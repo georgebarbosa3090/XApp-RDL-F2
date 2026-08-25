@@ -1,9 +1,16 @@
 apiVersion: v2
 name: iqos-xapp-rdl
-description: Near-RT RIC xApp Resource and Decision Layer (RDL) for O-RAN Conflict Mitigation
+description: xApp RDL Fase 2 - Context-Aware Resource and Decision Layer com MARL / MAPPO no Near-RT RIC O-RAN
 type: application
-version: 1.1.0
-appVersion: "1.1.0"
+version: 2.0.0
+appVersion: "2.0.0"
+keywords:
+  - oran
+  - near-rt-ric
+  - xapp
+  - rdl
+  - marl
+  - mappo
 maintainers:
-  - name: OpenRAN Brasil / IQoS Team
-    email: contact@openran.org.br
+  - name: OpenRAN Engineering Team
+    email: support@oran-rdl.org

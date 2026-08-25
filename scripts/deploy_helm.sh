@@ -10,7 +10,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 IMAGE_NAME="iqos-xapp-rdl"
-IMAGE_TAG="1.1.0"
+IMAGE_TAG="2.0.0"
 CHART_DIR="deploy/helm/iqos-xapp-rdl"
 NAMESPACE="ricxapp"
 RELEASE_NAME="ricxapp-iqos-xapp-rdl"

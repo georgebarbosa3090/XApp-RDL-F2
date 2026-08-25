@@ -24,7 +24,7 @@ spec:
       terminationGracePeriodSeconds: 15
       containers:
       - name: iqos-xapp-rdl
-        image: iqos-xapp-rdl:1.1.0
+        image: iqos-xapp-rdl:2.0.0
         imagePullPolicy: Never
         env:
         - name: USE_FAKE_SDL
