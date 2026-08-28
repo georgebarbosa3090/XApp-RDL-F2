@@ -30,9 +30,9 @@ O Smoke Test valida a integridade dos serviços HTTP e Prometheus em container i
 
 | Endpoint / Serviço | Porta | Método | Resposta Esperada | Status |
 | :--- | :---: | :---: | :--- | :---: |
-| **Liveness / Health** | `8090` | `GET /health` | HTTP `200 OK` `{"status":"UP"}` | ✅ APROVADO |
-| **Readiness** | `8090` | `GET /ready` | HTTP `200 OK` `{"ready":true}` | ✅ APROVADO |
-| **Prometheus Metrics** | `8091` | `GET /metrics` | Métricas `rdl_decision_latency_seconds`, `dl_kpm_indications_total` | ✅ APROVADO |
+| **Liveness / Health** | `8090` | `GET /health` | HTTP `200 OK` `{"status":"UP"}` |  APROVADO |
+| **Readiness** | `8090` | `GET /ready` | HTTP `200 OK` `{"ready":true}` |  APROVADO |
+| **Prometheus Metrics** | `8091` | `GET /metrics` | Métricas `rdl_decision_latency_seconds`, `dl_kpm_indications_total` |  APROVADO |
 
 ```bash
 make smoke-test
