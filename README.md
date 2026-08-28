@@ -5,7 +5,17 @@
 [![Helm](https://img.shields.io/badge/Helm-v3%20Chart%202.0.0-informational.svg)](deploy/helm/iqos-xapp-rdl)
 [![Kubernetes](https://img.shields.io/badge/K8s-Native%20Kustomize-326CE5.svg)](deploy/kubernetes)
 [![MARL](https://img.shields.io/badge/AI--Engine-MAPPO%20%2F%20Actor--Critic-brightgreen.svg)](src/agents/marl)
-[![Tests](https://img.shields.io/badge/Tests-14%2F14%20Passing-success.svg)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-18%2F18%20Passing-success.svg)](tests/)
+
+---
+
+### Navegação Multi-Fases do Projeto RDL (Resource and Decision Layer)
+
+| Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
+| :---: | :--- | :---: | :---: |
+| **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote (200ms), heurísticas TVS/EEVS e Safety Guards físicos.* | **Concluída e Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
+| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Aprendizado por Reforço Multiagente (MARL / MAPPO) e cognição contextual.* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
+| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch)**<br/>*Inteligência distribuída, orquestração por intenção (Intent-Driven) e O-Cloud 6G.* | **Roadmap / Planejada** | *Em especificação futura* |
 
 ---
 
@@ -13,9 +23,13 @@
 
 A **xApp RDL Fase 2 (Context-Aware RDL)** é o motor de arbitragem cognitiva e autônoma de conflitos para o **Near-RT RIC (RAN Intelligent Controller)** do ecossistema O-RAN.
 
-Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado por Reforço Multi-Agente (MARL / MAPPO - Multi-Agent Proximal Policy Optimization)** com observação centralizada de telemetria de rádio (E2SM-KPM) e execução descentralizada de ações de controle (E2SM-RC).
+Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado por Reforço Multi-Agente (MARL / MAPPO - Multi-Agent Proximal Policy Optimization)** com observação centralizada de telemetria de rádio (E2SM-KPM) e execução descentralizada de ações de controle (E2SM-RC), governando as decisões emitidas por **3 xApps de referência abertas da literatura**:
 
-```text
+1. **xSlice (QoS & Slicing Optimizer) — [peihaoY/xslice-oran](https://github.com/peihaoY/xslice-oran):** Solicita cotas elevadas de PRBs (PRB_QUOTA = 80%, prioridade 90) para fatias URLLC/eMBB.
+2. **Energy Saving (Green RAN Optimizer) — [Orange-OpenSource/ns-O-RAN-flexric](https://github.com/Orange-OpenSource/ns-O-RAN-flexric):** Solicita redução de potência (TX_POWER = 20 dBm, prioridade 65) e sono de células.
+3. **Traffic Steering (Mobility Optimizer) — [o-ran-sc/ric-app-ts](https://github.com/o-ran-sc/ric-app-ts):** Solicita migração e balanceamento de tráfego (HANDOVER, prioridade 80).
+
+`	ext
        +-------------------------------------------------------------+
        |             Near-RT RIC Platform (ricplt / O-RAN)           |
        |  [E2Term / SCTP 36422]  <-->  [Redis DBAAS / SDL 6379]      |
@@ -26,78 +40,68 @@ Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado
        +------------------------------v------------------------------+
        |           xApp CA-RDL (Fase 2: MARL / MAPPO) (ricxapp)      |
        |                                                             |
-       |  1. PerceptionAgent  --> Detecção de Conflitos e Features   |
+       |  1. PerceptionAgent  --> Deteccao de Conflitos e Features   |
        |  2. ReasoningAgent   --> Redes Neurais Actor-Critic (MAPPO) |
-       |  3. RefinementAgent  --> Safety Guards (Limites Físicos)    |
-       |                                                             |
-       |  [FastAPI HTTP 8080]           [Prometheus Metrics 8081]    |
+       |  3. RefinementAgent  --> Safety Guards Físicos Rigorosos    |
+       +------------------------------+------------------------------+
+                                      |
+       +------------------------------+------------------------------+
+       |            3 Reference xApps Concorrentes (ricxapp)         |
+       |  - xSlice QoS (:8082)       - Energy Saving (:8084)         |
+       |  - Traffic Steering (:8086)                                 |
        +-------------------------------------------------------------+
-```
+`
 
 ---
 
-## 2. Principais Funcionalidades Cognitivas
+## 2. Estrutura do Repositório
 
-* **Arquitetura MAPPO (Centralized Training with Decentralized Execution):**
-  - **Critic Network:** Avalia o estado global da rede de rádio ($S_t$) utilizando telemetria consolidada KPM (vazão de UEs, ocupação de PRB e latência por fatia de rede).
-  - **Actor Networks:** Selecionam as melhores propostas de ação ($A_t$) para cada xApp com convergência de políticas PPO e clipping de gradiente.
-* **Função de Recompensa Multiobjetivo:**
-  $$R_t = w_{	ext{QoS}} \cdot f_{	ext{QoS}}(a) + w_{	ext{EE}} \cdot f_{	ext{EE}}(a) - w_{	ext{pen}} \cdot 	ext{Penalty}(a)$$
-* **Classificação de Intenção e Resolução de Conflitos:**
-  - Resolução de conflitos diretos e indiretos com redução de colisões de **99.2%**.
-* **Safety Guards Estritos:** Limites de saturação de potência de transmissão ($\le 43	ext{ dBm}$), conservação de PRBs ($\le 100\%$) e bloqueio de oscilações (*ping-pong*).
+`	ext
+.
+├── configs/                     # Descritores de configuração xApp (config-file.json, routes.rt)
+├── deploy/                      # Manifestos de Implantação
+│   ├── helm/                    # Helm Charts oficiais (RDL, xSlice, Energy Saving, Traffic Steering)
+│   └── kubernetes/              # Manifestos K8s puros (Near-RT RIC ricplt + 3 xApps + RDL ricxapp)
+├── docs/                        # Portal de Documentação Técnica (Volumes 01 a 07)
+│   └── README.md                # Índice e trilhas de leitura da documentação
+├── reference-xapps/             # Adaptadores leves das 3 xApps de referência abertas
+│   ├── qos-xslice/              # Baseado em peihaoY/xslice-oran
+│   ├── energy-saving/           # Baseado em Orange-OpenSource/ns-O-RAN-flexric
+│   └── traffic-steering/        # Baseado em o-ran-sc/ric-app-ts
+├── scripts/                     # Automação de Deploy, Testes e Verificação
+│   ├── deploy_helm.sh           # Pipeline Helm (Near-RT RIC -> 3 xApps -> RDL)
+│   ├── deploy_k8s.sh            # Pipeline K8s/Kustomize equivalente
+│   └── verify_3_xapps.sh        # Smoke test unificado de todas as xApps
+├── src/                         # Código-Fonte Python da xApp CA-RDL
+│   ├── agents/                  # Agentes de Percepção, Raciocínio e Refinamento
+│   │   └── marl/                # Motor MAPPO / Actor-Critic e Intent Classifier
+│   ├── e2/                      # Codecs ASN.1 APER (E2AP, KPM, RC)
+│   └── observability/           # Servidores FastAPI (Health na 8080, Métricas na 8081)
+├── tests/                       # Suíte de Testes Unitários com pytest (18/18 PASS)
+└── Makefile                     # CLI unificada de operação, testes e benchmarks
+`
 
 ---
 
-## 3. Guia Rápido de Operação e Deploy
+## 3. Guia Rápido de Execução e Deploy
 
-### 3.1. Execução dos Testes Automatizados (14/14 Green)
-```bash
-make test
-# Executa a suíte completa de testes unitários e redes neurais
-```
-
-### 3.2. Deploy 100% Automatizado com Helm v2.0.0
-```bash
+### Opção A: Deploy Governança Completa (Near-RT RIC + 3 Reference xApps + CA-RDL)
+`ash
 make helm-deploy
-```
-*(O script auto-provisiona o cluster k3d, compila `iqos-xapp-rdl:2.0.0`, importa para o containerd, sobe o Redis DBAAS e faz o deploy do Helm Chart)*.
+`
 
-### 3.3. Testar Endpoints de Saúde e Métricas
-```bash
-make helm-test
-```
+### Opção B: Deploy Baseline (Near-RT RIC + 3 Reference xApps SEM RDL)
+`ash
+make helm-deploy-baseline
+`
 
-### 3.4. Ciclo de Vida do Cluster k3d
-```bash
-make cluster-create      # Cria cluster com portas O-RAN expostas
-make cluster-delete      # Remove cluster
-make cluster-recreate    # Recriação limpa completa
-```
+### Opção C: Validação e Smoke Test das xApps
+`ash
+make test-3xapps
+`
 
----
-
-## 4. Observabilidade e Monitoramento
-
-* **Rancher Dashboard:** Acesse `https://127.0.0.1:8443` para gerenciar os nós, namespaces (`ricplt`, `ricxapp`), métricas de CPU/RAM em tempo real e acompanhar logs.
-* **Kiali Service Mesh (Opcional):**
-  ```bash
-  make kiali-install     # Instala Istio e Kiali
-  make start-traffic     # Inicia gerador contínuo de tráfego interno
-  make kiali-dashboard   # Abre Kiali em http://localhost:20001/kiali
-  make stop-traffic      # Pausa o gerador de tráfego
-  ```
-
----
-
-## 5. Índice de Documentação Técnica Consolidada (`docs/`)
-
-| Volume | Título Temático | Conteúdo Abrangente |
-| :---: | :--- | :--- |
-| **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura, Módulos Core e Modelagem Matemática | Clean Architecture, DDD, agentes de percepção/raciocínio/refinamento, heurísticas TVS/EEVS, redes neurais MARL/MAPPO e modelagem matemática formal. |
-| **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura k3d, Rancher Dashboard e Operações O-RAN | Topologias de cluster no WSL2, instalação da plataforma Near-RT RIC (Redis DBAAS), visualização no Rancher UI e agente especialista `07-k8s-oran-cluster-operator`. |
-| **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação e Automação de Deploy (Helm & K8s) | Estrutura e empacotamento Helm Chart (`2.0.0`), deploy declarativo com Kustomize (`deploy/kubernetes/`), pipelines automatizados e onboarding O-RAN DMS. |
-| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Procedimentos de Backup | Procedimento Operacional Padrão (SOP), diagnósticos de erro (`ErrImageNeverPull`, Rancher agent), soluções offline e backup/restauração bare-metal do WSL Ubuntu 20.04. |
-| **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Testes, Simulação em ns-3 O-RAN e Benchmarks Científicos | Estratégia de testes unitários (14/14 PASS), relatório do Smoke Test (HTTP 200/Prometheus), código C++ de simulação 5G NR no `ns-O-RAN` (SCTP 36422) e métricas comparativas. |
-| **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh com Kiali e Injeção de Tráfego | Checklist de dependências, Service Mesh com Istio, Kiali Dashboard (opcional) e script gerador contínuo de tráfego O-RAN (`make start-traffic` / `make inject-traffic`). |
-| **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica, Governança e Manual Consolidado | Matriz de rastreabilidade de requisitos, avaliação de conformidade aos padrões O-RAN Alliance e sumário executivo de governança. |
+### Opção D: Testes Unitários e Validação de CI
+`ash
+make test
+# Saída esperada: 18 passed in 0.45s (100% green)
+`
