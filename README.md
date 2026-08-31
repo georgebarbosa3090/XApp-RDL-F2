@@ -96,9 +96,6 @@ make run-suite
 
 ## 4. Desempenho e Validação Experimental
 
-Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comparando a operação desregulada (**Baseline**) com a governança da **Fase 1 (H-RDL)**:
-
-![Métricas Experimentais Reais](docs/figures/cenario_4_comparativo_multidimensional_metricas.png)
 
 | Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL (Heurística) | Impacto / Ganho |
 | :--- | :--- | :---: | :---: | :---: |
