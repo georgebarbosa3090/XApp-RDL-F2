@@ -23,85 +23,73 @@
 
 A **xApp RDL Fase 2 (Context-Aware RDL)** é o motor de arbitragem cognitiva e autônoma de conflitos para o **Near-RT RIC (RAN Intelligent Controller)** do ecossistema O-RAN.
 
-Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado por Reforço Multi-Agente (MARL / MAPPO - Multi-Agent Proximal Policy Optimization)** com observação centralizada de telemetria de rádio (E2SM-KPM) e execução descentralizada de ações de controle (E2SM-RC), governando as decisões emitidas por **3 xApps de referência abertas da literatura**:
+Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado por Reforço Multi-Agente (MARL / MAPPO - Multi-Agent Proximal Policy Optimization)** com:
+1. **Crítico Centralizado:** Observação global do estado de rádio da rede (SINR, PRBs, carga, interferência, potência).
+2. **Atores Descentralizados:** Decisões probabilísticas por fatia de rede e xApp concorrente.
+3. **Recompensa Multi-Objetivo:** Otimização conjunta de Latência URLLC, Throughput eMBB, Eficiência Energética e Equidade de Jain.
+4. **Safety Guards de Proteção:** Barreiras determinísticas que impedem violações de limites físicos ou SLAs 3GPP.
 
-1. **xSlice (QoS & Slicing Optimizer) — [peihaoY/xslice-oran](https://github.com/peihaoY/xslice-oran):** Solicita cotas elevadas de PRBs (PRB_QUOTA = 80%, prioridade 90) para fatias URLLC/eMBB.
-2. **Energy Saving (Green RAN Optimizer) — [Orange-OpenSource/ns-O-RAN-flexric](https://github.com/Orange-OpenSource/ns-O-RAN-flexric):** Solicita redução de potência (TX_POWER = 20 dBm, prioridade 65) e sono de células.
-3. **Traffic Steering (Mobility Optimizer) — [o-ran-sc/ric-app-ts](https://github.com/o-ran-sc/ric-app-ts):** Solicita migração e balanceamento de tráfego (HANDOVER, prioridade 80).
+```mermaid
+graph TD
+    subgraph NearRTRIC["Near-RT RIC (O-RAN)"]
+        subgraph RDL_F2["xApp RDL Fase 2 (CA-RDL / MARL)"]
+            PA["1. Perception Agent<br/>(Telemetria KPM & Feature Engineering)"]
+            RA["2. Reasoning Agent<br/>(Motor MAPPO Centralized-Critic)"]
+            RE["3. Refinement Agent<br/>(Safety Guards Determinísticos)"]
+            IC["4. Intent Classifier<br/>(Modulação de Pesos de Recompensa)"]
+        end
 
-`	ext
-       +-------------------------------------------------------------+
-       |             Near-RT RIC Platform (ricplt / O-RAN)           |
-       |  [E2Term / SCTP 36422]  <-->  [Redis DBAAS / SDL 6379]      |
-       +------------------------------+------------------------------+
-                                      |
-                         RMR Message Router (JSON / APER)
-                                      |
-       +------------------------------v------------------------------+
-       |           xApp CA-RDL (Fase 2: MARL / MAPPO) (ricxapp)      |
-       |                                                             |
-       |  1. PerceptionAgent  --> Deteccao de Conflitos e Features   |
-       |  2. ReasoningAgent   --> Redes Neurais Actor-Critic (MAPPO) |
-       |  3. RefinementAgent  --> Safety Guards Físicos Rigorosos    |
-       +------------------------------+------------------------------+
-                                      |
-       +------------------------------+------------------------------+
-       |            3 Reference xApps Concorrentes (ricxapp)         |
-       |  - xSlice QoS (:8082)       - Energy Saving (:8084)         |
-       |  - Traffic Steering (:8086)                                 |
-       +-------------------------------------------------------------+
-`
+        XAPPS["Reference xApps Concorrentes<br/>(xSlice | Energy Saving | Traffic Steering)"]
+    end
+
+    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)"] <-->|E2SM-KPM / E2SM-RC| NearRTRIC
+    XAPPS -->|Ações Propostas| PA
+    PA --> RA
+    IC --> RA
+    RA --> RE
+    RE -->|Ações Harmonizadas| gNB
+```
 
 ---
 
-## 2. Estrutura do Repositório
+## 2. Início Rápido (Quickstart)
 
-`	ext
-.
-├── configs/                     # Descritores de configuração xApp (config-file.json, routes.rt)
-├── deploy/                      # Manifestos de Implantação
-│   ├── helm/                    # Helm Charts oficiais (RDL, xSlice, Energy Saving, Traffic Steering)
-│   └── kubernetes/              # Manifestos K8s puros (Near-RT RIC ricplt + 3 xApps + RDL ricxapp)
-├── docs/                        # Portal de Documentação Técnica (Volumes 01 a 07)
-│   └── README.md                # Índice e trilhas de leitura da documentação
-├── reference-xapps/             # Adaptadores leves das 3 xApps de referência abertas
-│   ├── qos-xslice/              # Baseado em peihaoY/xslice-oran
-│   ├── energy-saving/           # Baseado em Orange-OpenSource/ns-O-RAN-flexric
-│   └── traffic-steering/        # Baseado em o-ran-sc/ric-app-ts
-├── scripts/                     # Automação de Deploy, Testes e Verificação
-│   ├── deploy_helm.sh           # Pipeline Helm (Near-RT RIC -> 3 xApps -> RDL)
-│   ├── deploy_k8s.sh            # Pipeline K8s/Kustomize equivalente
-│   └── verify_3_xapps.sh        # Smoke test unificado de todas as xApps
-├── src/                         # Código-Fonte Python da xApp CA-RDL
-│   ├── agents/                  # Agentes de Percepção, Raciocínio e Refinamento
-│   │   └── marl/                # Motor MAPPO / Actor-Critic e Intent Classifier
-│   ├── e2/                      # Codecs ASN.1 APER (E2AP, KPM, RC)
-│   └── observability/           # Servidores FastAPI (Health na 8080, Métricas na 8081)
-├── tests/                       # Suíte de Testes Unitários com pytest (18/18 PASS)
-└── Makefile                     # CLI unificada de operação, testes e benchmarks
-`
-
----
-
-## 3. Guia Rápido de Execução e Deploy
-
-### Opção A: Deploy Governança Completa (Near-RT RIC + 3 Reference xApps + CA-RDL)
-`ash
-make helm-deploy
-`
-
-### Opção B: Deploy Baseline (Near-RT RIC + 3 Reference xApps SEM RDL)
-`ash
-make helm-deploy-baseline
-`
-
-### Opção C: Validação e Smoke Test das xApps
-`ash
-make test-3xapps
-`
-
-### Opção D: Testes Unitários e Validação de CI
-`ash
+### 2.1. Executar Testes Unitários:
+```bash
 make test
-# Saída esperada: 18 passed in 0.45s (100% green)
-`
+# 18/18 testes passando com 100% de sucesso
+```
+
+### 2.2. Implantar no Kubernetes / Near-RT RIC:
+```bash
+# Criar cluster k3d e fazer deploy dos 4 Helm Charts
+make cluster-create
+make helm-deploy
+```
+
+### 2.3. Executar Simulação ns-3 e Benchmarks:
+```bash
+# Executa pipeline completo, gera datasets e relatórios
+make run-suite
+```
+
+---
+
+## 3. Estrutura Documental da Fase 2
+
+| Volume Documental | Título do Documento | Descrição e Escopo |
+| :--- | :--- | :--- |
+| **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, formulação MAPPO/Actor-Critic e modelagem de utilidade. |
+| **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas. |
+| **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação Helm e K8s Nativo | Deploy dos 4 Helm Charts, barramento RMR e validação de endpoints. |
+| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Backup | Procedimentos operacionais, diagnóstico de logs e recuperação. |
+| **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, `NrPointToPointEpcHelper` e datasets. |
+| **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Tráfego | Métricas Prometheus, dashboards e injeção de tráfego sintético. |
+| **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos e conformidade O-RAN Alliance. |
+
+---
+
+## 4. Repositórios Oficiais
+
+* **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
+* **Fase 2 (CA-RDL / MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)

@@ -1,110 +1,141 @@
-# Volume 03: Guia de Implantação e Automação de Deploy (Helm e Kubernetes Puro)
+# Volume 03: Guia de Implantação e Operação no Kubernetes (Helm e K8s Nativo)
 
 **Documento:** Volume Temático 03  
-**Projeto:** xApp RDL (Resource and Decision Layer)  
-**Escopo:** Empacotamento Helm, Deploy Declarativo Kustomize/K8s, Pipelines Automatizados e Onboarding DMS  
-**Data de Consolidação:** 25/08/2026  
+**Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
+**Escopo:** Procedimentos de Deploy Helm v3, Kustomize K8s, Gestão de Cluster k3d, Roteamento RMR e Verificação de Endpoints  
+**Repositório Oficial:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
+**Versão do Chart / Imagem:** `2.0.0` (Fase 2 - CA-RDL)  
 
 ---
 
-## 1. Visão Geral das Estratégias de Deploy
+## 1. Visão Geral da Arquitetura de Implantação
 
-A xApp RDL suporta duas modalidades oficiais de implantação no Kubernetes Near-RT RIC:
+A **xApp RDL Fase 2** opera como um microserviço nativo em contêiner no namespace `ricxapp` do Near-RT RIC, integrando:
+* **Tríade de Agentes Cognitivos:** Perception Agent, Reasoning Agent (Motor MAPPO/MARL) e Refinement Agent (Safety Guards).
+* **Barramento de Mensageria RMR:** Portas `4560/TCP` (dados de controle E2) e `4561/TCP` (rotas dinâmicas).
+* **Servidor HTTP de Ciclo de Vida:** Porta `8080/TCP` (`/health` e `/state`).
+* **Servidor de Telemetria Prometheus:** Porta `8081/TCP` (`/metrics` com métricas `rdl_*`).
+* **Persistência SDL (Shared Data Layer):** Redis no namespace `ricplt` ou Mock Resiliente em memória.
 
-1. **Modalidade Helm Chart (Padrão O-RAN / Produção):** Utiliza a estrutura declarativa `deploy/helm/iqos-xapp-rdl` gerenciada via Helm CLI v3 ou AppMgr DMS.
-2. **Modalidade Kubernetes Puro / Kustomize (Desenvolvimento / K8s Nativo):** Utiliza os manifestos puros em `deploy/kubernetes/` aplicados diretamente com `kubectl apply -k`.
+```mermaid
+graph TD
+    subgraph K8s["Cluster Kubernetes (k3d: rancher-lab)"]
+        subgraph ricplt["Namespace: ricplt (Near-RT RIC Platform)"]
+            E2TERM["E2Term (SCTP 36422 / RMR 38000)"]
+            E2MGR["E2Mgr (HTTP 3800)"]
+            SDL["Redis SDL (Porta 6379)"]
+            RMR_RTG["RMR Route Generator (Porta 4561)"]
+        end
 
----
+        subgraph ricxapp["Namespace: ricxapp (Aplicações xApps)"]
+            RDL["ricxapp-iqos-xapp-rdl (v2.0.0 - MARL)"]
+            XS["ricxapp-qos-xslice (PRB Manager)"]
+            ES["ricxapp-energy-saving (Tx Power Manager)"]
+            TS["ricxapp-traffic-steering (Handover Manager)"]
+        end
+    end
 
-## 2. Estrutura do Helm Chart (`deploy/helm/iqos-xapp-rdl/`)
-
-```text
-deploy/helm/iqos-xapp-rdl/
-├── Chart.yaml                  # Metadados do Chart (versão 1.1.0 / 2.0.0)
-├── values.yaml                 # Parâmetros configuráveis (portas, recursos, sondas)
-└── templates/
-    ├── _helpers.tpl            # Nomes e labels padronizados
-    ├── deployment.yaml         # Pod da xApp com healthcheck e security context
-    ├── service-http.yaml       # Serviços HTTP (porta 8080 health / 8081 metrics)
-    └── service-rmr.yaml        # Serviços RMR (portas 4560 data / 4561 route)
+    E2TERM <-->|RMR E2AP/KPM| RDL
+    RDL <-->|RMR Control Actions| XS
+    RDL <-->|RMR Control Actions| ES
+    RDL <-->|RMR Control Actions| TS
+    RDL <-->|SDL State| SDL
 ```
 
-### 2.1. Deploy Helm Automatizado em 1 Comando
-Para compilar a imagem, carregar nos nós do k3d, validar sintaxe, empacotar e fazer o deploy:
+---
+
+## 2. Pré-requisitos de Infraestrutura
+
+1. **Docker Engine:** 20.10+ com suporte a contêineres Linux.
+2. **Kubernetes CLI (`kubectl`):** v1.26+.
+3. **Helm:** v3.10+.
+4. **k3d / k3s:** v5.4+ (para orquestração local leve de clusters O-RAN).
+5. **Python:** 3.10+ (para testes unitários e pipelines de simulação).
+
+---
+
+## 3. Criação e Configuração do Cluster k3d
+
+Para instanciar o cluster local com todas as portas de rede necessárias mapeadas para o host:
 
 ```bash
-cd ~/XApp-RDL-F1
+# Criação do cluster k3d com portas O-RAN e Near-RT RIC
+make cluster-create
+
+# Verificar status dos nós
+kubectl get nodes -o wide
+```
+
+As seguintes portas são expostas no host:
+* `36422/SCTP`: Interface O-RAN E2 para conexão com o simulador ns-3.
+* `8080-8087/TCP`: Endpoints HTTP REST das xApps e RIC Platform.
+* `4560-4561/TCP`: Barramento de Mensageria RMR.
+
+---
+
+## 4. Implantação via Helm Charts (Padrão O-RAN Alliance)
+
+A Fase 2 disponibiliza 4 Helm Charts modulares:
+1. `deploy/helm/iqos-xapp-rdl` (Chart v2.0.0 da xApp RDL com MARL)
+2. `deploy/helm/xapp-qos-xslice` (Chart da Reference xApp de Fatiamento)
+3. `deploy/helm/xapp-energy-saving` (Chart da Reference xApp de Economia de Energia)
+4. `deploy/helm/xapp-traffic-steering` (Chart da Reference xApp de Direcionamento de Tráfego)
+
+### 4.1. Deploy Completo com Governança RDL Ativa (Modo Proposta):
+```bash
+# Empacota e instala todos os Helm Charts no namespace ricxapp
 make helm-deploy
+
+# Ou execute diretamente o script shell:
+bash scripts/deploy_helm.sh --with-rdl
 ```
 
-*(Ou diretamente: `bash scripts/deploy_helm.sh`)*.
-
-### 2.2. Comandos Manuais de Helm
+### 4.2. Deploy em Modo Baseline (Sem RDL - Para Benchmarks de Comparação):
 ```bash
-# 1. Validar sintaxe
-helm lint deploy/helm/iqos-xapp-rdl
+make helm-deploy-baseline
+```
 
-# 2. Empacotar em .tgz
-helm package deploy/helm/iqos-xapp-rdl
-
-# 3. Fazer o deploy no namespace ricxapp
-helm upgrade --install ricxapp-iqos-xapp-rdl ./iqos-xapp-rdl-1.1.0.tgz \
-  --namespace ricxapp \
-  --create-namespace \
-  --set image.pullPolicy=Never \
-  --set env.useFakeSdl="true" \
-  --set env.rmrWaitForReady="false"
+### 4.3. Verificação do Status dos Pods:
+```bash
+kubectl get pods -n ricxapp -o wide
+kubectl get pods -n ricplt -o wide
 ```
 
 ---
 
-## 3. Estrutura de Kubernetes Puro (`deploy/kubernetes/`)
+## 5. Validação de Endpoints e Smoke Testing
 
-Para operadores que não utilizam Helm, a pasta `deploy/kubernetes/` disponibiliza a stack completa com suporte ao **Kustomize**:
-
-```text
-deploy/kubernetes/
-├── kustomization.yaml       # Orquestrador Kustomize
-├── namespace.yaml           # Cria os namespaces ricplt e ricxapp
-├── configmap.yaml           # Configurações JSON e rotas RMR (routes.rt)
-├── deployment.yaml          # Pod da xApp RDL com probes HTTP e portas RMR
-├── service-http.yaml        # Service ClusterIP para portas 8080 e 8081
-└── service-rmr.yaml         # Service ClusterIP para portas 4560 e 4561
+### 5.1. Teste de Saúde e Conectividade das xApps:
+```bash
+# Executa o script de validação das 3 Reference xApps + RDL
+make test-3xapps
+# ou: bash scripts/verify_3_xapps.sh
 ```
 
-### 3.1. Deploy K8s Nativo em 1 Comando
+### 5.2. Verificação Manual dos Endpoints HTTP e Prometheus:
 ```bash
-make k8s-deploy
-# ou diretamente:
-kubectl apply -k deploy/kubernetes/
+# 1. Healthcheck da xApp RDL
+curl -i http://localhost:8080/health
+# Resposta esperada: HTTP/1.1 200 OK  {"status": "UP", "phase": "2.0.0"}
+
+# 2. Métricas Prometheus de Governança e Decisão MARL
+curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_"
+```
+
+### 5.3. Logs Estruturados em Tempo Real:
+```bash
+make logs
+# ou: kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl -f
 ```
 
 ---
 
-## 4. Onboarding no O-RAN DMS / AppMgr (Opcional)
-
-Em clusters com a plataforma Near-RT RIC completa e `dms_cli` configurado:
+## 6. Desinstalação e Limpeza
 
 ```bash
-# 1. Onboarding do descriptor da xApp
-dms_cli onboard configs/config-file.json configs/schema.json
+# Remoção dos Helm releases
+make helm-uninstall
 
-# 2. Instalar a xApp via DMS
-dms_cli install --xapp-chart-name iqos-xapp-rdl --version 1.1.0 --namespace ricxapp
-
-# 3. Checar status no DMS
-dms_cli status iqos-xapp-rdl
+# Destruição completa do cluster k3d
+make cluster-delete
 ```
-
----
-
-## 5. Tabela de Comandos de Operação e Testes
-
-| Ação Desejada | Comando Make | Comando Equivalente Kubectl / Helm |
-| :--- | :--- | :--- |
-| **Deploy Helm Completo** | `make helm-deploy` | `bash scripts/deploy_helm.sh` |
-| **Deploy K8s Puro** | `make k8s-deploy` | `kubectl apply -k deploy/kubernetes/` |
-| **Testar Endpoints** | `make helm-test` | `curl http://localhost:8080/health` |
-| **Ver Logs da xApp** | `make logs` | `kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl -f` |
-| **Status dos Pods** | `make status` | `kubectl get pods -n ricxapp -o wide` |
-| **Desinstalar xApp** | `make helm-uninstall` | `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` |
