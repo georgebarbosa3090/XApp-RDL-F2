@@ -1,14 +1,16 @@
-.PHONY: build build-no-cache test validate package onboard install status logs smoke-test uninstall helm-deploy helm-deploy-baseline helm-package helm-test helm-uninstall k8s-deploy k8s-deploy-baseline k8s-uninstall k8s-test test-3xapps kiali-install kiali-dashboard inject-traffic start-traffic stop-traffic cluster-create cluster-delete cluster-recreate rancher-start rancher-stop rancher-logs rancher-password rancher-connect setup-ns3 deploy-rdl deploy-baseline run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
 IMAGE_NAME ?= iqos-xapp-rdl
 IMAGE_TAG ?= 2.0.0
 CHART_DIR ?= deploy/helm/iqos-xapp-rdl
-K8S_DIR ?= deploy/kubernetes
 NAMESPACE_RIC ?= ricplt
 NAMESPACE ?= ricxapp
-RELEASE_NAME ?= ricxapp-iqos-xapp-rdl
+RELEASE_NAME_F2 ?= ricxapp-iqos-xapp-rdl-f2
 CLUSTER_NAME ?= rancher-lab
 
+# -------------------------------------------------------------
+# Build e Testes Locais da xApp RDL Fase 2
+# -------------------------------------------------------------
 build:
 	docker build --file docker/Dockerfile --tag $(IMAGE_NAME):$(IMAGE_TAG) .
 
@@ -18,7 +20,54 @@ build-no-cache:
 test:
 	PYTHONPATH=. pytest tests/ -v
 
-# Gestão do Cluster k3d
+# -------------------------------------------------------------
+# Deploy Helm Exclusivo para RDL Fase 2 (CA-RDL / MARL)
+# Premissa: Near-RT RIC e as 3 Reference xApps ja estao rodando!
+# -------------------------------------------------------------
+helm-deploy-f2:
+	@echo "Implantando/Atualizando exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
+	bash scripts/deploy_rdl_phase2.sh
+
+helm-upgrade-f2:
+	@echo "Executando Helm Upgrade da release $(RELEASE_NAME_F2)..."
+	helm upgrade --install $(RELEASE_NAME_F2) $(CHART_DIR) \
+	  --namespace $(NAMESPACE) \
+	  --set image.repository=$(IMAGE_NAME) \
+	  --set image.tag=$(IMAGE_TAG) \
+	  --set image.pullPolicy=Never \
+	  --set fullnameOverride=$(RELEASE_NAME_F2) \
+	  --set env.useFakeSdl="false" \
+	  --set env.rmrWaitForReady="false" \
+	  --set env.enableTorch="true"
+
+helm-uninstall-f2:
+	@echo "Removendo exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
+	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) || echo "Release $(RELEASE_NAME_F2) nao encontrada."
+
+status-f2:
+	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="
+	@kubectl get pods -n $(NAMESPACE) -o wide
+	@echo "
+=== Pod da xApp RDL Fase 2 ==="
+	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide
+
+logs-f2:
+	kubectl logs -l app=$(RELEASE_NAME_F2) -n $(NAMESPACE) -f
+
+test-f2:
+	@echo "Testando endpoints da xApp RDL Fase 2 (CA-RDL / MARL)..."
+	@curl -i http://localhost:8080/health || true
+	@echo "
+Métricas Prometheus:"
+	@curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_" || true
+
+test-3xapps:
+	@echo "Testando integridade das 3 Reference xApps no cluster..."
+	bash scripts/verify_3_xapps.sh
+
+# -------------------------------------------------------------
+# Gestão do Cluster k3d (se necessário)
+# -------------------------------------------------------------
 cluster-create:
 	@echo "Criando cluster k3d $(CLUSTER_NAME)..."
 	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 0 --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
@@ -28,17 +77,9 @@ cluster-create:
 cluster-delete:
 	k3d cluster delete $(CLUSTER_NAME)
 
-# Deploy Helm / K8s
-helm-deploy:
-	bash scripts/deploy_helm.sh --with-rdl
-
-helm-deploy-baseline:
-	bash scripts/deploy_helm.sh --baseline
-
-test-3xapps:
-	bash scripts/verify_3_xapps.sh
-
+# -------------------------------------------------------------
 # Simulações ns-3 e Pipelines Experimentais
+# -------------------------------------------------------------
 setup-ns3:
 	bash scripts/setup_ns3.sh
 

@@ -1,141 +1,91 @@
-# Volume 03: Guia de Implantação e Operação no Kubernetes (Helm e K8s Nativo)
+# Volume 03: Guia de Implantação Helm Exclusivo para RDL Fase 2 (CA-RDL / MARL)
 
 **Documento:** Volume Temático 03  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
-**Escopo:** Procedimentos de Deploy Helm v3, Kustomize K8s, Gestão de Cluster k3d, Roteamento RMR e Verificação de Endpoints  
+**Escopo:** Procedimento de Deploy Helm Isolado da Release `ricxapp-iqos-xapp-rdl-f2` no Near-RT RIC Existente  
 **Repositório Oficial:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
-**Versão do Chart / Imagem:** `2.0.0` (Fase 2 - CA-RDL)  
+**Versão da Release:** `ricxapp-iqos-xapp-rdl-f2` | **Imagem:** `iqos-xapp-rdl:2.0.0`  
 
 ---
 
-## 1. Visão Geral da Arquitetura de Implantação
+## 1. Premissas de Implantação da Fase 2
 
-A **xApp RDL Fase 2** opera como um microserviço nativo em contêiner no namespace `ricxapp` do Near-RT RIC, integrando:
-* **Tríade de Agentes Cognitivos:** Perception Agent, Reasoning Agent (Motor MAPPO/MARL) e Refinement Agent (Safety Guards).
-* **Barramento de Mensageria RMR:** Portas `4560/TCP` (dados de controle E2) e `4561/TCP` (rotas dinâmicas).
-* **Servidor HTTP de Ciclo de Vida:** Porta `8080/TCP` (`/health` e `/state`).
-* **Servidor de Telemetria Prometheus:** Porta `8081/TCP` (`/metrics` com métricas `rdl_*`).
-* **Persistência SDL (Shared Data Layer):** Redis no namespace `ricplt` ou Mock Resiliente em memória.
+Na infraestrutura operacional de testes e produção:
+1. O **Near-RT RIC Platform (`ricplt`)** já está provisionado e ativo (DBAAS Redis na porta `6379`, E2Term na porta `36422/SCTP`, E2Mgr e Route Generator na porta `4561`).
+2. As **3 Reference xApps (`ricxapp`)** já estão implantadas e em execução:
+   - `ricxapp-qos-xslice` (porta HTTP `8082`, RMR `4562`)
+   - `ricxapp-energy-saving` (porta HTTP `8084`, RMR `4563`)
+   - `ricxapp-traffic-steering` (porta HTTP `8086`, RMR `4564`)
+3. A **xApp RDL Fase 2 (CA-RDL)** deve ser implantada de forma **isolada e independente**, com identificação exclusiva de release:
+   - **Helm Release Name:** `ricxapp-iqos-xapp-rdl-f2`
+   - **Deployment Name:** `ricxapp-iqos-xapp-rdl-f2`
+   - **Tag da Imagem:** `2.0.0`
+   - **Target de Execução:** `make helm-deploy-f2`
 
-```mermaid
-graph TD
-    subgraph K8s["Cluster Kubernetes (k3d: rancher-lab)"]
-        subgraph ricplt["Namespace: ricplt (Near-RT RIC Platform)"]
-            E2TERM["E2Term (SCTP 36422 / RMR 38000)"]
-            E2MGR["E2Mgr (HTTP 3800)"]
-            SDL["Redis SDL (Porta 6379)"]
-            RMR_RTG["RMR Route Generator (Porta 4561)"]
-        end
-
-        subgraph ricxapp["Namespace: ricxapp (Aplicações xApps)"]
-            RDL["ricxapp-iqos-xapp-rdl (v2.0.0 - MARL)"]
-            XS["ricxapp-qos-xslice (PRB Manager)"]
-            ES["ricxapp-energy-saving (Tx Power Manager)"]
-            TS["ricxapp-traffic-steering (Handover Manager)"]
-        end
-    end
-
-    E2TERM <-->|RMR E2AP/KPM| RDL
-    RDL <-->|RMR Control Actions| XS
-    RDL <-->|RMR Control Actions| ES
-    RDL <-->|RMR Control Actions| TS
-    RDL <-->|SDL State| SDL
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        Cluster Kubernetes: Namespace ricxapp                           │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│   [ricxapp-qos-xslice]          (Existente - Já em Execução)                           │
+│   [ricxapp-energy-saving]       (Existente - Já em Execução)                           │
+│   [ricxapp-traffic-steering]    (Existente - Já em Execução)                           │
+│                                                                                        │
+│   ─────────────────────────── [Deploy Isolado Fase 2] ────────────────────────────     │
+│   [ricxapp-iqos-xapp-rdl-f2]    (v2.0.0 - CA-RDL / MARL - Release Dedicada)           │
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Pré-requisitos de Infraestrutura
+## 2. Comandos Operacionais de Deploy da Fase 2
 
-1. **Docker Engine:** 20.10+ com suporte a contêineres Linux.
-2. **Kubernetes CLI (`kubectl`):** v1.26+.
-3. **Helm:** v3.10+.
-4. **k3d / k3s:** v5.4+ (para orquestração local leve de clusters O-RAN).
-5. **Python:** 3.10+ (para testes unitários e pipelines de simulação).
-
----
-
-## 3. Criação e Configuração do Cluster k3d
-
-Para instanciar o cluster local com todas as portas de rede necessárias mapeadas para o host:
-
+### 2.1. Implantar Exclusivamente a xApp RDL Fase 2:
 ```bash
-# Criação do cluster k3d com portas O-RAN e Near-RT RIC
-make cluster-create
+# Executa o build da imagem 2.0.0, importação no k3d e deploy da release 'ricxapp-iqos-xapp-rdl-f2'
+make helm-deploy-f2
+```
+*Esse comando não reinstala o Near-RT RIC nem interfere nas 3 Reference xApps existentes.*
 
-# Verificar status dos nós
-kubectl get nodes -o wide
+### 2.2. Verificar o Status da xApp RDL Fase 2:
+```bash
+make status-f2
+# ou: kubectl get pods -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -o wide
 ```
 
-As seguintes portas são expostas no host:
-* `36422/SCTP`: Interface O-RAN E2 para conexão com o simulador ns-3.
-* `8080-8087/TCP`: Endpoints HTTP REST das xApps e RIC Platform.
-* `4560-4561/TCP`: Barramento de Mensageria RMR.
-
----
-
-## 4. Implantação via Helm Charts (Padrão O-RAN Alliance)
-
-A Fase 2 disponibiliza 4 Helm Charts modulares:
-1. `deploy/helm/iqos-xapp-rdl` (Chart v2.0.0 da xApp RDL com MARL)
-2. `deploy/helm/xapp-qos-xslice` (Chart da Reference xApp de Fatiamento)
-3. `deploy/helm/xapp-energy-saving` (Chart da Reference xApp de Economia de Energia)
-4. `deploy/helm/xapp-traffic-steering` (Chart da Reference xApp de Direcionamento de Tráfego)
-
-### 4.1. Deploy Completo com Governança RDL Ativa (Modo Proposta):
+### 2.3. Inspecionar Logs do Motor MARL/MAPPO em Tempo Real:
 ```bash
-# Empacota e instala todos os Helm Charts no namespace ricxapp
-make helm-deploy
-
-# Ou execute diretamente o script shell:
-bash scripts/deploy_helm.sh --with-rdl
+make logs-f2
+# ou: kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -f
 ```
 
-### 4.2. Deploy em Modo Baseline (Sem RDL - Para Benchmarks de Comparação):
+### 2.4. Validar Endpoints HTTP e Telemetria Prometheus:
 ```bash
-make helm-deploy-baseline
-```
+# Testa o healthcheck e métricas cognitivas da Fase 2
+make test-f2
 
-### 4.3. Verificação do Status dos Pods:
-```bash
-kubectl get pods -n ricxapp -o wide
-kubectl get pods -n ricplt -o wide
-```
-
----
-
-## 5. Validação de Endpoints e Smoke Testing
-
-### 5.1. Teste de Saúde e Conectividade das xApps:
-```bash
-# Executa o script de validação das 3 Reference xApps + RDL
-make test-3xapps
-# ou: bash scripts/verify_3_xapps.sh
-```
-
-### 5.2. Verificação Manual dos Endpoints HTTP e Prometheus:
-```bash
-# 1. Healthcheck da xApp RDL
+# Chamadas manuais via cURL:
 curl -i http://localhost:8080/health
-# Resposta esperada: HTTP/1.1 200 OK  {"status": "UP", "phase": "2.0.0"}
-
-# 2. Métricas Prometheus de Governança e Decisão MARL
 curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_"
 ```
 
-### 5.3. Logs Estruturados em Tempo Real:
+### 2.5. Remover Apenas a xApp RDL Fase 2:
 ```bash
-make logs
-# ou: kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl -f
+# Desinstala somente a release 'ricxapp-iqos-xapp-rdl-f2' mantendo o restante da infraestrutura intacta
+make helm-uninstall-f2
 ```
 
 ---
 
-## 6. Desinstalação e Limpeza
+## 3. Resumo dos Targets do Makefile para a Fase 2
 
-```bash
-# Remoção dos Helm releases
-make helm-uninstall
-
-# Destruição completa do cluster k3d
-make cluster-delete
-```
+| Comando Makefile | Ação Executada | Escopo de Impacto |
+| :--- | :--- | :--- |
+| **`make test`** | Executa os 18 testes unitários (pytest) | Local |
+| **`make helm-deploy-f2`** | Instala/Atualiza a release `ricxapp-iqos-xapp-rdl-f2` (v2.0.0) | Namespace `ricxapp` (apenas RDL F2) |
+| **`make helm-uninstall-f2`** | Desinstala a release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` (apenas RDL F2) |
+| **`make status-f2`** | Exibe o status detalhado dos pods no namespace `ricxapp` | Somente leitura |
+| **`make logs-f2`** | Abre streaming dos logs da xApp RDL Fase 2 | Somente leitura |
+| **`make test-f2`** | Testa `/health` (`:8080`) e `/metrics` (`:8081`) da Fase 2 | Somente leitura |
+| **`make run-suite`** | Executa simulações ns-3 e benchmark de Machine Learning | Suíte experimental |

@@ -64,7 +64,7 @@ make test
 ```bash
 # Criar cluster k3d e fazer deploy dos 4 Helm Charts
 make cluster-create
-make helm-deploy
+make helm-deploy-f2
 ```
 
 ### 2.3. Executar Simulação ns-3 e Benchmarks:
