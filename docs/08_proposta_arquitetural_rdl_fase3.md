@@ -11,13 +11,13 @@ Enquanto a Fase 1 (*H-RDL*) introduziu a arbitragem determinística e a Fase 2 (
 
 ```mermaid
 flowchart TB
-    subgraph Non_RT_RIC["Non-RT RIC (SMO / Cloud > 1s Loop)"]
+    subgraph Non_RT_RIC["Non-RT RIC (SMO / Loop Lento: acima de 1s)"]
         LLM_Intent["Intent-Driven Engine (LLM / NLP)"]
         rApp_Fed["rApp Global Policy & FedMARL Aggregator"]
         A1_Interface["Interface A1-P / A1-EI"]
     end
 
-    subgraph Near_RT_RIC["Near-RT RIC (xApp AI-RDL: 10ms - 1s Loop)"]
+    subgraph Near_RT_RIC["Near-RT RIC (xApp AI-RDL: Loop Medio 10ms-1s)"]
         GNN_Engine["Spatio-Temporal GNN Perception"]
         Safe_MARL["Safe-HAPPO / Constrained MARL Engine"]
         Neuro_Sym["Neuro-Symbolic Guardrails (SMT Verifier)"]
@@ -25,23 +25,24 @@ flowchart TB
         ZeroCopy_SDL["Zero-Copy Shared Memory SDL (DPDK)"]
     end
 
-    subgraph RealTime_Domain["O-DU / O-RU (< 1ms / dApp Loop)"]
-        dApp_Fast["dApp Ultra-Fast Action Shaper (L1/L2 MAC-PHY)"]
+    subgraph RealTime_Domain["O-DU / O-RU (Loop Rapido: sub-1ms)"]
+        dApp_Fast["dApp Action Shaper (L1-L2 MAC-PHY)"]
         E2_Nodes["E2 Nodes (CU-CP, CU-UP, DU)"]
     end
 
-    LLM_Intent -->|Dynamic Weights & Intent Policies| A1_Interface
-    rApp_Fed -->|Federated Model Weights| A1_Interface
-    A1_Interface -->|A1-Policy / A1-EI| GNN_Engine
-    A1_Interface -->|A1-P Enriched Objectives| Safe_MARL
+    LLM_Intent -->|"Dynamic Weights e Intent Policies"| A1_Interface
+    rApp_Fed -->|"Federated Model Weights"| A1_Interface
+    A1_Interface -->|"A1-Policy e A1-EI"| GNN_Engine
+    A1_Interface -->|"A1-P Enriched Objectives"| Safe_MARL
 
-    E2_Nodes -->|E2SM-KPM v3 (Zero-Copy)| GNN_Engine
+    E2_Nodes -->|"E2SM-KPM v3 (Zero-Copy)"| GNN_Engine
     GNN_Engine --> Safe_MARL
     Safe_MARL --> Neuro_Sym
     Neuro_Sym --> XAI_Auditor
-    XAI_Auditor -->|E2SM-RC v1.03 / Shared Memory| dApp_Fast
+    XAI_Auditor -->|"E2SM-RC v1.03 (Shared Memory)"| dApp_Fast
     dApp_Fast --> E2_Nodes
-    ZeroCopy_SDL <--> Near_RT_RIC
+    ZeroCopy_SDL -.->|"Shared Fast State"| Safe_MARL
+    ZeroCopy_SDL -.->|"Shared Fast State"| GNN_Engine
 ```
 
 ---
@@ -145,20 +146,20 @@ A topologia de rede é estruturada como um grafo direcionado $\mathcal{G}_t = (\
 
 ```mermaid
 gantt
-    title Roadmap de Execução: xApp RDL Fase 3 (AI-RDL / 6G)
+    title Roadmap de Execucao: xApp RDL Fase 3 (AI-RDL / 6G)
     dateFormat  YYYY-MM-DD
-    section Sprint 1-2: Core & Desempenho
-    Motor de Inferência C++20 / ONNX TensorRT (<1ms)     :a1, 2026-10-01, 30d
-    Decodificadores ASN.1 E2AP/E2SM v3.0 Nativos        :a2, 2026-10-15, 30d
-    section Sprint 3-4: Safe RL & GNN
-    Constrained MARL (CMDP com Multiplicadores Lagrange) :b1, 2026-11-15, 35d
-    Percepção Grafos Espaço-Temporais (GNN-MARL)        :b2, 2026-12-01, 35d
-    section Sprint 5-6: A1 & Intent Engine
-    Integração A1-Policy e A1-EI (Non-RT RIC rApp)       :c1, 2027-01-05, 30d
-    Motor de Intenção em Linguagem Natural (LLM-to-Policy):c2, 2027-01-20, 30d
-    section Sprint 7-8: XAI, Segurança & 6G
-    Módulo de Explicabilidade XAI (SHAP / Attention Maps) :d1, 2027-02-20, 30d
-    Casos de Uso 6G: ISAC, RIS e Redes NTN no ns-3      :d2, 2027-03-10, 40d
+    section Sprint 1-2: Core e Desempenho
+    Motor de Inferencia C++20 e ONNX TensorRT     :a1, 2026-10-01, 30d
+    Decodificadores ASN.1 E2AP e E2SM v3.0 Nativos :a2, 2026-10-15, 30d
+    section Sprint 3-4: Safe RL e GNN
+    Constrained MARL com Multiplicadores Lagrange :b1, 2026-11-15, 35d
+    Percepcao Grafos Espaco-Temporais GNN-MARL   :b2, 2026-12-01, 35d
+    section Sprint 5-6: A1 e Intent Engine
+    Integracao A1-Policy e A1-EI no Non-RT RIC   :c1, 2027-01-05, 30d
+    Motor de Intencao em Linguagem Natural LLM   :c2, 2027-01-20, 30d
+    section Sprint 7-8: XAI Seguranca e 6G
+    Modulo de Explicabilidade XAI SHAP Attention :d1, 2027-02-20, 30d
+    Casos de Uso 6G ISAC RIS e Redes NTN no ns-3 :d2, 2027-03-10, 40d
 ```
 
 ---

@@ -265,13 +265,13 @@ A **xApp RDL Fase 3 (Cognitive AI-RDL)** representa o salto para a governança a
 
 ```mermaid
 flowchart TB
-    subgraph Non_RT_RIC["Non-RT RIC (SMO / Cloud > 1s Loop)"]
+    subgraph Non_RT_RIC["Non-RT RIC (SMO / Loop Lento: acima de 1s)"]
         LLM_Intent["Intent-Driven Engine (LLM / NLP)"]
         rApp_Fed["rApp Global Policy & FedMARL Aggregator"]
         A1_Interface["Interface A1-P / A1-EI"]
     end
 
-    subgraph Near_RT_RIC["Near-RT RIC (xApp AI-RDL: 10ms - 1s Loop)"]
+    subgraph Near_RT_RIC["Near-RT RIC (xApp AI-RDL: Loop Medio 10ms-1s)"]
         GNN_Engine["Spatio-Temporal GNN Perception"]
         Safe_MARL["Safe-HAPPO / Constrained MARL Engine"]
         Neuro_Sym["Neuro-Symbolic Guardrails (SMT Verifier)"]
@@ -279,23 +279,24 @@ flowchart TB
         ZeroCopy_SDL["Zero-Copy Shared Memory SDL (DPDK)"]
     end
 
-    subgraph RealTime_Domain["O-DU / O-RU (< 1ms / dApp Loop)"]
-        dApp_Fast["dApp Ultra-Fast Action Shaper (L1/L2 MAC-PHY)"]
+    subgraph RealTime_Domain["O-DU / O-RU (Loop Rapido: sub-1ms)"]
+        dApp_Fast["dApp Action Shaper (L1-L2 MAC-PHY)"]
         E2_Nodes["E2 Nodes (CU-CP, CU-UP, DU)"]
     end
 
-    LLM_Intent -->|Dynamic Weights & Intent Policies| A1_Interface
-    rApp_Fed -->|Federated Model Weights| A1_Interface
-    A1_Interface -->|A1-Policy / A1-EI| GNN_Engine
-    A1_Interface -->|A1-P Enriched Objectives| Safe_MARL
+    LLM_Intent -->|"Dynamic Weights e Intent Policies"| A1_Interface
+    rApp_Fed -->|"Federated Model Weights"| A1_Interface
+    A1_Interface -->|"A1-Policy e A1-EI"| GNN_Engine
+    A1_Interface -->|"A1-P Enriched Objectives"| Safe_MARL
 
-    E2_Nodes -->|E2SM-KPM v3 (Zero-Copy)| GNN_Engine
+    E2_Nodes -->|"E2SM-KPM v3 (Zero-Copy)"| GNN_Engine
     GNN_Engine --> Safe_MARL
     Safe_MARL --> Neuro_Sym
     Neuro_Sym --> XAI_Auditor
-    XAI_Auditor -->|E2SM-RC v1.03 / Shared Memory| dApp_Fast
+    XAI_Auditor -->|"E2SM-RC v1.03 (Shared Memory)"| dApp_Fast
     dApp_Fast --> E2_Nodes
-    ZeroCopy_SDL <--> Near_RT_RIC
+    ZeroCopy_SDL -.->|"Shared Fast State"| Safe_MARL
+    ZeroCopy_SDL -.->|"Shared Fast State"| GNN_Engine
 ```
 
 ### 7.1. Principais Pilares de Aprimoramento da Fase 3
