@@ -1,0 +1,15 @@
+# Auto detect text files and perform LF normalization
+* text eol=lf
+Makefile text eol=lf
+*.sh text eol=lf
+*.cc text eol=lf
+*.h text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary
