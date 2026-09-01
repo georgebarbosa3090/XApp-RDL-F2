@@ -146,21 +146,35 @@ A topologia de rede é estruturada como um grafo direcionado $\mathcal{G}_t = (\
 
 ```mermaid
 gantt
-    title Roadmap de Execucao: xApp RDL Fase 3 (AI-RDL / 6G)
-    dateFormat  YYYY-MM-DD
-    section Sprint 1-2: Core e Desempenho
-    Motor de Inferencia C++20 e ONNX TensorRT     :a1, 2026-10-01, 30d
-    Decodificadores ASN.1 E2AP e E2SM v3.0 Nativos :a2, 2026-10-15, 30d
-    section Sprint 3-4: Safe RL e GNN
-    Constrained MARL com Multiplicadores Lagrange :b1, 2026-11-15, 35d
-    Percepcao Grafos Espaco-Temporais GNN-MARL   :b2, 2026-12-01, 35d
-    section Sprint 5-6: A1 e Intent Engine
-    Integracao A1-Policy e A1-EI no Non-RT RIC   :c1, 2027-01-05, 30d
-    Motor de Intencao em Linguagem Natural LLM   :c2, 2027-01-20, 30d
-    section Sprint 7-8: XAI Seguranca e 6G
-    Modulo de Explicabilidade XAI SHAP Attention :d1, 2027-02-20, 30d
-    Casos de Uso 6G ISAC RIS e Redes NTN no ns-3 :d2, 2027-03-10, 40d
+    title Roadmap de Execucao xApp RDL Fase 3 (AI-RDL 6G)
+    dateFormat YYYY-MM-DD
+    axisFormat %b %Y
+
+    section Sprints 1 e 2 Core e Performance
+    Motor de Inferencia Cpp e ONNX TensorRT       :t1, 2026-10-01, 30d
+    Decodificadores ASN1 E2AP e E2SM v3 Nativos   :t2, 2026-10-15, 30d
+
+    section Sprints 3 e 4 Safe RL e GNN
+    Constrained MARL com Multiplicadores Lagrange :t3, 2026-11-15, 35d
+    Percepcao em Grafos Espaco-Temporais GNN      :t4, 2026-12-01, 35d
+
+    section Sprints 5 e 6 A1 e Intent Engine
+    Integracao A1-Policy e A1-EI no Non-RT RIC   :t5, 2027-01-05, 30d
+    Motor de Intencao em Linguagem Natural LLM    :t6, 2027-01-20, 30d
+
+    section Sprints 7 e 8 XAI e Casos 6G
+    Modulo de Explicabilidade XAI SHAP Attention  :t7, 2027-02-20, 30d
+    Casos de Uso 6G ISAC RIS e Redes NTN no ns-3 :t8, 2027-03-10, 40d
 ```
+
+### Tabela Detalhada de Entregáveis por Sprint
+
+| Fase / Sprint | Período Estimado | Entregáveis Técnicos | Critério de Sucesso |
+| :--- | :---: | :--- | :--- |
+| **Sprints 1 e 2**<br/>*Core & Performance* | Out/2026 – Nov/2026 | • Motor C++20 compilado com ONNX Runtime / TensorRT<br/>• Decodificadores nativos ASN.1 APER para E2AP v3.0 e E2SM-KPM/RC v3.0<br/>• Pool de memória compartilhada Zero-Copy DPDK | Latência de inferência **< 1.0 ms** com consumo de memória estável |
+| **Sprints 3 e 4**<br/>*Safe RL & GNN* | Nov/2026 – Jan/2027 | • Formulação Constrained MARL (CMDP) primal-dual<br/>• Módulo de percepção topológica via GNN Espaço-Temporal<br/>• Validação em topologia com 100+ células no ns-3 | **0% de violação de SLA** sob variações estocásticas severas |
+| **Sprints 5 e 6**<br/>*A1 & Intent Engine* | Jan/2027 – Fev/2027 | • Interface REST/gRPC A1-Policy e A1-EI com Non-RT RIC<br/>• Tradutor de linguagem natural LLM-to-Policy (JSON Schema)<br/>• Escudo neuro-simbólico com SMT Solver (Z3) | Tradução de intenção em tensores de pesos em tempo real |
+| **Sprints 7 e 8**<br/>*XAI, Zero-Trust & 6G* | Fev/2027 – Abr/2027 | • Auditor de decisões XAI (FastSHAP e Attention Maps)<br/>• Módulo de detecção e isolamento de Rogue xApps<br/>• Co-simulação de casos 6G (ISAC, RIS e NTN satelital) | Trilha auditável completa de todas as decisões E2-Control |
 
 ---
 
