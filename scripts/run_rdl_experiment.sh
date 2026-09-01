@@ -7,9 +7,17 @@
 set -e
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-EXP_DIR="${1:-${EXP_DIR:-$BASE_DIR/experiments/results}}"
+TODAY=$(date '+%Y-%m-%d')
+RUN_ID="run_$(date '+%H%M%S')"
+EXP_DIR="${1:-${EXP_DIR:-$BASE_DIR/experiments/results/$TODAY/$RUN_ID}}"
 NS3_DIR="${NS3_DIR:-$HOME/ns3-oran-workspace/ns-3-oran}"
 SCENARIO="${2:-all}"  # "1", "2", ou "all"
+
+# Copiar traces de baseline anteriores para este diretório isolado se não existirem
+if [ ! -d "$EXP_DIR/baseline" ] && [ -d "$BASE_DIR/experiments/results/baseline" ]; then
+    mkdir -p "$EXP_DIR/baseline"
+    cp -r "$BASE_DIR/experiments/results/baseline/"* "$EXP_DIR/baseline/" 2>/dev/null || true
+fi
 
 if command -v g++-11 >/dev/null 2>&1; then
     export CC=gcc-11
@@ -118,9 +126,17 @@ fi
 $PYTHON_CMD "$BASE_DIR/scripts/run_and_analyze_benchmarks.py" --output-dir "$EXP_DIR" 2>/dev/null || true
 $PYTHON_CMD "$BASE_DIR/scripts/evaluate_and_improve_algorithms.py" --input-dir "$EXP_DIR" --output-dir "$EXP_DIR" 2>/dev/null || true
 
+# Espelhamento para experiments/results/ e experiments/results/latest/
+if [ -d "$EXP_DIR" ] && [ "$EXP_DIR" != "$BASE_DIR/experiments/results" ]; then
+    mkdir -p "$BASE_DIR/experiments/results/latest"
+    cp -r "$EXP_DIR"/* "$BASE_DIR/experiments/results/" 2>/dev/null || true
+    cp -r "$EXP_DIR"/* "$BASE_DIR/experiments/results/latest/" 2>/dev/null || true
+fi
+
 echo ""
 echo "========================================================================"
 echo "[OK] Experimento com xApp RDL Fase 2 (CA-RDL / MARL) concluido!"
+echo "Resultados em:         $EXP_DIR"
 echo "Relatorio Comparativo: $EXP_DIR/relatorio_comparativo.md"
 echo "Relatorio Detalhado:   $EXP_DIR/relatorio_comparativo_detalhado.md"
 echo "Dataset Fluxos CSV:    $EXP_DIR/dataset_flow_metrics.csv"

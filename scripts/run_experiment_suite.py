@@ -35,8 +35,8 @@ def archive_historical_data_if_needed():
             if os.path.exists(src) and not os.path.exists(dst):
                 shutil.copy2(src, dst)
         
-        # Preserva traces de baseline e rdl_phase1 se existirem
-        for sub in ["baseline", "rdl_phase1"]:
+        # Preserva traces de baseline, rdl_phase1 e rdl_phase2 se existirem
+        for sub in ["baseline", "rdl_phase1", "rdl_phase2"]:
             src_sub = os.path.join(EXPERIMENTS_DIR, sub)
             dst_sub = os.path.join(aug27_dir, sub)
             if os.path.exists(src_sub) and not os.path.exists(dst_sub):
@@ -76,7 +76,7 @@ def run_suite(push_git=True, custom_date=None):
     os.makedirs(latest_dir, exist_ok=True)
 
     print("========================================================================")
-    print(f" Execução da Suíte de Experimentos xApp RDL - Fase 1")
+    print(f" Execução da Suíte de Experimentos xApp RDL - Fase 2 (CA-RDL / MARL)")
     print(f" Data: {date_formatted_pt} ({date_str}) | Execução: {run_id}")
     print(f" Destino: {run_dir}")
     print("========================================================================")
@@ -85,7 +85,7 @@ def run_suite(push_git=True, custom_date=None):
     archive_historical_data_if_needed()
 
     # 2. Copiar traces brutos existentes de baseline / rdl se existirem
-    for sub in ["baseline", "rdl_phase1"]:
+    for sub in ["baseline", "rdl_phase1", "rdl_phase2"]:
         src_sub = os.path.join(EXPERIMENTS_DIR, sub)
         dst_sub = os.path.join(run_dir, sub)
         if os.path.exists(src_sub):

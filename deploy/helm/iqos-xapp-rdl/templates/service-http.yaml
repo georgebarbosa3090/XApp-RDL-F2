@@ -5,14 +5,14 @@ metadata:
   labels:
     {{- include "iqos-xapp-rdl.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.http.type }}
+  type: {{ if and .Values.service .Values.service.http }}{{ .Values.service.http.type | default "ClusterIP" }}{{ else }}ClusterIP{{ end }}
   ports:
-    - port: {{ .Values.service.http.port }}
-      targetPort: {{ .Values.service.http.targetPort }}
+    - port: {{ if and .Values.service .Values.service.http }}{{ .Values.service.http.port | default 8080 }}{{ else }}8080{{ end }}
+      targetPort: {{ if and .Values.service .Values.service.http }}{{ .Values.service.http.targetPort | default 8080 }}{{ else }}8080{{ end }}
       protocol: TCP
       name: http-health
-    - port: {{ .Values.service.metrics.port }}
-      targetPort: {{ .Values.service.metrics.targetPort }}
+    - port: {{ if and .Values.service .Values.service.metrics }}{{ .Values.service.metrics.port | default 8081 }}{{ else if and .Values.service .Values.service.http .Values.service.http.metricsPort }}{{ .Values.service.http.metricsPort }}{{ else }}8081{{ end }}
+      targetPort: {{ if and .Values.service .Values.service.metrics }}{{ .Values.service.metrics.targetPort | default 8081 }}{{ else if and .Values.service .Values.service.http .Values.service.http.metricsPort }}{{ .Values.service.http.metricsPort }}{{ else }}8081{{ end }}
       protocol: TCP
       name: http-metrics
   selector:

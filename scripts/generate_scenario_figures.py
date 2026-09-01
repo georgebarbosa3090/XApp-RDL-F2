@@ -7,14 +7,18 @@ Baseado ESTRITAMENTE nos parâmetros e arquivos C++ reais do ns-3 e nos datasets
 import os
 import json
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-
-# Configurações globais de estilo (IEEE Style)
-plt.rcParams['font.sans-serif'] = 'DejaVu Sans'
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['figure.autolayout'] = True
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+    HAVE_PLT = True
+    # Configurações globais de estilo (IEEE Style)
+    plt.rcParams['font.sans-serif'] = 'DejaVu Sans'
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['figure.autolayout'] = True
+except ImportError:
+    HAVE_PLT = False
 
 P1_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 P2_DIR = os.path.abspath(os.path.join(P1_DIR, "..", "iqos-xapp-rdl-phase2"))
@@ -255,6 +259,9 @@ def generate_figure_real_metrics():
     plt.close(fig)
 
 def main():
+    if not HAVE_PLT:
+        print("[AVISO] matplotlib nao disponivel no ambiente local para geracao de figuras.")
+        return
     print("Iniciando geracao de figuras estritas e factuais dos cenarios de simulacao...")
     ensure_dirs()
     generate_figure_topology()

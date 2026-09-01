@@ -7,7 +7,9 @@
 set -e
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-EXP_DIR="${1:-${EXP_DIR:-$BASE_DIR/experiments/results}}"
+TODAY=$(date '+%Y-%m-%d')
+RUN_ID="run_$(date '+%H%M%S')"
+EXP_DIR="${1:-${EXP_DIR:-$BASE_DIR/experiments/results/$TODAY/$RUN_ID}}"
 NS3_DIR="${NS3_DIR:-$HOME/ns3-oran-workspace/ns-3-oran}"
 SCENARIO="${2:-all}"  # "1", "2", ou "all"
 
@@ -81,6 +83,12 @@ else
     echo ""
     echo "[AVISO] Diretorio ns-3 nao encontrado em $NS3_DIR."
     echo "[AVISO] Gerando traces calibrados do Baseline (5G-LENA 3.5 GHz n78)."
+fi
+
+if [ -d "$EXP_DIR/baseline" ] && [ "$EXP_DIR" != "$BASE_DIR/experiments/results" ]; then
+    mkdir -p "$BASE_DIR/experiments/results/baseline" "$BASE_DIR/experiments/results/latest/baseline"
+    cp -r "$EXP_DIR/baseline/"* "$BASE_DIR/experiments/results/baseline/" 2>/dev/null || true
+    cp -r "$EXP_DIR/baseline/"* "$BASE_DIR/experiments/results/latest/baseline/" 2>/dev/null || true
 fi
 
 echo ""

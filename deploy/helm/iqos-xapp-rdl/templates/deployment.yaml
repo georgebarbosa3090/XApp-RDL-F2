@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "iqos-xapp-rdl.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount | default 1 }}
   selector:
     matchLabels:
       {{- include "iqos-xapp-rdl.selectorLabels" . | nindent 6 }}
@@ -26,30 +26,44 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "Never" }}
           env:
             - name: USE_FAKE_SDL
-              value: {{ .Values.env.useFakeSdl | quote }}
+              value: {{ if and .Values.env .Values.env.useFakeSdl }}{{ .Values.env.useFakeSdl | quote }}{{ else }}"false"{{ end }}
             - name: RMR_SEED_RT
-              value: {{ .Values.env.rmrSeedRt | quote }}
+              value: {{ if and .Values.env .Values.env.rmrSeedRt }}{{ .Values.env.rmrSeedRt | quote }}{{ else }}"/app/configs/routes.rt"{{ end }}
             - name: CONFIG_FILE
-              value: {{ .Values.env.configFile | quote }}
+              value: {{ if and .Values.env .Values.env.configFile }}{{ .Values.env.configFile | quote }}{{ else }}"/app/configs/config-file.json"{{ end }}
             - name: RMR_WAIT_FOR_READY
-              value: {{ .Values.env.rmrWaitForReady | quote }}
+              value: {{ if and .Values.env .Values.env.rmrWaitForReady }}{{ .Values.env.rmrWaitForReady | quote }}{{ else }}"false"{{ end }}
             - name: LOG_LEVEL
-              value: {{ .Values.env.logLevel | quote }}
+              value: {{ if and .Values.env .Values.env.logLevel }}{{ .Values.env.logLevel | quote }}{{ else }}"INFO"{{ end }}
+            - name: ENABLE_TORCH
+              value: {{ if and .Values.env .Values.env.enableTorch }}{{ .Values.env.enableTorch | quote }}{{ else }}"true"{{ end }}
+            - name: MARL_AGENTS
+              value: {{ if and .Values.env .Values.env.marlAgents }}{{ .Values.env.marlAgents | quote }}{{ else }}"2"{{ end }}
+            - name: MARL_OBS_DIM
+              value: {{ if and .Values.env .Values.env.marlObsDim }}{{ .Values.env.marlObsDim | quote }}{{ else }}"10"{{ end }}
+            - name: MARL_ACTION_DIM
+              value: {{ if and .Values.env .Values.env.marlActionDim }}{{ .Values.env.marlActionDim | quote }}{{ else }}"5"{{ end }}
+            - name: W_QOS
+              value: {{ if and .Values.env .Values.env.wQos }}{{ .Values.env.wQos | quote }}{{ else }}"0.6"{{ end }}
+            - name: W_EE
+              value: {{ if and .Values.env .Values.env.wEe }}{{ .Values.env.wEe | quote }}{{ else }}"0.3"{{ end }}
+            - name: W_PEN
+              value: {{ if and .Values.env .Values.env.wPen }}{{ .Values.env.wPen | quote }}{{ else }}"0.1"{{ end }}
           ports:
             - name: rmr-data
-              containerPort: {{ .Values.service.rmr.dataPort }}
+              containerPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.dataPort | default 4560 }}{{ else }}4560{{ end }}
               protocol: TCP
             - name: rmr-route
-              containerPort: {{ .Values.service.rmr.routePort }}
+              containerPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.routePort | default 4561 }}{{ else }}4561{{ end }}
               protocol: TCP
             - name: http-health
-              containerPort: {{ .Values.service.http.port }}
+              containerPort: {{ if and .Values.service .Values.service.http }}{{ .Values.service.http.port | default 8080 }}{{ else }}8080{{ end }}
               protocol: TCP
             - name: http-metrics
-              containerPort: {{ .Values.service.metrics.port }}
+              containerPort: {{ if and .Values.service .Values.service.metrics }}{{ .Values.service.metrics.port | default 8081 }}{{ else if and .Values.service .Values.service.http .Values.service.http.metricsPort }}{{ .Values.service.http.metricsPort }}{{ else }}8081{{ end }}
               protocol: TCP
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}

@@ -6,11 +6,21 @@ image:
 
 replicaCount: 1
 
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8081"
+  prometheus.io/path: "/metrics"
+
 service:
   http:
+    type: ClusterIP
     port: 8080
-    metricsPort: 8081
+    targetPort: 8080
+  metrics:
+    port: 8081
+    targetPort: 8081
   rmr:
+    type: ClusterIP
     dataPort: 4560
     routePort: 4561
 
@@ -23,8 +33,11 @@ resources:
     memory: 256Mi
 
 env:
-  useFakeSdl: "true"
+  useFakeSdl: "false"
+  rmrSeedRt: "/app/configs/routes.rt"
+  configFile: "/app/configs/config-file.json"
   rmrWaitForReady: "false"
+  logLevel: "INFO"
   enableTorch: "true"
   marlAgents: "2"
   marlObsDim: "10"

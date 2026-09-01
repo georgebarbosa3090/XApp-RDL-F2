@@ -5,14 +5,14 @@ metadata:
   labels:
     {{- include "iqos-xapp-rdl.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.rmr.type }}
+  type: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.type | default "ClusterIP" }}{{ else }}ClusterIP{{ end }}
   ports:
-    - port: {{ .Values.service.rmr.dataPort }}
-      targetPort: {{ .Values.service.rmr.dataPort }}
+    - port: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.dataPort | default 4560 }}{{ else }}4560{{ end }}
+      targetPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.dataPort | default 4560 }}{{ else }}4560{{ end }}
       protocol: TCP
       name: rmr-data
-    - port: {{ .Values.service.rmr.routePort }}
-      targetPort: {{ .Values.service.rmr.routePort }}
+    - port: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.routePort | default 4561 }}{{ else }}4561{{ end }}
+      targetPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.routePort | default 4561 }}{{ else }}4561{{ end }}
       protocol: TCP
       name: rmr-route
   selector:
