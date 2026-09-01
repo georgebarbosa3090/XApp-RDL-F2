@@ -11,11 +11,11 @@
 
 ### Navegação Multi-Fases do Projeto RDL (Resource and Decision Layer)
 
-| Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
+| Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial / Especificação |
 | :---: | :--- | :---: | :---: |
 | **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote (200ms), heurísticas TVS/EEVS e Safety Guards físicos.* | **Concluída e Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
 | **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Aprendizado por Reforço Multiagente (MARL / MAPPO) e cognição contextual.* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
-| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch)**<br/>*Inteligência distribuída, orquestração por intenção (Intent-Driven) e O-Cloud 6G.* | **Roadmap / Planejada** | *Em especificação futura* |
+| **Fase 3** | **RDL Cognitiva, Orientada a Intenção e 6G (AI-RDL)**<br/>*Governança Cross-Tier (rApp-xApp-dApp), Safe RL (CMDP), GNN e IBN (LLM).* | **Especificação Completa** | [Volume 08: Especificação Fase 3](docs/08_proposta_arquitetural_rdl_fase3.md) |
 
 ---
 
@@ -245,7 +245,7 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 ---
 
 ## 6. Estrutura Documental da Fase 2
-
+ 
 | Volume Documental | Título do Documento | Descrição e Escopo |
 | :--- | :--- | :--- |
 | **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, formulação MAPPO/Actor-Critic e modelagem de utilidade. |
@@ -255,10 +255,88 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 | **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, `NrPointToPointEpcHelper` e datasets dos 2 cenários. |
 | **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus, Kiali Dashboard e injeção de tráfego. |
 | **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos e conformidade O-RAN Alliance. |
+| **[Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md)** | Proposta Arquitetural e Requisitos da Fase 3 | Governança Cross-Tier 6G, Safe RL (CMDPs), Spatio-Temporal GNN e IBN. |
 
 ---
 
-## 7. Repositórios Oficiais
+## 7. Proposta e Roadmap da Fase 3: Cognitive, Intent-Driven & Cross-Tier RDL (AI-RDL / 6G)
+
+A **xApp RDL Fase 3 (Cognitive AI-RDL)** representa o salto para a governança autônoma inteligente em redes **5G-Advanced (3GPP Rel. 18/19) e 6G**, expandindo a atuação do Near-RT RIC para uma coordenação integrada tri-camada:
+
+```mermaid
+flowchart TB
+    subgraph Non_RT_RIC["Non-RT RIC (SMO / Cloud > 1s Loop)"]
+        LLM_Intent["Intent-Driven Engine (LLM / NLP)"]
+        rApp_Fed["rApp Global Policy & FedMARL Aggregator"]
+        A1_Interface["Interface A1-P / A1-EI"]
+    end
+
+    subgraph Near_RT_RIC["Near-RT RIC (xApp AI-RDL: 10ms - 1s Loop)"]
+        GNN_Engine["Spatio-Temporal GNN Perception"]
+        Safe_MARL["Safe-HAPPO / Constrained MARL Engine"]
+        Neuro_Sym["Neuro-Symbolic Guardrails (SMT Verifier)"]
+        XAI_Auditor["XAI & Decision Auditor (SHAP / Attention)"]
+        ZeroCopy_SDL["Zero-Copy Shared Memory SDL (DPDK)"]
+    end
+
+    subgraph RealTime_Domain["O-DU / O-RU (< 1ms / dApp Loop)"]
+        dApp_Fast["dApp Ultra-Fast Action Shaper (L1/L2 MAC-PHY)"]
+        E2_Nodes["E2 Nodes (CU-CP, CU-UP, DU)"]
+    end
+
+    LLM_Intent -->|Dynamic Weights & Intent Policies| A1_Interface
+    rApp_Fed -->|Federated Model Weights| A1_Interface
+    A1_Interface -->|A1-Policy / A1-EI| GNN_Engine
+    A1_Interface -->|A1-P Enriched Objectives| Safe_MARL
+
+    E2_Nodes -->|E2SM-KPM v3 (Zero-Copy)| GNN_Engine
+    GNN_Engine --> Safe_MARL
+    Safe_MARL --> Neuro_Sym
+    Neuro_Sym --> XAI_Auditor
+    XAI_Auditor -->|E2SM-RC v1.03 / Shared Memory| dApp_Fast
+    dApp_Fast --> E2_Nodes
+    ZeroCopy_SDL <--> Near_RT_RIC
+```
+
+### 7.1. Principais Pilares de Aprimoramento da Fase 3
+
+1. **Governança Hierárquica Cross-Tier (rApp ⇄ xApp ⇄ dApp):**
+   - **Loop Lento (>1s / Non-RT RIC):** rApps de decomposição de intenções e orquestração de longo prazo.
+   - **Loop Médio (10ms–1s / Near-RT RIC):** xApp RDL executando arbitragem de conflitos em tempo real.
+   - **Loop Rápido (<1ms / O-DU):** *dApps* de camada MAC/PHY executando moldagem ultra-rápida de feixes e modulação de potência.
+   - Suporte completo às interfaces **A1-Policy (A1-P)** e **A1-Enrichment Information (A1-EI)** padronizadas pelo O-RAN WG2.
+
+2. **Safe Reinforcement Learning (Constrained MDPs com Multiplicadores de Lagrange):**
+   - Substituição de penalidades heurísticas por garantias matemáticas estritas:
+     $$\max_\pi \mathbb{E}[R(\tau)] \quad \text{sujeito a} \quad \mathbb{P}(\text{QoS Latência} > T_{\max}) \le \epsilon$$
+   - Zero violação de SLA mesmo sob condições severas de interferência ou oscilações de canal.
+
+3. **Spatio-Temporal Graph Neural Networks (GNN-MARL):**
+   - Modelagem de topologia celular em grafos dinâmicos $\mathcal{G}_t = (\mathcal{V}_t, \mathcal{E}_t)$, capturando interferências co-canal e fluxos de mobilidade entre centenas de células e feixes sem explosão combinatória.
+
+4. **Redes Orientadas por Intenção (IBN) & IA Neuro-Simbólica:**
+   - **Motor LLM-to-Policy:** Conversão automática de metas de negócio em linguagem natural para vetores tensores de modulação de recompensa $\mathbf{w}(t)$.
+   - **Escudo Neuro-Simbólico:** Verificação formal em tempo de execução via SMT Solvers (*Z3*) para garantir axiomas de estabilidade física.
+
+5. **Inferência Sub-Milissegundo (<1ms) em C++20 / ONNX TensorRT:**
+   - Modelos exportados para execução nativa em C++20 acelerados por GPU/AVX-512 (*NVIDIA TensorRT* / *OpenVINO*), reduzindo a latência de inferência para **< 800 µs**.
+   - Comunicação inter-xApp via memória compartilhada (*DPDK / HugePages / Lockless Ring Buffers*), eliminando o overhead de serialização.
+
+6. **Explainable AI (XAI) e Proteção Zero-Trust:**
+   - Geração de vetores explicativos auditáveis (*FastSHAP* / *Attention Attribution Maps*) para cada decisão de arbitragem.
+   - Detecção e isolamento automático de *Rogue xApps* (xApps descalibradas ou maliciosas).
+
+7. **Cenários 5G-Advanced & 6G (3GPP Release 18/19):**
+   - **ISAC (Integrated Sensing and Communication):** Otimização conjunta de sensoriamento de radar e dados.
+   - **RIS (Reconfigurable Intelligent Surfaces):** Controle de superfícies reflexivas para contorno dinâmico de obstáculos.
+   - **NTN (Non-Terrestrial Networks):** Coordenação preditiva com constelações satelitais LEO.
+
+> [!NOTE]
+> Para a especificação técnica completa, formulações matemáticas detalhadas e cronograma de sprints da Fase 3, consulte o documento dedicado: **[Volume 08: Proposta Arquitetural e Requisitos da Fase 3](docs/08_proposta_arquitetural_rdl_fase3.md)**.
+
+---
+
+## 8. Repositórios Oficiais
 
 * **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
 * **Fase 2 (CA-RDL / MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)
