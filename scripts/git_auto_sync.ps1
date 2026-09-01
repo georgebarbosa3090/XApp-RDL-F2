@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    Script de Monitoramento e Auto-Sync para GitHub (PowerShell)
-    Projeto: xApp RDL - Fase 1
+    Script de Atualizacao Automatica Continua (Watcher / Auto-Sync) para PowerShell
+    Projeto: xApp RDL - Fase 2: Context-Aware RDL (CA-RDL / MARL)
 #>
 
 param(

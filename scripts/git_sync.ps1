@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Script de Sincronizacao Rapida e Segura com o GitHub (PowerShell)
-    Projeto: xApp RDL - Fase 1
+    Projeto: xApp RDL - Fase 2: Context-Aware RDL (CA-RDL / MARL)
 #>
 
 param(

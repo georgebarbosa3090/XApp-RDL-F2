@@ -1,9 +1,9 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
  * =========================================================================================
- * Projeto: xApp RDL (Resource and Decision Layer) - Fase 1 (H-RDL Deterministica)
+ * Projeto: xApp RDL (Resource and Decision Layer) - Fase 2: Context-Aware RDL (CA-RDL / MARL)
  * Arquivo: scenario_rdl_energy_vs_qos.cc
- * Descricao: Cenario de Simulacao 5G-LENA + ns-O-RAN / NORI
+ * Descricao: Cenario 1 de Simulacao 5G-LENA + ns-O-RAN / NORI
  *            Avaliacao de Arbitragem EEVS (Eficiencia Energetica vs Garantia de SLA URLLC)
  * Topologia: 1 Macro gNB (Banda Alta) + 1 Micro gNB (Economia de Energia), 20 UEs com Carga Dinamica
  * =========================================================================================
@@ -56,16 +56,22 @@ int main (int argc, char *argv[])
     double bandwidth = 50e6;                 // Largura de banda do canal: 50 MHz
     std::string ricIp = "172.18.0.4";        // Endereco IP do Near-RT RIC (E2Term) na rede Docker/K8s
     uint16_t ricPort = 36422;                // Porta SCTP padrao da interface O-RAN E2 (E2AP)
+    bool enableE2Agent = true;               // Flag de controle para ativacao da comunicacao com o Near-RT RIC
 
     // Configuracao do parser de linha de comando para sobrescrita dinamica dos parametros
     CommandLine cmd (__FILE__);
+    cmd.AddValue ("gNbNum", "Quantidade total de estacoes radiobase", gNbNum);
+    cmd.AddValue ("ueNum", "Quantidade total de terminais de usuario (UEs)", ueNum);
     cmd.AddValue ("simTime", "Tempo total de simulacao em segundos", simTime);
+    cmd.AddValue ("centralFreq", "Frequencia central de operacao em Hz", centralFreq);
+    cmd.AddValue ("bandwidth", "Largura de banda do canal em Hz", bandwidth);
     cmd.AddValue ("ricIp", "Endereco IP do Near-RT RIC E2Term", ricIp);
     cmd.AddValue ("ricPort", "Porta SCTP do servico E2Term", ricPort);
+    cmd.AddValue ("enableE2", "Ativar comunicacao O-RAN E2 com o RIC", enableE2Agent);
     cmd.Parse (argc, argv); // Processamento dos argumentos passados via terminal
 
     // Log de inicializacao do cenario com informacoes de topologia
-    NS_LOG_INFO ("Iniciando Cenario RDL Fase 1 - EEVS (Energy Saving vs SLA URLLC)...");
+    NS_LOG_INFO ("Iniciando Cenario RDL Fase 2 (CA-RDL / MARL) - EEVS (Energy Saving vs SLA URLLC)...");
 
 #if HAS_NR_MODULE
     // =========================================================================
@@ -139,11 +145,14 @@ int main (int argc, char *argv[])
     // 6. Integracao do Agente O-RAN E2 (ns-O-RAN / NORI)
     // =========================================================================
 #if HAS_ORAN_MODULE
-    Ptr<E2AgentHelper> e2AgentHelper = CreateObject<E2AgentHelper> ();       // Instancia o helper do agente E2AP
-    e2AgentHelper->SetAttribute ("RicIpAddress", Ipv4AddressValue (ricIp.c_str ())); // Configura o IP de destino do Near-RT RIC
-    e2AgentHelper->SetAttribute ("RicPort", UintegerValue (ricPort));                 // Configura a porta SCTP de comunicacao E2
-    e2AgentHelper->SetAttribute ("KpmReportIntervalMs", UintegerValue (200));         // Intervalo de reporte KPM alinhado a Decision Window de 200ms
-    e2AgentHelper->Install (gridScenario.GetBaseStations ());                         // Instala o agente E2 nas estacoes base para telemetria e controle
+    if (enableE2Agent)
+    {
+        Ptr<E2AgentHelper> e2AgentHelper = CreateObject<E2AgentHelper> ();       // Instancia o helper do agente E2AP
+        e2AgentHelper->SetAttribute ("RicIpAddress", Ipv4AddressValue (ricIp.c_str ())); // Configura o IP de destino do Near-RT RIC
+        e2AgentHelper->SetAttribute ("RicPort", UintegerValue (ricPort));                 // Configura a porta SCTP de comunicacao E2
+        e2AgentHelper->SetAttribute ("KpmReportIntervalMs", UintegerValue (200));         // Intervalo de reporte KPM alinhado a Decision Window de 200ms
+        e2AgentHelper->Install (gridScenario.GetBaseStations ());                         // Instala o agente E2 nas estacoes base para telemetria e controle
+    }
 #endif
 
     // =========================================================================

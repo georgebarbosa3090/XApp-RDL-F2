@@ -21,10 +21,10 @@ build-no-cache:
 test:
 	PYTHONPATH=. pytest tests/ -v
 
-# -------------------------------------------------------------
-# Deploy Helm Exclusivo para RDL Fase 2 (CA-RDL / MARL)
-# Premissa: Near-RT RIC e as 3 Reference xApps ja estao rodando!
-# -------------------------------------------------------------
+helm-deploy: helm-deploy-f2
+
+helm-uninstall: helm-uninstall-f2
+
 helm-deploy-f2:
 	@echo "Implantando/Atualizando exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
 	bash scripts/deploy_rdl_phase2.sh
@@ -100,11 +100,23 @@ run-scenario1:
 	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 
+run-scenario1-baseline:
+	@echo "Executando Baseline Cenário 1: Energy Saving vs QoS (EEVS) [enableE2=false]..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30"
+
 run-scenario2:
 	@echo "Executando Cenário 2: Traffic Steering vs QoS (TVS) com logs em tempo real..."
 	@mkdir -p $(NS3_DIR)/scratch
 	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+
+run-scenario2-baseline:
+	@echo "Executando Baseline Cenário 2: Traffic Steering vs QoS (TVS) [enableE2=false]..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
 
 run-baseline:
 	bash scripts/run_baseline_experiment.sh

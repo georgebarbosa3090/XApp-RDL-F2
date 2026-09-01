@@ -27,12 +27,29 @@ A validação experimental da Fase 2 contempla **dois cenários críticos de con
 * **Dinâmica:** A xApp `ricxapp-energy-saving` propõe redução de potência de transmissão (`TX_POWER`) e throttling de PRB para reduzir consumo elétrico, colidindo frontalmente com a xApp `ricxapp-qos-xslice`, que exige garantia de SLA com baixa latência para fatias URLLC e alto throughput para eMBB.
 * **Topologia:** 1 Macro gNB (Banda Alta) + 1 Micro gNB (Small Cell), 20 UEs com carga dinâmica.
 * **Comando para Execução Visível no Console:**
-```bash
-cd ~/ns3-oran-workspace/ns-3-oran
-cp /caminho/para/simulations/ns3/scenario_rdl_energy_vs_qos.cc scratch/
-export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
-./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-```
+  * **Opção A (Via Makefile a partir da raiz do repositório - Recomendado):**
+    ```bash
+    make run-scenario1
+    ```
+  * **Opção B (Manual no terminal):**
+    ```bash
+    # A partir da raiz do repositório:
+    cp simulations/ns3/scenario_rdl_energy_vs_qos.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
+    cd ~/ns3-oran-workspace/ns-3-oran
+    export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
+    ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+    ```
+* **Comandos para Desinstalação da xApp RDL ao Final da Simulação do Cenário 1:**
+  * **RDL Fase 1 (H-RDL Heurística):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+    # ou via Makefile: make helm-uninstall-f1
+    ```
+  * **RDL Fase 2 (CA-RDL / MARL):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+    # ou via Makefile: make helm-uninstall-f2
+    ```
 
 ---
 
@@ -41,12 +58,29 @@ export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
 * **Dinâmica:** A xApp `ricxapp-traffic-steering` tenta balancear carga forçando handovers de UEs entre as duas células, gerando risco de instabilidade, handover ping-pong e degradação severa da fatia URLLC gerida pela xApp `ricxapp-qos-xslice`.
 * **Topologia:** 2 gNodeBs separadas por 80 metros, 30 UEs divididos em 3 fatias de rede (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
 * **Comando para Execução Visível no Console:**
-```bash
-cd ~/ns3-oran-workspace/ns-3-oran
-cp /caminho/para/simulations/ns3/scenario_rdl_tvs_conflict.cc scratch/
-export NS_LOG="ScenarioRdlTvsConflict=level_all"
-./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-```
+  * **Opção A (Via Makefile a partir da raiz do repositório - Recomendado):**
+    ```bash
+    make run-scenario2
+    ```
+  * **Opção B (Manual no terminal):**
+    ```bash
+    # A partir da raiz do repositório:
+    cp simulations/ns3/scenario_rdl_tvs_conflict.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
+    cd ~/ns3-oran-workspace/ns-3-oran
+    export NS_LOG="ScenarioRdlTvsConflict=level_all"
+    ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+    ```
+* **Comandos para Desinstalação da xApp RDL ao Final da Simulação do Cenário 2:**
+  * **RDL Fase 1 (H-RDL Heurística):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+    # ou via Makefile: make helm-uninstall-f1
+    ```
+  * **RDL Fase 2 (CA-RDL / MARL):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+    # ou via Makefile: make helm-uninstall-f2
+    ```
 ---
 
 ## 3. Parâmetros Reais dos Cenários em C++

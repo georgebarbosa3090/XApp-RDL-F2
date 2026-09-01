@@ -21,10 +21,10 @@ mkdir -p "$EXP_RUN_DIR"
 # ETAPA 1: Executar Baseline salvando no diretorio isolado
 bash "$BASE_DIR/scripts/run_baseline_experiment.sh" "$EXP_RUN_DIR"
 
-# ETAPA 2: Garantir Deploy da xApp RDL no Kubernetes
+# ETAPA 2: Garantir Deploy da xApp RDL Fase 2 (CA-RDL / MARL) no Kubernetes
 echo ""
-echo "[PIPELINE] Garantindo deploy do orquestrador xApp RDL..."
-bash "$BASE_DIR/scripts/deploy_helm.sh" --with-rdl || true
+echo "[PIPELINE] Garantindo deploy do orquestrador xApp RDL Fase 2 (CA-RDL / MARL)..."
+bash "$BASE_DIR/scripts/deploy_rdl_phase2.sh" || bash "$BASE_DIR/scripts/deploy_helm.sh" --with-rdl || true
 
 # ETAPA 3: Executar Cenarios com RDL e Analisar Resultados
 bash "$BASE_DIR/scripts/run_rdl_experiment.sh" "$EXP_RUN_DIR"

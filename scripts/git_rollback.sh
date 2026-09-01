@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script de Rollback Seguro de Commits e Alterações
-# Permite desfazer alterações com criação automática de ponto de restauração
-# Projeto: xApp RDL (Resource and Decision Layer) - Fase 1
+# Script de Rollback Seguro de Commits Locais e Remotos (GitHub)
+# Projeto: xApp RDL (Resource and Decision Layer) - Fase 2: Context-Aware RDL (CA-RDL / MARL)
 # ==============================================================================
 
 set -e

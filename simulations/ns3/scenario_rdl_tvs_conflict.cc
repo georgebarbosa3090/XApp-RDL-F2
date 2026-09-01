@@ -1,9 +1,9 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
  * =========================================================================================
- * Projeto: xApp RDL (Resource and Decision Layer) - Fase 1 (H-RDL Deterministica)
+ * Projeto: xApp RDL (Resource and Decision Layer) - Fase 2: Context-Aware RDL (CA-RDL / MARL)
  * Arquivo: scenario_rdl_tvs_conflict.cc
- * Descricao: Cenario de Simulacao 5G-LENA + ns-O-RAN / NORI
+ * Descricao: Cenario 2 de Simulacao 5G-LENA + ns-O-RAN / NORI
  *            Avaliacao de Arbitragem de Conflitos Multiobjetivo (TVS: URLLC vs eMBB vs mMTC)
  * Topologia: 2 gNodeBs 5G NR (Macro + Micro), 30 UEs divididos em 3 Fatias de Rede
  * =========================================================================================
@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
     cmd.Parse (argc, argv); // Executa o parsing dos argumentos fornecidos pelo usuario
 
     // Mensagens de inicializacao exibindo a configuracao carregada
-    NS_LOG_INFO ("Iniciando Cenario RDL Fase 1 - TVS Conflict Mitigation...");
+    NS_LOG_INFO ("Iniciando Cenario RDL Fase 2 (CA-RDL / MARL) - TVS Conflict Mitigation...");
     NS_LOG_INFO ("gNBs: " << gNbNum << " | Total UEs: " << (gNbNum * ueNumPerGnb) << " | Banda: " << (bandwidthBand1 / 1e6) << " MHz");
 
 #if HAS_NR_MODULE
