@@ -73,10 +73,30 @@ curl -i http://localhost:8080/health
 curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_"
 ```
 
-### 2.5. Remover Apenas a xApp RDL Fase 2:
+### 2.5. Comandos para Desinstalar a xApp RDL (Fase 1 e Fase 2):
+
+#### 2.5.1. Desinstalar xApp RDL Fase 1 (H-RDL Heurística):
 ```bash
-# Desinstala somente a release 'ricxapp-iqos-xapp-rdl-f2' mantendo o restante da infraestrutura intacta
+# Via Makefile:
+make helm-uninstall-f1
+
+# Via Helm direto:
+helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+```
+
+#### 2.5.2. Desinstalar xApp RDL Fase 2 (CA-RDL / MARL):
+```bash
+# Via Makefile:
 make helm-uninstall-f2
+
+# Via Helm direto:
+helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+```
+
+#### 2.5.3. Desinstalação Simultânea de Todas as Versões RDL:
+```bash
+# Desinstala ambas as releases mantendo as 3 reference xApps ativas:
+make uninstall-all-rdl
 ```
 
 ---
@@ -87,8 +107,11 @@ make helm-uninstall-f2
 | :--- | :--- | :--- |
 | **`make test`** | Executa os 18 testes unitários (pytest) | Local |
 | **`make helm-deploy-f2`** | Instala/Atualiza a release `ricxapp-iqos-xapp-rdl-f2` (v2.0.0) | Namespace `ricxapp` (apenas RDL F2) |
-| **`make helm-uninstall-f2`** | Desinstala a release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` (apenas RDL F2) |
+| **`make helm-uninstall-f1`** | Desinstala a release `ricxapp-iqos-xapp-rdl` (Fase 1) | Namespace `ricxapp` (apenas RDL F1) |
+| **`make helm-uninstall-f2`** | Desinstala a release `ricxapp-iqos-xapp-rdl-f2` (Fase 2) | Namespace `ricxapp` (apenas RDL F2) |
+| **`make uninstall-all-rdl`** | Desinstala ambas as releases RDL (Fase 1 e Fase 2) | Namespace `ricxapp` (apenas RDLs) |
 | **`make status-f2`** | Exibe o status detalhado dos pods no namespace `ricxapp` | Somente leitura |
 | **`make logs-f2`** | Abre streaming dos logs da xApp RDL Fase 2 | Somente leitura |
 | **`make test-f2`** | Testa `/health` (`:8080`) e `/metrics` (`:8081`) da Fase 2 | Somente leitura |
 | **`make run-suite`** | Executa simulações ns-3 e benchmark de Machine Learning | Suíte experimental |
+

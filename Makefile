@@ -1,4 +1,4 @@
-.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-scenario1 run-scenario2 run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f1 helm-uninstall-f2 uninstall-all-rdl helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-scenario1 run-scenario2 run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
 IMAGE_NAME ?= iqos-xapp-rdl
 IMAGE_TAG ?= 2.0.0
@@ -41,9 +41,18 @@ helm-upgrade-f2:
 	  --set env.rmrWaitForReady="false" \
 	  --set env.enableTorch="true"
 
+helm-uninstall-f1:
+	@echo "Removendo a xApp RDL Fase 1 (ricxapp-iqos-xapp-rdl)..."
+	helm uninstall ricxapp-iqos-xapp-rdl -n $(NAMESPACE) || echo "Release ricxapp-iqos-xapp-rdl nao encontrada."
+
 helm-uninstall-f2:
 	@echo "Removendo exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
 	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) || echo "Release $(RELEASE_NAME_F2) nao encontrada."
+
+uninstall-all-rdl:
+	@echo "Removendo todas as versoes da xApp RDL (Fase 1 e Fase 2)..."
+	helm uninstall ricxapp-iqos-xapp-rdl -n $(NAMESPACE) 2>/dev/null || true
+	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) 2>/dev/null || true
 
 status-f2:
 	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="

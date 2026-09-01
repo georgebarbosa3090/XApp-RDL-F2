@@ -7,7 +7,7 @@
 
 ---
 
-## Papel no Projeto XApp-RDL-F1
+## Papel no Projeto XApp-RDL (Fase 1 e Fase 2)
 * **Categoria:** Workload Concorrente / Controlador de Eficiência Energética (Green RAN).
 * **Objetivo de Controle:** Monitora a taxa de ocupação de PRBs e carga de tráfego, propondo desligamento de portadoras/células secundárias (*Micro-Sleep*) e redução forçada de potência de transmissão (`TX_POWER`).
 * **Comportamento Conflitante:** Ao cortar potência e desativar células, degrada o throughput de usuários e eleva a latência, colidindo diretamente com `xSlice` (QoS) e `Traffic Steering`.

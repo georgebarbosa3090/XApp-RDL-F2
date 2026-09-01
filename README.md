@@ -76,6 +76,11 @@ make logs-f2
 
 # 4. Executar os dois cenários de simulação e benchmarks
 make run-suite
+
+# 5. Desinstalação da xApp RDL ao final dos testes (escolha a fase):
+make helm-uninstall-f2      # Desinstala a Fase 2 (CA-RDL / MARL)
+make helm-uninstall-f1      # Desinstala a Fase 1 (H-RDL Heurística)
+make uninstall-all-rdl      # Desinstala ambas as versões do RDL
 ```
 
 ---
@@ -128,6 +133,11 @@ export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
 ```
 *A saída mostrará no console a criação dos 20 UEs, telemetria E2SM-KPM enviada para o RIC, modulação de potência e decisões em tempo real.*
 
+> [!TIP]
+> **Comandos para Desinstalar a xApp RDL ao Final da Simulação do Cenário 1:**
+> * **RDL Fase 1 (H-RDL Heurística):** `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` (ou `make helm-uninstall-f1`)
+> * **RDL Fase 2 (CA-RDL / MARL):** `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` (ou `make helm-uninstall-f2`)
+
 ---
 
 ### 4.3. Etapa 3: Execução em Tempo Real do Cenário 2 (Traffic Steering vs QoS / TVS)
@@ -146,6 +156,11 @@ export NS_LOG="ScenarioRdlTvsConflict=level_all"
 ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 ```
 *A saída exibirá o rastreamento contínuo de pacotes PDCP RX, detecção de conflitos de handover, ações de controle E2SM-RC e latências medidas.*
+
+> [!TIP]
+> **Comandos para Desinstalar a xApp RDL ao Final da Simulação do Cenário 2:**
+> * **RDL Fase 1 (H-RDL Heurística):** `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` (ou `make helm-uninstall-f1`)
+> * **RDL Fase 2 (CA-RDL / MARL):** `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` (ou `make helm-uninstall-f2`)
 
 ---
 
@@ -170,6 +185,11 @@ python3 scripts/run_experiment_suite.py
 * Desempenho dos 6 algoritmos de Machine Learning (RandomForest, ExtraTrees, GradientBoosting, VotingEnsemble).
 * Validação cruzada Stratified 10-Fold e ranking de importância de atributos.
 
+> [!TIP]
+> **Comandos para Desinstalar a xApp RDL ao Final da Suíte Experimental:**
+> * **RDL Fase 1 (H-RDL Heurística):** `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` (ou `make helm-uninstall-f1`)
+> * **RDL Fase 2 (CA-RDL / MARL):** `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` (ou `make helm-uninstall-f2`)
+
 ---
 
 ### 4.5. Etapa 5: Execução Interativa via Contêiner Docker Standalone
@@ -182,6 +202,23 @@ docker run --rm -it \
   -e USE_FAKE_SDL=true \
   -e ENABLE_TORCH=true \
   iqos-xapp-rdl:2.0.0
+```
+
+---
+
+### 4.6. Etapa 6: Comandos de Desinstalação e Limpeza Pós-Simulação (Fase 1 e Fase 2)
+
+Ao concluir as simulações, remova a release RDL utilizada para liberar portas e recursos de computação do cluster:
+
+| Objetivo de Desinstalação | Comando Helm Direto | Atalho Makefile | Escopo de Efeito |
+| :--- | :--- | :--- | :--- |
+| **Desinstalar RDL Fase 1 (H-RDL)** | `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` | `make helm-uninstall-f1` | Remove apenas `ricxapp-iqos-xapp-rdl` |
+| **Desinstalar RDL Fase 2 (CA-RDL)** | `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` | `make helm-uninstall-f2` | Remove apenas `ricxapp-iqos-xapp-rdl-f2` |
+| **Desinstalar Ambas as Versões** | `helm uninstall ricxapp-iqos-xapp-rdl ricxapp-iqos-xapp-rdl-f2 -n ricxapp` | `make uninstall-all-rdl` | Remove ambas as releases no namespace `ricxapp` |
+
+Para confirmar que os pods foram removidos com sucesso:
+```bash
+kubectl get pods -n ricxapp -o wide
 ```
 
 ---

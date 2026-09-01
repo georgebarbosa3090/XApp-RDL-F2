@@ -7,7 +7,7 @@
 
 ---
 
-## Papel no Projeto XApp-RDL-F1
+## Papel no Projeto XApp-RDL (Fase 1 e Fase 2)
 * **Categoria:** Workload Concorrente / Controlador de Mobilidade e Steering.
 * **Objetivo de Controle:** Avalia métricas de sinal (RSRP/RSRQ) e predição de QoE, emitindo comandos de handover e balanceamento de tráfego entre estações rádio-base (`HANDOVER`).
 * **Comportamento Conflitante:** Tenta direcionar UEs para células secundárias ou aumentar potência para manter cobertura contínua, colidindo com políticas de economia de energia (`Energy Saving`) que visam manter essas mesmas células desligadas ou com potência mínima.

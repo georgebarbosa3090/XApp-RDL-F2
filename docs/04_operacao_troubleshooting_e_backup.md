@@ -29,3 +29,21 @@ make test-f2
 ### 1.4. Troubleshooting de Problemas Comuns
 * **Pod em CrashLoopBackOff:** Verifique se as dependências PyTorch foram carregadas ou se a porta RMR está livre (`kubectl describe pod -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2`).
 * **Timeout na Interface E2:** Certifique-se de que a porta SCTP `36422` está mapeada corretamente no cluster k3d.
+
+### 1.5. Comandos de Desinstalação e Limpeza de Releases RDL
+Ao finalizar simulações ou testes operacionais, desinstale as releases correspondentes:
+* **Desinstalar RDL Fase 1 (`ricxapp-iqos-xapp-rdl`):**
+  ```bash
+  helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+  # ou: make helm-uninstall-f1
+  ```
+* **Desinstalar RDL Fase 2 (`ricxapp-iqos-xapp-rdl-f2`):**
+  ```bash
+  helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+  # ou: make helm-uninstall-f2
+  ```
+* **Desinstalar Ambas Simultaneamente:**
+  ```bash
+  make uninstall-all-rdl
+  ```
+

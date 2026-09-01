@@ -33,6 +33,17 @@ cp /caminho/para/simulations/ns3/scenario_rdl_energy_vs_qos.cc scratch/
 export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
 ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 ```
+* **Comandos para Desinstalação da xApp RDL ao Final da Simulação do Cenário 1:**
+  * **RDL Fase 1 (H-RDL Heurística):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+    # ou via Makefile: make helm-uninstall-f1
+    ```
+  * **RDL Fase 2 (CA-RDL / MARL):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+    # ou via Makefile: make helm-uninstall-f2
+    ```
 
 ---
 
@@ -47,6 +58,17 @@ cp /caminho/para/simulations/ns3/scenario_rdl_tvs_conflict.cc scratch/
 export NS_LOG="ScenarioRdlTvsConflict=level_all"
 ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 ```
+* **Comandos para Desinstalação da xApp RDL ao Final da Simulação do Cenário 2:**
+  * **RDL Fase 1 (H-RDL Heurística):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+    # ou via Makefile: make helm-uninstall-f1
+    ```
+  * **RDL Fase 2 (CA-RDL / MARL):**
+    ```bash
+    helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+    # ou via Makefile: make helm-uninstall-f2
+    ```
 
 ---
 
@@ -86,3 +108,46 @@ Os artefatos gerados são salvos em `experiments/results/YYYY-MM-DD/run_HHMMSS/`
 * `relatorio_comparativo.json`: Consolidação de métricas científicas em JSON.
 * `relatorio_comparativo.md`: Relatório executivo em Markdown.
 * `relatorio_comparativo_detalhado.md`: Avaliação estatística completa com benchmarks de 6 modelos de ML.
+
+---
+
+## 5. Procedimentos de Desinstalação e Limpeza Pós-Simulação (Fase 1 e Fase 2)
+
+Ao término de qualquer simulação de cenário ou suíte de benchmarks, execute os comandos de desinstalação abaixo para liberar os recursos do cluster Kubernetes e retornar ao estado limpo:
+
+### 5.1. Desinstalação da xApp RDL Fase 1 (H-RDL Heurística)
+Remove a release `ricxapp-iqos-xapp-rdl` do namespace `ricxapp`:
+```bash
+# Comando direto via Helm:
+helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
+
+# Ou via Makefile:
+make helm-uninstall-f1
+```
+
+### 5.2. Desinstalação da xApp RDL Fase 2 (CA-RDL / MARL)
+Remove exclusivamente a release `ricxapp-iqos-xapp-rdl-f2` do namespace `ricxapp`:
+```bash
+# Comando direto via Helm:
+helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
+
+# Ou via Makefile:
+make helm-uninstall-f2
+```
+
+### 5.3. Desinstalação Simultânea (Todas as Versões RDL)
+Para remover ambas as releases RDL de uma só vez, mantendo as 3 reference xApps e a plataforma Near-RT RIC intactas:
+```bash
+# Via Makefile:
+make uninstall-all-rdl
+
+# Ou via Helm direto:
+helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp 2>/dev/null || true
+helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp 2>/dev/null || true
+```
+
+### 5.4. Verificação de Término e Status dos Pods
+```bash
+kubectl get pods -n ricxapp -o wide
+```
+
