@@ -1,4 +1,4 @@
-.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-scenario1 run-scenario2 run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
 IMAGE_NAME ?= iqos-xapp-rdl
 IMAGE_TAG ?= 2.0.0
@@ -7,6 +7,7 @@ NAMESPACE_RIC ?= ricplt
 NAMESPACE ?= ricxapp
 RELEASE_NAME_F2 ?= ricxapp-iqos-xapp-rdl-f2
 CLUSTER_NAME ?= rancher-lab
+NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
 # -------------------------------------------------------------
 # Build e Testes Locais da xApp RDL Fase 2
@@ -47,9 +48,11 @@ helm-uninstall-f2:
 status-f2:
 	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="
 	@kubectl get pods -n $(NAMESPACE) -o wide
-	@echo "
-=== Pod da xApp RDL Fase 2 ==="
+	@echo "\n=== Pod da xApp RDL Fase 2 ==="
 	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide
+
+watch-pods-f2:
+	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -w
 
 logs-f2:
 	kubectl logs -l app=$(RELEASE_NAME_F2) -n $(NAMESPACE) -f
@@ -57,8 +60,7 @@ logs-f2:
 test-f2:
 	@echo "Testando endpoints da xApp RDL Fase 2 (CA-RDL / MARL)..."
 	@curl -i http://localhost:8080/health || true
-	@echo "
-Métricas Prometheus:"
+	@echo "\nMétricas Prometheus:"
 	@curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_" || true
 
 test-3xapps:
@@ -66,7 +68,7 @@ test-3xapps:
 	bash scripts/verify_3_xapps.sh
 
 # -------------------------------------------------------------
-# Gestão do Cluster k3d (se necessário)
+# Gestao do Cluster k3d (se necessario)
 # -------------------------------------------------------------
 cluster-create:
 	@echo "Criando cluster k3d $(CLUSTER_NAME)..."
@@ -82,6 +84,18 @@ cluster-delete:
 # -------------------------------------------------------------
 setup-ns3:
 	bash scripts/setup_ns3.sh
+
+run-scenario1:
+	@echo "Executando Cenário 1: Energy Saving vs QoS (EEVS) com logs em tempo real..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+
+run-scenario2:
+	@echo "Executando Cenário 2: Traffic Steering vs QoS (TVS) com logs em tempo real..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 
 run-baseline:
 	bash scripts/run_baseline_experiment.sh

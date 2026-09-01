@@ -2,7 +2,7 @@
 
 **Documento:** Volume Temático 05  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
-**Escopo:** Co-Simulação 5G NR no ns-3 (5G-LENA + NORI), Arquitetura EpcHelper (Plano de Usuário), Conexão E2 ao Near-RT RIC, Pipeline de Benchmarks e Análise de ML  
+**Escopo:** Co-Simulação 5G NR no ns-3 (5G-LENA + NORI), Execução em Tempo Real dos 2 Cenários de Conflito, Conexão E2 ao Near-RT RIC, Pipeline de Benchmarks e Análise de ML  
 **Repositório Oficial:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 
 ---
@@ -18,9 +18,39 @@ A validação experimental é realizada com o simulador de eventos discretos **n
 
 ---
 
-## 2. Parâmetros Reais dos Cenários em C++
+## 2. Detalhamento e Execução dos 2 Cenários de Conflito em Tempo Real
 
-Os parâmetros implementados no código C++ [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_tvs_conflict.cc) são:
+A validação experimental da Fase 2 contempla **dois cenários críticos de contenção de rádio**:
+
+### 2.1. Cenário 1: Conflito Economia de Energia vs QoS / Slicing (EEVS)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_energy_vs_qos.cc`](file:///simulations/ns3/scenario_rdl_energy_vs_qos.cc)
+* **Dinâmica:** A xApp `ricxapp-energy-saving` propõe redução de potência de transmissão (`TX_POWER`) e throttling de PRB para reduzir consumo elétrico, colidindo frontalmente com a xApp `ricxapp-qos-xslice`, que exige garantia de SLA com baixa latência para fatias URLLC e alto throughput para eMBB.
+* **Topologia:** 1 Macro gNB (Banda Alta) + 1 Micro gNB (Small Cell), 20 UEs com carga dinâmica.
+* **Comando para Execução Visível no Console:**
+```bash
+cd ~/ns3-oran-workspace/ns-3-oran
+cp /caminho/para/simulations/ns3/scenario_rdl_energy_vs_qos.cc scratch/
+export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
+./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+```
+
+---
+
+### 2.2. Cenário 2: Conflito Traffic Steering vs QoS / Handover Ping-Pong (TVS)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](file:///simulations/ns3/scenario_rdl_tvs_conflict.cc)
+* **Dinâmica:** A xApp `ricxapp-traffic-steering` tenta balancear carga forçando handovers de UEs entre as duas células, gerando risco de instabilidade, handover ping-pong e degradação severa da fatia URLLC gerida pela xApp `ricxapp-qos-xslice`.
+* **Topologia:** 2 gNodeBs separadas por 80 metros, 30 UEs divididos em 3 fatias de rede (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
+* **Comando para Execução Visível no Console:**
+```bash
+cd ~/ns3-oran-workspace/ns-3-oran
+cp /caminho/para/simulations/ns3/scenario_rdl_tvs_conflict.cc scratch/
+export NS_LOG="ScenarioRdlTvsConflict=level_all"
+./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+```
+
+---
+
+## 3. Parâmetros Reais dos Cenários em C++
 
 | Parâmetro | Valor Configurado no C++ | Justificativa Técnica |
 | :--- | :--- | :--- |
@@ -36,12 +66,18 @@ Os parâmetros implementados no código C++ [`simulations/ns3/scenario_rdl_tvs_c
 
 ---
 
-## 3. Execução da Suíte Experimental e Benchmarks
+## 4. Execução da Suíte Experimental e Benchmarks no Prompt
 
-Para executar a suíte experimental completa e analisar os resultados:
+Para processar a suíte experimental completa e acompanhar as tabelas de métricas ao vivo no console:
 ```bash
-# Executa análise de fluxo, calibração de modelos de ML e exportação de relatórios
-make run-suite
+# No Linux / WSL2:
+python3 scripts/evaluate_and_improve_algorithms.py
+python3 scripts/run_experiment_suite.py
+```
+```powershell
+# No Windows (PowerShell / CMD):
+python scripts/evaluate_and_improve_algorithms.py
+python scripts/run_experiment_suite.py
 ```
 
 Os artefatos gerados são salvos em `experiments/results/YYYY-MM-DD/run_HHMMSS/` e espelhados em `experiments/results/latest/`:

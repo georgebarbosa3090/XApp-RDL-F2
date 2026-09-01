@@ -2,7 +2,7 @@
 
 **Documento:** Volume Temático 03  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
-**Escopo:** Procedimento de Deploy Helm Isolado da Release `ricxapp-iqos-xapp-rdl-f2` no Near-RT RIC Existente  
+**Escopo:** Procedimento de Deploy Helm Isolado da Release `ricxapp-iqos-xapp-rdl-f2` no Near-RT RIC Existente com Monitoramento em Tempo Real  
 **Repositório Oficial:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Versão da Release:** `ricxapp-iqos-xapp-rdl-f2` | **Imagem:** `iqos-xapp-rdl:2.0.0`  
 
@@ -23,41 +23,44 @@ Na infraestrutura operacional de testes e produção:
    - **Target de Execução:** `make helm-deploy-f2`
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                        Cluster Kubernetes: Namespace ricxapp                           │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                        │
-│   [ricxapp-qos-xslice]          (Existente - Já em Execução)                           │
-│   [ricxapp-energy-saving]       (Existente - Já em Execução)                           │
-│   [ricxapp-traffic-steering]    (Existente - Já em Execução)                           │
-│                                                                                        │
-│   ─────────────────────────── [Deploy Isolado Fase 2] ────────────────────────────     │
-│   [ricxapp-iqos-xapp-rdl-f2]    (v2.0.0 - CA-RDL / MARL - Release Dedicada)           │
-│                                                                                        │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Cluster Kubernetes: Namespace ricxapp                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   [ricxapp-qos-xslice]          (Existente - Já em Execução)                │
+│   [ricxapp-energy-saving]       (Existente - Já em Execução)                │
+│   [ricxapp-traffic-steering]    (Existente - Já em Execução)                │
+│                                                                             │
+│   ─────────────────────────── [Deploy Isolado Fase 2] ───────────────────── │
+│   [ricxapp-iqos-xapp-rdl-f2]    (v2.0.0 - CA-RDL / MARL - Release Dedicada) │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Comandos Operacionais de Deploy da Fase 2
+## 2. Comandos Operacionais de Deploy e Acompanhamento em Tempo Real
 
 ### 2.1. Implantar Exclusivamente a xApp RDL Fase 2:
 ```bash
 # Executa o build da imagem 2.0.0, importação no k3d e deploy da release 'ricxapp-iqos-xapp-rdl-f2'
 make helm-deploy-f2
-```
-*Esse comando não reinstala o Near-RT RIC nem interfere nas 3 Reference xApps existentes.*
-
-### 2.2. Verificar o Status da xApp RDL Fase 2:
-```bash
-make status-f2
-# ou: kubectl get pods -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -o wide
+# OU
+bash scripts/deploy_rdl_phase2.sh
 ```
 
-### 2.3. Inspecionar Logs do Motor MARL/MAPPO em Tempo Real:
+### 2.2. Monitorar o Ciclo de Vida dos Pods em Tempo Real (`-w`):
 ```bash
+kubectl get pods -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -w
+```
+
+### 2.3. Streaming de Logs do Motor MARL/MAPPO em Tempo Real (`-f`):
+```bash
+# Via Makefile:
 make logs-f2
-# ou: kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -f
+
+# Via Kubectl direto (PowerShell, CMD ou Bash):
+kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -f
 ```
 
 ### 2.4. Validar Endpoints HTTP e Telemetria Prometheus:
