@@ -33,17 +33,6 @@ cp /caminho/para/simulations/ns3/scenario_rdl_energy_vs_qos.cc scratch/
 export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
 ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 ```
-* **Comandos para Desinstalação da xApp RDL ao Final da Simulação do Cenário 1:**
-  * **RDL Fase 1 (H-RDL Heurística):**
-    ```bash
-    helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
-    # ou via Makefile: make helm-uninstall-f1
-    ```
-  * **RDL Fase 2 (CA-RDL / MARL):**
-    ```bash
-    helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
-    # ou via Makefile: make helm-uninstall-f2
-    ```
 
 ---
 
@@ -58,18 +47,6 @@ cp /caminho/para/simulations/ns3/scenario_rdl_tvs_conflict.cc scratch/
 export NS_LOG="ScenarioRdlTvsConflict=level_all"
 ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 ```
-* **Comandos para Desinstalação da xApp RDL ao Final da Simulação do Cenário 2:**
-  * **RDL Fase 1 (H-RDL Heurística):**
-    ```bash
-    helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp
-    # ou via Makefile: make helm-uninstall-f1
-    ```
-  * **RDL Fase 2 (CA-RDL / MARL):**
-    ```bash
-    helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
-    # ou via Makefile: make helm-uninstall-f2
-    ```
-
 ---
 
 ## 3. Parâmetros Reais dos Cenários em C++
