@@ -17,8 +17,8 @@
 | **REQ-MARL-04** | Classificação de Intenção e Modulação de Pesos de Recompensa |  APROVADO | `src.agents.intent.IntentClassifier` | Validação de pesos $w_{qos}, w_{ee}, w_{pen}$ |
 | **REQ-MARL-05** | Safety Guards Físicos Determinísticos |  APROVADO | `src.agents.refinement.RefinementAgent` | Bloqueio de violações de $P_{tx}$ e PRB |
 | **REQ-MARL-06** | Deploy Helm Isolado da Release `ricxapp-iqos-xapp-rdl-f2` |  APROVADO | `deploy/helm/iqos-xapp-rdl` | Target `make helm-deploy-f2` |
-| **REQ-MARL-07** | Latência de Decisão Near-RT inferior a $50	ext{ ms}$ |  APROVADO | `src.core.decision_engine` | Média de `14.2 ms` medida empiricamente |
-| **REQ-MARL-08** | Cumprimento de SLA URLLC ($	ext{Delay} \le 5	ext{ ms}$) |  APROVADO | `simulations/ns3` | `0.0%` de violação de SLA |
+| **REQ-MARL-07** | Latência de Decisão Near-RT inferior a $50\text{ ms}$ |  APROVADO | `src.core.decision_engine` | Média de `14.2 ms` medida empiricamente |
+| **REQ-MARL-08** | Cumprimento de SLA URLLC ($\text{Delay} \le 5\text{ ms}$) |  APROVADO | `simulations/ns3` | `0.0%` de violação de SLA |
 | **REQ-MARL-09** | Coexistência com as 3 Reference xApps Concorrentes |  APROVADO | Namespace `ricxapp` | xSlice, Energy Saving e Traffic Steering |
 | **REQ-MARL-10** | Roteamento de Mensagens RMR e Persistência SDL Redis |  APROVADO | `src.adapters.sdl_adapter` | Barramento RMR nas portas 4560/4561 |
 

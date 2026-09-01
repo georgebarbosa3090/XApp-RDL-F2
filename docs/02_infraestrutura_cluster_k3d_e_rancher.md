@@ -19,12 +19,18 @@ Executar a stack completa do **Near-RT RIC** e xApps no WSL2 exige uma gestão p
 
 ```mermaid
 graph LR
-    subgraph Host["Host / WSL2"]
-        K3D["Cluster k3d: rancher-lab"]
+    subgraph Host_Env["Ambiente Host / WSL2"]
+        subgraph Cluster_K3D["Cluster k3d (rancher-lab)"]
+            E2TERM["E2Term (:36422 SCTP)"]
+            RDL_SVC["xApp RDL Services (:8080 / :8081)"]
+            XAPPS_SVC["Reference xApps (:8082, :8084, :8086)"]
+        end
+
         NS3["ns-3 / 5G-LENA Simulator"]
+        DEV["Cliente / Navegador / Rancher"]
     end
 
-    NS3 -->|"SCTP:36422 (E2 Interface)"| K3D
-    K3D -->|"HTTP:8080 / Health"| Host
-    K3D -->|"HTTP:8081 / Metrics"| Host
+    NS3 -->|"Interface E2 (SCTP:36422)"| E2TERM
+    DEV -->|"HTTP:8080 (Health)"| RDL_SVC
+    DEV -->|"HTTP:8081 (Metrics)"| RDL_SVC
 ```

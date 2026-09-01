@@ -39,10 +39,10 @@ graph TD
             IC["4. Intent Classifier<br/>(Modulação Dinâmica de Pesos)"]
         end
 
-        XAPPS["Reference xApps Concorrentes (Já em Execução)<br/>(ricxapp-qos-xslice | ricxapp-energy-saving | ricxapp-traffic-steering)"]
+        XAPPS["Reference xApps Concorrentes<br/>(ricxapp-qos-xslice | ricxapp-energy-saving | ricxapp-traffic-steering)"]
     end
 
-    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| NearRTRIC
+    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| PA
     XAPPS -->|"Ações Propostas (RMR)"| PA
     PA -->|"Vetor de Estado s_t"| RA
     IC -->|"Pesos de Recompensa (w_qos, w_ee, w_pen)"| RA
