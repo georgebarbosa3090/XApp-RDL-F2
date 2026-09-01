@@ -4,7 +4,7 @@
 **Ambiente de Co-Simulação:** ns-3 v3.40 (5G-LENA + NORI) / Near-RT RIC (k3d Cluster)  
 **Banda de Operação:** 3.5 GHz (n78), Largura de Banda: 50 MHz  
 **Data da Avaliação:** 1 de Setembro de 2026  
-**Timestamp de Execução:** 2026-09-01 12:50:48  
+**Timestamp de Execução:** 2026-09-01 12:52:37  
 **Repositório Fase 1:** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)  
 **Repositório Fase 2:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Google Colab:** [Executar Notebook de ML](https://colab.research.google.com/github/georgebarbosa3090/XApp-RDL-F1/blob/main/notebooks/rdl_colab_scikit_learn.ipynb)
