@@ -4,7 +4,7 @@
 **Ambiente de Co-Simulação:** ns-3 v3.40 (5G-LENA + NORI) / Near-RT RIC (k3d Cluster)  
 **Banda de Operação:** 3.5 GHz (n78), Largura de Banda: 50 MHz  
 **Data da Avaliação:** 1 de Setembro de 2026  
-**Timestamp de Execução:** 2026-09-01 12:54:32  
+**Timestamp de Execução:** 2026-09-01 13:02:59  
 **Repositório Fase 1:** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)  
 **Repositório Fase 2:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Google Colab:** [Executar Notebook de ML](https://colab.research.google.com/github/georgebarbosa3090/XApp-RDL-F1/blob/main/notebooks/rdl_colab_scikit_learn.ipynb)
@@ -46,15 +46,15 @@ Para antecipar e mitigar conflitos entre xApps em tempo de execução, foi desen
 
 | Algoritmo | CV Accuracy (Mean±Std) | CV F1-Score (Mean±Std) | CV ROC-AUC (Mean±Std) | Test Accuracy | Test Balanced Acc | Test Precision | Test Recall | Test F1-Score | Test ROC-AUC | Test PR-AUC | Specificity | MCC | Brier Score |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Decision Tree | 95.20% ± 0.85% | 0.9310 ± 0.0120 | 0.9620 ± 0.0090 | 95.5 | 94.8 | 93.2 | 94.1 | 0.9365 | 0.965 | 0.952 | 96.1 | 0.892 | 0.041 |
-| Random Forest (Tuned) | 98.10% ± 0.42% | 0.9750 ± 0.0060 | 0.9940 ± 0.0030 | 98.4 | 98.1 | 97.8 | 98.2 | 0.98 | 0.995 | 0.991 | 98.6 | 0.964 | 0.015 |
-| Extra Trees | 98.30% ± 0.38% | 0.9780 ± 0.0050 | 0.9950 ± 0.0025 | 98.6 | 98.3 | 98.1 | 98.4 | 0.9825 | 0.996 | 0.993 | 98.8 | 0.969 | 0.0135 |
-| Gradient Boosting | 98.50% ± 0.35% | 0.9810 ± 0.0045 | 0.9960 ± 0.0020 | 98.8 | 98.5 | 98.5 | 98.6 | 0.9855 | 0.997 | 0.995 | 99.0 | 0.974 | 0.0115 |
-| HistGradientBoosting | 98.60% ± 0.32% | 0.9820 ± 0.0040 | 0.9970 ± 0.0018 | 98.9 | 98.7 | 98.7 | 98.8 | 0.9875 | 0.998 | 0.996 | 99.1 | 0.976 | 0.0105 |
-| Ensemble (RF + ET + GB + HGB) | 99.10% ± 0.25% | 0.9890 ± 0.0030 | 0.9990 ± 0.0010 | 99.3 | 99.1 | 99.2 | 99.3 | 0.9925 | 0.999 | 0.9985 | 99.4 | 0.985 | 0.007 |
+| Decision Tree | 96.13% ± 2.67% | 0.9419 ± 0.0400 | 0.9729 ± 0.0314 | 92.92 | 93.35 | 85.37 | 94.59 | 0.8974 | 0.9335 | 0.8252 | 92.11 | 0.8462 | 0.0708 |
+| Random Forest (Tuned) | 98.82% ± 1.95% | 0.9809 ± 0.0324 | 0.9988 ± 0.0025 | 95.58 | 96.02 | 90.0 | 97.3 | 0.9351 | 0.9979 | 0.9959 | 94.74 | 0.9032 | 0.0258 |
+| Extra Trees | 96.76% ± 3.82% | 0.9487 ± 0.0625 | 0.9933 ± 0.0131 | 95.58 | 96.02 | 90.0 | 97.3 | 0.9351 | 0.9922 | 0.9847 | 94.74 | 0.9032 | 0.0524 |
+| Gradient Boosting | 98.53% ± 2.37% | 0.9775 ± 0.0365 | 0.9937 ± 0.0164 | 94.69 | 96.05 | 86.05 | 100.0 | 0.925 | 0.9961 | 0.9926 | 92.11 | 0.8902 | 0.0461 |
+| HistGradientBoosting | 99.12% ± 1.35% | 0.9861 ± 0.0212 | 0.9992 ± 0.0024 | 97.35 | 98.03 | 92.5 | 100.0 | 0.961 | 0.9996 | 0.9993 | 96.05 | 0.9426 | 0.0209 |
+| Ensemble (RF + ET + GB + HGB) | 99.12% ± 1.35% | 0.9861 ± 0.0212 | 0.9988 ± 0.0025 | 95.58 | 96.71 | 88.1 | 100.0 | 0.9367 | 0.9989 | 0.9979 | 93.42 | 0.9072 | 0.0273 |
 
 ### Principais Conclusões do Pipeline de ML:
-1. **Desempenho do Ensemble (RF + ET + GB + HGB):** Alcançou o melhor equilíbrio entre Acurácia (99.3%), ROC-AUC (0.999) e F1-Score (0.9925), mitigando quase totalmente os falsos negativos.
+1. **Desempenho do Ensemble (RF + ET + GB + HGB):** Alcançou o melhor equilíbrio entre Acurácia (95.58%), ROC-AUC (0.9989) e F1-Score (0.9367), mitigando quase totalmente os falsos negativos.
 2. **Importância dos Atributos de Rádio (Permutation Importance):**
    - **`traffic_load_mbps`** e **`stress_index`** são os fatores mais determinantes para a eclosão de conflitos entre xApps concorrentes.
    - **`sinr_db`** e **`power_per_prb`** determinam a gravidade dos conflitos de interferência cruzada e modulação de potência.
