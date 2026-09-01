@@ -19,22 +19,22 @@ A tabela abaixo consolida todas as métricas relevantes de rede, governança O-R
 
 | Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL | Fase 2: CA-RDL (MARL) | Ganho Fase 2 vs Baseline |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **QoS & Latência URLLC** | Latência Média URLLC | `11.83 ms` | `2.74 ms` | **`1.92 ms`** | **`-83.8%`** |
-| | Latência Percentil 95 (P95) | `13.47 ms` | `3.41 ms` | **`2.32 ms`** | **`-82.8%`** |
-| | Latência Percentil 99 (P99) | `13.53 ms` | `3.56 ms` | **`2.35 ms`** | **`-82.6%`** |
+| **QoS & Latência URLLC** | Latência Média URLLC | `11.83 ms` | `2.74 ms` | **`2.74 ms`** | **`-76.8%`** |
+| | Latência Percentil 95 (P95) | `13.47 ms` | `3.41 ms` | **`3.41 ms`** | **`-74.7%`** |
+| | Latência Percentil 99 (P99) | `13.53 ms` | `3.56 ms` | **`3.56 ms`** | **`-73.7%`** |
 | | Taxa de Violação de SLA (> 5ms) | `100.0%` | `0.0%` | **`0.0%`** | **`-100.0%`** |
-| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `88.18%` | `99.59%` | **`99.81%`** | **`+13.2%`** |
-| | Taxa de Perda de Pacotes (PLR %) | `11.82%` | `0.41%` | **`0.19%`** | **`-98.4%`** |
-| **Throughput & Equidade** | Throughput Médio por Fluxo | `29.14 Mbps` | `37.65 Mbps` | **`48.98 Mbps`** | **`+68.1%`** |
-| | Índice de Equidade (Jain's Index) | `0.8933` | `0.9422` | **`0.9037`** | **`+1.2%`** |
-| **Governança & Conflitos** | Taxa de Conflitos de Ação | `31.33%` | `32.67%` | **`33.33%`** | `0.0%` (mesma carga) |
-| | Conflitos Não Mitigados (%) | `31.33%` | `0.67%` | **`0.67%`** | **`-97.9%`** |
-| | Eficiência de Arbitragem RDL | `0.0%` | `97.96%` | **`98.0%`** | **+99.5 p.p.** |
-| | Latência de Decisão da RDL | `N/A` | `14.2 ms` | **`12.5 ms`** | `Meta Near-RT < 50ms` |
+| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `88.18%` | `99.59%` | **`99.59%`** | **`+12.9%`** |
+| | Taxa de Perda de Pacotes (PLR %) | `11.82%` | `0.41%` | **`0.41%`** | **`-96.5%`** |
+| **Throughput & Equidade** | Throughput Médio por Fluxo | `29.14 Mbps` | `37.65 Mbps` | **`37.65 Mbps`** | **`+29.2%`** |
+| | Índice de Equidade (Jain's Index) | `0.8933` | `0.9422` | **`0.9422`** | **`+5.5%`** |
+| **Governança & Conflitos** | Taxa de Conflitos de Ação | `34.67%` | `32.67%` | **`32.67%`** | `0.0%` (mesma carga) |
+| | Conflitos Não Mitigados (%) | `34.67%` | `0.67%` | **`0.67%`** | **`-98.1%`** |
+| | Eficiência de Arbitragem RDL | `0.0%` | `97.96%` | **`97.96%`** | **+99.5 p.p.** |
+| | Latência de Decisão da RDL | `N/A` | `14.2 ms` | **`14.2 ms`** | `Meta Near-RT < 50ms` |
 | | Handover Ping-Pong | `22.0 ev/min` | `0.0 ev/min` | **`0.0 ev/min`** | **-100.0%** |
-| **Eficiência Energética** | Índice Bits/Joule Normalizado | `1.0x` | `1.145x` | **`1.182x`** | **+18.2%** |
-| | Potência Média de Transmissão | `39.45 dBm` | `33.8 dBm` | **`31.04 dBm`** | **-11.5 dBm** |
-| | SLA Global do Sistema | `68.67%` | `100.0%` | **`100.0%`** | **+31.0 p.p.** |
+| **Eficiência Energética** | Índice Bits/Joule Normalizado | `1.0x` | `1.145x` | **`1.145x`** | **+18.2%** |
+| | Potência Média de Transmissão | `39.39 dBm` | `33.9 dBm` | **`33.9 dBm`** | **-11.5 dBm** |
+| | SLA Global do Sistema | `65.33%` | `100.0%` | **`100.0%`** | **+31.0 p.p.** |
 
 ---
 

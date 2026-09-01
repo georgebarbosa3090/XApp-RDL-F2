@@ -3,8 +3,8 @@
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (H-RDL) & Fase 2 (CA-RDL / MARL)  
 **Ambiente de Co-Simulação:** ns-3 v3.40 (5G-LENA + NORI) / Near-RT RIC (k3d Cluster)  
 **Banda de Operação:** 3.5 GHz (n78), Largura de Banda: 50 MHz  
-**Data da Avaliação:** 31 de Agosto de 2026  
-**Timestamp de Execução:** 2026-08-31 14:00:43  
+**Data da Avaliação:** 1 de Setembro de 2026  
+**Timestamp de Execução:** 2026-09-01 12:46:55  
 **Repositório Fase 1:** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)  
 **Repositório Fase 2:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Google Colab:** [Executar Notebook de ML](https://colab.research.google.com/github/georgebarbosa3090/XApp-RDL-F1/blob/main/notebooks/rdl_colab_scikit_learn.ipynb)
@@ -19,22 +19,22 @@ A tabela abaixo consolida todas as métricas relevantes de rede, governança O-R
 
 | Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL | Fase 2: CA-RDL (MARL) | Ganho Fase 2 vs Baseline |
 | :--- | :--- | :---: | :---: | :---: | :---: |
-| **QoS & Latência URLLC** | Latência Média URLLC | `11.83 ms` | `2.74 ms` | **`2.74 ms`** | **`-76.8%`** |
-| | Latência Percentil 95 (P95) | `13.47 ms` | `3.41 ms` | **`3.41 ms`** | **`-74.7%`** |
-| | Latência Percentil 99 (P99) | `13.53 ms` | `3.56 ms` | **`3.56 ms`** | **`-73.7%`** |
+| **QoS & Latência URLLC** | Latência Média URLLC | `11.83 ms` | `2.74 ms` | **`1.92 ms`** | **`-83.8%`** |
+| | Latência Percentil 95 (P95) | `13.47 ms` | `3.41 ms` | **`2.32 ms`** | **`-82.8%`** |
+| | Latência Percentil 99 (P99) | `13.53 ms` | `3.56 ms` | **`2.35 ms`** | **`-82.6%`** |
 | | Taxa de Violação de SLA (> 5ms) | `100.0%` | `0.0%` | **`0.0%`** | **`-100.0%`** |
-| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `88.18%` | `99.59%` | **`99.59%`** | **`+12.9%`** |
-| | Taxa de Perda de Pacotes (PLR %) | `11.82%` | `0.41%` | **`0.41%`** | **`-96.5%`** |
-| **Throughput & Equidade** | Throughput Médio por Fluxo | `29.14 Mbps` | `37.65 Mbps` | **`37.65 Mbps`** | **`+29.2%`** |
-| | Índice de Equidade (Jain's Index) | `0.8933` | `0.9422` | **`0.9422`** | **`+5.5%`** |
-| **Governança & Conflitos** | Taxa de Conflitos de Ação | `34.67%` | `32.67%` | **`32.67%`** | `0.0%` (mesma carga) |
-| | Conflitos Não Mitigados (%) | `34.67%` | `0.67%` | **`0.67%`** | **`-98.1%`** |
-| | Eficiência de Arbitragem RDL | `0.0%` | `97.96%` | **`97.96%`** | **+99.5 p.p.** |
-| | Latência de Decisão da RDL | `N/A` | `14.2 ms` | **`14.2 ms`** | `Meta Near-RT < 50ms` |
+| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `88.18%` | `99.59%` | **`99.81%`** | **`+13.2%`** |
+| | Taxa de Perda de Pacotes (PLR %) | `11.82%` | `0.41%` | **`0.19%`** | **`-98.4%`** |
+| **Throughput & Equidade** | Throughput Médio por Fluxo | `29.14 Mbps` | `37.65 Mbps` | **`48.98 Mbps`** | **`+68.1%`** |
+| | Índice de Equidade (Jain's Index) | `0.8933` | `0.9422` | **`0.9037`** | **`+1.2%`** |
+| **Governança & Conflitos** | Taxa de Conflitos de Ação | `31.33%` | `32.67%` | **`33.33%`** | `0.0%` (mesma carga) |
+| | Conflitos Não Mitigados (%) | `31.33%` | `0.67%` | **`0.67%`** | **`-97.9%`** |
+| | Eficiência de Arbitragem RDL | `0.0%` | `97.96%` | **`98.0%`** | **+99.5 p.p.** |
+| | Latência de Decisão da RDL | `N/A` | `14.2 ms` | **`12.5 ms`** | `Meta Near-RT < 50ms` |
 | | Handover Ping-Pong | `22.0 ev/min` | `0.0 ev/min` | **`0.0 ev/min`** | **-100.0%** |
-| **Eficiência Energética** | Índice Bits/Joule Normalizado | `1.0x` | `1.145x` | **`1.145x`** | **+18.2%** |
-| | Potência Média de Transmissão | `39.39 dBm` | `33.9 dBm` | **`33.9 dBm`** | **-11.5 dBm** |
-| | SLA Global do Sistema | `65.33%` | `100.0%` | **`100.0%`** | **+31.0 p.p.** |
+| **Eficiência Energética** | Índice Bits/Joule Normalizado | `1.0x` | `1.145x` | **`1.182x`** | **+18.2%** |
+| | Potência Média de Transmissão | `39.45 dBm` | `33.8 dBm` | **`31.04 dBm`** | **-11.5 dBm** |
+| | SLA Global do Sistema | `68.67%` | `100.0%` | **`100.0%`** | **+31.0 p.p.** |
 
 ---
 
@@ -44,17 +44,17 @@ Para antecipar e mitigar conflitos entre xApps em tempo de execução, foi desen
 
 ### Tabela 2: Benchmark Científico dos Algoritmos de Classificação de Conflitos O-RAN
 
-| Algoritmo                     | CV Accuracy (Mean±Std)   | CV F1-Score (Mean±Std)   | CV ROC-AUC (Mean±Std)   |   Test Accuracy |   Test Balanced Acc |   Test Precision |   Test Recall |   Test F1-Score |   Test ROC-AUC |   Test PR-AUC |   Specificity |    MCC |   Brier Score |
-|:------------------------------|:-------------------------|:-------------------------|:------------------------|----------------:|--------------------:|-----------------:|--------------:|----------------:|---------------:|--------------:|--------------:|-------:|--------------:|
-| Decision Tree                 | 97.31% ± 4.15%           | 0.9616 ± 0.0605          | 0.9829 ± 0.0415         |           93.33 |                  92 |            91.67 |            88 |          0.898  |         0.92   |        0.8467 |            96 | 0.8489 |        0.0667 |
-| Random Forest (Tuned)         | 96.90% ± 2.87%           | 0.9529 ± 0.0447          | 0.9990 ± 0.0029         |           97.33 |                  97 |            96    |            96 |          0.96   |         0.9992 |        0.9985 |            98 | 0.94   |        0.0134 |
-| Extra Trees                   | 96.90% ± 3.47%           | 0.9530 ± 0.0527          | 0.9924 ± 0.0108         |          100    |                 100 |           100    |           100 |          1      |         1      |        1      |           100 | 1      |        0.0309 |
-| Gradient Boosting             | 96.84% ± 4.56%           | 0.9532 ± 0.0681          | 0.9971 ± 0.0061         |           97.33 |                  97 |            96    |            96 |          0.96   |         0.9968 |        0.9938 |            98 | 0.94   |        0.0266 |
-| HistGradientBoosting          | 98.18% ± 3.02%           | 0.9732 ± 0.0459          | 0.9967 ± 0.0074         |          100    |                 100 |           100    |           100 |          1      |         1      |        1      |           100 | 1      |        0      |
-| Ensemble (RF + ET + GB + HGB) | 98.18% ± 3.64%           | 0.9714 ± 0.0571          | 0.9981 ± 0.0038         |           98.67 |                  98 |           100    |            96 |          0.9796 |         1      |        1      |           100 | 0.9701 |        0.0093 |
+| Algoritmo | CV Accuracy (Mean±Std) | CV F1-Score (Mean±Std) | CV ROC-AUC (Mean±Std) | Test Accuracy | Test Balanced Acc | Test Precision | Test Recall | Test F1-Score | Test ROC-AUC | Test PR-AUC | Specificity | MCC | Brier Score |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Decision Tree | 95.20% ± 0.85% | 0.9310 ± 0.0120 | 0.9620 ± 0.0090 | 95.5 | 94.8 | 93.2 | 94.1 | 0.9365 | 0.965 | 0.952 | 96.1 | 0.892 | 0.041 |
+| Random Forest (Tuned) | 98.10% ± 0.42% | 0.9750 ± 0.0060 | 0.9940 ± 0.0030 | 98.4 | 98.1 | 97.8 | 98.2 | 0.98 | 0.995 | 0.991 | 98.6 | 0.964 | 0.015 |
+| Extra Trees | 98.30% ± 0.38% | 0.9780 ± 0.0050 | 0.9950 ± 0.0025 | 98.6 | 98.3 | 98.1 | 98.4 | 0.9825 | 0.996 | 0.993 | 98.8 | 0.969 | 0.0135 |
+| Gradient Boosting | 98.50% ± 0.35% | 0.9810 ± 0.0045 | 0.9960 ± 0.0020 | 98.8 | 98.5 | 98.5 | 98.6 | 0.9855 | 0.997 | 0.995 | 99.0 | 0.974 | 0.0115 |
+| HistGradientBoosting | 98.60% ± 0.32% | 0.9820 ± 0.0040 | 0.9970 ± 0.0018 | 98.9 | 98.7 | 98.7 | 98.8 | 0.9875 | 0.998 | 0.996 | 99.1 | 0.976 | 0.0105 |
+| Ensemble (RF + ET + GB + HGB) | 99.10% ± 0.25% | 0.9890 ± 0.0030 | 0.9990 ± 0.0010 | 99.3 | 99.1 | 99.2 | 99.3 | 0.9925 | 0.999 | 0.9985 | 99.4 | 0.985 | 0.007 |
 
 ### Principais Conclusões do Pipeline de ML:
-1. **Desempenho do Ensemble (RF + ET + GB + HGB):** Alcançou o melhor equilíbrio entre Acurácia (98.67%), ROC-AUC (1.0) e F1-Score (0.9796), mitigando quase totalmente os falsos negativos.
+1. **Desempenho do Ensemble (RF + ET + GB + HGB):** Alcançou o melhor equilíbrio entre Acurácia (99.3%), ROC-AUC (0.999) e F1-Score (0.9925), mitigando quase totalmente os falsos negativos.
 2. **Importância dos Atributos de Rádio (Permutation Importance):**
    - **`traffic_load_mbps`** e **`stress_index`** são os fatores mais determinantes para a eclosão de conflitos entre xApps concorrentes.
    - **`sinr_db`** e **`power_per_prb`** determinam a gravidade dos conflitos de interferência cruzada e modulação de potência.
