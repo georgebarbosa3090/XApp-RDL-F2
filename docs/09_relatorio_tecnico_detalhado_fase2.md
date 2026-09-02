@@ -153,14 +153,29 @@ Avalia todas as combinações de subconjuntos possíveis ($2^N$ combinações) d
 ---
 
 ### 4.3. Módulo de Refinamento e Blindagem (`RefinementAgent` / Safety Guards)
-O [`RefinementAgent`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/refinement_agent.py) implementa filtros determinísticos que interceptam e validam as decisões do modelo de ML antes da emissão à RAN:
+
+O [`RefinementAgent`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/refinement_agent.py) implementa filtros determinísticos e regras de segurança que interceptam, validam e corrigem as decisões do modelo de ML antes de qualquer comando ser emitido à rede 5G NR:
+
+| Regra de Blindagem | Parâmetro / Escopo | Limite Operacional | Ação em Caso de Violação |
+| :--- | :--- | :--- | :--- |
+| **Barreira de Frequência Temporal** (*Temporal Throttling*) | Todos os parâmetros por nó (`node_id`, `parameter`) | `t_now - t_last_control >= 1000 ms` | Rejeição do comando para evitar oscilações e sobrecarga na interface E2 |
+| **Restrições de Quota de Recursos** (*PRB Bounds*) | Alocação de Blocos de Recursos (`PRB_QUOTA`) | `0 <= PRB_QUOTA <= 100 %` | Bloqueio de valores negativos ou acima da capacidade total do enlace |
+| **Restrições de Potência de Rádio** (*Power Bounds*) | Potência de Transmissão (`TX_POWER`) | `-10 dBm <= TX_POWER <= 23 dBm` (Macro gNB até `43 dBm`) | Bloqueio de comandos fora da faixa de rádio-frequência segura |
+| **Checagem de Destino e Integridade** | Identificador de Nó E2 (`node_id`) | `node_id != ""` e cadastrado no SDL | Descarte imediato de comandos com nós de destino nulos ou desconhecidos |
+
+#### Detalhamento das Regras de Segurança:
+
 1. **Barreira de Frequência Temporal (*Temporal Throttling*):**
-   $$t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{param}) \ge \Delta t_{\text{min}} \quad (\Delta t_{\text{min}} = 1000\text{ ms})$$
-   Impede que rajadas de decisões causem instabilidade ou saturação no canal de sinalização E2.
+   Garante que o intervalo mínimo entre comandos sucessivos de controle no mesmo parâmetro e no mesmo nó E2 seja respeitado:
+   $$\Delta t_{\text{control}} = t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{parameter}) \ge 1000\text{ ms}$$
+   Impede que rajadas de decisões instáveis provoquem flutuações e sobrecarga no canal de sinalização E2.
+
 2. **Restrições de Fronteira Física de Rádio (*Physical Bounds*):**
-   * Quota de PRBs: $\text{PRB\_QUOTA} \in [0, \, 100]\%$
-   * Potência de Transmissão: $P_{tx} \in [-10, \, 23]\text{ dBm}$ (ajustável até $43\text{ dBm}$ para Macro gNodeB).
-3. **Checagem de Destino e Integridade:** Bloqueia comandos com identificadores de nós E2 nulos ou não cadastrados.
+   * **Quota de PRBs:** $0 \le \text{PRB\_QUOTA} \le 100\%$
+   * **Potência de Transmissão:** $-10\text{ dBm} \le P_{tx} \le 23\text{ dBm}$ (ajustável até $43\text{ dBm}$ para Macro gNodeBs).
+
+3. **Checagem de Destino e Validação de Lote:**
+   Bloqueia comandos direcionados a nós E2 vazios (`node_id == ""`) e descarta lotes vazios sem ações selecionadas.
 
 ---
 
