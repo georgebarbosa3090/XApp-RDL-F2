@@ -158,7 +158,7 @@ O [`RefinementAgent`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratc
 
 | Regra de Blindagem | Parâmetro / Escopo | Limite Operacional | Ação em Caso de Violação |
 | :--- | :--- | :--- | :--- |
-| **Barreira de Frequência Temporal** (*Temporal Throttling*) | Todos os parâmetros por nó (`node_id`, `parameter`) | `t_now - t_last_control >= 1000 ms` | Rejeição do comando para evitar oscilações e sobrecarga na interface E2 |
+| **Barreira de Frequência Temporal** (*Temporal Throttling*) | Todos os parâmetros por nó (`node_id`, `parameter`) | `t_now - t_last >= 1000 ms` | Rejeição do comando para evitar oscilações e sobrecarga na interface E2 |
 | **Restrições de Quota de Recursos** (*PRB Bounds*) | Alocação de Blocos de Recursos (`PRB_QUOTA`) | `0 <= PRB_QUOTA <= 100 %` | Bloqueio de valores negativos ou acima da capacidade total do enlace |
 | **Restrições de Potência de Rádio** (*Power Bounds*) | Potência de Transmissão (`TX_POWER`) | `-10 dBm <= TX_POWER <= 23 dBm` (Macro gNB até `43 dBm`) | Bloqueio de comandos fora da faixa de rádio-frequência segura |
 | **Checagem de Destino e Integridade** | Identificador de Nó E2 (`node_id`) | `node_id != ""` e cadastrado no SDL | Descarte imediato de comandos com nós de destino nulos ou desconhecidos |
@@ -166,7 +166,7 @@ O [`RefinementAgent`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratc
 #### Detalhamento das Regras de Segurança:
 
 * **Barreira de Frequência Temporal:**  
-  $$\Delta t_{\text{control}} = t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{parameter}) \ge 1000\text{ ms}$$
+  $$\Delta t_{\text{control}} = t_{\text{now}} - t_{\text{last}} \ge 1000\text{ ms}$$
 * **Restrições de Fronteira Física de Rádio:**  
   * Quota de PRBs: `0 <= PRB_QUOTA <= 100%`  
   * Potência de Transmissão: `-10 dBm <= P_tx <= 23 dBm` (ajustável até `43 dBm` para nós Macro gNodeB).  
@@ -202,7 +202,7 @@ No módulo [`mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravit
 
 O coordenador [`MAPPOCoordinator`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py) calcula a recompensa multi-objetivo $R_t$ a cada transição de estado da rede:
 
-$$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee}}(t) - w_{\text{pen}} \cdot \text{Penalty}(t)$$
+$$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee}}(t) - w_{\text{pen}} \cdot \text{Pen}(t)$$
 
 **Pesos Padrão de Ponderação:**
 * $w_{\text{qos}} = 0.60$ (Prioridade para Qualidade de Serviço e SLA)
@@ -217,7 +217,7 @@ $$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee
 | | | Se `Delay_URLLC >= 15.0 ms` | `(Priority(a_t) / 10.0) - 0.5` |
 | **Eficiência Energética (EE)** | $f_{\text{ee}}(t)$ | Modulação de potência / economia de energia (`power` ou `es`) | `1.0` |
 | | | Caso neutro / sem alteração de potência | `0.5` |
-| **Penalidade de Conflito** | $\text{Penalty}(t)$ | Conflito plenamente resolvido e harmonizado | `0.0` (Sem penalidade) |
+| **Penalidade de Conflito** | $\text{Pen}(t)$ | Conflito plenamente resolvido e harmonizado | `0.0` (Sem penalidade) |
 | | | Conflito não resolvido / contenção de recursos | `1.0` (Penalidade máxima) |
 
 ### 6.2. Função de Perda dos Atores com PPO-Clip
@@ -226,7 +226,7 @@ Para garantir estabilidade no treinamento e evitar atualizações de política d
 
 $$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
 
-* **Razão de probabilidade:** $r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)}$
+* **Razão de probabilidade:** $r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta,\text{old}}(a_t | s_t)}$
 * **Parâmetro de corte:** $\epsilon = 0.20$
 * **Vantagem $\hat{A}_t$:** Calculada via Generalized Advantage Estimation (GAE) com $\gamma = 0.99$ e $\lambda = 0.95$.
 
