@@ -142,13 +142,13 @@ flowchart TD
 ```
 
 #### A. Políticas de Utilidade de SLA (Conflitos Diretos)
+
 Avalia todas as combinações de subconjuntos possíveis ($2^N$ combinações) das ações conflitantes:
-1. **TVS (*Throughput Violation-based Selection*):**
-   $$s_j^{\text{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$
-   onde $C_u(t)$ é o indicador de violação de taxa do UE $u$ e $P_{\text{total}}$ é a potência total demandada. Prioriza a eliminação estrita de violações de SLA de vazão e latência.
-2. **EEVS (*Energy Efficiency Violation-based Selection*):**
-   $$s_j^{\text{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$
-   onde $E_u(t)$ penaliza potências excessivas que resultem em retornos marginais decrescentes de vazão ($Throughput / Watt$).
+
+| Política de SLA | Fórmula de Utilidade | Objetivo Primário |
+| :--- | :--- | :--- |
+| **TVS** (*Throughput Violation-based Selection*) | $$s_j^{\text{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$ | Prioriza a eliminação estrita de violações de SLA de vazão ($C_u$) e latência. |
+| **EEVS** (*Energy Efficiency Violation-based Selection*) | $$s_j^{\text{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$ | Penaliza potências excessivas ($E_u$) que degradam a eficiência energética ($\text{Throughput}/\text{Watt}$). |
 
 ---
 
@@ -165,17 +165,13 @@ O [`RefinementAgent`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratc
 
 #### Detalhamento das Regras de Segurança:
 
-1. **Barreira de Frequência Temporal (*Temporal Throttling*):**
-   Garante que o intervalo mínimo entre comandos sucessivos de controle no mesmo parâmetro e no mesmo nó E2 seja respeitado:
-   $$\Delta t_{\text{control}} = t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{parameter}) \ge 1000\text{ ms}$$
-   Impede que rajadas de decisões instáveis provoquem flutuações e sobrecarga no canal de sinalização E2.
-
-2. **Restrições de Fronteira Física de Rádio (*Physical Bounds*):**
-   * **Quota de PRBs:** $0 \le \text{PRB\_QUOTA} \le 100\%$
-   * **Potência de Transmissão:** $-10\text{ dBm} \le P_{tx} \le 23\text{ dBm}$ (ajustável até $43\text{ dBm}$ para Macro gNodeBs).
-
-3. **Checagem de Destino e Validação de Lote:**
-   Bloqueia comandos direcionados a nós E2 vazios (`node_id == ""`) e descarta lotes vazios sem ações selecionadas.
+* **Barreira de Frequência Temporal:**  
+  $$\Delta t_{\text{control}} = t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{parameter}) \ge 1000\text{ ms}$$
+* **Restrições de Fronteira Física de Rádio:**  
+  * Quota de PRBs: $0 \le \text{PRB\_QUOTA} \le 100\%$  
+  * Potência de Transmissão: $-10\text{ dBm} \le P_{tx} \le 23\text{ dBm}$ (até $43\text{ dBm}$ para nós Macro).  
+* **Checagem de Destino e Validação de Lote:**  
+  Bloqueia comandos direcionados a nós E2 vazios (`node_id == ""`) e descarta lotes vazios sem ações selecionadas.
 
 ---
 
@@ -203,30 +199,39 @@ No módulo [`mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravit
 ## 6. Modelagem Matemática de Recompensas e Penalidades
 
 ### 6.1. Função de Recompensa Multi-Objetivo Global
-O coordenador [`MAPPOCoordinator`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py) calcula a recompensa multi-objetivo $R_t$ a cada transição:
+
+O coordenador [`MAPPOCoordinator`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py) calcula a recompensa multi-objetivo $R_t$ a cada transição de estado da rede:
 
 $$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee}}(t) - w_{\text{pen}} \cdot \text{Penalty}(t)$$
 
-Onde os pesos padrão são configurados como:
-$$w_{\text{qos}} = 0.60, \quad w_{\text{ee}} = 0.30, \quad w_{\text{pen}} = 0.10$$
+**Pesos Padrão de Ponderação:**
+* $w_{\text{qos}} = 0.60$ (Prioridade para Qualidade de Serviço e SLA)
+* $w_{\text{ee}} = 0.30$ (Prioridade para Eficiência Energética)
+* $w_{\text{pen}} = 0.10$ (Penalidade para Conflitos / Contenção não mitigada)
 
-1. **Componente de Qualidade de Serviço ($f_{\text{qos}}$):**
-   $$f_{\text{qos}}(t) = \frac{\text{Priority}(a_t)}{10} + \begin{cases} +0.5, & \text{se } \text{Delay}_{\text{URLLC}} < 15.0\text{ ms} \\ -0.5, & \text{caso contrário} \end{cases}$$
-2. **Componente de Eficiência Energética ($f_{\text{ee}}$):**
-   $$f_{\text{ee}}(t) = \begin{cases} 1.0, & \text{se a ação envolve modulação de potência ou redução de consumo} \\ 0.5, & \text{caso neutro} \end{cases}$$
-3. **Penalidade por Violação e Não Resolução ($\text{Penalty}$):**
-   $$\text{Penalty}(t) = \begin{cases} 0.0, & \text{se o conflito foi plenamente harmonizado e mitigado} \\ 1.0, & \text{se o conflito gerou contenção de recursos ou deadlock} \end{cases}$$
+#### Componentes Detalhados da Função de Recompensa:
+
+| Componente | Símbolo | Condição / Regra de Cálculo | Valor Retornado |
+| :--- | :--- | :--- | :--- |
+| **Qualidade de Serviço (QoS)** | $f_{\text{qos}}(t)$ | Se $\text{Delay}_{\text{URLLC}} < 15.0\text{ ms}$ | $\frac{\text{Priority}(a_t)}{10} + 0.5$ |
+| | | Se $\text{Delay}_{\text{URLLC}} \ge 15.0\text{ ms}$ | $\frac{\text{Priority}(a_t)}{10} - 0.5$ |
+| **Eficiência Energética (EE)** | $f_{\text{ee}}(t)$ | Modulação de potência / economia de energia (`power` ou `es`) | $1.0$ |
+| | | Caso neutro / sem alteração de potência | $0.5$ |
+| **Penalidade de Conflito** | $\text{Penalty}(t)$ | Conflito plenamente resolvido e harmonizado | $0.0$ (Sem penalidade) |
+| | | Conflito não resolvido / contenção de recursos | $1.0$ (Penalidade máxima) |
 
 ### 6.2. Função de Perda dos Atores com PPO-Clip
+
 Para garantir estabilidade no treinamento e evitar atualizações de política destrutivas no plano de controle:
 
 $$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
 
-* Razão de probabilidade: $r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)}$
-* Parâmetro de corte: $\epsilon = 0.20$
-* Vantagem $\hat{A}_t$: Calculada via Generalized Advantage Estimation (GAE) com $\gamma = 0.99$ e $\lambda = 0.95$.
+* **Razão de probabilidade:** $r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)}$
+* **Parâmetro de corte:** $\epsilon = 0.20$
+* **Vantagem $\hat{A}_t$:** Calculada via Generalized Advantage Estimation (GAE) com $\gamma = 0.99$ e $\lambda = 0.95$.
 
 ### 6.3. Função de Perda do Crítico Centralizado
+
 Minimização do erro quadrático médio (MSE) entre o valor predito e o retorno descontado real:
 
 $$L(\phi) = \hat{\mathbb{E}}_t \left[ \left( V_\phi(s_t) - \hat{R}_t \right)^2 \right]$$
