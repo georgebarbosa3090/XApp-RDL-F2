@@ -10,7 +10,7 @@
 
 ## 1. Visão Geral Executiva e Arquitetura Global da Fase 2
 
-A Fase 2 do projeto evoluiu a camada de decisão do xApp RDL de uma abordagem puramente heurística (H-RDL da Fase 1) para uma arquitetura **Cognitiva e Ciente de Contexto (Context-Aware RDL - CA-RDL)**. O sistema atua no plano Near-RT RIC (loop de controle de $10\text{ ms}$ a $1\text{ s}$ segundo as especificações O-RAN WG3), arbitrando ações conflitantes emitidas simultaneamente por múltiplas xApps de rádio (`ricxapp-qos-xslice`, `ricxapp-energy-saving` e `ricxapp-traffic-steering`) sobre nós gNodeB 5G NR.
+A Fase 2 do projeto evoluiu a camada de decisão do xApp RDL de uma abordagem puramente heurística (H-RDL da Fase 1) para uma arquitetura **Cognitiva e Ciente de Contexto (Context-Aware RDL - CA-RDL)**. O sistema atua no plano Near-RT RIC (loop de controle de 10 ms a 1 s segundo as especificações O-RAN WG3), arbitrando ações conflitantes emitidas simultaneamente por múltiplas xApps de rádio (`ricxapp-qos-xslice`, `ricxapp-energy-saving` e `ricxapp-traffic-steering`) sobre nós gNodeB 5G NR.
 
 ![Pipeline Global e Arquitetura do xApp RDL Fase 2](figures/diagram_01_global_pipeline_architecture.png)
 
@@ -64,7 +64,7 @@ graph TD
   * `monitoring`: Contém as instâncias do **Prometheus** (porta `9090`), **Grafana** (porta `3000`) e **Kiali Mesh** (porta `20001`).
 * **Roteamento de Portas e Serviços:**
   * Porta `8080/TCP`: Endpoint de integridade e liveness/readiness probes (`/health/live`, `/health/ready`) gerenciado pelo `HealthServer`.
-  * Porta `8081/TCP`: Endpoint OpenMetrics (`/metrics`) consumido a cada $1\text{ s}$ pelo scraper do Prometheus.
+  * Porta `8081/TCP`: Endpoint OpenMetrics (`/metrics`) consumido a cada 1 s pelo scraper do Prometheus.
   * Portas `4560/TCP` e `4561/TCP`: Barramento de alta velocidade RMR (RIC Message Router) com roteamento direto para troca de mensagens inter-xApp sem overhead de serialização HTTP.
 
 ### 2.2. Shared Data Layer (SDL) e Redis
@@ -87,11 +87,9 @@ O módulo de percepção implementa um **Grafo de Dependências de Recursos e KP
 ### 3.1. Modelagem das Relações Lógicas
 O grafo direcionado mapeia como alterações em parâmetros de baixo nível da RAN propagam efeitos sobre os KPIs de desempenho:
 
-$$\mathcal{G}_{KG} = (\mathcal{V}_{params} \cup \mathcal{V}_{KPIs}, \, \mathcal{E}_{impact})$$
-
-* **PRB_QUOTA** afeta: `DRB.UEThpDl` (Throughput) e `RRU.PrbUsedDl` (Ocupação de PRB).
-* **SCHEDULER_WEIGHT** afeta: `DRB.UEThpDl` (Throughput) e `DRB.RlcSduDelayDl` (Latência RLC).
-* **TX_POWER** afeta: `L1M.DL-sinr` (Qualidade de Canal SINR) e `DRB.UEThpDl` (Throughput).
+* `PRB_QUOTA` afeta: `DRB.UEThpDl` (Throughput) e `RRU.PrbUsedDl` (Ocupação de PRB).
+* `SCHEDULER_WEIGHT` afeta: `DRB.UEThpDl` (Throughput) e `DRB.RlcSduDelayDl` (Latência RLC).
+* `TX_POWER` afeta: `L1M.DL-sinr` (Qualidade de Canal SINR) e `DRB.UEThpDl` (Throughput).
 
 ```mermaid
 graph LR
@@ -104,11 +102,13 @@ graph LR
 ```
 
 ### 3.2. Classificação e Detecção Topológica de Conflitos
-1. **Conflito Direto (DIRECT):** Duas ou mais xApps distintas tentam alterar simultaneamente o mesmo parâmetro físico de rádio no mesmo nó gNodeB:
-   $$\text{node}_a = \text{node}_b \quad \text{e} \quad \text{param}_a = \text{param}_b \quad \text{e} \quad \text{xapp}_a \neq \text{xapp}_b$$
-2. **Conflito Indireto (INDIRECT):** Ações direcionadas a parâmetros diferentes geram acoplamento destrutivo ao disputar os mesmos KPIs compartilhados no Grafo de Conhecimento:
-   $$\text{node}_a = \text{node}_b \quad \text{e} \quad \text{param}_a \neq \text{param}_b \quad \text{e} \quad \left( \text{KPIs}(\text{param}_a) \cap \text{KPIs}(\text{param}_b) \neq \emptyset \right)$$
-   *Exemplo Prático:* A xApp `energy-saving` reduz `TX_POWER` para economizar energia enquanto a xApp `qos-xslice` aumenta `PRB_QUOTA` para manter o throughput do fluxo URLLC. A queda de potência degrada o SINR (`L1M.DL-sinr`), anulando o efeito do aumento de PRBs e provocando violação de latência.
+
+1. **Conflito Direto (`DIRECT`):** Duas ou mais xApps distintas tentam alterar simultaneamente o mesmo parâmetro físico de rádio no mesmo nó gNodeB:
+   * Condição: `node_a == node_b` e `param_a == param_b` e `xapp_a != xapp_b`
+
+2. **Conflito Indireto (`INDIRECT`):** Ações direcionadas a parâmetros diferentes geram acoplamento destrutivo ao disputar os mesmos KPIs compartilhados no Grafo de Conhecimento:
+   * Condição: `node_a == node_b` e `param_a != param_b` e intersecção não-vazia entre os KPIs impactados.
+   * *Exemplo Prático:* A xApp `energy-saving` reduz `TX_POWER` para economizar energia enquanto a xApp `qos-xslice` aumenta `PRB_QUOTA` para manter o throughput do fluxo URLLC. A queda de potência degrada o SINR (`L1M.DL-sinr`), anulando o efeito do aumento de PRBs e provocando violação de latência.
 
 ---
 
@@ -118,14 +118,14 @@ graph LR
 
 ### 4.1. Módulo de Percepção (`PerceptionAgent`)
 * **Ingestão E2SM-KPM:** O [`KpmDecoder`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/kpm_decoder.py) decodifica payloads ASN.1 das mensagens `RIC_INDICATION` (mtype `12050`).
-* **Janela Temporal de Decisão (*Decision Window*):** O [`RDLxApp`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py) implementa um buffer com janela $\Delta t_{win} = 200\text{ ms}$. Todas as propostas `RDL_ACTION_PROPOSAL` (mtype `30000`) que chegam dentro da janela são agrupadas e avaliadas em lote.
+* **Janela Temporal de Decisão (*Decision Window*):** O [`RDLxApp`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py) implementa um buffer com janela temporal de 200 ms. Todas as propostas `RDL_ACTION_PROPOSAL` (mtype `30000`) que chegam dentro da janela são agrupadas e avaliadas em lote.
 * **Extração e Normalização de Estado Global:** Converte as telemetrias e propostas em um vetor de observação normalizado $s_t \in \mathbb{R}^{10}$:
-  * $s_t[0]$: Tipo de conflito ($1.0$ para direto, $0.5$ para indireto).
-  * $s_t[1]$: Densidade de xApps envolvidas no lote ($\frac{N_{xapps}}{5}$).
-  * $s_t[2]$: Throughput agregado normalizado ($\min(1.0, \frac{\text{DRB.UEThpDl}}{100})$).
-  * $s_t[3]$: Taxa de ocupação de PRBs no enlace descendente ($\frac{\text{RRU.PrbTotDl}}{100}$).
-  * $s_t[4]$: Atraso médio de pacotes na fila MAC/RLC ($\frac{\text{QoS.FlowDelay}}{50}$).
-  * $s_t[5..9]$: Vetores de prioridade e valores propostos pelas xApps concorrentes.
+  * `s_t[0]`: Tipo de conflito (1.0 para direto, 0.5 para indireto).
+  * `s_t[1]`: Densidade de xApps envolvidas no lote (`N_xapps / 5.0`).
+  * `s_t[2]`: Throughput agregado normalizado (`min(1.0, DRB.UEThpDl / 100.0)`).
+  * `s_t[3]`: Taxa de ocupação de PRBs no enlace descendente (`RRU.PrbTotDl / 100.0`).
+  * `s_t[4]`: Atraso médio de pacotes na fila MAC/RLC (`QoS.FlowDelay / 50.0`).
+  * `s_t[5..9]`: Vetores de prioridade e valores propostos pelas xApps concorrentes.
 
 ---
 
@@ -141,11 +141,11 @@ flowchart TD
     T -- INDIRETO --> MARL[3. Motor MARL MAPPO<br/>Crítico Global + Atores Distribuídos]
 ```
 
-#### A. Políticas de Utilidade de SLA (Conflitos Diretos)
+#### Políticas de Utilidade de SLA (Conflitos Diretos)
 
 Avalia todas as combinações de subconjuntos possíveis ($2^N$ combinações) das ações conflitantes:
 
-| Política de SLA | Fórmula de Utilidade | Objetivo Primário |
+| Política de SLA | Fórmula de Pontuação | Objetivo Primário |
 | :--- | :--- | :--- |
 | **TVS** (*Throughput Violation-based Selection*) | $$s_j^{\text{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$ | Prioriza a eliminação estrita de violações de SLA de vazão ($C_u$) e latência. |
 | **EEVS** (*Energy Efficiency Violation-based Selection*) | $$s_j^{\text{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$ | Penaliza potências excessivas ($E_u$) que degradam a eficiência energética ($\text{Throughput}/\text{Watt}$). |
@@ -168,8 +168,8 @@ O [`RefinementAgent`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratc
 * **Barreira de Frequência Temporal:**  
   $$\Delta t_{\text{control}} = t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{parameter}) \ge 1000\text{ ms}$$
 * **Restrições de Fronteira Física de Rádio:**  
-  * Quota de PRBs: $0 \le \text{PRB\_QUOTA} \le 100\%$  
-  * Potência de Transmissão: $-10\text{ dBm} \le P_{tx} \le 23\text{ dBm}$ (até $43\text{ dBm}$ para nós Macro).  
+  * Quota de PRBs: `0 <= PRB_QUOTA <= 100%`  
+  * Potência de Transmissão: `-10 dBm <= P_tx <= 23 dBm` (ajustável até `43 dBm` para nós Macro gNodeB).  
 * **Checagem de Destino e Validação de Lote:**  
   Bloqueia comandos direcionados a nós E2 vazios (`node_id == ""`) e descarta lotes vazios sem ações selecionadas.
 
@@ -185,13 +185,13 @@ No módulo [`mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravit
 * **Execução Descentralizada:** Cada Ator $\pi_{\theta_i}$ toma decisões sobre sua respectiva fatia (URLLC, eMBB ou Energy Saving) utilizando apenas informações locais.
 
 ### 5.2. Topologia das Redes Neurais (PyTorch / Fallback Numérico)
-* **Rede do Ator ($\text{ActorNetwork}$):**
+* **Rede do Ator (`ActorNetwork`):**
   * Entrada: Vetor de observação local $o_i \in \mathbb{R}^{10}$.
-  * Camadas: $\text{Linear}(10, 128) \rightarrow \text{LayerNorm}(128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 256) \rightarrow \text{LayerNorm}(256) \rightarrow \text{ReLU} \rightarrow \text{Linear}(256, 128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 5) \rightarrow \text{Softmax}$.
+  * Arquitetura: `Linear(10, 128) -> LayerNorm(128) -> ReLU -> Linear(128, 256) -> LayerNorm(256) -> ReLU -> Linear(256, 128) -> ReLU -> Linear(128, 5) -> Softmax`
   * Saída: Distribuição de probabilidade categórica sobre as 5 ações discretas de arbitragem.
-* **Rede do Crítico ($\text{CriticNetwork}$):**
+* **Rede do Crítico (`CriticNetwork`):**
   * Entrada: Vetor de observação global concatenado $s_t \in \mathbb{R}^{10 \times N}$.
-  * Camadas: $\text{Linear}(20, 128) \rightarrow \text{LayerNorm}(128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 256) \rightarrow \text{LayerNorm}(256) \rightarrow \text{ReLU} \rightarrow \text{Linear}(256, 128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 1)$.
+  * Arquitetura: `Linear(20, 128) -> LayerNorm(128) -> ReLU -> Linear(128, 256) -> LayerNorm(256) -> ReLU -> Linear(256, 128) -> ReLU -> Linear(128, 1)`
   * Saída: Escalar que estima o valor de estado $V_\phi(s_t)$.
 
 ---
@@ -213,12 +213,12 @@ $$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee
 
 | Componente | Símbolo | Condição / Regra de Cálculo | Valor Retornado |
 | :--- | :--- | :--- | :--- |
-| **Qualidade de Serviço (QoS)** | $f_{\text{qos}}(t)$ | Se $\text{Delay}_{\text{URLLC}} < 15.0\text{ ms}$ | $\frac{\text{Priority}(a_t)}{10} + 0.5$ |
-| | | Se $\text{Delay}_{\text{URLLC}} \ge 15.0\text{ ms}$ | $\frac{\text{Priority}(a_t)}{10} - 0.5$ |
-| **Eficiência Energética (EE)** | $f_{\text{ee}}(t)$ | Modulação de potência / economia de energia (`power` ou `es`) | $1.0$ |
-| | | Caso neutro / sem alteração de potência | $0.5$ |
-| **Penalidade de Conflito** | $\text{Penalty}(t)$ | Conflito plenamente resolvido e harmonizado | $0.0$ (Sem penalidade) |
-| | | Conflito não resolvido / contenção de recursos | $1.0$ (Penalidade máxima) |
+| **Qualidade de Serviço (QoS)** | $f_{\text{qos}}(t)$ | Se `Delay_URLLC < 15.0 ms` | `(Priority(a_t) / 10.0) + 0.5` |
+| | | Se `Delay_URLLC >= 15.0 ms` | `(Priority(a_t) / 10.0) - 0.5` |
+| **Eficiência Energética (EE)** | $f_{\text{ee}}(t)$ | Modulação de potência / economia de energia (`power` ou `es`) | `1.0` |
+| | | Caso neutro / sem alteração de potência | `0.5` |
+| **Penalidade de Conflito** | $\text{Penalty}(t)$ | Conflito plenamente resolvido e harmonizado | `0.0` (Sem penalidade) |
+| | | Conflito não resolvido / contenção de recursos | `1.0` (Penalidade máxima) |
 
 ### 6.2. Função de Perda dos Atores com PPO-Clip
 
@@ -241,12 +241,15 @@ $$L(\phi) = \hat{\mathbb{E}}_t \left[ \left( V_\phi(s_t) - \hat{R}_t \right)^2 \
 ## 7. Despacho de Controle E2SM-RC e Formatação ASN.1 APER
 
 Uma vez aprovada pelo Refinement Agent, a ação vencedora $a_t^*$ é convertida em um payload binário E2 pelo [`RCEncoder`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/rc_encoder.py):
-1. **Mapeamento de Parâmetros:**
-   * $\text{PRB\_QUOTA} \rightarrow \text{RAN Parameter ID: } 1$
-   * $\text{TX\_POWER} \rightarrow \text{RAN Parameter ID: } 2$
-   * $\text{SCHEDULER\_WEIGHT} \rightarrow \text{RAN Parameter ID: } 3$
-2. **Encodificação APER (Aligned Packet Encoding Rules):** Gera a sequência de bytes ASN.1 empacotada no envelope RMR `RIC_CONTROL_REQ` (mtype `12010`).
-3. **Envio via RMR:** Transmitido ao `E2Term` que converte a mensagem para o stream SCTP (porta `36422`) conectado à gNodeB no ns-3.
+
+| Parâmetro de Rádio | Identificador ASN.1 | Descrição do Controle E2SM-RC |
+| :--- | :--- | :--- |
+| `PRB_QUOTA` | **RAN Parameter ID: 1** | Ajuste dinâmico de quota de blocos de recursos físicos por fatia |
+| `TX_POWER` | **RAN Parameter ID: 2** | Controle de potência de transmissão do transmissor de rádio |
+| `SCHEDULER_WEIGHT` | **RAN Parameter ID: 3** | Ponderação do algoritmo de agendamento de pacotes MAC/RLC |
+
+* **Encodificação APER (*Aligned Packet Encoding Rules*):** Gera a sequência de bytes ASN.1 empacotada no envelope RMR `RIC_CONTROL_REQ` (mtype `12010`).
+* **Envio via RMR:** Transmitido ao `E2Term` que converte a mensagem para o stream SCTP (porta `36422`) conectado à gNodeB no ns-3.
 
 ---
 
@@ -258,16 +261,16 @@ A execução dos cenários de validação e simulação em larga escala no ns-3.
 
 | Dimensão de Governança | Baseline (Sem RDL) | Fase 1 (H-RDL) | Fase 2 (CA-RDL / MARL) | Impacto Técnico |
 | :--- | :---: | :---: | :---: | :--- |
-| **Latência Média URLLC** | $11.83\text{ ms}$ | $2.74\text{ ms}$ | **$1.92\text{ ms}$** | Redução de $83.8\%$ no atraso |
-| **Violação de SLA URLLC ($<5\text{ms}$)** | $100.0\%$ | $0.0\%$ | **$0.0\%$** | $0$ violações em 30 UEs |
-| **Confiabilidade (PDR)** | $88.18\%$ | $99.59\%$ | **$99.81\%$** | Ganho de $+11.63\text{ p.p.}$ |
-| **Throughput Total da Célula** | $874.1\text{ Mbps}$ | $1,129.5\text{ Mbps}$ | **$1,469.5\text{ Mbps}$** | Aumento de $+68.1\%$ na capacidade |
-| **Eficiência Energética** | $1.000\times$ | $1.145\times$ | **$1.182\times$** | Ganho de $+18.2\%$ de economia |
-| **Potência Média $P_{tx}$** | $39.45\text{ dBm}$ | $33.80\text{ dBm}$ | **$31.04\text{ dBm}$** | Redução real de potência de rádio |
-| **Conflitos Não Mitigados** | $31.33\%$ | $0.67\%$ | **$0.00\%$** | Eliminação completa de contenções |
-| **Latência de Decisão Near-RT** | $0.0\text{ ms}$ | $14.2\text{ ms}$ | **$12.5\text{ ms}$** | Bem abaixo do limite O-RAN ($50\text{ms}$) |
-| **Handover Ping-Pong** | $22.0\text{ ev/min}$ | $0.0\text{ ev/min}$ | **$0.0\text{ ev/min}$** | Estabilidade absoluta de conexão |
-| **Equidade de Jain (Fairness)** | $0.8933$ | $0.9422$ | **$0.9037$** | Distribuição justa de recursos |
+| **Latência Média URLLC** | 11.83 ms | 2.74 ms | **1.92 ms** | Redução de 83.8% no atraso |
+| **Violação de SLA URLLC (< 5 ms)** | 100.0% | 0.0% | **0.0%** | 0 violações em 30 UEs |
+| **Confiabilidade (PDR)** | 88.18% | 99.59% | **99.81%** | Ganho de +11.63 p.p. |
+| **Throughput Total da Célula** | 874.1 Mbps | 1,129.5 Mbps | **1,469.5 Mbps** | Aumento de +68.1% na capacidade |
+| **Eficiência Energética** | 1.000x | 1.145x | **1.182x** | Ganho de +18.2% de economia |
+| **Potência Média P_tx** | 39.45 dBm | 33.80 dBm | **31.04 dBm** | Redução real de potência de rádio |
+| **Conflitos Não Mitigados** | 31.33% | 0.67% | **0.00%** | Eliminação completa de contenções |
+| **Latência de Decisão Near-RT** | 0.0 ms | 14.2 ms | **12.5 ms** | Bem abaixo do limite O-RAN (50 ms) |
+| **Handover Ping-Pong** | 22.0 ev/min | 0.0 ev/min | **0.0 ev/min** | Estabilidade absoluta de conexão |
+| **Equidade de Jain (Fairness)** | 0.8933 | 0.9422 | **0.9037** | Distribuição justa de recursos |
 
 ---
 
