@@ -37,3 +37,6 @@ graph TD
     WG3 --> E2SM_RC["E2SM-RC v1.0 (Service Model: RAN Control)"]
     WG10 --> PROM["Prometheus Telemetry (:8081) & Helm v3 Packaging"]
 ```
+
+![Conformidade com Padrões O-RAN](figures/diagram_05_conformidade_oran_standards.png)
+

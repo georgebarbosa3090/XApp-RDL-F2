@@ -36,6 +36,8 @@ graph TD
     HARMONIZED --> E2_OUT["Interface E2 / E2SM-RC -> gNodeB"]
 ```
 
+![Arquitetura Cognitiva MAPPO](figures/diagram_02_arquitetura_cognitiva_mappo.png)
+
 ---
 
 ## 2. Modelagem Matemática do MAPPO

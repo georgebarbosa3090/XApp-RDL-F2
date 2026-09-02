@@ -24,3 +24,6 @@ graph LR
     RDL["xApp RDL Fase 2<br/>(:8081/metrics)"] --> PROM["Prometheus Scraper"]
     PROM --> GRAFANA["Grafana / Kiali Dashboard"]
 ```
+
+![Observabilidade Prometheus e Kiali](figures/diagram_04_observabilidade_prometheus_kiali.png)
+

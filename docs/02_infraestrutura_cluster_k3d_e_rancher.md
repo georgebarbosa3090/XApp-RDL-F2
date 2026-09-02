@@ -34,3 +34,6 @@ graph LR
     DEV -->|"HTTP:8080 (Health)"| RDL_SVC
     DEV -->|"HTTP:8081 (Metrics)"| RDL_SVC
 ```
+
+![Infraestrutura Cluster k3d e Rancher](figures/diagram_03_infraestrutura_k3d_rancher.png)
+

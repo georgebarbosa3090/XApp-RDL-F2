@@ -1,8 +1,8 @@
 {
     "metadata": {
         "title": "Avalia\u00e7\u00e3o Comparativa Completa: Baseline (Sem RDL) vs Fase 1 (H-RDL) vs Fase 2 (CA-RDL)",
-        "timestamp": "2026-09-01 13:05:06",
-        "evaluation_date": "1 de Setembro de 2026",
+        "timestamp": "2026-09-02 08:44:18",
+        "evaluation_date": "2 de Setembro de 2026",
         "environment": "ns-3 NORI / 5G-LENA 3.5 GHz (n78) + Near-RT RIC",
         "repository_phase1": "https://github.com/georgebarbosa3090/XApp-RDL-F1",
         "repository_phase2": "https://github.com/georgebarbosa3090/XApp-RDL-F2",
@@ -137,17 +137,17 @@
             "Algoritmo": "Gradient Boosting",
             "CV Accuracy (Mean\u00b1Std)": "98.53% \u00b1 2.37%",
             "CV F1-Score (Mean\u00b1Std)": "0.9775 \u00b1 0.0365",
-            "CV ROC-AUC (Mean\u00b1Std)": "0.9937 \u00b1 0.0164",
-            "Test Accuracy": 94.69,
-            "Test Balanced Acc": 96.05,
-            "Test Precision": 86.05,
+            "CV ROC-AUC (Mean\u00b1Std)": "0.9943 \u00b1 0.0146",
+            "Test Accuracy": 95.58,
+            "Test Balanced Acc": 96.71,
+            "Test Precision": 88.1,
             "Test Recall": 100.0,
-            "Test F1-Score": 0.925,
-            "Test ROC-AUC": 0.9961,
-            "Test PR-AUC": 0.9926,
-            "Specificity": 92.11,
-            "MCC": 0.8902,
-            "Brier Score": 0.0461
+            "Test F1-Score": 0.9367,
+            "Test ROC-AUC": 0.9968,
+            "Test PR-AUC": 0.9938,
+            "Specificity": 93.42,
+            "MCC": 0.9072,
+            "Brier Score": 0.0424
         },
         {
             "Algoritmo": "HistGradientBoosting",
@@ -179,7 +179,7 @@
             "Test PR-AUC": 0.9979,
             "Specificity": 93.42,
             "MCC": 0.9072,
-            "Brier Score": 0.0273
+            "Brier Score": 0.0265
         }
     ]
 }

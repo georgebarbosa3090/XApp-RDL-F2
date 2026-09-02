@@ -1,6 +1,6 @@
 # Relatório Comparativo de Validação Experimental: Baseline vs Fase 1 (H-RDL) vs Fase 2 (CA-RDL)
 
-**Data de Execução:** 2026-09-01 13:05:06  
+**Data de Execução:** 2026-09-02 08:44:24  
 **Ambiente:** ns-3 NORI / 5G-LENA 3.5 GHz (n78) + Near-RT RIC  
 **Repositório Fase 1:** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)  
 **Repositório Fase 2:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  

@@ -45,6 +45,8 @@ flowchart TB
     ZeroCopy_SDL -.->|"Shared Fast State"| GNN_Engine
 ```
 
+![Proposta Arquitetural Cross-Tier Hierárquica Fase 3](figures/diagram_06_proposta_arquitetural_fase3_6g.png)
+
 ---
 
 ## 2. Matriz Comparativa Evolutiva das Fases RDL
@@ -166,6 +168,8 @@ gantt
     Modulo de Explicabilidade XAI SHAP Attention  :t7, 2027-02-20, 30d
     Casos de Uso 6G ISAC RIS e Redes NTN no ns-3 :t8, 2027-03-10, 40d
 ```
+
+![Roadmap Técnico e Cronograma de Execução Fase 3](figures/diagram_07_roadmap_gantt_fase3.png)
 
 ### Tabela Detalhada de Entregáveis por Sprint
 

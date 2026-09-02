@@ -3,8 +3,8 @@
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (H-RDL) & Fase 2 (CA-RDL / MARL)  
 **Ambiente de Co-Simulação:** ns-3 v3.40 (5G-LENA + NORI) / Near-RT RIC (k3d Cluster)  
 **Banda de Operação:** 3.5 GHz (n78), Largura de Banda: 50 MHz  
-**Data da Avaliação:** 1 de Setembro de 2026  
-**Timestamp de Execução:** 2026-09-01 13:05:06  
+**Data da Avaliação:** 2 de Setembro de 2026  
+**Timestamp de Execução:** 2026-09-02 08:44:18  
 **Repositório Fase 1:** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)  
 **Repositório Fase 2:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Google Colab:** [Executar Notebook de ML](https://colab.research.google.com/github/georgebarbosa3090/XApp-RDL-F1/blob/main/notebooks/rdl_colab_scikit_learn.ipynb)
@@ -44,14 +44,14 @@ Para antecipar e mitigar conflitos entre xApps em tempo de execução, foi desen
 
 ### Tabela 2: Benchmark Científico dos Algoritmos de Classificação de Conflitos O-RAN
 
-| Algoritmo | CV Accuracy (Mean±Std) | CV F1-Score (Mean±Std) | CV ROC-AUC (Mean±Std) | Test Accuracy | Test Balanced Acc | Test Precision | Test Recall | Test F1-Score | Test ROC-AUC | Test PR-AUC | Specificity | MCC | Brier Score |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Decision Tree | 96.13% ± 2.67% | 0.9419 ± 0.0400 | 0.9729 ± 0.0314 | 92.92 | 93.35 | 85.37 | 94.59 | 0.8974 | 0.9335 | 0.8252 | 92.11 | 0.8462 | 0.0708 |
-| Random Forest (Tuned) | 98.82% ± 1.95% | 0.9809 ± 0.0324 | 0.9988 ± 0.0025 | 95.58 | 96.02 | 90.0 | 97.3 | 0.9351 | 0.9979 | 0.9959 | 94.74 | 0.9032 | 0.0258 |
-| Extra Trees | 96.76% ± 3.82% | 0.9487 ± 0.0625 | 0.9933 ± 0.0131 | 95.58 | 96.02 | 90.0 | 97.3 | 0.9351 | 0.9922 | 0.9847 | 94.74 | 0.9032 | 0.0524 |
-| Gradient Boosting | 98.53% ± 2.37% | 0.9775 ± 0.0365 | 0.9937 ± 0.0164 | 94.69 | 96.05 | 86.05 | 100.0 | 0.925 | 0.9961 | 0.9926 | 92.11 | 0.8902 | 0.0461 |
-| HistGradientBoosting | 99.12% ± 1.35% | 0.9861 ± 0.0212 | 0.9992 ± 0.0024 | 97.35 | 98.03 | 92.5 | 100.0 | 0.961 | 0.9996 | 0.9993 | 96.05 | 0.9426 | 0.0209 |
-| Ensemble (RF + ET + GB + HGB) | 99.12% ± 1.35% | 0.9861 ± 0.0212 | 0.9988 ± 0.0025 | 95.58 | 96.71 | 88.1 | 100.0 | 0.9367 | 0.9989 | 0.9979 | 93.42 | 0.9072 | 0.0273 |
+| Algoritmo                     | CV Accuracy (Mean±Std)   | CV F1-Score (Mean±Std)   | CV ROC-AUC (Mean±Std)   |   Test Accuracy |   Test Balanced Acc |   Test Precision |   Test Recall |   Test F1-Score |   Test ROC-AUC |   Test PR-AUC |   Specificity |    MCC |   Brier Score |
+|:------------------------------|:-------------------------|:-------------------------|:------------------------|----------------:|--------------------:|-----------------:|--------------:|----------------:|---------------:|--------------:|--------------:|-------:|--------------:|
+| Decision Tree                 | 96.13% ± 2.67%           | 0.9419 ± 0.0400          | 0.9729 ± 0.0314         |           92.92 |               93.35 |            85.37 |         94.59 |          0.8974 |         0.9335 |        0.8252 |         92.11 | 0.8462 |        0.0708 |
+| Random Forest (Tuned)         | 98.82% ± 1.95%           | 0.9809 ± 0.0324          | 0.9988 ± 0.0025         |           95.58 |               96.02 |            90    |         97.3  |          0.9351 |         0.9979 |        0.9959 |         94.74 | 0.9032 |        0.0258 |
+| Extra Trees                   | 96.76% ± 3.82%           | 0.9487 ± 0.0625          | 0.9933 ± 0.0131         |           95.58 |               96.02 |            90    |         97.3  |          0.9351 |         0.9922 |        0.9847 |         94.74 | 0.9032 |        0.0524 |
+| Gradient Boosting             | 98.53% ± 2.37%           | 0.9775 ± 0.0365          | 0.9943 ± 0.0146         |           95.58 |               96.71 |            88.1  |        100    |          0.9367 |         0.9968 |        0.9938 |         93.42 | 0.9072 |        0.0424 |
+| HistGradientBoosting          | 99.12% ± 1.35%           | 0.9861 ± 0.0212          | 0.9992 ± 0.0024         |           97.35 |               98.03 |            92.5  |        100    |          0.961  |         0.9996 |        0.9993 |         96.05 | 0.9426 |        0.0209 |
+| Ensemble (RF + ET + GB + HGB) | 99.12% ± 1.35%           | 0.9861 ± 0.0212          | 0.9988 ± 0.0025         |           95.58 |               96.71 |            88.1  |        100    |          0.9367 |         0.9989 |        0.9979 |         93.42 | 0.9072 |        0.0265 |
 
 ### Principais Conclusões do Pipeline de ML:
 1. **Desempenho do Ensemble (RF + ET + GB + HGB):** Alcançou o melhor equilíbrio entre Acurácia (95.58%), ROC-AUC (0.9989) e F1-Score (0.9367), mitigando quase totalmente os falsos negativos.

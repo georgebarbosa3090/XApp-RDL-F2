@@ -50,6 +50,8 @@ graph TD
     RE -->|"Ações Harmonizadas e Seguras"| gNB
 ```
 
+![Pipeline Global e Arquitetura do xApp RDL Fase 2](docs/figures/diagram_01_global_pipeline_architecture.png)
+
 ---
 
 ## 2. Arquitetura e Cenários Simulados

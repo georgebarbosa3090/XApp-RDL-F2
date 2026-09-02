@@ -122,7 +122,35 @@ Os artefatos gerados são salvos em `experiments/results/YYYY-MM-DD/run_HHMMSS/`
 
 ---
 
-## 5. Procedimentos de Desinstalação e Limpeza Pós-Simulação (Fase 1 e Fase 2)
+## 5. Galeria de Resultados Científicos e Cenários Simulados (Fase 2)
+
+### 5.1. Cenário 1: Topologia Espacial e Conflito de Fatias de Rádio
+![Cenário 1: Topologia](figures/cenario_1_topologia_tvs_conflict.png)
+
+### 5.2. Cenário 2: Superfície de Trade-off Energy Saving vs QoS / Slicing
+![Cenário 2: Trade-off](figures/cenario_2_tradeoff_energy_vs_qos.png)
+
+### 5.3. Cenário 3: Arquitetura de Co-Simulação Fim-a-Fim ns-3 + Near-RT RIC
+![Cenário 3: Arquitetura](figures/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
+
+### 5.4. Cenário 4: Comparativo Multidimensional de Métricas Reais (CDF, Boxplot, PDR e Governança)
+![Cenário 4: Métricas Reais](figures/cenario_4_comparativo_multidimensional_metricas.png)
+
+### 5.5. Cenário 5: Throughput Agregado, Alocação por Fatia e Equidade de Jain
+![Cenário 5: Throughput e Jain Fairness](figures/cenario_5_vazao_throughput_e_jain_fairness.png)
+
+### 5.6. Cenário 6: Agilidade de Decisão Near-RT, Perda de Pacotes e Estabilidade de Handover
+![Cenário 6: Latência de Decisão e Handover](figures/cenario_6_latencia_decisao_e_estabilidade_handover.png)
+
+### 5.7. Cenário 7: Dinâmica de Treinamento MARL, Convergência de Perdas e Safety Guards
+![Cenário 7: Treinamento MARL](figures/cenario_7_marl_treinamento_convergencia_perdas.png)
+
+### 5.8. Cenário 8: Radar Holístico Multidimensional de Governança O-RAN (Baseline vs Fase 1 vs Fase 2)
+![Cenário 8: Radar Holístico](figures/cenario_8_radar_comparativo_holistico_3fases.png)
+
+---
+
+## 6. Procedimentos de Desinstalação e Limpeza Pós-Simulação (Fase 1 e Fase 2)
 
 Ao término de qualquer simulação de cenário ou suíte de benchmarks, execute os comandos de desinstalação abaixo para liberar os recursos do cluster Kubernetes e retornar ao estado limpo:
 
