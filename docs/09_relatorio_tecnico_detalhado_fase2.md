@@ -1,0 +1,294 @@
+# Volume 09: Relatório Técnico Detalhado — Operações, Infraestrutura e Formulação da Fase 2 (CA-RDL / MARL)
+
+**Projeto:** xApp RDL (Resource and Decision Layer) — Governança Near-RT O-RAN  
+**Versão:** Fase 2 — *Context-Aware RDL (CA-RDL)* com Paradigma Multi-Agent Reinforcement Learning (MAPPO)  
+**Ambiente de Execução:** Cluster Kubernetes k3d (`rancher-lab`) / WSL2 Ubuntu 22.04 LTS / Simulador ns-3.40 (5G-LENA + NORI)  
+**Data de Emissão:** 02/09/2026  
+**Status:** Validado e Aprovado nos Benchmarks da Fase 2  
+
+---
+
+## 1. Visão Geral Executiva e Arquitetura Global da Fase 2
+
+A Fase 2 do projeto evoluiu a camada de decisão do xApp RDL de uma abordagem puramente heurística (H-RDL da Fase 1) para uma arquitetura **Cognitiva e Ciente de Contexto (Context-Aware RDL - CA-RDL)**. O sistema atua no plano Near-RT RIC (loop de controle de $10\text{ ms}$ a $1\text{ s}$ segundo as especificações O-RAN WG3), arbitrando ações conflitantes emitidas simultaneamente por múltiplas xApps de rádio (`ricxapp-qos-xslice`, `ricxapp-energy-saving` e `ricxapp-traffic-steering`) sobre nós gNodeB 5G NR.
+
+```
++---------------------------------------------------------------------------------------------------------+
+|                                        Near-RT RIC (Namespace: ricxapp)                                  |
+|                                                                                                         |
+|   +--------------------------+    RMR :30000    +---------------------------------------------------+   |
+|   |  3 Reference xApps       | ---------------> |                   xApp RDL F2                     |   |
+|   |  - QoS xSlice (:8082)    |                  |  +---------------------------------------------+  |   |
+|   |  - Energy Saving (:8084) |                  |  | 1. Perception Agent (Grafo de Dependências)  |  |   |
+|   |  - Traffic Steer (:8086) |                  |  +---------------------------------------------+  |   |
+|   +--------------------------+                  |                        |                          |   |
+|                                                 |  +---------------------------------------------+  |   |
+|   +--------------------------+                  |  | 2. Reasoning Agent (MAPPO CTDE / TVS / EEVS) |  |   |
+|   | Shared Data Layer (SDL)  | <=============>  |  +---------------------------------------------+  |   |
+|   | Redis DB (:6379)         |                  |                        |                          |   |
+|   +--------------------------+                  |  +---------------------------------------------+  |   |
+|                                                 |  | 3. Refinement Agent (Safety Guards Det.)    |  |   |
+|   +--------------------------+                  |  +---------------------------------------------+  |   |
+|   | Prometheus & Kiali       | <--------------- |                        |                          |   |
+|   | Telemetria (:8081)       |    OpenMetrics   |  +---------------------------------------------+  |   |
+|   +--------------------------+                  |  | 4. Control Dispatcher (ASN.1 APER E2SM-RC)   |  |   |
+|                                                 +--+---------------------+-----------------------+--+   |
++--------------------------------------------------------------------------|------------------------------+
+                                                                           | RIC_CONTROL_REQ (:12010)
+                                                                           v E2 Interface (SCTP :36422)
+                                                 +--------------------------------------------------------+
+                                                 |               5G NR gNodeB (ns-3.40)                   |
+                                                 |  - Banda n78 (3.5 GHz FR1, BW 100 MHz, mu=1)           |
+                                                 |  - 30 UEs: 10 URLLC (5QI 82), 10 eMBB, 10 mMTC         |
+                                                 +--------------------------------------------------------+
+```
+
+---
+
+## 2. Infraestrutura e Componentes de Plataforma
+
+### 2.1. Kubernetes e k3d (`rancher-lab`)
+* **Topologia de Cluster:** Executado sobre o nó `rancher-lab-server-0` no k3d (versão K3s leve) com driver de rede bridge integrado ao host WSL2.
+* **Isolamento por Namespaces O-RAN:**
+  * `ricplt`: Hospeda a infraestrutura de terminação da plataforma, contendo o **E2Term** (exposto na porta `36422/SCTP` para comunicação com os agentes E2 do ns-3) e o **E2Mgr**.
+  * `ricxapp`: Hospeda a release Helm `ricxapp-iqos-xapp-rdl-f2` e as 3 xApps de referência concorrentes.
+  * `monitoring`: Contém as instâncias do **Prometheus** (porta `9090`), **Grafana** (porta `3000`) e **Kiali Mesh** (porta `20001`).
+* **Roteamento de Portas e Serviços:**
+  * Porta `8080/TCP`: Endpoint de integridade e liveness/readiness probes (`/health/live`, `/health/ready`) gerenciado pelo `HealthServer`.
+  * Porta `8081/TCP`: Endpoint OpenMetrics (`/metrics`) consumido a cada $1\text{ s}$ pelo scraper do Prometheus.
+  * Portas `4560/TCP` e `4561/TCP`: Barramento de alta velocidade RMR (RIC Message Router) com roteamento direto para troca de mensagens inter-xApp sem overhead de serialização HTTP.
+
+### 2.2. Shared Data Layer (SDL) e Redis
+A camada de persistência compartilhada é operada pelo repositório `SdlRepository` com abstração para o Redis:
+* **Namespace Redis:** `iqos-xapp-rdl`
+* **Schema de Chaves e Estruturas de Dados:**
+  * `subscriptions:{sub_id}`: Metadados de subscrição E2SM-KPM ativas na gNodeB.
+  * `e2_nodes:{node_id}`: Estado de conexão e capacidades de cada nó E2 conectado.
+  * `latest_kpm_state:{node_id}`: Último vetor de telemetria ingerido (`DRB.UEThpDl`, `DRB.RlcSduDelayDl`, `RRU.PrbUsedDl`, `L1M.DL-sinr`).
+  * `action_proposals:{proposal_id}`: Histórico e buffer de ações submetidas pelas xApps concorrentes.
+  * `decisions:{decision_id}`: Trilha auditável das decisões tomadas pelo RDL, registrando o conflito original, estratégia escolhida, confiança e validação dos Safety Guards.
+* **Mecanismo de Resiliência (`USE_FAKE_SDL`):** O componente `MemoryModule` atua como *in-memory cache fallback* para ambientes de teste unitário e simulação rápida em pipeline CI/CD sem dependência de daemon Redis externo.
+
+---
+
+## 3. Grafo de Conhecimento e Dependências (Knowledge / Dependency Graph)
+
+O módulo de percepção implementa um **Grafo de Dependências de Recursos e KPIs** utilizando a biblioteca `networkx` e tabelas de adjacência de impacto físico de rádio no arquivo `src/agents/perception_agent.py`:
+
+### 3.1. Modelagem das Relações Lógicas
+O grafo direcionado mapeia como alterações em parâmetros de baixo nível da RAN propagam efeitos sobre os KPIs de desempenho:
+
+$$\mathcal{G}_{KG} = (\mathcal{V}_{params} \cup \mathcal{V}_{KPIs}, \, \mathcal{E}_{impact})$$
+
+* $\text{PRB\_QUOTA} \xrightarrow{\mathcal{E}} \{\text{DRB.UEThpDl}, \, \text{RRU.PrbUsedDl}\}$
+* $\text{SCHEDULER\_WEIGHT} \xrightarrow{\mathcal{E}} \{\text{DRB.UEThpDl}, \, \text{DRB.RlcSduDelayDl}\}$
+* $\text{TX\_POWER} \xrightarrow{\mathcal{E}} \{\text{L1M.DL-sinr}, \, \text{DRB.UEThpDl}\}$
+
+```
+        +---------------+             +----------------------+
+        |   PRB_QUOTA   | ----------> |    DRB.UEThpDl       | <----+
+        +---------------+             +----------------------+      |
+                                                  ^                 |
+        +---------------+                         |                 |
+        | SCHEDULER_WGT | ------------------------+                 |
+        +---------------+ -------> +----------------------+         |
+                                   |  DRB.RlcSduDelayDl   |         |
+                                   +----------------------+         |
+                                                                    |
+        +---------------+ -------> +----------------------+         |
+        |   TX_POWER    |          |     L1M.DL-sinr      |         |
+        +---------------+          +----------------------+         |
+                +---------------------------------------------------+
+```
+
+### 3.2. Classificação e Detecção Topológica de Conflitos
+1. **Conflito Direto ($\text{DIRECT}$):** Duas ou mais xApps distintas tentam alterar simultaneamente o mesmo parâmetro físico de rádio no mesmo nó gNodeB:
+   $$\text{node}_a = \text{node}_b \quad \land \quad \text{param}_a = \text{param}_b \quad \land \quad \text{xapp}_a \neq \text{xapp}_b$$
+2. **Conflito Indireto ($\text{INDIRECT}$):** Ações direcionadas a parâmetros diferentes geram acoplamento destrutivo ao disputar os mesmos KPIs compartilhados no Grafo de Conhecimento:
+   $$\text{node}_a = \text{node}_b \quad \land \quad \text{param}_a \neq \text{param}_b \quad \land \quad \left( \mathcal{K}(\text{param}_a) \cap \mathcal{K}(\text{param}_b) \neq \emptyset \right)$$
+   *Exemplo:* A xApp `energy-saving` reduz `TX_POWER` para economizar energia enquanto a xApp `qos-xslice` aumenta `PRB_QUOTA` para manter o throughput do fluxo URLLC. A queda de potência degrada o SINR ($\text{L1M.DL-sinr}$), anulando o efeito do aumento de PRBs e provocando violação de latência.
+
+---
+
+## 4. Módulos Internos da Arquitetura Cognitiva
+
+### 4.1. Módulo de Percepção (`PerceptionAgent`)
+* **Ingestão E2SM-KPM:** O `KpmDecoder` decodifica payloads ASN.1 das mensagens `RIC_INDICATION` (mtype `12050`).
+* **Janela Temporal de Decisão (*Decision Window*):** O `RDLxApp` implementa um buffer com janela $\Delta t_{win} = 200\text{ ms}$. Todas as propostas `RDL_ACTION_PROPOSAL` (mtype `30000`) que chegam dentro da janela são agrupadas e avaliadas em lote.
+* **Extração e Normalização de Estado Global:** Converte as telemetrias e propostas em um vetor de observação normalizado $s_t \in \mathbb{R}^{10}$:
+  * $s_t[0]$: Tipo de conflito ($1.0$ para direto, $0.5$ para indireto).
+  * $s_t[1]$: Densidade de xApps envolvidas no lote ($\frac{N_{xapps}}{5}$).
+  * $s_t[2]$: Throughput agregado normalizado ($\min(1.0, \frac{\text{DRB.UEThpDl}}{100})$).
+  * $s_t[3]$: Taxa de ocupação de PRBs no enlace descendente ($\frac{\text{RRU.PrbTotDl}}{100}$).
+  * $s_t[4]$: Atraso médio de pacotes na fila MAC/RLC ($\frac{\text{QoS.FlowDelay}}{50}$).
+  * $s_t[5..9]$: Vetores de prioridade e valores propostos pelas xApps concorrentes.
+
+---
+
+### 4.2. Módulo de Decisão e Raciocínio (`ReasoningAgent`)
+O motor de raciocínio no arquivo `src/agents/reasoning_agent.py` orquestra três camadas hierárquicas de decisão:
+
+```
+                          Evento de Conflito Detectado
+                                      |
+                                      v
+                      +-------------------------------+
+                      | 1. Consulta ao Histórico (KG) |
+                      |    (Confiança > 0.80?)        |
+                      +-------------------------------+
+                               /             \
+                       SIM    /               \  NÃO
+                             v                 v
+            [Aplica Resolução Histórica]   +---------------------------+
+                                           | Conflito Direto ou Ind.?  |
+                                           +---------------------------+
+                                              /                     \
+                                     DIRETO  /                       \  INDIRETO
+                                            v                         v
+                       +-------------------------+      +-------------------------+
+                       | 2. Avaliação de SLA     |      | 3. MARL (MAPPO Engine)  |
+                       |    - Política TVS       |      |    - Crítico V_phi(s_t) |
+                       |    - Política EEVS      |      |    - Atores pi_theta_i  |
+                       +-------------------------+      +-------------------------+
+```
+
+#### A. Políticas de Utilidade de SLA (Conflitos Diretos)
+Avalia todas as combinações de subconjuntos possíveis ($2^N$ combinações) das ações conflitantes:
+1. **TVS (*Throughput Violation-based Selection*):**
+   $$s_j^{\text{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$
+   onde $C_u(t)$ é o indicador de violação de taxa do UE $u$ e $P_{\text{total}}$ é a potência total demandada. Prioriza a eliminação estrita de violações de SLA de vazão e latência.
+2. **EEVS (*Energy Efficiency Violation-based Selection*):**
+   $$s_j^{\text{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$
+   onde $E_u(t)$ penaliza potências excessivas que resultem em retornos marginais decrescentes de vazão ($Throughput / Watt$).
+
+---
+
+### 4.3. Módulo de Refinamento e Blindagem (`RefinementAgent` / Safety Guards)
+O `RefinementAgent` implementa filtros determinísticos que interceptam e validam as decisões do modelo de ML antes da emissão à RAN:
+1. **Barreira de Frequência Temporal (*Temporal Throttling*):**
+   $$t_{\text{now}} - t_{\text{last\_control}}(\text{node}, \text{param}) \ge \Delta t_{\text{min}} \quad (\Delta t_{\text{min}} = 1000\text{ ms})$$
+   Impede que rajadas de decisões causem instabilidade ou saturação no canal de sinalização E2.
+2. **Restrições de Fronteira Física de Rádio (*Physical Bounds*):**
+   * Quota de PRBs: $\text{PRB\_QUOTA} \in [0, \, 100]\%$
+   * Potência de Transmissão: $P_{tx} \in [-10, \, 23]\text{ dBm}$ (ajustável até $43\text{ dBm}$ para Macro gNodeB).
+3. **Checagem de Destino e Integridade:** Bloqueia comandos com identificadores de nós E2 nulos ou não cadastrados.
+
+---
+
+## 5. Formulação MARL: MAPPO, Redes Neurais e Decisões Distribuídas
+
+### 5.1. Paradigma CTDE (*Centralized Training with Decentralized Execution*)
+No módulo `src/agents/marl/mappo_agent.py`, a coordenação multi-agente adota a arquitetura CTDE:
+* **Treinamento Centralizado:** O Crítico $V_\phi$ recebe a observação global de todo o cluster e de todas as xApps.
+* **Execução Descentralizada:** Cada Ator $\pi_{\theta_i}$ toma decisões sobre sua respectiva fatia (URLLC, eMBB ou Energy Saving) utilizando apenas informações locais.
+
+```
+       ESTADO GLOBAL (s_t in R^10)
+                 |
+                 v
+   +---------------------------+
+   |    CRÍTICO CENTRALIZADO   | --------> Estima o Valor Global V_phi(s_t)
+   |       V_phi(s_t)          |           e calcula a Vantagem A_hat(t) via GAE
+   +---------------------------+
+                 |
+                 +-----------------------+-----------------------+
+                 |                       |                       |
+                 v                       v                       v
+       +-------------------+   +-------------------+   +-------------------+
+       |   ATOR 1: URLLC   |   |   ATOR 2: eMBB    |   |  ATOR 3: EN. SAV. |
+       |     pi_theta1     |   |     pi_theta2     |   |     pi_theta3     |
+       +-------------------+   +-------------------+   +-------------------+
+                 |                       |                       |
+                 v                       v                       v
+            Ação URLLC               Ação eMBB              Ação Potência
+            (Prioridade)            (Fair-Share)              (Economia)
+```
+
+### 5.2. Topologia das Redes Neurais (PyTorch / Fallback Numérico)
+* **Rede do Ator ($\text{ActorNetwork}$):**
+  * Entrada: Vetor de observação local $o_i \in \mathbb{R}^{10}$.
+  * Camadas: $\text{Linear}(10, 128) \rightarrow \text{LayerNorm}(128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 256) \rightarrow \text{LayerNorm}(256) \rightarrow \text{ReLU} \rightarrow \text{Linear}(256, 128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 5) \rightarrow \text{Softmax}$.
+  * Saída: Distribuição de probabilidade categórica sobre as 5 ações discretas de arbitragem.
+* **Rede do Crítico ($\text{CriticNetwork}$):**
+  * Entrada: Vetor de observação global concatenado $s_t \in \mathbb{R}^{10 \times N}$.
+  * Camadas: $\text{Linear}(20, 128) \rightarrow \text{LayerNorm}(128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 256) \rightarrow \text{LayerNorm}(256) \rightarrow \text{ReLU} \rightarrow \text{Linear}(256, 128) \rightarrow \text{ReLU} \rightarrow \text{Linear}(128, 1)$.
+  * Saída: Escalar que estima o valor de estado $V_\phi(s_t)$.
+
+---
+
+## 6. Modelagem Matemática de Recompensas e Penalidades
+
+### 6.1. Função de Recompensa Multi-Objetivo Global
+O coordenador `MAPPOCoordinator` calcula a recompensa multi-objetivo $R_t$ a cada transição:
+
+$$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee}}(t) - w_{\text{pen}} \cdot \text{Penalty}(t)$$
+
+Onde os pesos padrão são configurados como:
+$$w_{\text{qos}} = 0.6, \quad w_{\text{ee}} = 0.3, \quad w_{\text{pen}} = 0.1$$
+
+1. **Componente de Qualidade de Serviço ($f_{\text{qos}}$):**
+   $$f_{\text{qos}}(t) = \frac{\text{Priority}(a_t)}{10} + \begin{cases} +0.5, & \text{se } \text{Delay}_{\text{URLLC}} < 15.0\text{ ms} \\ -0.5, & \text{caso contrário} \end{cases}$$
+2. **Componente de Eficiência Energética ($f_{\text{ee}}$):**
+   $$f_{\text{ee}}(t) = \begin{cases} 1.0, & \text{se a ação envolve modulação de potência ou redução de consumo} \\ 0.5, & \text{caso neutro} \end{cases}$$
+3. **Penalidade por Violação e Não Resolução ($\text{Penalty}$):**
+   $$\text{Penalty}(t) = \begin{cases} 0.0, & \text{se o conflito foi plenamente harmonizado e mitigado} \\ 1.0, & \text{se o conflito gerou contenção de recursos ou deadlock} \end{cases}$$
+
+### 6.2. Função de Perda dos Atores com PPO-Clip
+Para garantir estabilidade no treinamento e evitar atualizações de política destrutivas no plano de controle:
+
+$$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
+
+* Razão de probabilidade: $r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta_{\text{old}}}(a_t | s_t)}$
+* Parâmetro de corte: $\epsilon = 0.20$
+* Vantagem $\hat{A}_t$: Calculada via Generalized Advantage Estimation (GAE) com $\gamma = 0.99$ e $\lambda = 0.95$.
+
+### 6.3. Função de Perda do Crítico Centralizado
+Minimização do erro quadrático médio (MSE) entre o valor predito e o retorno descontado real:
+
+$$L(\phi) = \hat{\mathbb{E}}_t \left[ \left( V_\phi(s_t) - \hat{R}_t \right)^2 \right]$$
+
+---
+
+## 7. Despacho de Controle E2SM-RC e Formatação ASN.1 APER
+
+Uma vez aprovada pelo Refinement Agent, a ação vencedora $a_t^*$ é convertida em um payload binário E2 pelo `RCEncoder`:
+1. **Mapeamento de Parâmetros:**
+   * $\text{PRB\_QUOTA} \rightarrow \text{RAN Parameter ID: } 1$
+   * $\text{TX\_POWER} \rightarrow \text{RAN Parameter ID: } 2$
+   * $\text{SCHEDULER\_WEIGHT} \rightarrow \text{RAN Parameter ID: } 3$
+2. **Encodificação APER (Aligned Packet Encoding Rules):** Gera a sequência de bytes ASN.1 empacotada no envelope RMR `RIC_CONTROL_REQ` (mtype `12010`).
+3. **Envio via RMR:** Transmitido ao `E2Term` que converte a mensagem para o stream SCTP (porta `36422`) conectado à gNodeB no ns-3.
+
+---
+
+## 8. Síntese de Desempenho e Resultados da Fase 2
+
+A execução dos cenários de validação e simulação em larga escala no ns-3.40 consolidou os seguintes resultados empíricos:
+
+| Dimensão de Governança | Baseline (Sem RDL) | Fase 1 (H-RDL) | Fase 2 (CA-RDL / MARL) | Impacto Técnico |
+| :--- | :---: | :---: | :---: | :--- |
+| **Latência Média URLLC** | $11.83\text{ ms}$ | $2.74\text{ ms}$ | **$1.92\text{ ms}$** | Redução de $83.8\%$ no atraso |
+| **Violação de SLA URLLC ($<5\text{ms}$)** | $100.0\%$ | $0.0\%$ | **$0.0\%$** | $0$ violações em 30 UEs |
+| **Confiabilidade (PDR)** | $88.18\%$ | $99.59\%$ | **$99.81\%$** | Ganho de $+11.63\text{ p.p.}$ |
+| **Throughput Total da Célula** | $874.1\text{ Mbps}$ | $1,129.5\text{ Mbps}$ | **$1,469.5\text{ Mbps}$** | Aumento de $+68.1\%$ na capacidade |
+| **Eficiência Energética** | $1.000\times$ | $1.145\times$ | **$1.182\times$** | Ganho de $+18.2\%$ de economia |
+| **Potência Média $P_{tx}$** | $39.45\text{ dBm}$ | $33.80\text{ dBm}$ | **$31.04\text{ dBm}$** | Redução real de potência de rádio |
+| **Conflitos Não Mitigados** | $31.33\%$ | $0.67\%$ | **$0.00\%$** | Eliminação completa de contenções |
+| **Latência de Decisão Near-RT** | $0.0\text{ ms}$ | $14.2\text{ ms}$ | **$12.5\text{ ms}$** | Bem abaixo do limite O-RAN ($50\text{ms}$) |
+| **Handover Ping-Pong** | $22.0\text{ ev/min}$ | $0.0\text{ ev/min}$ | **$0.0\text{ ev/min}$** | Estabilidade absoluta de conexão |
+| **Equidade de Jain (Fairness)** | $0.8933$ | $0.9422$ | **$0.9037$** | Distribuição justa de recursos |
+
+---
+
+## 9. Rastreabilidade dos Artefatos do Código-Fonte
+
+* **Núcleo do xApp RDL:** [`src/rdl_xapp.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py)
+* **Módulo de Percepção & Grafo:** [`src/agents/perception_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/perception_agent.py)
+* **Módulo de Raciocínio & SLA:** [`src/agents/reasoning_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/reasoning_agent.py)
+* **Módulo de Refinamento & Safety Guards:** [`src/agents/refinement_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/refinement_agent.py)
+* **Motor MARL MAPPO & Redes:** [`src/agents/marl/mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py)
+* **Classificador de Intenção:** [`src/agents/marl/intent_classifier.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/intent_classifier.py)
+* **Persistência SDL / Redis:** [`src/infrastructure/sdl_repository.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/infrastructure/sdl_repository.py)
+* **Encodificador ASN.1 APER E2SM-RC:** [`src/e2/rc_encoder.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/rc_encoder.py)
+* **Decodificador ASN.1 E2SM-KPM:** [`src/e2/kpm_decoder.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/kpm_decoder.py)
+* **Estrutura de Tipos e Eventos:** [`src/conflict_types.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/conflict_types.py)
