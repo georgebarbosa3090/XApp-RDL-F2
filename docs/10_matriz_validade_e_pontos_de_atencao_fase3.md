@@ -92,5 +92,4 @@ Em vez disso, a xApp-RDL opera sob um **Motor de Decisão Hierárquico Escalonad
    Utilizar a interface padronizada do `NoriE2Interface` e `e2sim_lib` (E2AP v2.02.03) para executar simulações closed-loop conectadas diretamente ao cluster Kubernetes do Near-RT RIC (k3d/Rancher).
 3. **Padrão Zero-Trust e Isolamento de Rogue xApps:**
    Implementar métricas de anomalia comportamental no módulo de percepção para detectar xApps que violem sistematicamente as restrições ou gerem flooding de propostas conflitantes.
-4. **Governança de Snapshots Locais:**
-   Manter snapshots e backups diários através do script automatizado [`scripts/create_daily_snapshot.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/create_daily_snapshot.py), com histórico rastreável via Git local e **sem qualquer push para repositórios remotos**.
+
