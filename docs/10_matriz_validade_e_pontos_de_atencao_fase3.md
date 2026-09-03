@@ -1,4 +1,4 @@
-# Volume 10: Matriz de Validade, Arquitetura Hierárquica e Pontos de Atenção Críticos — RDL Fase 3
+# Volume 10: Matriz de Validade, Arquitetura Hierárquica e Pontos de Atenção Críticos - RDL Fase 3
 
 ## Governança Cognitiva Escalonada e Mitigação Híbrida de Conflitos em O-RAN (5G-Adv/6G)
 
