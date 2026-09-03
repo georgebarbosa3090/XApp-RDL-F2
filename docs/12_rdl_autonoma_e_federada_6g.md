@@ -101,18 +101,18 @@ O motor de raciocínio da xApp-RDL opera sob o paradigma de **Treinamento Centra
 
 1. **Atores Descentralizados ($\pi_{\theta_i}$):**
    Cada nó/célula da rede O-RAN executa uma política descentralizada $\pi_{\theta_i}$ com base apenas na sua observação parcial local $o_t^{(i)} \in \mathbb{R}^{d_{obs}}$ (telemetria local da célula):
-   $$a_t^{(i)} \sim \pi_{\theta_i}\left(\cdot \,\big|\, o_t^{(i)}\right)$$
+   $$a_t^{(i)} \sim \pi_{\theta_i}(a_t^{(i)} \mid o_t^{(i)})$$
 
 2. **Crítico Centralizado ($V_\phi$):**
-   Durante o treinamento na O-Cloud, o crítico avalia o estado global concatenado $s_t^{global} = \big[o_t^{(1)}, o_t^{(2)}, \dots, o_t^{(N)}\big] \in \mathbb{R}^{N \times d_{obs}}$, capturando a interferência cruzada intercelular:
-   $$V_\phi\left(s_t^{global}\right) \approx \mathbb{E}\left[ \sum_{k=0}^\infty \gamma^k r_{t+k} \;\Big|\; s_t^{global} \right]$$
+   Durante o treinamento na O-Cloud, o crítico avalia o estado global concatenado $s_t^{\text{global}} = [o_t^{(1)}, o_t^{(2)}, \dots, o_t^{(N)}] \in \mathbb{R}^{N \times d_{obs}}$, capturando a interferência cruzada intercelular:
+   $$V_\phi(s_t^{\text{global}}) \approx \mathbb{E}\left[ \sum_{k=0}^\infty \gamma^k r_{t+k} \;\middle|\; s_t^{\text{global}} \right]$$
 
 ---
 
 ### 4.2. Buffer de Rollout e Coleta de Trajetórias
 
 O coordenador MAPPO coleta trajetórias operacionais completas contendo as tuplas:
-$$\mathcal{D} = \left\{ \left( o_t^{(i)}, \, s_t^{global}, \, a_t^{(i)}, \, \log \pi_{\theta_{old}}\left(a_t^{(i)} \,\big|\, o_t^{(i)}\right), \, r_t^{(i)}, \, d_t \right) \right\}_{t=1}^T$$
+$$\mathcal{D} = \Big\{ \big( o_t^{(i)}, s_t^{\text{global}}, a_t^{(i)}, \log \pi_{\theta_{\text{old}}}(a_t^{(i)} \mid o_t^{(i)}), r_t^{(i)}, d_t \big) \Big\}_{t=1}^T$$
 
 onde $d_t \in \{0, 1\}$ é o sinalizador de término de episódio (*done flag*).
 
@@ -123,32 +123,32 @@ onde $d_t \in \{0, 1\}$ é o sinalizador de término de episódio (*done flag*).
 O cálculo das vantagens $\hat{A}_t$ e dos retornos-alvo $R_t$ é executado em sentido temporal reverso ($t = T-1, \dots, 0$):
 
 1. **Resíduo de Diferença Temporal (TD-Error do Crítico):**
-   $$\delta_t = r_t + \gamma \, V_\phi\left(s_{t+1}^{global}\right) (1 - d_t) - V_\phi\left(s_t^{global}\right)$$
+   $$\delta_t = r_t + \gamma \, V_\phi(s_{t+1}^{\text{global}}) (1 - d_t) - V_\phi(s_t^{\text{global}})$$
 
 2. **Estimador de Vantagem Generalizada (GAE com decaimento $\lambda$):**
    $$\hat{A}_t = \delta_t + \gamma \lambda \, (1 - d_t) \, \hat{A}_{t+1}$$
 
 3. **Retornos Alvo para Atualização do Crítico:**
-   $$R_t = \hat{A}_t + V_\phi\left(s_t^{global}\right)$$
+   $$R_t = \hat{A}_t + V_\phi(s_t^{\text{global}})$$
 
 4. **Normalização da Vantagem (Estabilidade Numérica de Gradiente):**
-   $$\hat{A}_t^{norm} = \frac{\hat{A}_t - \mu_{\hat{A}}}{\sigma_{\hat{A}} + \epsilon_{stab}}$$
+   $$\hat{A}_t^{\text{norm}} = \frac{\hat{A}_t - \mu_{\hat{A}}}{\sigma_{\hat{A}} + \epsilon_{\text{stab}}}$$
 
 ---
 
 ### 4.4. Funções de Perda e Otimização do MAPPO
 
 1. **Razão de Probabilidade de Política (Importance Sampling Ratio):**
-   $$r_t(\theta) = \frac{\pi_\theta\left(a_t \,\big|\, o_t\right)}{\pi_{\theta_{old}}\left(a_t \,\big|\, o_t\right)} = \exp\left( \log \pi_\theta\left(a_t \,\big|\, o_t\right) - \log \pi_{\theta_{old}}\left(a_t \,\big|\, o_t\right) \right)$$
+   $$r_t(\theta) = \frac{\pi_\theta(a_t \mid o_t)}{\pi_{\theta_{\text{old}}}(a_t \mid o_t)} = \exp\left( \log \pi_\theta(a_t \mid o_t) - \log \pi_{\theta_{\text{old}}}(a_t \mid o_t) \right)$$
 
 2. **Função de Perda Clipped Surrogate do Ator com Regularização de Entropia:**
-   $$L^{CLIP}(\theta) = -\hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta) \hat{A}_t^{norm}, \; \text{clip}\left(r_t(\theta), 1-\epsilon, 1+\epsilon\right) \hat{A}_t^{norm} \right) \right] - c_{ent} \, \mathcal{H}\left(\pi_\theta(\cdot | o_t)\right)$$
+   $$L^{\text{CLIP}}(\theta) = -\hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta) \hat{A}_t^{\text{norm}}, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t^{\text{norm}} \right) \right] - c_{\text{ent}} \, \mathcal{H}(\pi_\theta)$$
 
 3. **Função de Perda do Crítico Centralizado (MSE):**
-   $$L^{VF}(\phi) = \frac{1}{B} \sum_{i=1}^B \left( V_\phi\left(s_i^{global}\right) - R_i \right)^2$$
+   $$L^{\text{VF}}(\phi) = \frac{1}{B} \sum_{i=1}^B \left( V_\phi(s_i^{\text{global}}) - R_i \right)^2$$
 
 4. **Recompensa Multiobjetivo Ponderada por Intenções A1:**
-   $$r_t = w_{qos} \, r_{qos}(t) + w_{ee} \, r_{ee}(t) - w_{pen} \, r_{pen}(t) - w_{stab} \, r_{stab}(t)$$
+   $$r_t = w_{\text{qos}} \, r_{\text{qos}}(t) + w_{\text{ee}} \, r_{\text{ee}}(t) - w_{\text{pen}} \, r_{\text{pen}}(t) - w_{\text{stab}} \, r_{\text{stab}}(t)$$
    onde os pesos $w_k$ são injetados dinamicamente pelo Non-RT RIC via interface A1-P.
 
 ---
