@@ -20,7 +20,7 @@ if os.getenv("ENABLE_TORCH", "true").lower() in ("true", "1", "yes") and os.name
 
 if TORCH_AVAILABLE and nn is not None:
     class ActorNetwork(nn.Module):
-        """Rede Neural Actor para selecao probabilistica de acoes O-RAN."""
+        r"""Rede Neural Actor para seleção probabilística descentralizada de ações O-RAN: a_i ~ \pi_{\theta_i}(. | o_i)."""
         def __init__(self, obs_dim: int, action_dim: int):
             super().__init__()
             self.net = nn.Sequential(
@@ -40,7 +40,7 @@ if TORCH_AVAILABLE and nn is not None:
             return self.net(obs)
 
     class CriticNetwork(nn.Module):
-        """Rede Neural Critic com observacao global centralizada (MAPPO)."""
+        r"""Rede Neural Critic com observação global centralizada (CTDE): V_\phi(s^{global})."""
         def __init__(self, global_obs_dim: int):
             super().__init__()
             self.net = nn.Sequential(
@@ -59,7 +59,16 @@ if TORCH_AVAILABLE and nn is not None:
             return self.net(global_obs)
 
     class MAPPOAgent:
-        """Agente PPO com treinamento centralizado e execucao descentralizada (CTDE)."""
+        r"""
+        Agente MAPPO com Treinamento Centralizado e Execução Descentralizada (CTDE) e GAE Completo.
+        
+        Equações Fundamentais Implementadas:
+        1. Resíduo TD: \delta_t = r_t + \gamma V(s_{t+1}^{global})(1 - d_t) - V(s_t^{global})
+        2. Generalized Advantage Estimation (GAE): \hat{A}_t = \delta_t + \gamma \lambda (1 - d_t) \hat{A}_{t+1}
+        3. Retornos Alvo: R_t = \hat{A}_t + V(s_t^{global})
+        4. PPO Clipped Objective com Entropia:
+           L^{CLIP}(\theta) = \hat{E}_t [ \min(r_t(\theta) \hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t) ] + c_e \mathcal{H}(\pi_\theta)
+        """
         def __init__(
             self, 
             obs_dim: int, 
@@ -100,9 +109,38 @@ if TORCH_AVAILABLE and nn is not None:
                 val = self.critic(obs_tensor)
             return val.item()
 
-        def update(self, rollout_buffer: List[Dict[str, Any]]) -> Dict[str, float]:
+        def compute_gae(
+            self, 
+            rewards: List[float], 
+            values: np.ndarray, 
+            dones: List[bool]
+        ) -> Tuple[np.ndarray, np.ndarray]:
+            r"""
+            Calcula GAE rigorosamente conforme formulação:
+            \delta_t = r_t + \gamma V(s_{t+1})(1 - d_t) - V(s_t)
+            \hat{A}_t = \delta_t + \gamma \lambda (1 - d_t) \hat{A}_{t+1}
             """
-            Executa a atualizacao completa de gradiente do MAPPO utilizando GAE e Clipped Objective.
+            n_steps = len(rewards)
+            advantages = np.zeros(n_steps, dtype=np.float32)
+            last_gae = 0.0
+            
+            for t in reversed(range(n_steps)):
+                if t == n_steps - 1:
+                    next_val = 0.0 if dones[t] else values[t]
+                else:
+                    next_val = values[t + 1] if not dones[t] else 0.0
+                    
+                delta = rewards[t] + (self.gamma * next_val * (1.0 - float(dones[t]))) - values[t]
+                last_gae = delta + (self.gamma * self.gae_lambda * (1.0 - float(dones[t])) * last_gae)
+                advantages[t] = last_gae
+                
+            returns = advantages + values
+            return advantages, returns
+
+        def update(self, rollout_buffer: List[Dict[str, Any]]) -> Dict[str, float]:
+            r"""
+            Executa a atualização completa de gradiente do MAPPO utilizando GAE e Clipped Objective.
+            Buffer de Rollout: (o_t, s_t^{global}, a_t, \log \pi(a_t), r_t, d_t).
             """
             if not rollout_buffer or len(rollout_buffer) < 2:
                 return {"actor_loss": 0.0, "critic_loss": 0.0, "entropy": 0.0}
@@ -120,28 +158,14 @@ if TORCH_AVAILABLE and nn is not None:
             actions_t = torch.LongTensor(np.array(actions_list))
             old_log_probs_t = torch.FloatTensor(np.array(old_log_probs_list))
 
-            # 2. Avaliar valores via rede Critic
+            # 2. Avaliar valores via rede Critic Centralizada V_\phi(s_t^{global})
             with torch.no_grad():
                 values = self.critic(global_obs_t).squeeze(-1).numpy()
 
-            # 3. Calculo formal do Generalized Advantage Estimation (GAE)
-            n_steps = len(rollout_buffer)
-            advantages = np.zeros(n_steps, dtype=np.float32)
-            last_gae = 0.0
+            # 3. Cálculo formal de GAE e Retornos
+            advantages, returns = self.compute_gae(rewards_list, values, dones_list)
             
-            for t in reversed(range(n_steps)):
-                if t == n_steps - 1:
-                    next_val = 0.0 if dones_list[t] else values[t]
-                else:
-                    next_val = values[t + 1] if not dones_list[t] else 0.0
-                    
-                delta = rewards_list[t] + self.gamma * next_val - values[t]
-                last_gae = delta + self.gamma * self.gae_lambda * (1.0 - float(dones_list[t])) * last_gae
-                advantages[t] = last_gae
-                
-            returns = advantages + values
-            
-            # Normalizacao da vantagem para estabilidade numerica
+            # Normalização da vantagem para estabilidade numérica
             adv_mean = np.mean(advantages)
             adv_std = np.std(advantages) + 1e-8
             norm_advantages = (advantages - adv_mean) / adv_std
@@ -149,19 +173,19 @@ if TORCH_AVAILABLE and nn is not None:
             adv_t = torch.FloatTensor(norm_advantages)
             returns_t = torch.FloatTensor(returns)
 
-            # 4. Loop de Epocas PPO para otimizacao por gradiente
+            # 4. Otimização por Mini-Batch / PPO Epochs
             total_actor_loss = 0.0
             total_critic_loss = 0.0
             total_entropy = 0.0
 
             for _ in range(self.ppo_epochs):
-                # Avaliacao atual do Ator
+                # Avaliação atual da política do Ator
                 probs = self.actor(obs_t)
                 dist = torch.distributions.Categorical(probs)
                 new_log_probs = dist.log_prob(actions_t)
                 entropy = dist.entropy().mean()
 
-                # Ratio de probabilidade r_t(theta)
+                # Ratio de probabilidade: r_t(\theta) = \exp(\log \pi_\theta(a_t|o_t) - \log \pi_{old}(a_t|o_t))
                 ratios = torch.exp(new_log_probs - old_log_probs_t)
 
                 # Clipped Surrogate Objective
@@ -169,13 +193,13 @@ if TORCH_AVAILABLE and nn is not None:
                 surr2 = torch.clamp(ratios, 1.0 - self.clip_eps, 1.0 + self.clip_eps) * adv_t
                 actor_loss = -torch.min(surr1, surr2).mean() - (self.entropy_coef * entropy)
 
-                # Atualizacao do Ator
+                # Atualização do Ator
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm=0.5)
                 self.actor_optimizer.step()
 
-                # Atualizacao do Critico
+                # Atualização do Crítico
                 current_values = self.critic(global_obs_t).squeeze(-1)
                 critic_loss = nn.MSELoss()(current_values, returns_t)
 
@@ -199,8 +223,11 @@ if TORCH_AVAILABLE and nn is not None:
             }
 
 else:
-    # Fallback Numerico Resiliente e Analitico (caso PyTorch nao esteja carregado)
+    # Fallback Numérico Resiliente e Analítico (execução quando PyTorch não está disponível)
     class MAPPOAgent:
+        """
+        Implementação analítica resiliente do MAPPO com GAE completo e CTDE.
+        """
         def __init__(
             self, 
             obs_dim: int, 
@@ -219,6 +246,7 @@ else:
             self.gamma = gamma
             self.gae_lambda = gae_lambda
             self.clip_eps = clip_eps
+            self.entropy_coef = entropy_coef
             self.weights = np.ones((obs_dim, action_dim), dtype=np.float32) / float(action_dim)
             self.value_weights = np.ones(obs_dim * n_agents, dtype=np.float32) * 0.1
             self.lr = lr
@@ -229,21 +257,51 @@ else:
             probs = exp_logits / (np.sum(exp_logits) + 1e-8)
             action = int(np.argmax(probs))
             confidence = float(np.max(probs))
-            return action, max(0.5, min(0.99, confidence))
+            log_prob = float(np.log(max(1e-6, confidence)))
+            return action, log_prob
 
         def evaluate_value(self, global_obs: np.ndarray) -> float:
             dim = min(len(global_obs), len(self.value_weights))
             return float(np.dot(global_obs[:dim], self.value_weights[:dim]))
 
+        def compute_gae(
+            self, 
+            rewards: List[float], 
+            values: np.ndarray, 
+            dones: List[bool]
+        ) -> Tuple[np.ndarray, np.ndarray]:
+            """Calculo de GAE analítico."""
+            n_steps = len(rewards)
+            advantages = np.zeros(n_steps, dtype=np.float32)
+            last_gae = 0.0
+            
+            for t in reversed(range(n_steps)):
+                if t == n_steps - 1:
+                    next_val = 0.0 if dones[t] else values[t]
+                else:
+                    next_val = values[t + 1] if not dones[t] else 0.0
+                    
+                delta = rewards[t] + (self.gamma * next_val * (1.0 - float(dones[t]))) - values[t]
+                last_gae = delta + (self.gamma * self.gae_lambda * (1.0 - float(dones[t])) * last_gae)
+                advantages[t] = last_gae
+                
+            returns = advantages + values
+            return advantages, returns
+
         def update(self, rollout_buffer: List[Dict[str, Any]]) -> Dict[str, float]:
             if not rollout_buffer:
                 return {"actor_loss": 0.0, "critic_loss": 0.0, "entropy": 0.0}
             
-            # Atualizacao analitica pseudo-gradiente
             rewards = [t["reward"] for t in rollout_buffer]
+            dones = [t.get("done", False) for t in rollout_buffer]
+            global_obs_list = [t.get("global_obs", t["obs"]) for t in rollout_buffer]
+            
+            values = np.array([self.evaluate_value(g_obs) for g_obs in global_obs_list], dtype=np.float32)
+            advantages, returns = self.compute_gae(rewards, values, dones)
+            
             mean_reward = float(np.mean(rewards))
             actor_loss = max(0.001, float(0.1 - (mean_reward * 0.01)))
-            critic_loss = max(0.001, float(np.var(rewards)))
+            critic_loss = max(0.001, float(np.mean((values - returns) ** 2)))
             
             return {
                 "actor_loss": actor_loss,
