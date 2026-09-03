@@ -118,6 +118,32 @@ run-scenario2-baseline:
 	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
 
+run-scenario3:
+	@echo "Executando Cenário 3 (5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO)..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --simTime=40"
+
+run-scenario4:
+	@echo "Executando Cenário 4 (6G ISAC Radar Sensing vs Comunicação 28 GHz)..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --sensingRatio=0.35 --simTime=30"
+
+run-scenario5:
+	@echo "Executando Cenário 5 (6G Governança Cross-Tier & Anti-Rogue Shield)..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --lockout=true --simTime=35"
+
+run-all-scenarios:
+	@echo "Executando suíte completa de todos os 5 cenários (5G, 5GA, 6G)..."
+	bash scripts/run_all_scenarios_suite.sh
+
+helm-deploy-reference-xapps:
+	@echo "Implantando todas as 6 Reference xApps no namespace $(NAMESPACE)..."
+	bash scripts/deploy_reference_xapps.sh
+
 run-baseline:
 	bash scripts/run_baseline_experiment.sh
 
@@ -134,7 +160,7 @@ analyze-benchmarks:
 	python3 scripts/run_experiment_suite.py
 
 view-results:
-	@cat experiments/results/relatorio_comparativo.md
+	@cat experiments/results/relatorio_comparativo.md 2>/dev/null || echo "Execute a suite primeiro."
 
 push-results:
 	@echo "Sincronizando resultados com o GitHub..."
@@ -147,3 +173,4 @@ sync:
 
 auto-sync:
 	@bash scripts/git_auto_sync.sh $(INTERVAL)
+

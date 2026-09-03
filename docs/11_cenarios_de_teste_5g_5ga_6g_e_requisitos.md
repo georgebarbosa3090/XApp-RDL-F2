@@ -101,25 +101,102 @@ graph LR
 
 ---
 
-## 4. Instruções de Compilação e Execução no ns-3
+---
 
-Para compilar e executar os novos cenários C++ no ambiente do simulador:
+## 4. Modos de Execução e Automação Operacional
+
+Para atender tanto a depuração de baixo nível quanto a validação de produção em larga escala, o projeto disponibiliza **3 modalidades de execução e automação**:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                MODALIDADES DE EXECUÇÃO E AUTOMAÇÃO RDL                                 │
+├──────────────────────────────┬──────────────────────────────┬──────────────────────────────────────────┤
+│ Modalidade Operacional       │ Ferramental Utilizado        │ Escopo de Aplicação                      │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────────────────┤
+│ 1. Execução Granular no ns-3 │ `./ns3 run` / CMake / Ninja  │ Depuração de protocolo, traces de canal  │
+│ 2. Implantação Helm no K8s   │ Helm / `deploy_helm.sh`      │ Deploy isolado da RDL e das 6 xApps no K8s│
+│ 3. Automação Fim-a-Fim Total │ `run_all_scenarios_suite.sh` │ Execução de todos os 5 cenários integrados│
+└──────────────────────────────┴──────────────────────────────┴──────────────────────────────────────────┘
+```
+
+---
+
+### Opção 1: Execução Manual & Granular no Simulador ns-3
+
+Indicado para análise de traces físicos, depuração de logs em nível completo e inspeção de camadas MAC/PHY:
 
 ```bash
-# 1. Copiar cenários para o diretório scratch do ns-3
-cp simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
-cp simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
-cp simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
+# 1. Copiar todos os cenários para o scratch do ns-3
+cp simulations/ns3/scenario_rdl_*.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
 
-# 2. Configurar e compilar via CMake / Ninja
+# 2. Configurar e compilar via Ninja
 cd ~/ns3-oran-workspace/ns-3-oran
 ./ns3 configure --build-profile=optimized -G Ninja
-./ns3 build scratch/scenario_rdl_5ga_multicarrier_mimo \
+./ns3 build scratch/scenario_rdl_energy_vs_qos \
+            scratch/scenario_rdl_tvs_conflict \
+            scratch/scenario_rdl_5ga_multicarrier_mimo \
             scratch/scenario_rdl_6g_isac_sensing_coexistence \
             scratch/scenario_rdl_6g_cross_tier_governance
 
-# 3. Execução individual com passagem dinâmica de sementes e flags
-./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --seed=42 --enableE2=true"
-./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --seed=101 --sensingRatio=0.3"
-./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --seed=2026 --lockout=true"
+# 3. Execução individual de cada cenário com semente RNG controlada
+./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --simTime=30 --seed=42"
+./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --simTime=30 --seed=42"
+./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --simTime=40 --seed=101"
+./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --sensingRatio=0.35 --simTime=30 --seed=101"
+./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --lockout=true --simTime=35 --seed=2026"
 ```
+
+---
+
+### Opção 2: Implantação Automatizada com Helm no Near-RT RIC (Kubernetes)
+
+Permite implantar a **xApp-RDL** e as **6 Reference xApps** diretamente no cluster Kubernetes (`k3d` / Rancher) no namespace `ricxapp` sem reinstalar a plataforma `ricplt`:
+
+```bash
+# 1. Implantar a xApp RDL (Release: ricxapp-iqos-xapp-rdl-f2)
+make helm-deploy-f2
+# OU via script:
+bash scripts/deploy_rdl_phase2.sh
+
+# 2. Implantar todas as 6 Reference xApps (xSlice, EnergySaving, TrafficSteering, Beamformer, ISAC, Rogue)
+make helm-deploy-reference-xapps
+# OU via script dedicado:
+bash scripts/deploy_reference_xapps.sh
+
+# 3. Verificar o status e prontidão de todos os Pods no namespace ricxapp
+kubectl get pods -n ricxapp -o wide
+
+# 4. Acompanhar streaming de logs da xApp RDL em tempo real
+make logs-f2
+```
+
+---
+
+### Opção 3: Automação Fim-a-Fim de Todos os Cenários Integrados às Suas Reference xApps
+
+Executa um pipeline completamente automatizado que:
+1. Sincroniza e compila todos os 5 cenários C++ no simulador ns-3;
+2. Verifica e conecta a comunicação com o Near-RT RIC e as Reference xApps ativas;
+3. Executa sequencialmente todos os cenários com múltiplas sementes RNG independentes ($42, 101, 2026$);
+4. Coleta as métricas em `data/results_suite/` e gera a tabela comparativa multidimensional.
+
+```bash
+# Execução via atalho Makefile
+make run-all-scenarios
+
+# OU execução direta via script de orquestração
+bash scripts/run_all_scenarios_suite.sh
+```
+
+---
+
+## 5. Mapeamento Cenário $\leftrightarrow$ Reference xApps Envolvidas
+
+| Cenário de Teste | Arquivo `.cc` | Reference xApps Concorrentes | Tipo de Interação & Conflito |
+| :--- | :--- | :--- | :--- |
+| **Cenário 1: 5G EEVS** | `scenario_rdl_energy_vs_qos.cc` | `qos-xslice` + `energy-saving` | Conflito Direto em `TX_POWER` e Indireto em SLA URLLC |
+| **Cenário 2: 5G TVS** | `scenario_rdl_tvs_conflict.cc` | `qos-xslice` + `traffic-steering` | Conflito em Handover $A_3\text{-Offset}$ e Quota `PRB_QUOTA` |
+| **Cenário 3: 5GA Multi-Carrier** | `scenario_rdl_5ga_multicarrier_mimo.cc` | `qos-xslice` + `beamformer` + `traffic-steering` | Otimização conjunta de Downtilt $16 \times 4$ e Quotas `RRMPolicyRatio` |
+| **Cenário 4: 6G ISAC** | `scenario_rdl_6g_isac_sensing_coexistence.cc` | `qos-xslice` + `isac-radar` | Contenção de feixe/símbolos entre radar $\Delta R \le 0.5\text{ m}$ e dados $> 1\text{ Gbps}$ |
+| **Cenário 5: 6G Cross-Tier** | `scenario_rdl_6g_cross_tier_governance.cc` | `qos-xslice` + `energy-saving` + `rogue-stress` | Validação de Lockout de 5s contra *Parameter Flipping* a 5 Hz |
+
