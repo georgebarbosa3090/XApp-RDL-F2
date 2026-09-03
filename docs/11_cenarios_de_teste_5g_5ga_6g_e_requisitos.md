@@ -40,27 +40,31 @@ graph LR
 * **Conflito:** `xApp-Energy` tenta reduzir potência de transmissão para $15\text{ dBm}$ enquanto `xApp-QoS` exige potência $> 23\text{ dBm}$ para manter atraso URLLC $< 5\text{ ms}$.
 * **Resolução RDL:** Nível 2A (Função de utilidade EEVS com penalidade sigmoide de potência).
 
+![Cenário 1: Energy Saving vs QoS (EEVS)](figures/scenario_1_eevs_energy_vs_qos.png)
+
 #### Cenário 2: TVS (Traffic Steering vs. Slicing e Handover)
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_tvs_conflict.cc)
 * **Topologia:** 2 gNBs adjacentes com zona de sobreposição e 30 UEs divididos em 3 fatias (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
 * **Conflito:** `xApp-TrafficSteering` força handover de UEs de borda por carga, enquanto `xApp-Slicing` altera quotas de PRB, gerando instabilidade na fronteira.
 * **Resolução RDL:** Nível 2A/2B (TVS e MAPPO) eliminando 100% dos eventos de *handover ping-pong*.
 
+![Cenário 2: Traffic Steering vs Slicing (TVS)](figures/scenario_2_tvs_traffic_steering_slicing.png)
+
 ---
 
 ### 2.2. Cenário 5G-Advanced: Multi-Carrier, Massive MIMO e Fatiamento Dinâmico
 
+#### Cenário 3: Multi-Carrier FR1/FR3 & Massive MIMO UPA (16x4)
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc)
 * **Topologia & Espectro:**
   - 3 gNBs em corredor urbano UMi ($1000\text{ m} \times 400\text{ m}$, ISD $500\text{ m}$);
   - Espectro Multi-Portadora: FR1 ($3.5\text{ GHz}, 100\text{ MHz}, 273\text{ PRBs}$) + FR3 Upper Mid-Band ($10.5\text{ GHz}, 200\text{ MHz}$);
-  - Antenas Massive MIMO UPA $16 \times 4$ (64 elementos com controle de *vertical downtilt* na gNB) e $2 \times 2$ (UEs);
+  - Antenas Massive MIMO UPA $16 \times 4$ (64 elementos com controle de *vertical downtilt* $6^\circ-8^\circ$ na gNB) e $2 \times 2$ (UEs);
   - 60 UEs sob mobilidade heterogênea (20 Estáticos, 20 Pedestres a $3-5\text{ km/h}$, 20 Veiculares a $54\text{ km/h}$).
-* **xApps Envolvidas:**
-  1. `xApp-Beamformer`: Modifica tilt elétrico e pesos de feixe (E2SM-RC Style 10 Action 2);
-  2. `xApp-TrafficSteering`: Redireciona UEs via $A_3\text{-Offset}$ (E2SM-RC Style 3 Action 2);
-  3. `xApp-PRBQuota` (ORIGAMI PIOR): Aloca quotas dinâmicas `RRMPolicyRatio` (E2SM-RC Style 1 Action 1).
+* **xApps Envolvidas:** `xApp-Beamformer` (Downtilt elétrico E2SM-RC Style 10), `xApp-TrafficSteering` (A3 Offset) e `xApp-PRBQuota` (ORIGAMI PIOR).
 * **Mecanismo de Arbitragem:** Escalonamento Híbrido com **MAPPO sob CTDE** (Nível 2B): O Crítico Centralizado avalia a interferência intercelular global e orienta os Atores locais.
+
+![Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO](figures/scenario_3_5ga_multicarrier_mimo.png)
 
 ---
 
@@ -72,10 +76,14 @@ graph LR
 * **Conflito:** Competição direta por símbolos OFDM e feixes de transmissão entre a `xApp-RadarSensing` (exige resolução fina $\Delta R = \frac{c}{2B}$) e a `xApp-eMBB-Plus` (demanda vazão $> 1\text{ Gbps}$).
 * **Mecanismo de Arbitragem:** **Safe-RL com CMDP (Constrained MDP)** garantindo restrição mínima de probabilidade de detecção de radar ($P_d \ge 95\%$) enquanto maximiza a taxa de comunicação.
 
+![Cenário 4: 6G ISAC Sensing vs Communication](figures/scenario_4_6g_isac_sensing_coexistence.png)
+
 #### Cenário 5: Governança Cross-Tier e Escudo Anti-Rogue xApp
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
 * **Topologia & Operação:** Grade $2 \times 2$ com 4 gNBs e 40 UEs sob alta carga estocástica. Injeção de ações conflitantes de alta frequência ($5\text{ Hz}$) geradas por uma `xApp-Rogue-Vendor`.
 * **Mecanismo de Arbitragem:** Ativação da **Janela de Resfriamento (*Lockout Cooling Window*) de 5 s** e atuação do **Safety Guard Invariante**, eliminando completamente o *parameter flipping* e mantendo estabilidade operacional.
+
+![Cenário 5: 6G Cross-Tier Multi-Loop Governance & Anti-Rogue Shield](figures/scenario_5_6g_cross_tier_governance.png)
 
 ---
 
