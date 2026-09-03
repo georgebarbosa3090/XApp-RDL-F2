@@ -142,7 +142,7 @@ O cálculo das vantagens $\hat{A}_t$ e dos retornos-alvo $R_t$ é executado em s
    $$r_t(\theta) = \frac{\pi_\theta(a_t \mid o_t)}{\pi_{\theta_{\text{old}}}(a_t \mid o_t)} = \exp\left( \log \pi_\theta(a_t \mid o_t) - \log \pi_{\theta_{\text{old}}}(a_t \mid o_t) \right)$$
 
 2. **Função de Perda Clipped Surrogate do Ator com Regularização de Entropia:**
-   $$L^{\text{CLIP}}(\theta) = -\hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta) \hat{A}_t^{\text{norm}}, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t^{\text{norm}} \right) \right] - c_{\text{ent}} \, \mathcal{H}(\pi_\theta)$$
+   $$L^{\text{CLIP}}(\theta) = -\hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta) \hat{A}_t^{\text{norm}}, \; \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat{A}_t^{\text{norm}} \right) \right] - c_{\text{ent}} \, \mathcal{H}\left(\pi_\theta(\cdot \mid o_t)\right)$$
 
 3. **Função de Perda do Crítico Centralizado (MSE):**
    $$L^{\text{VF}}(\phi) = \frac{1}{B} \sum_{i=1}^B \left( V_\phi(s_i^{\text{global}}) - R_i \right)^2$$
