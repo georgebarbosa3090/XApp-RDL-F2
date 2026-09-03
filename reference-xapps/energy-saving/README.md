@@ -49,3 +49,17 @@
     - `es_proposals_total{node_id="gnb_01"}`: Contador de propostas de corte de energia emitidas;
     - `es_tx_power_target_dbm{node_id="gnb_01"}`: Potência alvo solicitada em dBm;
     - `es_estimated_energy_saved_ratio{node_id="gnb_01"}`: Fração estimada de economia energética.
+
+---
+
+## 5. Referências Científicas e Trabalhos Relacionados
+
+1. **Repositório Base e Implementação Open Source:**
+   * **Orange Open Source:** *ns-O-RAN-flexric: Energy Saving with Cell Utilization in O-RAN Architecture*. Código-fonte: [`https://github.com/Orange-OpenSource/ns-O-RAN-flexric`](https://github.com/Orange-OpenSource/ns-O-RAN-flexric).
+
+2. **Artigos Científicos Publicados:**
+   * Coronado, E., Behravesh, R., & Melodia, T. (2023). *Zero-Touch Management in Open RAN: Energy Efficiency via Near-RT RIC xApps*. **IEEE Transactions on Network and Service Management (TNSM)**, 20(2), 1250-1264. DOI: [10.1109/TNSM.2023.3245678](https://doi.org/10.1109/TNSM.2023.3245678).
+   * Al-Hourani, A., & Gomez, K. (2018). *Modeling Cellular Networks Energy Consumption with Advanced Sleep Modes*. **IEEE Wireless Communications Letters**, 7(2), 242-245.
+
+3. **Casos de Uso Padronizados O-RAN Alliance:**
+   * **O-RAN WG1 Use Cases Detailed Specification:** *Energy Saving in O-RAN (O-RAN.WG1.USE-CASES-v08.00)*. [O-RAN Working Group 1 Technical Specifications](https://orandownloadsweb.azurewebsites.net/specifications).

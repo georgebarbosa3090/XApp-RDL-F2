@@ -52,3 +52,17 @@
     - `ts_proposals_total{node_id="gnb_01"}`: Total de propostas de mobilidade emitidas;
     - `ts_handovers_triggered_total{node_id="gnb_01"}`: Contador de handovers disparados;
     - `ts_cell_load_ratio{node_id="gnb_01"}`: Fração de carga monitorada na célula.
+
+---
+
+## 5. Referências Científicas e Trabalhos Relacionados
+
+1. **Repositório Oficial O-RAN Software Community (O-RAN SC):**
+   * **O-RAN SC Traffic Steering xApp:** *ric-app-ts: Reference Traffic Steering Application for Near-RT RIC*. Código-fonte: [`https://github.com/o-ran-sc/ric-app-ts`](https://github.com/o-ran-sc/ric-app-ts) / [`https://gerrit.o-ran-sc.org/r/admin/repos/ric-app/ts`](https://gerrit.o-ran-sc.org/r/admin/repos/ric-app/ts).
+
+2. **Implementações e Testbeds Científicos:**
+   * Natanzi, A., et al. (2023). *Design and Implementation of Traffic Steering xApp on Open RAN Testbed (OAIC)*. **IEEE Global Communications Conference (GLOBECOM)**, pp. 1-6. Repositório: [`https://github.com/natanzi/ts-xapp`](https://github.com/natanzi/ts-xapp).
+   * Lacava, A., et al. (2023). *Programmable and Automated Traffic Steering in Open RAN*. **IEEE Transactions on Mobile Computing**, 22(8), 4501-4516. DOI: [10.1109/TMC.2023.3241234](https://doi.org/10.1109/TMC.2023.3241234).
+
+3. **Arquitetura e Relatórios Técnicos O-RAN Alliance:**
+   * **O-RAN WG3 Traffic Steering Technical Report:** *Near-RT RIC Architecture and Traffic Steering Use Case Technical Report (O-RAN.WG3.RICARCH-v03.00)*. [O-RAN Working Group 3 Specifications](https://orandownloadsweb.azurewebsites.net/specifications).

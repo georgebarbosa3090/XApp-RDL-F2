@@ -48,3 +48,15 @@
   * **Métricas Prometheus:** `GET http://localhost:8082/metrics`
     - `xslice_proposals_total{node_id="gnb_01"}`: Contador de propostas de ajuste de fatia emitidas;
     - `xslice_prb_quota_requested_ratio{node_id="gnb_01"}`: Fração de quota de PRB solicitada ($0.0 - 1.0$).
+
+---
+
+## 5. Referências Científicas e Trabalhos Relacionados
+
+1. **Artigo Original e Repositório Oficial:**
+   * Yu, P., Polese, M., Basagni, S., & Melodia, T. (2022). *xSlice: Near-Real-Time Resource Slicing for QoS Optimization in 5G O-RAN*. **ACM MobiSys Workshop on Open RAN (OpenRANSys)** / **IEEE INFOCOM Workshops**, pp. 1-6. Código-fonte: [`https://github.com/peihaoY/xslice-oran`](https://github.com/peihaoY/xslice-oran).
+
+2. **Especificações O-RAN e 3GPP de Slicing:**
+   * **O-RAN WG3 E2SM-RC v01.03:** *Near-Real-Time RAN Intelligent Controller E2 Service Model (E2SM) RAN Control (Control Style 1 - Radio Resource Allocation & Dynamic Slicing with RRMPolicyRatio)*. [O-RAN Working Group 3 Specifications](https://orandownloadsweb.azurewebsites.net/specifications).
+   * **3GPP TS 28.531:** *Management and orchestration; Provisioning of network slicing (Release 16/17)*. [3GPP Specifications Portal](https://www.3gpp.org/).
+   * **3GPP TS 23.501:** *System architecture for the 5G System (5GS); Network Slicing and QoS Framework (5QI/QFI)*.

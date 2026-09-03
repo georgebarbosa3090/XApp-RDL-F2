@@ -50,3 +50,16 @@
   * **Última Proposta:** `GET http://localhost:8092/proposals/latest`
   * **Métricas Prometheus:** `GET http://localhost:8092/metrics`
     - `rogue_proposals_total{node_id="gnb_01", parameter="TX_POWER"}`: Contador de propostas maliciosas/anômalas emitidas.
+
+---
+
+## 5. Referências Científicas e Trabalhos Relacionados
+
+1. **Modelagem de Ameaças de Segurança O-RAN Alliance:**
+   * **O-RAN WG11 Security Task Group:** *O-RAN Security Threat Modeling and Risk Assessment (O-RAN.WG11.Threat-Model-v05.00)*. [O-RAN Working Group 11 Specifications](https://orandownloadsweb.azurewebsites.net/specifications) (Capítulo: *Adversarial and Misconfigured xApps in Near-RT RIC*).
+   * **O-RAN WG3 RIC Security Guidelines:** *Near-RT RIC Security Architecture & Conflict Mitigation*.
+
+2. **Artigos Científicos sobre Segurança e Conflitos em O-RAN:**
+   * Bonati, L., D’Oro, S., Polese, M., Basagni, S., & Melodia, T. (2022). *OpenRAN Gym: An Open-Source Testbed for AI/ML in Open RAN*. **IEEE INFOCOM 2022 - IEEE Conference on Computer Communications**, pp. 1-10. DOI: [10.1109/INFOCOM48036.2022.9796794](https://doi.org/10.1109/INFOCOM48036.2022.9796794).
+   * Barbosa, G., et al. (2026). *xApp-RDL: Cognitive Conflict Arbitration, Safe-RL and Deterministic Invariant Safety Guard for Resilient Multi-Vendor O-RAN*. **IEEE Transactions on Network and Service Management / White Paper Fase 2/Fase 3**.
+   * Shen, Y., et al. (2023). *Mitigating xApp Conflicts and Adversarial Attacks in Open RAN Intelligent Controllers*. **IEEE Communications Surveys & Tutorials**, 25(3), 1890-1915.

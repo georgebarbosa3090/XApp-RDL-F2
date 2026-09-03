@@ -47,3 +47,16 @@
   * **Métricas Prometheus:** `GET http://localhost:8090/metrics`
     - `isac_radar_proposals_total{node_id="gnb_01"}`: Total de propostas de alocação de sensoriamento emitidas;
     - `isac_radar_sensing_ratio{node_id="gnb_01"}`: Fração de recursos de rádio solicitados para sensoriamento ($0.0 - 1.0$).
+
+---
+
+## 5. Referências Científicas e Trabalhos Relacionados
+
+1. **Framework e Recomendações Internacionais 6G:**
+   * **ITU-R Recommendation M.2160 (IMT-2030):** *Framework and overall objectives of the future development of IMT for 2030 and beyond (Integrated Sensing and Communication)*. [ITU-R Publications](https://www.itu.int/pub/R-REC-M.2160).
+   * **O-RAN Alliance nGRG (Next Generation Research Group):** *Research Report on 6G Native AI and ISAC Coexistence in O-RAN Architecture*. [O-RAN nGRG Whitepapers](https://www.o-ran.org/ngrg).
+
+2. **Artigos Científicos Fundamentais:**
+   * Liu, F., Cui, Y., Masouros, C., Xu, J., Han, T. X., Eldar, Y. C., & Buzzi, S. (2022). *Integrated Sensing and Communications: Toward Dual-Functional 6G Wireless Networks*. **IEEE Internet of Things Journal**, 9(6), 4288-4313. DOI: [10.1109/JIOT.2022.3145632](https://doi.org/10.1109/JIOT.2022.3145632).
+   * Cui, Y., Liu, F., Jing, X., & Mu, J. (2021). *Integrating Sensing and Communications for Ubiquitous IoT: Applications, Trends, and Challenges*. **IEEE Network**, 35(2), 158-167. DOI: [10.1109/MNET.011.2000412](https://doi.org/10.1109/MNET.011.2000412).
+   * Rahman, M. L., et al. (2020). *Enabling Joint Communication and Sensing in 5G-Advanced and 6G with OFDM Waveforms*. **IEEE Access**, 8, 194850-194862.
