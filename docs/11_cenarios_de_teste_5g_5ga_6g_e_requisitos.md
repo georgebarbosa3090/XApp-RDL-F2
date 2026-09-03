@@ -40,7 +40,7 @@ graph LR
 * **Conflito:** `xApp-Energy` tenta reduzir potência de transmissão para $15\text{ dBm}$ enquanto `xApp-QoS` exige potência $> 23\text{ dBm}$ para manter atraso URLLC $< 5\text{ ms}$.
 * **Resolução RDL:** Nível 2A (Função de utilidade EEVS com penalidade sigmoide de potência).
 
-![Cenário 1: Energy Saving vs QoS (EEVS)](figures/scenario_1_eevs_energy_vs_qos.png)
+![Cenário 1: Energy Saving vs QoS - Tema Claro para Artigos](figures/scenario_1_eevs_energy_vs_qos_light.png)
 
 #### Cenário 2: TVS (Traffic Steering vs. Slicing e Handover)
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_tvs_conflict.cc)
@@ -48,7 +48,7 @@ graph LR
 * **Conflito:** `xApp-TrafficSteering` força handover de UEs de borda por carga, enquanto `xApp-Slicing` altera quotas de PRB, gerando instabilidade na fronteira.
 * **Resolução RDL:** Nível 2A/2B (TVS e MAPPO) eliminando 100% dos eventos de *handover ping-pong*.
 
-![Cenário 2: Traffic Steering vs Slicing (TVS)](figures/scenario_2_tvs_traffic_steering_slicing.png)
+![Cenário 2: Traffic Steering vs Slicing - Tema Claro para Artigos](figures/scenario_2_tvs_traffic_steering_slicing_light.png)
 
 ---
 
@@ -64,7 +64,7 @@ graph LR
 * **xApps Envolvidas:** `xApp-Beamformer` (Downtilt elétrico E2SM-RC Style 10), `xApp-TrafficSteering` (A3 Offset) e `xApp-PRBQuota` (ORIGAMI PIOR).
 * **Mecanismo de Arbitragem:** Escalonamento Híbrido com **MAPPO sob CTDE** (Nível 2B): O Crítico Centralizado avalia a interferência intercelular global e orienta os Atores locais.
 
-![Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO](figures/scenario_3_5ga_multicarrier_mimo.png)
+![Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO - Tema Claro para Artigos](figures/scenario_3_5ga_multicarrier_mimo_light.png)
 
 ---
 
@@ -76,14 +76,14 @@ graph LR
 * **Conflito:** Competição direta por símbolos OFDM e feixes de transmissão entre a `xApp-RadarSensing` (exige resolução fina $\Delta R = \frac{c}{2B}$) e a `xApp-eMBB-Plus` (demanda vazão $> 1\text{ Gbps}$).
 * **Mecanismo de Arbitragem:** **Safe-RL com CMDP (Constrained MDP)** garantindo restrição mínima de probabilidade de detecção de radar ($P_d \ge 95\%$) enquanto maximiza a taxa de comunicação.
 
-![Cenário 4: 6G ISAC Sensing vs Communication](figures/scenario_4_6g_isac_sensing_coexistence.png)
+![Cenário 4: 6G ISAC Sensing vs Communication - Tema Claro para Artigos](figures/scenario_4_6g_isac_sensing_coexistence_light.png)
 
 #### Cenário 5: Governança Cross-Tier e Escudo Anti-Rogue xApp
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
 * **Topologia & Operação:** Grade $2 \times 2$ com 4 gNBs e 40 UEs sob alta carga estocástica. Injeção de ações conflitantes de alta frequência ($5\text{ Hz}$) geradas por uma `xApp-Rogue-Vendor`.
 * **Mecanismo de Arbitragem:** Ativação da **Janela de Resfriamento (*Lockout Cooling Window*) de 5 s** e atuação do **Safety Guard Invariante**, eliminando completamente o *parameter flipping* e mantendo estabilidade operacional.
 
-![Cenário 5: 6G Cross-Tier Multi-Loop Governance & Anti-Rogue Shield](figures/scenario_5_6g_cross_tier_governance.png)
+![Cenário 5: 6G Cross-Tier Multi-Loop Governance & Anti-Rogue Shield - Tema Claro para Artigos](figures/scenario_5_6g_cross_tier_governance_light.png)
 
 ---
 
