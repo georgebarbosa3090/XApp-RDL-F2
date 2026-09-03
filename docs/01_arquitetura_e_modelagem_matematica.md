@@ -83,6 +83,6 @@ onde os pesos são dinamicamente modulados via **A1-Policy** do Non-RT RIC.
 | Agente | Classe Python | Responsabilidade Principal |
 | :--- | :--- | :--- |
 | **Perception Agent** | `src.agents.perception_agent.PerceptionAgent` | Ingestão E2SM-KPM, extração de features normalizadas, detecção de conflitos direta/indireta e cache Redis. |
-| **Reasoning Agent** | `src.agents.reasoning_agent.ReasoningAgent` | Estimador de complexidade $C(c, s)$, roteamento hierárquico (H-RDL $\to$ Utilidade $\to$ MAPPO) e lockout cooling de 5s. |
+| **Reasoning Agent** | `src.agents.reasoning_agent.ReasoningAgent` | Estimador de complexidade $C(c, s)$, roteamento hierárquico (H-RDL → Utilidade → MAPPO) e lockout cooling de 5s. |
 | **Refinement Agent** | `src.agents.refinement_agent.RefinementAgent` | Verificação de limites físicos (PRBs, potência de -10 a 23 dBm), validação A1 e injeção de fallback seguro. |
 | **MAPPO Coordinator** | `src.agents.marl.mappo_agent.MAPPOCoordinator` | Coordenação multiagente CTDE com cálculo formal de GAE e backpropagation com otimizador Adam. |

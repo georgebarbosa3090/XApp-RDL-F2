@@ -14,8 +14,8 @@
 | Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
 | :---: | :--- | :---: | :---: |
 | **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote (200ms), heurísticas TVS/EEVS e Safety Guards físicos.* | **Concluída e Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
-| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Motor Hierárquico Escalonado (Heurística $\to$ Utilidade $\to$ MAPPO CTDE).* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
-| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch / Intent-Driven)**<br/>*Inteligência Cross-Tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp), GNN Espaço-Temporal, XAI e O-Cloud 6G.* | **Em Especificação / Roadmap** | [Volume 12: RDL Autônoma 6G](docs/12_rdl_autonoma_e_federada_6g.md) / [Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md) |
+| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Motor Hierárquico Escalonado (Heurística → Utilidade → MAPPO CTDE).* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
+| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch / Intent-Driven)**<br/>*Inteligência Cross-Tier (rApp ⇄ xApp ⇄ dApp), GNN Espaço-Temporal, XAI e O-Cloud 6G.* | **Em Especificação / Roadmap** | [Volume 12: RDL Autônoma 6G](docs/12_rdl_autonoma_e_federada_6g.md) / [Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md) |
 
 ---
 

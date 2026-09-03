@@ -230,7 +230,7 @@ bash scripts/run_all_scenarios_suite.sh
 
 ---
 
-## 5. Mapeamento Cenário $\leftrightarrow$ Reference xApps Envolvidas
+## 5. Mapeamento Cenário ⇄ Reference xApps Envolvidas
 
 | Cenário de Teste | Arquivo `.cc` | Reference xApps Concorrentes | Tipo de Interação & Conflito |
 | :--- | :--- | :--- | :--- |
