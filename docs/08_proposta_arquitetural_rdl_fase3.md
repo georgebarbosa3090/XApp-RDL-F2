@@ -1,4 +1,4 @@
-# Volume 08: Proposta Arquitetural e Especificação de Requisitos — RDL Fase 3
+# Volume 08: Proposta Arquitetural e Especificação de Requisitos - RDL Fase 3
 ## Cognitive, Intent-Driven & Cross-Tier Autonomous Governance (AI-RDL / 6G)
 
 ---
