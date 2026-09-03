@@ -162,15 +162,4 @@ analyze-benchmarks:
 view-results:
 	@cat experiments/results/relatorio_comparativo.md 2>/dev/null || echo "Execute a suite primeiro."
 
-push-results:
-	@echo "Sincronizando resultados com o GitHub..."
-	git add experiments/results/ docs/ scripts/
-	git commit -m "chore(experiments): upload latest ns-3 MARL benchmark results [skip ci]" || echo "Nenhum dado novo."
-	git push origin main || echo "Aviso no push."
-
-sync:
-	@bash scripts/git_sync.sh "$(MSG)"
-
-auto-sync:
-	@bash scripts/git_auto_sync.sh $(INTERVAL)
 

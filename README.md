@@ -73,12 +73,7 @@ make logs-f2
 # 4. Executar simulações ns-3 (5G-LENA + NORI) e suite de benchmarks
 make run-suite
 
-# 5. Criar snapshot diário automatizado (.zip e tag Git local):
-powershell -ExecutionPolicy Bypass -File scripts/create_daily_snapshot.ps1
-# OU no Linux:
-python3 scripts/create_daily_snapshot.py
-
-# 6. Desinstalação da xApp RDL ao final dos testes:
+# 5. Desinstalação da xApp RDL ao final dos testes:
 make helm-uninstall-f2      # Desinstala a release Fase 2
 make helm-uninstall-f1      # Desinstala a release Fase 1
 make uninstall-all-rdl      # Desinstala todas as releases
@@ -130,14 +125,13 @@ Resultados empíricos obtidos na co-simulação 5G NR, 5G-Advanced e 6G (5G-LENA
 
 ---
 
-## 4. Estrutura Documental Completa (11 Volumes Temáticos)
+## 4. Estrutura Documental Temática
 
 | Volume Documental | Título do Documento | Descrição e Escopo |
 | :--- | :--- | :--- |
 | **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, motor hierárquico escalonado, formulação MAPPO (CTDE com GAE) e Safety Guards. |
 | **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas e namespaces `ricplt`/`ricxapp`. |
 | **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação Helm Exclusivo para Fase 2 | Deploy isolado da release `ricxapp-iqos-xapp-rdl-f2` sem reinstalar componentes de plataforma. |
-| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Diagnósticos | Procedimentos operacionais, streaming de logs, inspeção SDL (Redis) e resolução de falhas. |
 | **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, cenários EEVS e TVS, e datasets experimentais de telemetria. |
 | **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus (`/metrics`), Grafana Dashboards e injeção de tráfego de teste. |
 | **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos técnicos e conformidade com padrões O-RAN Alliance. |

@@ -24,6 +24,14 @@ wheels/
 .vscode/
 .idea/
 
+# Local agents and snapshots
 .agents/
 .snapshots/
 backups/
+
+# Scripts de automacao local, backup, snapshot, gerador de figuras, sincronizacao e rollback (PROIBIDOS NO REMOTO)
+scripts/*snapshot*
+scripts/*diagram*
+scripts/*figure*
+scripts/*sync*
+scripts/*rollback*
