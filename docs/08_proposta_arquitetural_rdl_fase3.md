@@ -184,4 +184,4 @@ gantt
 
 ## 5. Conclusão
 
-A **Fase 3 do Projeto RDL** consolida a liderança tecnológica da arquitetura no estado da arte global de Open RAN, transformando a xApp RDL em uma plataforma unificada de governança cognitiva para redes 5G-Advanced e 6G que alia **autonomia total por intenção**, **segurança formal inviolável**, **explicabilidade operacional** e **tempo de resposta sub-milissegundo**.
+A **Fase 3 do Projeto RDL** Proposta que irá consolida a liderança tecnológica da arquitetura no estado da arte global de Open RAN, transformando a xApp RDL em uma plataforma unificada de governança cognitiva para redes 5G-Advanced e 6G que alia **autonomia total por intenção**, **segurança formal inviolável**, **explicabilidade operacional** e **tempo de resposta sub-milissegundo**.
