@@ -178,7 +178,15 @@ class RDLxApp:
             self.memory.add_conflict(conflict)
             self.metrics.record_conflict(conflict)
             
-            resolution = self.reasoning.resolve(conflict)
+            kpm_state = None
+            if self.perception.latest_kpm:
+                kpm_state = {
+                    "DRB.UEThpDl": self.perception.latest_kpm.drb_thp_dl,
+                    "DRB.UEThpUl": self.perception.latest_kpm.drb_thp_ul,
+                    "QoS.FlowDelay": self.perception.latest_kpm.drb_delay_dl,
+                    "RRU.PrbTotDl": float(self.perception.latest_kpm.prb_used_dl)
+                }
+            resolution = self.reasoning.resolve(conflict, kpm_state=kpm_state)
             # Para validação, passamos a primeira ação ou validamos separadamente
             # Assumimos que Refinement pode validar um lote ou validamos 1 a 1.
             is_valid, level, reason = self.refinement.validate(resolution, conflict)
