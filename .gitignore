@@ -35,3 +35,7 @@ scripts/*diagram*
 scripts/*figure*
 scripts/*sync*
 scripts/*rollback*
+
+# Documentos locais experimentais (PROIBIDOS NO REMOTO)
+docs/12_rdl_autonoma_e_federada_6g.md
+
