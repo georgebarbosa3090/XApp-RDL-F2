@@ -107,7 +107,7 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 
 ---
 
-## 4. Estrutura Documental Completa (10 Volumes Temáticos)
+## 4. Estrutura Documental Completa (11 Volumes Temáticos)
 
 | Volume Documental | Título do Documento | Descrição e Escopo |
 | :--- | :--- | :--- |
@@ -121,6 +121,7 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 | **[Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md)** | Proposta Arquitetural e Requisitos — RDL Fase 3 | Especificação de governança autônoma 6G, controle cross-tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp) e Safe-RL. |
 | **[Volume 09](docs/09_relatorio_tecnico_detalhado_fase2.md)** | Relatório Técnico Detalhado da Fase 2 | Documento consolidado e exaustivo de arquitetura, código, simulações e resultados da Fase 2. |
 | **[Volume 10](docs/10_matriz_validade_e_pontos_de_atencao_fase3.md)** | Matriz de Validade e Pontos de Atenção Críticos | Análise formal de validade (interna, temporal, sinalização, externalidade, estatística) e roadmap. |
+| **[Volume 11](docs/11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md)** | Cenários de Teste 5G, 5GA, 6G e Requisitos | Especificação formal dos cenários C++ (.cc), características de canal e matriz de métricas. |
 
 ---
 
