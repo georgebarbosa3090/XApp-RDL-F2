@@ -83,35 +83,33 @@ make uninstall-all-rdl      # Desinstala todas as releases
 
 ## 3. Desempenho e Validação Experimental Multidimensional
 
-Resultados empíricos obtidos na co-simulação 5G NR, 5G-Advanced e 6G (5G-LENA + NORI) comparando a operação desregulada (**Baseline**), a governança heurística da **Fase 1 (H-RDL)** e o motor escalonado da **Fase 2 / Fase 3 (CA-RDL)**:
-
-![Métricas Experimentais Reais](docs/figures/cenario_4_comparativo_multidimensional_metricas.png)
+Resultados empíricos obtidos na co-simulação 5G NR, 5G-Advanced e 6G (5G-LENA + NORI) comparando a operação desregulada (**Baseline**), a governança heurística da **Fase 1 (H-RDL)** e o motor escalonado da **Fase 2 (CA-RDL)**:
 
 ### 3.1. QoS, Latência e Confiabilidade Telecom
 
-| Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL (Heurística) | Fase 2: CA-RDL (MARL) | Fase 3: Cognitive 5GA/6G | Ganho vs Baseline |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **QoS & Latência URLLC** | Latência Média URLLC | `11.41 ms` | `2.85 ms` | **`1.85 ms`** | **`1.15 ms`** | **-89.9% de redução** |
-| | Latência Percentil 99 (P99) | `18.66 ms` | `3.59 ms` | **`2.40 ms`** | **`1.80 ms`** | **-90.3% de cauda** |
-| | Violação de SLA (> 5ms) | `93.33%` | `0.0%` | **`0.0%`** | **`0.0%`** | **100% de cumprimento** |
-| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `39.28%` | `99.53%` | **`99.85%`** | **`99.98%`** | **+154.5% de entrega** |
-| | Taxa de Perda (PLR %) | `60.72%` | `0.47%` | **`0.15%`** | **`0.02%`** | **-99.9% de perda** |
-| **Sustentabilidade** | Ganho Bits/Joule (EE) | `1.00x` | `+14.5%` | **`+18.2%`** | **`+34.6%`** | **Operação Green 6G** |
+| Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL (Heurística) | Fase 2: CA-RDL (MARL) | Ganho vs Baseline |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **QoS & Latência URLLC** | Latência Média URLLC | `11.41 ms` | `2.85 ms` | **`1.85 ms`** | **-83.8% de redução** |
+| | Latência Percentil 99 (P99) | `18.66 ms` | `3.59 ms` | **`2.40 ms`** | **-87.1% de cauda** |
+| | Violação de SLA (> 5ms) | `93.33%` | `0.0%` | **`0.0%`** | **100% de cumprimento** |
+| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `39.28%` | `99.53%` | **`99.85%`** | **+154.2% de entrega** |
+| | Taxa de Perda (PLR %) | `60.72%` | `0.47%` | **`0.15%`** | **-99.8% de perda** |
+| **Sustentabilidade** | Ganho Bits/Joule (EE) | `1.00x` | `+14.5%` | **`+18.2%`** | **Operação Green** |
 
 ### 3.2. Camada Física (PHY), Bandas, Feixes, PRB, Handover e Slices
 
-| Domínio Técnico | Métrica Específica | Baseline | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Fase 3 (5GA/6G) | Impacto de Rede |
-| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| **SINR & Interferência** | SINR Médio Downlink | `14.2 dB` | `18.5 dB` | `21.4 dB` | **`24.8 dB`** | **+10.6 dB** (Maior MCS 28) |
-| | SINR de Borda (P05) | `-2.1 dB` | `3.4 dB` | `5.8 dB` | **`8.2 dB`** | **+10.3 dB** (Sem queda de chamadas) |
-| | Interferência Co-Canal | `-72.4 dBm` | `-79.8 dBm` | `-84.5 dBm` | **`-91.2 dBm`** | **-18.8 dBm** de supressão |
-| **Bandas & Feixes** | Largura de Banda Alocada | `50 MHz` | `100 MHz` | `100 MHz` | **`100+200+400 MHz`** | Suporte multi-portadora FR1/FR3/mmWave |
-| | Ganho Feixe UPA 16x4 | `N/A (Omni)` | `12.0 dBi` | `15.8 dBi` | **`18.4 dBi`** | Downtilt dinâmico $6^\circ-8^\circ$ |
-| **Fatiamento & PRB** | Taxa Utilização PRB | `98.4% (Sat.)`| `74.2%` | `68.5%` | **`62.0%`** | Sem saturação de canal |
-| | Índice Equidade Jain | `0.48` | `0.78` | `0.88` | **`0.94`** | Distribuição justa de recursos |
-| **Mobilidade & Tráfego**| Throughput Agregado | `412 Mbps` | `620 Mbps` | `785 Mbps` | **`1.420 Mbps`** | **+244.6%** vazão de dados |
-| | Handover Ping-Pong | `22 ev/min` | `0 ev/min` | **`0 ev/min`** | **`0 ev/min`** | **100% eliminado** |
-| | Desbalanceamento Carga | `48.5%` | `18.2%` | `11.4%` | **`6.8%`** | Carga homogênea entre gNBs |
+| Domínio Técnico | Métrica Específica | Baseline (Sem RDL) | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Impacto de Rede (Fase 2) |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| **SINR & Interferência** | SINR Médio Downlink | `14.2 dB` | `18.5 dB` | **`21.4 dB`** | **+7.2 dB** (Modulação MCS 24/28) |
+| | SINR de Borda (P05) | `-2.1 dB` | `3.4 dB` | **`5.8 dB`** | **+7.9 dB** (Sem queda de chamadas) |
+| | Interferência Co-Canal | `-72.4 dBm` | `-79.8 dBm` | **`-84.5 dBm`** | **-12.1 dBm** de supressão |
+| **Bandas & Feixes** | Largura de Banda Alocada | `50 MHz` | `100 MHz` | **`100 MHz`** | Uso ótimo de espectro na banda $n78$ |
+| | Ganho Feixe UPA 16x4 | `N/A (Omni)` | `12.0 dBi` | **`15.8 dBi`** | Downtilt dinâmico $6^\circ-8^\circ$ |
+| **Fatiamento & PRB** | Taxa Utilização PRB | `98.4% (Sat.)`| `74.2%` | **`68.5%`** | Sem saturação de canal |
+| | Índice Equidade Jain | `0.48` | `0.78` | **`0.88`** | Distribuição justa de recursos |
+| **Mobilidade & Tráfego**| Throughput Agregado | `412 Mbps` | `620 Mbps` | **`785 Mbps`** | **+90.5%** de vazão de dados |
+| | Handover Ping-Pong | `22 ev/min` | `0 ev/min` | **`0 ev/min`** | **100% eliminado** |
+| | Desbalanceamento Carga | `48.5%` | `18.2%` | **`11.4%`** | Carga homogênea entre gNBs |
 
 ### 3.3. Resiliência sob xApp Descalibrada (Rogue xApp), Lockout Cooling e Safety Guard
 

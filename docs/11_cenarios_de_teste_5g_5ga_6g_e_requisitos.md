@@ -93,39 +93,38 @@ A avaliação de desempenho da xApp-RDL nos cenários 5G, 5G-Advanced e 6G englo
 
 ### 3.1. Métricas de Camada Física, Bandas, Feixes e Interferência (PHY & Massive MIMO)
 
-| Métrica Específica | Símbolo / Unidade | Cenário Alvo | Baseline (Sem RDL) | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Fase 3 (Cognitive 5GA/6G) | Ganho / Impacto Operacional |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **SINR Médio de Downlink** | $\overline{\gamma}_{\text{DL}}$ ($\text{dB}$) | 5G / 5GA / 6G | `14.2 dB` | `18.5 dB` | `21.4 dB` | **`24.8 dB`** | **+10.6 dB** (Maior robustez de modulação MCS 28) |
-| **SINR de Borda de Célula (P05)** | $\gamma_{\text{edge}}$ ($\text{dB}$) | 5G / 5GA | `-2.1 dB` | `3.4 dB` | `5.8 dB` | **`8.2 dB`** | **+10.3 dB** (Eliminação de zonas de sombra e queda de chamadas) |
-| **Potência de Interferência Co-Canal** | $I_{\text{inter}}$ ($\text{dBm}$) | 5GA / 6G | `-72.4 dBm` | `-79.8 dBm` | `-84.5 dBm` | **`-91.2 dBm`** | **-18.8 dBm** (Supressão de interferência via Massive MIMO) |
-| **Ganho de Conformação de Feixe** | $G_{\text{BF}}$ ($\text{dBi}$) | 5GA (UPA 16x4) | `N/A (Omni)` | `12.0 dBi` | `15.8 dBi` | **`18.4 dBi`** | Feixes estreitos dinâmicos com *vertical downtilt* $6^\circ-8^\circ$ |
-| **Largura de Banda Efetiva Alocada** | $B_{\text{eff}}$ ($\text{MHz}$) | 5G / 5GA / 6G | `50 MHz` | `100 MHz` | `100 MHz` | **`100 + 200 + 400 MHz`** | Suporte a agregação multi-portadora FR1, FR3 e mmWave |
-| **Eficiência Espectral Média** | $\eta$ ($\text{bps/Hz}$) | Todos | `2.8 bps/Hz` | `4.2 bps/Hz` | `5.4 bps/Hz` | **`6.9 bps/Hz`** | **+146.4%** de ganho de capacidade espectral |
+| Métrica Específica | Símbolo / Unidade | Cenário Alvo | Baseline (Sem RDL) | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Ganho / Impacto Operacional (Fase 2) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **SINR Médio de Downlink** | $\overline{\gamma}_{\text{DL}}$ ($\text{dB}$) | 5G / 5GA | `14.2 dB` | `18.5 dB` | **`21.4 dB`** | **+7.2 dB** (Modulação robusta MCS 24/28) |
+| **SINR de Borda de Célula (P05)** | $\gamma_{\text{edge}}$ ($\text{dB}$) | 5G / 5GA | `-2.1 dB` | `3.4 dB` | **`5.8 dB`** | **+7.9 dB** (Eliminação de zonas de sombra) |
+| **Potência de Interferência Co-Canal** | $I_{\text{inter}}$ ($\text{dBm}$) | 5GA | `-72.4 dBm` | `-79.8 dBm` | **`-84.5 dBm`** | **-12.1 dBm** (Supressão de interferência via MARL) |
+| **Ganho de Conformação de Feixe** | $G_{\text{BF}}$ ($\text{dBi}$) | 5GA (UPA 16x4) | `N/A (Omni)` | `12.0 dBi` | **`15.8 dBi`** | Feixes dinâmicos com *vertical downtilt* $6^\circ-8^\circ$ |
+| **Largura de Banda Efetiva Alocada** | $B_{\text{eff}}$ ($\text{MHz}$) | 5G / 5GA | `50 MHz` | `100 MHz` | **`100 MHz`** | Alocação ótima na banda $n78$ (3.5 GHz) |
+| **Eficiência Espectral Média** | $\eta$ ($\text{bps/Hz}$) | Todos | `2.8 bps/Hz` | `4.2 bps/Hz` | **`5.4 bps/Hz`** | **+92.8%** de ganho de capacidade espectral |
 
 ---
 
 ### 3.2. Métricas de Fatiamento (Slices) e Alocação de Recursos (PRBs)
 
-| Métrica Específica | Símbolo / Unidade | Cenário Alvo | Baseline | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Fase 3 (Cognitive 5GA/6G) | Meta / Comportamento |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Taxa de Cumprimento SLA URLLC** | $SLA_{\text{URLLC}}$ ($\%$) | Todos | `6.67%` | `100.0%` | `100.0%` | **`100.0%`** | Latência E2E $\le 2.0\text{ ms}$ garantida |
-| **Taxa de Cumprimento SLA eMBB** | $SLA_{\text{eMBB}}$ ($\%$) | Todos | `54.2%` | `92.8%` | `98.5%` | **`99.9%`** | Vazão mínima contratada atendida |
-| **Taxa de Cumprimento SLA Sensoriamento** | $SLA_{\text{ISAC}}$ ($\%$) | 6G ISAC | `0.0%` | `N/A` | `N/A` | **`98.7%`** | Resolução radar $\Delta R \le 0.5\text{ m}$ e $P_d \ge 95\%$ |
-| **Taxa de Utilização de PRB** | $\rho_{\text{PRB}}$ ($\%$) | 5G / 5GA | `98.4% (Sat.)` | `74.2%` | `68.5%` | **`62.0%`** | Sem saturação, margem para rajadas de tráfego |
-| **Taxa de Inanição de PRB (Starvation)** | $P_{\text{starv}}$ ($\%$) | Todos | `32.1%` | `0.8%` | `0.0%` | **`0.0%`** | Nenhuma fatia tem alocação zerada |
-| **Índice de Equidade de Jain** | $J(\mathbf{x})$ | Todos | `0.48` | `0.78` | `0.88` | **`0.94`** | Distribuição justa de recursos entre UEs e fatias |
+| Métrica Específica | Símbolo / Unidade | Cenário Alvo | Baseline | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Meta / Comportamento (Fase 2) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Taxa de Cumprimento SLA URLLC** | $SLA_{\text{URLLC}}$ ($\%$) | Todos | `6.67%` | `100.0%` | **`100.0%`** | Latência E2E $\le 2.0\text{ ms}$ garantida |
+| **Taxa de Cumprimento SLA eMBB** | $SLA_{\text{eMBB}}$ ($\%$) | Todos | `54.2%` | `92.8%` | **`98.5%`** | Vazão mínima contratada atendida |
+| **Taxa de Utilização de PRB** | $\rho_{\text{PRB}}$ ($\%$) | 5G / 5GA | `98.4% (Sat.)` | `74.2%` | **`68.5%`** | Sem saturação, margem para rajadas |
+| **Taxa de Inanição de PRB (Starvation)** | $P_{\text{starv}}$ ($\%$) | Todos | `32.1%` | `0.8%` | **`0.0%`** | Nenhuma fatia tem alocação zerada |
+| **Índice de Equidade de Jain** | $J(\mathbf{x})$ | Todos | `0.48` | `0.78` | **`0.88`** | Distribuição justa de recursos entre fatias |
 
 ---
 
 ### 3.3. Métricas de Mobilidade, Handover, Balanceamento de Carga e Throughput
 
-| Métrica Específica | Símbolo / Unidade | Cenário Alvo | Baseline | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Fase 3 (Cognitive 5GA/6G) | Ganho / Impacto Operacional |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Throughput Agregado da Rede** | $T_{\text{agg}}$ ($\text{Mbps}$) | 5G / 5GA | `412 Mbps` | `620 Mbps` | `785 Mbps` | **`1.420 Mbps`** | **+244.6%** no tráfego agregado entregue |
-| **Throughput de Pico por UE (eMBB)** | $T_{\text{peak}}$ ($\text{Mbps}$) | 5GA / 6G | `38 Mbps` | `65 Mbps` | `92 Mbps` | **`185 Mbps`** | Máximo aproveitamento do canal 5GA/6G |
-| **Taxa de Sucesso de Handover** | $HSR$ ($\%$) | TVS / 5GA | `71.4%` | `96.8%` | `99.2%` | **`99.8%`** | Quase zero falhas de mobilidade |
-| **Handover Ping-Pong** | $HPP$ ($\text{ev/min}$) | TVS / 5GA | `22 ev/min` | `0 ev/min` | `0 ev/min` | **`0 ev/min`** | **100% eliminado** pela arbitragem RDL |
-| **Fator de Desbalanceamento de Carga** | $\sigma_{\text{load}}$ ($\%$) | TVS / 5GA | `48.5%` | `18.2%` | `11.4%` | **`6.8%`** | Distribuição homogênea de tráfego entre gNBs |
+| Métrica Específica | Símbolo / Unidade | Cenário Alvo | Baseline | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Ganho / Impacto Operacional (Fase 2) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Throughput Agregado da Rede** | $T_{\text{agg}}$ ($\text{Mbps}$) | 5G / 5GA | `412 Mbps` | `620 Mbps` | **`785 Mbps`** | **+90.5%** no tráfego agregado entregue |
+| **Throughput de Pico por UE (eMBB)** | $T_{\text{peak}}$ ($\text{Mbps}$) | 5GA | `38 Mbps` | `65 Mbps` | **`92 Mbps`** | Alto aproveitamento do canal 5GA |
+| **Taxa de Sucesso de Handover** | $HSR$ ($\%$) | TVS / 5GA | `71.4%` | `96.8%` | **`99.2%`** | Quase zero falhas de mobilidade |
+| **Handover Ping-Pong** | $HPP$ ($\text{ev/min}$) | TVS / 5GA | `22 ev/min` | `0 ev/min` | **`0 ev/min`** | **100% eliminado** pela arbitragem RDL |
+| **Fator de Desbalanceamento de Carga** | $\sigma_{\text{load}}$ ($\%$) | TVS / 5GA | `48.5%` | `18.2%` | **`11.4%`** | Distribuição homogênea entre células |
 
 ---
 
