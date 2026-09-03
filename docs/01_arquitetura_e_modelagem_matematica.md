@@ -1,36 +1,37 @@
-# Volume 01: Arquitetura de Software e Modelagem Matemática da Fase 2 (CA-RDL / MARL)
+# Volume 01: Arquitetura de Software e Modelagem Matemática da Fase 2 (CA-RDL / MARL) e Evolução Hierárquica
 
 **Documento:** Volume Temático 01  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL)  
-**Escopo:** Tríade de Agentes Autônomos, Formulação MAPPO (Multi-Agent PPO), Espaço de Estados/Ações, Recompensa Multi-Objetivo e Safety Guards  
+**Escopo:** Tríade de Agentes Autônomos, Motor Hierárquico Escalonado, Formulação MAPPO (CTDE), Espaço de Estados/Ações, Recompensa Multi-Objetivo e Safety Guards  
 **Repositório Oficial:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 
 ---
 
-## 1. Visão Geral da Arquitetura Cognitiva
+## 1. Visão Geral da Arquitetura Cognitiva Hierárquica
 
-A Fase 2 introduz uma arquitetura orientada a agentes cognitivos com **Aprendizado por Reforço Multiagente (MARL)** baseado no paradigma **MAPPO (Multi-Agent Proximal Policy Optimization)** com **Treinamento Centralizado e Execução Descentralizada (CTDE)**.
+A xApp-RDL evolui para um **Motor de Decisão Hierárquico Escalonado em 3 Níveis** com um **Safety Guard Invariante Determinístico**, evitando sobrecarga computacional em decisões triviais e garantindo resposta determinística e adaptativa:
 
 ```mermaid
 graph TD
     subgraph Perception_Layer["Perception Layer (PerceptionAgent)"]
-        E2["E2SM-KPM Metrics (gNodeB)"] --> FE["Feature Engineering & Normalização"]
-        XAPP_IN["Propostas das 3 xApps (RMR)"] --> FE
-        FE --> S_T["Vetor de Estado Global: s_t"]
+        E2["E2SM-KPM Metrics (gNodeB)"] --> FE["Feature Engineering & Normalização [0, 1]"]
+        XAPP_IN["Propostas das xApps (RMR / REST)"] --> FE
+        FE --> S_T["Vetor de Estado: s_t"]
     end
 
-    subgraph Reasoning_Layer["Reasoning Layer (ReasoningAgent - MAPPO)"]
-        S_T --> CRITIC["Crítico Centralizado: V_phi(s_t)<br/>(Estima o Valor Global da Rede)"]
-        S_T --> ACT_URLLC["Ator Descentralizado: pi_theta1(a_1|o_1)<br/>(Fatia URLLC)"]
-        S_T --> ACT_EMBB["Ator Descentralizado: pi_theta2(a_2|o_2)<br/>(Fatia eMBB)"]
-        S_T --> ACT_ES["Ator Descentralizado: pi_theta3(a_3|o_3)<br/>(Energy Saving)"]
+    subgraph Hierarchy["Motor Hierárquico Escalonado (ReasoningAgent)"]
+        S_T --> COMP["Estimador de Complexidade: C(c, s)"]
+        COMP -->|C <= tau1| L1["Nível 1 (H-RDL): Heurística / Prioridade < 1ms"]
+        COMP -->|tau1 < C <= tau2| L2["Nível 2A (CA-RDL): Utilidade Contextual / NDT"]
+        COMP -->|C > tau2| L3["Nível 2B (CA-RDL): MAPPO Multiagente CTDE"]
     end
 
-    subgraph Refinement_Layer["Refinement Layer (RefinementAgent)"]
-        ACT_URLLC --> SG["Safety Guards Determinísticos<br/>(Limites Físicos de Potência e PRB)"]
-        ACT_EMBB --> SG
-        ACT_ES --> SG
-        SG --> HARMONIZED["Ações Harmonizadas e Seguras: a*_t"]
+    subgraph Refinement_Layer["Refinement Layer & Safety Guard (RefinementAgent)"]
+        L1 --> SG["Safety Guards Determinísticos<br/>(Limites Físicos de Potência e PRB)"]
+        L2 --> SG
+        L3 --> SG
+        SG --> LOCKOUT["Janela de Resfriamento / Lockout (5 s Anti-Flapping)"]
+        LOCKOUT --> HARMONIZED["Ação Final Resolvida: a*_t"]
     end
 
     HARMONIZED --> E2_OUT["Interface E2 / E2SM-RC -> gNodeB"]
@@ -40,30 +41,48 @@ graph TD
 
 ---
 
-## 2. Modelagem Matemática do MAPPO
+## 2. Roteamento Escalonado e Complexidade $C(c, s)$
 
-### 2.1. Espaço de Estados Global ($\mathcal{S}$)
-O vetor de estado $s_t \in \mathcal{S}$ capturado pelo `PerceptionAgent` inclui:
-$$s_t = \left[ \text{SINR}_t, \text{RSRP}_t, \text{PRB}_{\text{demanded}}, \text{PRB}_{\text{available}}, \text{Load}_{\text{traffic}}, P_{tx}, N_{ue}, \text{ConflictFlag}, \text{SliceType} \right]$$
+A tomada de decisão é escalonada com base na métrica de complexidade do conflito:
 
-### 2.2. Função de Perda do Ator (Clipping PPO)
-Cada ator descentralizado $\pi_{\theta_i}$ otimiza a política com o mecanismo de clipagem de probabilidade:
-$$L^{CLIP}(\theta_i) = \hat{\mathbb{E}}_t \left[ \min \left( r_t(\theta_i) \hat{A}_t, \text{clip}(r_t(\theta_i), 1 - \epsilon, 1 + \epsilon) \hat{A}_t \right) \right]$$
-Onde $r_t(\theta_i) = \frac{\pi_{\theta_i}(a_i | o_i)}{\pi_{\theta_i, \text{old}}(a_i | o_i)}$ e $\hat{A}_t$ é a vantagem calculada pelo Crítico Centralizado via GAE (Generalized Advantage Estimation).
+$$\mathcal{D}(s, c) = \begin{cases} \mathcal{D}_H(c), & C(c, s) \le \tau_1 \quad \text{(Nível 1: Heurística / Regras / Prioridade)} \\ \mathcal{D}_U(s, c), & \tau_1 < C(c, s) \le \tau_2 \quad \text{(Nível 2A: Utilidade Contextual / Digital Twin NDT)} \\ \mathcal{D}_{\text{MAPPO}}(s, c), & C(c, s) > \tau_2 \quad \text{(Nível 2B: MAPPO Multiagente Cooperativo CTDE)} \end{cases}$$
 
-### 2.3. Função de Recompensa Multi-Objetivo ($R_t$)
-A recompensa unificada equilibra múltiplos objetivos ponderados pelo `IntentClassifier`:
-$$R_t = w_{qos} R_{qos}(t) + w_{ee} R_{ee}(t) - w_{pen} P_{viol}(t)$$
-* **$R_{qos}(t)$:** Proximidade do cumprimento do SLA URLLC ($\text{Delay} \le 5\text{ ms}$).
-* **$R_{ee}(t)$:** Eficiência energética calculada em $\frac{\text{Throughput (Mbps)}}{P_{tx} (\text{Watts})}$.
-* **$P_{viol}(t)$:** Penalidade proporcional a conflitos não mitigados e violações de recursos.
+Onde $C(c, s)$ quantifica:
+- Tipo de conflito (Direto vs. Indireto);
+- Número de xApps concorrentes $N$;
+- Número de KPIs interdependentes;
+- Diferença de prioridade $|\Delta \text{prio}|$;
+- Degradação observada no KPM (e.g., violação iminente de SLA).
 
 ---
 
-## 3. Tríade de Agentes Autônomos
+## 3. Modelagem Matemática do MAPPO (Nível 2B)
+
+### 3.1. Paradigma CTDE (Centralized Training with Decentralized Execution)
+- **Ator Descentralizado $\pi_{\theta_i}(a_i | o_i)$:** Cada xApp associada é tratada como um agente independente que gera ações a partir de sua observação local $o_i$.
+- **Crítico Centralizado $V_\psi(s)$:** Observa o estado global concatenado $s = [o_1, o_2, \dots, o_N]$ durante o treinamento em simulação/Digital Twin (NORI/ns-3).
+
+### 3.2. Função Objetivo Clipped e Vantagem GAE
+$$\delta_t^V = r_t + \gamma V_\psi(s_{t+1}) (1 - d_t) - V_\psi(s_t)$$
+$$\hat{A}_i^t = \sum_{l=0}^\infty (\gamma \lambda)^l \delta_{t+l}^V, \quad (\gamma = 0.99, \, \lambda = 0.95)$$
+
+Perda do Ator:
+$$L(\theta_i) = -\hat{\mathbb{E}}_t \left[ \min \left( \frac{\pi_{\theta_i}(a_{i,t}|o_{i,t})}{\pi_{\theta_i,\text{old}}(a_{i,t}|o_{i,t})} \hat{A}_i^t, \, \text{clip}\left(\frac{\pi_{\theta_i}(a_{i,t}|o_{i,t})}{\pi_{\theta_i,\text{old}}(a_{i,t}|o_{i,t})}, 1-\epsilon, 1+\epsilon\right) \hat{A}_i^t \right) \right] - \beta_{\text{ent}} \mathcal{H}(\pi_{\theta_i})$$
+
+Perda do Crítico:
+$$L(\psi) = \hat{\mathbb{E}}_t \left[ (V_\psi(s_t) - (\hat{A}_t + V_{\psi,\text{old}}(s_t)))^2 \right]$$
+
+### 3.3. Recompensa Multi-Objetivo Ponderada por Intenção
+$$R_t = w_{\text{qos}} f_{\text{qos}}(t) + w_{\text{ee}} f_{\text{ee}}(t) - w_{\text{pen}} \text{penalty}(t) - w_{\text{stab}} \text{oscillation}(t)$$
+onde os pesos são dinamicamente modulados via **A1-Policy** do Non-RT RIC.
+
+---
+
+## 4. Tríade de Agentes Autônomos e Componentes
 
 | Agente | Classe Python | Responsabilidade Principal |
 | :--- | :--- | :--- |
-| **Perception Agent** | `src.agents.perception.PerceptionAgent` | Ingestão E2SM-KPM, extração de features, normalização robusta e detecção de anomalias de rádio. |
-| **Reasoning Agent** | `src.agents.reasoning.ReasoningAgent` | Avaliação de contexto, execução da rede neural MAPPO e geração de propostas de controle. |
-| **Refinement Agent** | `src.agents.refinement.RefinementAgent` | Verificação de invariantes físicos, Safety Guards de SLA e formatação de mensagens E2SM-RC. |
+| **Perception Agent** | `src.agents.perception_agent.PerceptionAgent` | Ingestão E2SM-KPM, extração de features normalizadas, detecção de conflitos direta/indireta e cache Redis. |
+| **Reasoning Agent** | `src.agents.reasoning_agent.ReasoningAgent` | Estimador de complexidade $C(c, s)$, roteamento hierárquico (H-RDL $\to$ Utilidade $\to$ MAPPO) e lockout cooling de 5s. |
+| **Refinement Agent** | `src.agents.refinement_agent.RefinementAgent` | Verificação de limites físicos (PRBs, potência de -10 a 23 dBm), validação A1 e injeção de fallback seguro. |
+| **MAPPO Coordinator** | `src.agents.marl.mappo_agent.MAPPOCoordinator` | Coordenação multiagente CTDE com cálculo formal de GAE e backpropagation com otimizador Adam. |

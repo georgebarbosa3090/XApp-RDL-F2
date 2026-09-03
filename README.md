@@ -1,11 +1,11 @@
-# xApp RDL — Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL)
+# xApp RDL — Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL) e Evolução Hierárquica
 
 [![Open RAN](https://img.shields.io/badge/O--RAN-Near--RT--RIC-orange.svg)](https://o-ran.org)
 [![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](https://github.com/georgebarbosa3090/XApp-RDL-F2)
 [![Helm](https://img.shields.io/badge/Helm-Release%20ricxapp--iqos--xapp--rdl--f2-informational.svg)](deploy/helm/iqos-xapp-rdl)
 [![Kubernetes](https://img.shields.io/badge/K8s-Namespace%20ricxapp-326CE5.svg)](deploy/kubernetes)
-[![AI Engine](https://img.shields.io/badge/AI--Engine-MAPPO%20%2F%20Actor--Critic-brightgreen.svg)](src/agents/marl)
-[![Tests](https://img.shields.io/badge/Tests-18%2F18%20Passing-success.svg)](tests/)
+[![AI Engine](https://img.shields.io/badge/AI--Engine-MAPPO%20%2F%20Actor--Critic%20%2F%20Hierarchical-brightgreen.svg)](src/agents/marl)
+[![Tests](https://img.shields.io/badge/Tests-Passing-success.svg)](tests/)
 
 ---
 
@@ -14,220 +14,81 @@
 | Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
 | :---: | :--- | :---: | :---: |
 | **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote (200ms), heurísticas TVS/EEVS e Safety Guards físicos.* | **Concluída e Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
-| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Aprendizado por Reforço Multiagente (MARL / MAPPO) e cognição contextual.* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
-| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch)**<br/>*Inteligência distribuída, orquestração por intenção (Intent-Driven) e O-Cloud 6G.* | **Roadmap / Planejada** | *Em especificação futura* |
+| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Motor Hierárquico Escalonado (Heurística $\to$ Utilidade $\to$ MAPPO CTDE).* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
+| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch / Intent-Driven)**<br/>*Inteligência Cross-Tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp), GNN Espaço-Temporal, XAI e O-Cloud 6G.* | **Em Especificação / Roadmap** | [Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md) / [Volume 10](docs/10_matriz_validade_e_pontos_de_atencao_fase3.md) |
 
 ---
 
-## 1. Visão Geral da Fase 2 (CA-RDL)
+## 1. Visão Geral da Fase 2 (CA-RDL) e Arquitetura Hierárquica Escalonada
 
-A **xApp RDL Fase 2 (Context-Aware RDL)** é o motor de arbitragem cognitiva e autônoma de conflitos para o **Near-RT RIC (RAN Intelligent Controller)** do ecossistema O-RAN.
+A **xApp RDL Fase 2 (Context-Aware RDL)** é o motor de arbitragem cognitiva e autônoma de conflitos para o **Near-RT RIC (RAN Intelligent Controller)** no ecossistema O-RAN.
 
-Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado por Reforço Multi-Agente (MARL / MAPPO - Multi-Agent Proximal Policy Optimization)** com:
-1. **Crítico Centralizado (Centralized Critic):** Observação global do estado de rádio da rede (SINR, PRBs, carga de tráfego, interferência intercelular, potência de transmissão).
-2. **Atores Descentralizados (Decentralized Actors):** Decisões probabilísticas especializadas por fatia de rede (URLLC, eMBB, mMTC) e xApp concorrente.
-3. **Recompensa Multi-Objetivo:** Otimização balanceada de Latência URLLC, Throughput eMBB, Eficiência Energética e Equidade de Jain.
-4. **Safety Guards Determinísticos:** Barreiras de proteção que impedem violações de limites físicos ou SLAs 3GPP.
+A arquitetura opera sob um **Motor de Decisão Hierárquico Escalonado em 3 Níveis** com um **Safety Guard Invariante Determinístico**:
 
 ```mermaid
 graph TD
     subgraph NearRTRIC["Near-RT RIC (Namespace: ricxapp)"]
-        subgraph RDL_F2["xApp RDL Fase 2 (ricxapp-iqos-xapp-rdl-f2)"]
+        subgraph RDL_F2["xApp RDL (ricxapp-iqos-xapp-rdl-f2)"]
             PA["1. Perception Agent<br/>(Telemetria KPM & Feature Engineering)"]
-            RA["2. Reasoning Agent<br/>(Motor MAPPO Centralized-Critic / Actor-Critic)"]
-            RE["3. Refinement Agent<br/>(Safety Guards Determinísticos)"]
-            IC["4. Intent Classifier<br/>(Modulação Dinâmica de Pesos)"]
+            
+            subgraph Engine["Motor de Decisão Hierárquico Escalonado"]
+                RA1["Nível 1 (H-RDL): Heurística Rápida & Prioridade (< 1ms)"]
+                RA2["Nível 2A (CA-RDL): Utilidade Contextual / NDT (TVS/EEVS/COMIX)"]
+                RA3["Nível 2B (CA-RDL): MAPPO Multiagente Cooperativo CTDE"]
+            end
+            
+            RE["3. Refinement Agent & Safety Guard<br/>(Limites Físicos & Lockout 5s Anti-Flapping)"]
         end
 
         XAPPS["Reference xApps Concorrentes<br/>(ricxapp-qos-xslice | ricxapp-energy-saving | ricxapp-traffic-steering)"]
     end
 
-    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| PA
-    XAPPS -->|"Ações Propostas (RMR)"| PA
-    PA -->|"Vetor de Estado s_t"| RA
-    IC -->|"Pesos de Recompensa (w_qos, w_ee, w_pen)"| RA
-    RA -->|"Ações Otimizadas a_t"| RE
-    RE -->|"Ações Harmonizadas e Seguras"| gNB
+    gNB["gNodeB 5G NR (ns-3 / 5G-LENA + NORI)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| PA
+    XAPPS -->|"Propostas de Ação (RMR / REST)"| PA
+    PA -->|"Vetor de Estado s_t"| Engine
+    Engine -->|"Ações Harmonizadas"| RE
+    RE -->|"Comando E2SM-RC Seguro"| gNB
 ```
 
-![Pipeline Global e Arquitetura do xApp RDL Fase 2](docs/figures/diagram_01_global_pipeline_architecture.png)
+### Princípios do Escalonamento $C(c, s)$:
+1. **Nível 1 — Heurística e Prioridade (H-RDL):** Conflitos diretos simples e regras determinísticas são resolvidos em tempo $O(1)$ ($< 1\text{ ms}$) usando funções de precedência $\Phi(a_k)$ (estilo ORIGAMI PIOR).
+2. **Nível 2A — Utilidade Contextual & NDT (COMIX / 6G-SMART MLO):** Conflitos multi-objetivo moderados são resolvidos avaliando o Power Set $2^N$ com funções de utilidade normalizadas TVS/EEVS e desempate suave por sigmoide de potência.
+3. **Nível 2B — Coordenação Multiagente com MAPPO (CA-RDL):** Conflitos indiretos e implícitos de alta complexidade e interações não-lineares são resolvidos via **Multi-Agent PPO** com **Centralized Training with Decentralized Execution (CTDE)** e **Generalized Advantage Estimation (GAE)**.
+4. **Camada 3 — Invariante Safety Guard:** Validação física estrita de limites de potência ($-10$ a $23\text{ dBm}$), PRBs ($0$ a $100\%$) e janela de resfriamento (*lockout cooling window*) de **5 segundos** contra oscilações *ping-pong*.
 
 ---
 
-## 2. Arquitetura e Cenários Simulados
-
-### 2.1. Arquitetura de Co-Simulação Fim-a-Fim (ns-3 + Near-RT RIC)
-![Arquitetura de Co-Simulação](docs/figures/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
-
-### 2.2. Topologia Espacial e Conflito de Fatias de Rádio
-![Topologia Espacial](docs/figures/cenario_1_topologia_tvs_conflict.png)
-
----
-
-## 3. Início Rápido (Quickstart)
+## 2. Início Rápido (Quickstart)
 
 ```bash
-# 1. Executar testes unitários (18 testes MARL/PyTorch)
+# 1. Executar testes unitários e de integração
 make test
 
 # 2. Fazer o deploy isolado da RDL Fase 2 no Kubernetes/k3d
 make helm-deploy-f2
 
-# 3. Acompanhar logs em tempo real
+# 3. Acompanhar streaming contínuo de logs em tempo real
 make logs-f2
 
-# 4. Executar os dois cenários de simulação e benchmarks
+# 4. Executar simulações ns-3 (5G-LENA + NORI) e suite de benchmarks
 make run-suite
 
-# 5. Desinstalação da xApp RDL ao final dos testes (escolha a fase):
-make helm-uninstall-f2      # Desinstala a Fase 2 (CA-RDL / MARL)
-make helm-uninstall-f1      # Desinstala a Fase 1 (H-RDL Heurística)
-make uninstall-all-rdl      # Desinstala ambas as versões do RDL
+# 5. Criar snapshot diário automatizado (.zip e tag Git local):
+powershell -ExecutionPolicy Bypass -File scripts/create_daily_snapshot.ps1
+# OU no Linux:
+python3 scripts/create_daily_snapshot.py
+
+# 6. Desinstalação da xApp RDL ao final dos testes:
+make helm-uninstall-f2      # Desinstala a release Fase 2
+make helm-uninstall-f1      # Desinstala a release Fase 1
+make uninstall-all-rdl      # Desinstala todas as releases
 ```
 
 ---
 
-## 4. Guia Passo a Passo: Acompanhamento em Tempo Real no Prompt de Comando
+## 3. Desempenho e Validação Experimental
 
-Para executar e visualizar todas as decisões, trocas de mensagens e métricas **diretamente no prompt de comando (PowerShell, CMD ou Bash/WSL2)** nos dois cenários:
-
-### 4.1. Etapa 1: Deploy e Monitoramento em Tempo Real do Pod da Fase 2
-
-Abra uma janela de terminal e execute o deploy dedicado:
-```bash
-# Executa o deploy Helm da release ricxapp-iqos-xapp-rdl-f2
-make helm-deploy-f2
-# OU
-bash scripts/deploy_rdl_phase2.sh
-```
-
-Em seguida, acompanhe o ciclo de vida e os logs em tempo real:
-```powershell
-# [Terminal 1 - Windows PowerShell/CMD] Streaming contínuo de logs da xApp RDL Fase 2:
-kubectl logs -l app=ricxapp-iqos-xapp-rdl-f2 -n ricxapp -f
-```
-```bash
-# [Terminal 1 - WSL2/Linux]:
-make logs-f2
-```
-
-Para monitorar mudanças de estado dos Pods em tempo real no console:
-```bash
-kubectl get pods -n ricxapp -w
-```
-
----
-
-### 4.2. Etapa 2: Execução em Tempo Real do Cenário 1 (Energy vs QoS / EEVS)
-
-* **Objetivo:** Avaliar a arbitragem cognitiva quando a xApp de **Economia de Energia** tenta desligar/reduzir potência e a xApp de **QoS/Slicing** exige garantia de SLA URLLC.
-* **Arquivo:** `simulations/ns3/scenario_rdl_energy_vs_qos.cc`
-
-No terminal do ns-3 (Linux/WSL2 em `~/ns3-oran-workspace/ns-3-oran`):
-```bash
-# 1. Copiar cenário para o scratch do ns-3
-cp simulations/ns3/scenario_rdl_energy_vs_qos.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
-
-# 2. Habilitar logs visíveis em nível completo e executar:
-cd ~/ns3-oran-workspace/ns-3-oran
-export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
-./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-```
-*A saída mostrará no console a criação dos 20 UEs, telemetria E2SM-KPM enviada para o RIC, modulação de potência e decisões em tempo real.*
-
-> [!TIP]
-> **Comandos para Desinstalar a xApp RDL ao Final da Simulação do Cenário 1:**
-> * **RDL Fase 1 (H-RDL Heurística):** `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` (ou `make helm-uninstall-f1`)
-> * **RDL Fase 2 (CA-RDL / MARL):** `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` (ou `make helm-uninstall-f2`)
-
----
-
-### 4.3. Etapa 3: Execução em Tempo Real do Cenário 2 (Traffic Steering vs QoS / TVS)
-
-* **Objetivo:** Avaliar a resolução de conflitos multiobjetivo entre **Traffic Steering** (handover de balanceamento) e **QoS/Slicing** com 30 UEs em 3 fatias (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
-* **Arquivo:** `simulations/ns3/scenario_rdl_tvs_conflict.cc`
-
-No terminal do ns-3 (Linux/WSL2):
-```bash
-# 1. Copiar cenário para o scratch do ns-3
-cp simulations/ns3/scenario_rdl_tvs_conflict.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
-
-# 2. Habilitar logs detalhados e executar com saída no terminal:
-cd ~/ns3-oran-workspace/ns-3-oran
-export NS_LOG="ScenarioRdlTvsConflict=level_all"
-./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-```
-*A saída exibirá o rastreamento contínuo de pacotes PDCP RX, detecção de conflitos de handover, ações de controle E2SM-RC e latências medidas.*
-
-> [!TIP]
-> **Comandos para Desinstalar a xApp RDL ao Final da Simulação do Cenário 2:**
-> * **RDL Fase 1 (H-RDL Heurística):** `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` (ou `make helm-uninstall-f1`)
-> * **RDL Fase 2 (CA-RDL / MARL):** `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` (ou `make helm-uninstall-f2`)
-
----
-
-### 4.4. Etapa 4: Execução da Suíte Experimental e Benchmark MARL no Terminal
-
-Para processar os dados dos dois cenários e gerar a tabela comparativa multidimensional (**Baseline Sem RDL vs Fase 1 H-RDL vs Fase 2 CA-RDL**) diretamente no prompt:
-
-```powershell
-# No Windows (PowerShell / Prompt de Comando):
-python scripts/evaluate_and_improve_algorithms.py
-python scripts/run_experiment_suite.py
-```
-```bash
-# No Linux / WSL2:
-python3 scripts/evaluate_and_improve_algorithms.py
-python3 scripts/run_experiment_suite.py
-```
-
-**Informações exibidas visualmente no prompt:**
-* Tabela completa de Latência URLLC (Média, P95, P99) e violação de SLA.
-* Tabela de Eficiência de Arbitragem e mitigação de conflitos.
-* Desempenho dos 6 algoritmos de Machine Learning (RandomForest, ExtraTrees, GradientBoosting, VotingEnsemble).
-* Validação cruzada Stratified 10-Fold e ranking de importância de atributos.
-
-> [!TIP]
-> **Comandos para Desinstalar a xApp RDL ao Final da Suíte Experimental:**
-> * **RDL Fase 1 (H-RDL Heurística):** `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` (ou `make helm-uninstall-f1`)
-> * **RDL Fase 2 (CA-RDL / MARL):** `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` (ou `make helm-uninstall-f2`)
-
----
-
-### 4.5. Etapa 5: Execução Interativa via Contêiner Docker Standalone
-
-Para testar a xApp RDL Fase 2 de forma isolada com streaming de logs direto no terminal atual:
-```bash
-docker run --rm -it \
-  --name rdl-f2-interactive \
-  -p 8080:8080 -p 8081:8081 \
-  -e USE_FAKE_SDL=true \
-  -e ENABLE_TORCH=true \
-  iqos-xapp-rdl:2.0.0
-```
-
----
-
-### 4.6. Etapa 6: Comandos de Desinstalação e Limpeza Pós-Simulação (Fase 1 e Fase 2)
-
-Ao concluir as simulações, remova a release RDL utilizada para liberar portas e recursos de computação do cluster:
-
-| Objetivo de Desinstalação | Comando Helm Direto | Atalho Makefile | Escopo de Efeito |
-| :--- | :--- | :--- | :--- |
-| **Desinstalar RDL Fase 1 (H-RDL)** | `helm uninstall ricxapp-iqos-xapp-rdl -n ricxapp` | `make helm-uninstall-f1` | Remove apenas `ricxapp-iqos-xapp-rdl` |
-| **Desinstalar RDL Fase 2 (CA-RDL)** | `helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp` | `make helm-uninstall-f2` | Remove apenas `ricxapp-iqos-xapp-rdl-f2` |
-| **Desinstalar Ambas as Versões** | `helm uninstall ricxapp-iqos-xapp-rdl ricxapp-iqos-xapp-rdl-f2 -n ricxapp` | `make uninstall-all-rdl` | Remove ambas as releases no namespace `ricxapp` |
-
-Para confirmar que os pods foram removidos com sucesso:
-```bash
-kubectl get pods -n ricxapp -o wide
-```
-
----
-
-## 5. Desempenho e Validação Experimental
-
-Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comparando a operação desregulada (**Baseline**), a governança heurística da **Fase 1 (H-RDL)** e o aprendizado por reforço da **Fase 2 (CA-RDL)**:
+Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comparando a operação desregulada (**Baseline**), a governança heurística da **Fase 1 (H-RDL)** e o motor escalonado da **Fase 2 (CA-RDL)**:
 
 ![Métricas Experimentais Reais](docs/figures/cenario_4_comparativo_multidimensional_metricas.png)
 
@@ -246,22 +107,24 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 
 ---
 
-## 6. Estrutura Documental da Fase 2
+## 4. Estrutura Documental Completa (10 Volumes Temáticos)
 
 | Volume Documental | Título do Documento | Descrição e Escopo |
 | :--- | :--- | :--- |
-| **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, formulação MAPPO/Actor-Critic e modelagem de utilidade. |
-| **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas. |
-| **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação Helm Exclusivo para Fase 2 | Deploy isolado da release `ricxapp-iqos-xapp-rdl-f2` sem reinstalar RIC. |
-| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Diagnósticos | Procedimentos operacionais, streaming de logs e auditoria de memória. |
-| **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, `NrPointToPointEpcHelper` e datasets dos 2 cenários. |
-| **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus, Kiali Dashboard e injeção de tráfego. |
-| **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos e conformidade O-RAN Alliance. |
+| **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, motor hierárquico escalonado, formulação MAPPO (CTDE com GAE) e Safety Guards. |
+| **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas e namespaces `ricplt`/`ricxapp`. |
+| **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação Helm Exclusivo para Fase 2 | Deploy isolado da release `ricxapp-iqos-xapp-rdl-f2` sem reinstalar componentes de plataforma. |
+| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Diagnósticos | Procedimentos operacionais, streaming de logs, inspeção SDL (Redis) e resolução de falhas. |
+| **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, cenários EEVS e TVS, e datasets experimentais de telemetria. |
+| **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus (`/metrics`), Grafana Dashboards e injeção de tráfego de teste. |
+| **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos técnicos e conformidade com padrões O-RAN Alliance. |
+| **[Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md)** | Proposta Arquitetural e Requisitos — RDL Fase 3 | Especificação de governança autônoma 6G, controle cross-tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp) e Safe-RL. |
+| **[Volume 09](docs/09_relatorio_tecnico_detalhado_fase2.md)** | Relatório Técnico Detalhado da Fase 2 | Documento consolidado e exaustivo de arquitetura, código, simulações e resultados da Fase 2. |
+| **[Volume 10](docs/10_matriz_validade_e_pontos_de_atencao_fase3.md)** | Matriz de Validade e Pontos de Atenção Críticos | Análise formal de validade (interna, temporal, sinalização, externalidade, estatística) e roadmap. |
 
 ---
 
-## 7. Repositórios Oficiais
+## 5. Repositórios Oficiais
 
 * **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
 * **Fase 2 (CA-RDL / MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)
-
