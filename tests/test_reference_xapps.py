@@ -7,10 +7,16 @@ sys.path.insert(0, str(root_dir))
 sys.path.insert(0, str(root_dir / "reference-xapps" / "qos-xslice"))
 sys.path.insert(0, str(root_dir / "reference-xapps" / "energy-saving"))
 sys.path.insert(0, str(root_dir / "reference-xapps" / "traffic-steering"))
+sys.path.insert(0, str(root_dir / "reference-xapps" / "beamformer"))
+sys.path.insert(0, str(root_dir / "reference-xapps" / "isac-radar"))
+sys.path.insert(0, str(root_dir / "reference-xapps" / "rogue-xapp"))
 
 from xslice_xapp import XSliceXApp
 from energy_saving_xapp import EnergySavingXApp
 from traffic_steering_xapp import TrafficSteeringXApp
+from beamformer_xapp import BeamformerXApp
+from isac_radar_xapp import ISACRadarXApp
+from rogue_xapp import RogueXApp
 
 from src.agents.perception_agent import PerceptionAgent
 from src.agents.reasoning_agent import ReasoningAgent
@@ -43,16 +49,39 @@ def test_traffic_steering_proposal_generation():
     assert prop["target_ue"] == "UE-09"
     assert prop["priority"] == 80
 
+def test_beamformer_proposal_generation():
+    app = BeamformerXApp(http_port=18088, metrics_port=18089)
+    prop = app.generate_action_proposal(node_id="gnb_01", downtilt=7.5)
+    assert prop["xapp_id"] == "beamformer_mimo_5ga"
+    assert prop["parameter"] == "VERTICAL_DOWNTILT"
+    assert prop["value"] == 7.5
+    assert prop["priority"] == 75
+
+def test_isac_radar_proposal_generation():
+    app = ISACRadarXApp(http_port=18090, metrics_port=18091)
+    prop = app.generate_action_proposal(node_id="gnb_01", sensing_ratio=0.4)
+    assert prop["xapp_id"] == "isac_radar_sensing_6g"
+    assert prop["parameter"] == "SENSING_RATIO"
+    assert prop["value"] == 0.4
+    assert prop["priority"] == 85
+    assert prop["slice_type"] == "SENSING"
+
+def test_rogue_xapp_proposal_generation():
+    app = RogueXApp(http_port=18092, metrics_port=18093)
+    prop1 = app.generate_action_proposal(node_id="gnb_01")
+    prop2 = app.generate_action_proposal(node_id="gnb_01")
+    assert prop1["xapp_id"] == "rogue_vendor_stress_6g"
+    assert prop1["parameter"] == "TX_POWER"
+    assert prop1["value"] != prop2["value"] # Parameter flipping verificado
+
 def test_multi_xapp_conflict_triad_detection_and_resolution():
-    """Valida que as 3 xApps concorrentes colidem e o RDL arbitra com sucesso pela heurística TVS/EEVS."""
+    """Valida arbitragem de conflito entre fatiamento e economia de energia."""
     xslice = XSliceXApp()
     es = EnergySavingXApp()
-    ts = TrafficSteeringXApp()
 
     p1 = xslice.generate_action_proposal(node_id="gnb_01", prb_quota=80.0)
     p2 = es.generate_action_proposal(node_id="gnb_01", tx_power=15.0)
 
-    # Converter para objetos XAppAction
     action_xslice = XAppAction(
         xapp_id=p1["xapp_id"],
         node_id=p1["node_id"],
@@ -68,7 +97,6 @@ def test_multi_xapp_conflict_triad_detection_and_resolution():
         priority=p2["priority"]
     )
 
-    # Detecção de conflito pelo PerceptionAgent
     perception = PerceptionAgent()
     conflicts = perception.register_action_group([action_xslice, action_es])
 
@@ -76,7 +104,6 @@ def test_multi_xapp_conflict_triad_detection_and_resolution():
     assert conflicts[0].conflict_type == ConflictType.INDIRECT
     assert len(conflicts[0].involved_xapps) == 2
 
-    # Arbitragem pelo ReasoningAgent (xSlice tem prioridade 90 > ES 65)
     memory = MemoryModule()
     reasoning = ReasoningAgent(memory=memory, config={})
     resolution = reasoning.resolve(conflicts[0])
