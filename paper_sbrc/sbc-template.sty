@@ -1,0 +1,85 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{sbc-template}[2003/03/21]
+
+\RequirePackage[a4paper,top=3.5cm,bottom=2.5cm,left=3.0cm,right=3.0cm]{geometry}
+\RequirePackage{times}
+\RequirePackage{indentfirst}
+\RequirePackage{graphicx}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsfonts}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{multirow}
+\RequirePackage{url}
+\RequirePackage{hyperref}
+\RequirePackage{microtype}
+\RequirePackage{cite}
+\RequirePackage{float}
+
+\setlength{\parindent}{1.27cm}
+\setlength{\parskip}{0pt}
+
+% Title and Author formatting
+\def\@maketitle{%
+  \newpage
+  \null
+  \vskip 1em%
+  \begin{center}%
+  \let \footnote \thanks
+    {\fontsize{16pt}{20pt}\selectfont \bfseries \@title \par}%
+    \vskip 1.5em%
+    {\fontsize{12pt}{14pt}\selectfont
+      \lineskip .5em%
+      \begin{tabular}[t]{c}%
+        \@author
+      \end{tabular}\par}%
+    \vskip 1em%
+    {\fontsize{10pt}{12pt}\selectfont \itshape \@address \par}%
+  \end{center}%
+  \par
+  \vskip 1.5em}
+
+\def\address#1{\gdef\@address{#1}}
+\gdef\@address{}
+
+% Section formatting
+\def\section{\@startsection{section}{1}{\z@}%
+  {-3.5ex \@plus -1ex \@minus -.2ex}%
+  {2.3ex \@plus.2ex}%
+  {\reset@font\fontsize{13pt}{15pt}\selectfont\bfseries}}
+
+\def\subsection{\@startsection{subsection}{2}{\z@}%
+  {-3.25ex\@plus -1ex \@minus -.2ex}%
+  {1.5ex \@plus .2ex}%
+  {\reset@font\fontsize{12pt}{14pt}\selectfont\bfseries}}
+
+\def\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+  {-3.25ex\@plus -1ex \@minus -.2ex}%
+  {1.5ex \@plus .2ex}%
+  {\reset@font\fontsize{12pt}{14pt}\selectfont\bfseries}}
+
+% Abstract / Resumo environments
+\newenvironment{resumo}{%
+  \begin{center}%
+    {\bfseries\fontsize{12pt}{14pt}\selectfont Resumo}\\%
+  \end{center}%
+  \begin{quote}%
+  \fontsize{12pt}{14pt}\selectfont%
+}{%
+  \end{quote}%
+  \vskip 1.5em%
+}
+
+\newenvironment{abstract}{%
+  \begin{center}%
+    {\bfseries\fontsize{12pt}{14pt}\selectfont Abstract}\\%
+  \end{center}%
+  \begin{quote}%
+  \fontsize{12pt}{14pt}\selectfont%
+}{%
+  \end{quote}%
+  \vskip 1.5em%
+}
+
+\endinput

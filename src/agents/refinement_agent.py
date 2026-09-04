@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Any, List
+﻿from typing import Tuple, Dict, Any, List
 import time
 from src.conflict_types import ConflictEvent, ResolutionAction, XAppAction
 from src.observability.logging import setup_logger
@@ -16,7 +16,7 @@ class RefinementAgent:
 
     def validate(self, resolution: ResolutionAction, conflict: ConflictEvent) -> Tuple[bool, int, str]:
         """
-        Safety Guard que valida se o controle proposto é seguro.
+        Safety Guard que valida se o lote de controle proposto e seguro.
         Retorna (is_valid, validation_level, reason)
         """
         if not self.config.get("enabled", True):
@@ -31,12 +31,12 @@ class RefinementAgent:
         for action in actions:
             target_key = f"{action.node_id}_{action.parameter}"
             
-            # 1. Validade temporal (frequência máxima de controle no mesmo parâmetro/nó)
+            # 1. Validade temporal (frequencia maxima de controle no mesmo parametro/no)
             last_time = self.last_control_time.get(target_key, 0)
             if (now - last_time) < self.config.get("minimum_control_interval_ms", 1000):
                 return False, 1, f"Control frequency exceeded for {target_key}"
                 
-            # 2. Valores negativos ou fora de escopo para parâmetros conhecidos
+            # 2. Valores negativos ou fora de escopo para parametros conhecidos
             if action.parameter == "PRB_QUOTA":
                 if action.value < 0 or action.value > 100:
                     return False, 1, "PRB value out of bounds (0-100)"
@@ -44,10 +44,40 @@ class RefinementAgent:
                 if action.value < -10 or action.value > 23:
                     return False, 1, "TX Power out of bounds (-10 to 23 dBm)"
             
-            if action.node_id == "":
+            if not action.node_id:
                 return False, 1, "Unknown target node"
 
             # Atualiza tempo
             self.last_control_time[target_key] = now
 
+        return True, 2, "Passed safety checks"
+
+    def validate_single_action(self, action: XAppAction) -> Tuple[bool, int, str]:
+        """
+        Valida uma acao individual nao conflitante (Pass-Through) antes do envio direto.
+        Garante que mesmo acoes limpas respeitem os limites fisicos e temporais da rede.
+        """
+        if not self.config.get("enabled", True):
+            return True, 1, "Safety guard disabled"
+            
+        now = time.time() * 1000
+        target_key = f"{action.node_id}_{action.parameter}"
+        
+        # 1. Validade temporal (frequencia maxima de controle no mesmo parametro/no)
+        last_time = self.last_control_time.get(target_key, 0)
+        if (now - last_time) < self.config.get("minimum_control_interval_ms", 1000):
+            return False, 1, f"Control frequency exceeded for {target_key}"
+            
+        # 2. Valores fisicos fora de escopo
+        if action.parameter == "PRB_QUOTA":
+            if action.value < 0 or action.value > 100:
+                return False, 1, "PRB value out of bounds (0-100)"
+        elif action.parameter == "TX_POWER":
+            if action.value < -10 or action.value > 23:
+                return False, 1, "TX Power out of bounds (-10 to 23 dBm)"
+        
+        if not action.node_id:
+            return False, 1, "Unknown target node"
+
+        self.last_control_time[target_key] = now
         return True, 2, "Passed safety checks"

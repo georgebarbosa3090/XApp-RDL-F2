@@ -1,10 +1,10 @@
-import pytest
+﻿import pytest
 from src.agents.reasoning_agent import ReasoningAgent
 from src.conflict_types import ResolutionStrategy, ConflictEvent, ConflictType, ConflictSeverity, XAppAction
 import uuid
 
 def test_resolve_by_heuristic_priority(mock_memory, direct_conflict):
-    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 1.5})
+    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 3.0})
     
     # Resolve the direct conflict using H-RDL priority heuristic
     resolution = agent.resolve(direct_conflict)
@@ -16,7 +16,7 @@ def test_resolve_by_heuristic_priority(mock_memory, direct_conflict):
     assert resolution.modified_value in [15.0, 20.0, 40.0]
 
 def test_resolve_by_sla_utility(mock_memory, action_tx_power, action_prb_quota):
-    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 0.1, "tau2": 5.0})
+    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 1.0, "tau2": 3.0})
     
     conflict = ConflictEvent(
         conflict_id=str(uuid.uuid4()),
