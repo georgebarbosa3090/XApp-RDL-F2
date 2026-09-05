@@ -45,11 +45,15 @@ class RCEncoder:
     Requisito RF-17.
     """
     def __init__(self):
-        # Mapeia nomes lógicos para IDs da RAN
+        # Mapeia nomes lógicos para IDs padronizados da RAN (O-RAN.WG3.TS.E2SM-RC)
         self.param_map = {
             "PRB_QUOTA": 1,
-            "SCHEDULER_WEIGHT": 2,
-            "TX_POWER": 3
+            "TX_POWER": 2,
+            "SCHEDULER_WEIGHT": 3,
+            "A3_OFFSET": 4,
+            "BEAM_DOWNTILT": 10,
+            "ISAC_SENSING_RATIO": 11,
+            "CARRIER_AGG_RATIO": 12
         }
 
     def encode_control_request(self, node_id: str, parameter: str, value: float) -> bytes:

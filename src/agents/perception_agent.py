@@ -1,20 +1,54 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 from src.conflict_types import XAppAction, ConflictEvent, ConflictType, ConflictSeverity, KPMReport
 import networkx as nx
 import itertools
 
 class PerceptionAgent:
-    def __init__(self):
-        # Grafo de dependências KPI modelando as relações lógicas da rede
-        # Parâmetro -> Afeta -> KPI
-        self.kpi_dependency_graph = {
+    def __init__(self, memory=None, neighbor_nodes: Optional[Dict[str, List[str]]] = None):
+        self.memory = memory
+        # Grafo de dependências KPI multidimensional modelando relações lógicas, 5G-Adv e 6G
+        # Parâmetro -> Afeta -> KPIs
+        self.kpi_dependency_graph: Dict[str, List[str]] = {
             "PRB_QUOTA": ["DRB.UEThpDl", "RRU.PrbUsedDl"],
             "SCHEDULER_WEIGHT": ["DRB.UEThpDl", "DRB.RlcSduDelayDl"],
-            "TX_POWER": ["L1M.DL-sinr", "DRB.UEThpDl"]
+            "TX_POWER": ["L1M.DL-sinr", "DRB.UEThpDl", "Energy.PowerConsumption"],
+            "BEAM_DOWNTILT": ["L1M.DL-sinr", "Beam.RSRP", "InterCell.Interference", "DRB.UEThpDl"],
+            "A3_OFFSET": ["Mobility.HandoverRate", "Mobility.PingPongRate", "RRU.PrbUsedDl"],
+            "ISAC_SENSING_RATIO": ["Radar.DetectionProb", "Radar.ResolutionRange", "DRB.UEThpDl"],
+            "CARRIER_AGG_RATIO": ["SCell.PrbUsedDl", "DRB.UEThpDl"]
         }
+        
+        # Mapeamento de nós vizinhos com sobreposição de cobertura de rádio (Inter-Cell Topology)
+        self.neighbor_nodes: Dict[str, List[str]] = neighbor_nodes or {}
+        
+        # Grafo NetworkX para análise topológica de caminhos causais
+        self.graph = nx.DiGraph()
+        self._build_topology_graph()
+        
         # Registro das últimas ações: node_id -> parameter -> XAppAction
         self._action_registry: Dict[str, Dict[str, XAppAction]] = {}
         self.latest_kpm: Optional[KPMReport] = None
+
+    def add_neighbor_relation(self, node_a: str, node_b: str):
+        """Registra adjacência e potencial interferência co-canal entre duas gNodeBs vizinhas."""
+        if node_a not in self.neighbor_nodes:
+            self.neighbor_nodes[node_a] = []
+        if node_b not in self.neighbor_nodes:
+            self.neighbor_nodes[node_b] = []
+        if node_b not in self.neighbor_nodes[node_a]:
+            self.neighbor_nodes[node_a].append(node_b)
+        if node_a not in self.neighbor_nodes[node_b]:
+            self.neighbor_nodes[node_b].append(node_a)
+
+    def _build_topology_graph(self):
+        """Constrói o grafo direcionado de relacionamentos Parâmetro -> KPI -> QoS."""
+        for param, kpis in self.kpi_dependency_graph.items():
+            for kpi in kpis:
+                self.graph.add_edge(param, kpi)
+                if "Delay" in kpi or "sinr" in kpi or "Detection" in kpi:
+                    self.graph.add_edge(kpi, "QoS.SLA")
+                elif "Power" in kpi:
+                    self.graph.add_edge(kpi, "EnergyEfficiency")
 
     def update_kpm_report(self, report: KPMReport):
         self.latest_kpm = report
@@ -31,37 +65,51 @@ class PerceptionAgent:
     def register_action_group(self, actions: List[XAppAction]) -> List[ConflictEvent]:
         conflicts = []
         
-        # Avalia combinações dentro do próprio grupo (Decision Window)
+        # 1. Avalia combinações dentro do próprio grupo (Decision Window)
         for i in range(len(actions)):
             for j in range(i + 1, len(actions)):
                 action_a = actions[i]
                 action_b = actions[j]
                 
-                # Check Direct
+                # Check Direct (Mesmo nó e mesmo parâmetro)
                 if action_a.node_id == action_b.node_id and action_a.parameter == action_b.parameter and action_a.xapp_id != action_b.xapp_id:
                     conflicts.append(ConflictEvent(
                         conflict_type=ConflictType.DIRECT,
                         severity=ConflictSeverity.HIGH,
                         involved_xapps=[action_a, action_b],
                         affected_kpis=self.kpi_dependency_graph.get(action_a.parameter, []),
-                        description=f"Direct conflict on parameter {action_a.parameter}"
+                        description=f"Direct conflict on parameter {action_a.parameter} at {action_a.node_id}"
                     ))
                 
-                # Check Indirect
-                else:
+                # Check Indirect Intra-Cell (Mesmo nó, parâmetros distintos, KPIs compartilhados)
+                elif action_a.node_id == action_b.node_id and action_a.xapp_id != action_b.xapp_id:
                     kpis_a = self.kpi_dependency_graph.get(action_a.parameter, [])
                     kpis_b = self.kpi_dependency_graph.get(action_b.parameter, [])
                     common_kpis = set(kpis_a).intersection(set(kpis_b))
-                    if common_kpis and action_a.node_id == action_b.node_id and action_a.xapp_id != action_b.xapp_id:
+                    if common_kpis:
                         conflicts.append(ConflictEvent(
                             conflict_type=ConflictType.INDIRECT,
                             severity=ConflictSeverity.MEDIUM,
                             involved_xapps=[action_a, action_b],
                             affected_kpis=list(common_kpis),
-                            description=f"Indirect conflict on KPIs {common_kpis}"
+                            description=f"Indirect conflict on KPIs {common_kpis} via params {action_a.parameter} and {action_b.parameter}"
                         ))
+                        
+                # Check Indirect Inter-Cell (Nós vizinhos com acoplamento de interferência co-canal)
+                elif action_a.node_id != action_b.node_id and action_a.xapp_id != action_b.xapp_id:
+                    neighbors_a = self.neighbor_nodes.get(action_a.node_id, [])
+                    if action_b.node_id in neighbors_a:
+                        inter_params = {"TX_POWER", "BEAM_DOWNTILT", "PRB_QUOTA"}
+                        if action_a.parameter in inter_params and action_b.parameter in inter_params:
+                            conflicts.append(ConflictEvent(
+                                conflict_type=ConflictType.INDIRECT,
+                                severity=ConflictSeverity.MEDIUM,
+                                involved_xapps=[action_a, action_b],
+                                affected_kpis=["InterCell.Interference", "L1M.DL-sinr"],
+                                description=f"Inter-Cell interference conflict between {action_a.node_id} ({action_a.parameter}) and {action_b.node_id} ({action_b.parameter})"
+                            ))
 
-        # Avalia cada ação contra o registry (ações em vigor que não expiraram antes do lote)
+        # 2. Avalia cada ação contra o registry (ações em vigor que não expiraram antes do lote)
         for action in actions:
             # Check Direct contra o histórico
             direct = self._detect_direct_conflict(action)
@@ -72,7 +120,7 @@ class PerceptionAgent:
             indirects = self._detect_indirect_conflict(action)
             conflicts.extend(indirects)
             
-        # Registra todas as novas ações após checagem
+        # 3. Registra todas as novas ações após checagem
         for action in actions:
             if action.node_id not in self._action_registry:
                 self._action_registry[action.node_id] = {}

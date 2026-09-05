@@ -103,3 +103,50 @@ def test_mappo_rollout_buffer_and_train_step():
     assert "agent_0_critic_loss" in losses
     assert len(coordinator.rollout_buffer) == 0  # Buffer cleared after training
 
+def test_mappo_dynamic_n_xapps_support():
+    """Valida que o MAPPOCoordinator processa conflito com 4 xApps sem truncamento de erro."""
+    coordinator = MAPPOCoordinator(n_agents=4, obs_dim=16, action_dim=5)
+    
+    actions = [
+        XAppAction(xapp_id="xslice", node_id="gnb_01", parameter="PRB_QUOTA", value=60.0, priority=9),
+        XAppAction(xapp_id="energy_saving", node_id="gnb_01", parameter="TX_POWER", value=20.0, priority=5),
+        XAppAction(xapp_id="beamformer", node_id="gnb_01", parameter="BEAM_DOWNTILT", value=6.0, priority=7),
+        XAppAction(xapp_id="isac_radar", node_id="gnb_01", parameter="ISAC_SENSING_RATIO", value=0.25, priority=6)
+    ]
+    conflict = ConflictEvent(
+        conflict_type=ConflictType.INDIRECT,
+        severity=ConflictSeverity.HIGH,
+        involved_xapps=actions,
+        affected_kpis=["DRB.UEThpDl", "L1M.DL-sinr"],
+        description="Complex 4-xApp 5G-Adv/6G contention"
+    )
+    
+    kpm_state = {"DRB.UEThpDl": 90.0, "RRU.PrbTotDl": 75.0, "QoS.FlowDelay": 6.0}
+    obs = coordinator.extract_features(conflict, kpm_state)
+    assert len(obs) == 16
+    assert obs[0] == 0.5  # INDIRECT
+    
+    best_action, confidence = coordinator.decide(conflict, kpm_state)
+    assert best_action is not None
+    assert confidence >= 0.75
+
+def test_mappo_safe_rl_cmdp_lagrange():
+    """Valida o cálculo de restrição física CMDP e atualização do multiplicador de Lagrange."""
+    coordinator = MAPPOCoordinator(n_agents=2, obs_dim=10, action_dim=5)
+    
+    safe_action = XAppAction("xslice", "gnb_01", "PRB_QUOTA", 50.0, 5)
+    illegal_action = XAppAction("rogue", "gnb_01", "TX_POWER", 60.0, 5) # 60 dBm > 43 dBm
+    
+    assert coordinator.calculate_action_constraint_cost(safe_action) == 0.0
+    assert coordinator.calculate_action_constraint_cost(illegal_action) == 1.0
+    
+    # Registra transição com custo Safe-RL
+    obs = np.ones(10, dtype=np.float32) * 0.5
+    global_obs = np.ones(20, dtype=np.float32) * 0.5
+    coordinator.record_transition(obs, 1, -0.693, 0.8, global_obs, done=False, cost=1.0)
+    coordinator.record_transition(obs, 1, -0.693, 0.8, global_obs, done=True, cost=1.0)
+    
+    losses = coordinator.train_step()
+    assert "agent_0_lagrange_mult" in losses
+    assert losses["agent_0_lagrange_mult"] > 0.0
+

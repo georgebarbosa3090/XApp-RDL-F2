@@ -193,7 +193,8 @@ class ReasoningAgent:
         ee_violations = 0
         
         for act in subset:
-            if "power" in act.parameter.lower() or "tx_power" in act.parameter.lower():
+            param_lower = act.parameter.lower()
+            if "power" in param_lower or "tx_power" in param_lower:
                 val = float(act.value) if isinstance(act.value, (int, float)) else 20.0
                 total_power += val
                 # Relação física de perda de pacote / SLA vs potência
@@ -203,10 +204,24 @@ class ReasoningAgent:
                     sla_violations += 0
                 else:
                     ee_violations += 3 # Potência excessiva degrada EE
-            elif "prb" in act.parameter.lower():
+            elif "prb" in param_lower:
                 val = float(act.value) if isinstance(act.value, (int, float)) else 50.0
                 if val < 20.0:
                     sla_violations += 1
+            elif "downtilt" in param_lower or "beam" in param_lower:
+                val = float(act.value) if isinstance(act.value, (int, float)) else 6.0
+                if val > 12.0:
+                    sla_violations += 1 # Downtilt excessivo reduz cobertura na borda
+                elif val < 3.0:
+                    ee_violations += 1 # Downtilt raso aumenta interferência intercelular
+            elif "isac" in param_lower or "radar" in param_lower or "sensing" in param_lower:
+                val = float(act.value) if isinstance(act.value, (int, float)) else 0.25
+                if val > 0.40:
+                    sla_violations += 1 # Excesso de símbolos dedicados a radar reduz vazão eMBB
+            elif "offset" in param_lower or "a3" in param_lower:
+                val = float(act.value) if isinstance(act.value, (int, float)) else 3.0
+                if val < 1.0:
+                    sla_violations += 1 # Margem de histerese muito baixa induz ping-pong
             else:
                 total_power += 10.0
 

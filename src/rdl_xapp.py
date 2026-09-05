@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import time
 import threading
@@ -137,13 +137,18 @@ class RDLxApp:
                         self.window_start = now_ts()
                     self.proposal_buffer.append(action)
                     logger.debug(f"Action buffered. Queue size: {len(self.proposal_buffer)}")
+                    
+                    # Janela de Decisão Adaptativa: Flush imediato para ações críticas URLLC (prioridade >= 80)
+                    if action.priority >= 80:
+                        logger.info("⚡ Fast-Flush disparado para ação URLLC de emergência", xapp=action.xapp_id, prio=action.priority)
+                        self.window_start = 0.0 # Força expiração imediata
             except Exception as e:
                 logger.error("Erro ao processar RDL_ACTION_PROPOSAL", error=str(e))
         if xapp_instance and sbuf:
             xapp_instance.rmr_free(sbuf)
 
     def _control_ack_handler(self, xapp_instance: Xapp, summary: Dict[str, Any], sbuf: Any):
-        """Trata confirmacoes de execucao de controle emitidas pelo E2 Node / E2Term."""
+        """Trata confirmações de execução de controle emitidas pelo E2 Node / E2Term."""
         payload = summary.get("payload")
         if payload:
             try:
@@ -164,18 +169,20 @@ class RDLxApp:
             xapp_instance.rmr_free(sbuf)
 
     def inject_xapp_action(self, action: XAppAction):
-        """API publica para injecao de acoes simuladas (usada em testes)"""
+        """API pública para injeção de ações simuladas (usada em testes)"""
         with self.buffer_lock:
             if not self.proposal_buffer:
                 self.window_start = now_ts()
             self.proposal_buffer.append(action)
+            if action.priority >= 80:
+                self.window_start = 0.0
 
     def _process_action_group(self, actions: List[XAppAction]):
         """
-        Processa todas as acoes acumuladas na Decision Window (Feature 2):
+        Processa todas as ações acumuladas na Decision Window (Feature 2):
         1. Identifica conflitos diretos e indiretos;
         2. Arbitra conflitos via ReasoningAgent e valida via RefinementAgent;
-        3. Executa Pass-Through de acoes sem conflito validadas individualmente.
+        3. Executa Pass-Through de ações sem conflito validadas individualmente.
         """
         t0 = now_ts()
         for act in actions:
@@ -184,7 +191,7 @@ class RDLxApp:
         conflicts = self.perception.register_action_group(actions)
         self.metrics.update_active_xapps(len(self.perception.get_active_xapps()))
         
-        # Mapeia acoes em conflito para isolar as acoes limpas
+        # Mapeia ações em conflito para isolar as ações limpas
         conflicting_action_keys = set()
         for conflict in conflicts:
             for act in conflict.involved_xapps:
@@ -216,9 +223,9 @@ class RDLxApp:
                     logger.info("Conflito Resolvido", conflict=conflict.conflict_id, strategy=resolution.strategy_used.name, action=act.parameter)
                     self._send_control(act.node_id, act.parameter, act.value)
             else:
-                logger.warning("Resolucao Rejeitada ou Lote Vazio", reason=reason)
+                logger.warning("Resolução Rejeitada ou Lote Vazio / Quarentena", reason=reason)
 
-        # 2. Despacho Continuo de Acoes Limpas (Conflict-Free Pass-Through Pipeline)
+        # 2. Despacho Contínuo de Ações Limpas (Conflict-Free Pass-Through Pipeline)
         clean_actions = [
             act for act in actions 
             if (act.node_id, act.parameter, act.xapp_id) not in conflicting_action_keys
@@ -227,26 +234,26 @@ class RDLxApp:
         for clean_act in clean_actions:
             is_safe, level, reason = self.refinement.validate_single_action(clean_act)
             if is_safe:
-                logger.info("Acao Limpa Despachada (Pass-Through)", xapp=clean_act.xapp_id, param=clean_act.parameter, val=clean_act.value)
+                logger.info("Ação Limpa Despachada (Pass-Through)", xapp=clean_act.xapp_id, param=clean_act.parameter, val=clean_act.value)
                 self._send_control(clean_act.node_id, clean_act.parameter, clean_act.value)
             else:
-                logger.warning("Acao Limpa Bloqueada pelo Safety Guard", reason=reason, param=clean_act.parameter)
+                logger.warning("Ação Limpa Bloqueada pelo Safety Guard / Quarentena", reason=reason, param=clean_act.parameter)
 
     def _decision_loop(self):
         while self.running:
-            time.sleep(0.05) # Verifica a cada 50ms
+            time.sleep(0.02) # Verifica a cada 20ms para agilidade adaptativa
             
             with self.buffer_lock:
                 if self.proposal_buffer:
-                    elapsed_ms = (now_ts() - self.window_start) * 1000
-                    if elapsed_ms >= self.WINDOW_DURATION_MS:
+                    elapsed_ms = (now_ts() - self.window_start) * 1000 if self.window_start > 0 else 9999.0
+                    if elapsed_ms >= self.WINDOW_DURATION_MS or self.window_start == 0.0:
                         # Flush Window
                         actions_to_process = list(self.proposal_buffer)
                         self.proposal_buffer.clear()
                         self.window_start = 0.0
                         logger.info(f"Decision Window Expired. Processing batch of {len(actions_to_process)} actions.")
                         
-                        # Processa fora do lock para nao travar RMR
+                        # Processa fora do lock para não travar RMR
                         threading.Thread(target=self._process_action_group, args=(actions_to_process,), daemon=True).start()
 
     def _send_control(self, node_id: str, parameter: str, value: float):
