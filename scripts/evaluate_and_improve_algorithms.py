@@ -88,7 +88,12 @@ warnings.filterwarnings('ignore')
 
 def load_and_preprocess_data(results_dir="experiments/results"):
     flow_path = os.path.join(results_dir, "dataset_flow_metrics.csv")
+    if not os.path.exists(flow_path):
+        flow_path = os.path.join(results_dir, "data", "dataset_flow_metrics.csv")
+        
     ml_path = os.path.join(results_dir, "dataset_rdl_decisions_ml.csv")
+    if not os.path.exists(ml_path):
+        ml_path = os.path.join(results_dir, "data", "dataset_rdl_decisions_ml.csv")
     
     df_flows = pd.read_csv(flow_path)
     df_ml = pd.read_csv(ml_path)

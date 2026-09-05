@@ -3,8 +3,8 @@
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (H-RDL) & Fase 2 (CA-RDL / MARL)  
 **Ambiente de Co-Simulação:** ns-3 v3.40 (5G-LENA + NORI) / Near-RT RIC (k3d Cluster)  
 **Banda de Operação:** 3.5 GHz (n78), Largura de Banda: 50 MHz  
-**Data da Avaliação:** 2 de Setembro de 2026  
-**Timestamp de Execução:** 2026-09-02 08:44:18  
+**Data da Avaliação:** 4 de Setembro de 2026  
+**Timestamp de Execução:** 2026-09-04 22:13:22  
 **Repositório Fase 1:** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)  
 **Repositório Fase 2:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Google Colab:** [Executar Notebook de ML](https://colab.research.google.com/github/georgebarbosa3090/XApp-RDL-F1/blob/main/notebooks/rdl_colab_scikit_learn.ipynb)

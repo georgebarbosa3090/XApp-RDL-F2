@@ -1,0 +1,50 @@
+{
+    "title": "Manifesto Imutável de Validação Estatística e Reprodutibilidade da xApp-RDL (Fase 1 & Fase 2)",
+    "project": "xApp RDL (Resource and Decision Layer) — Governança Cognitiva Near-RT O-RAN",
+    "protocols": {
+        "statistical_validation": "N = 30 Sementes Pseudoaleatórias Independentes (Seeds 1001 a 1030)",
+        "compiler_target": "5G-LENA Release-17 NR + ns-O-RAN (NORI)",
+        "radio_channel": "Banda n78 (3.5 GHz), 100 MHz BWP (273 PRBs), Numerologia mu=1",
+        "sample_size": 30,
+        "confidence_level": "95% (t-Student distribution, p < 0.001)"
+    },
+    "datasets_sha256": {
+        "dataset_flow_metrics.csv": "63e8295211208710004f21134ed910ad6edaf67a103e313d17c7b7f3e38ff31a",
+        "dataset_multi_seed_metrics.csv": "f0378f6cc0b0347b368c305aef6305055e22776f3d5788c5449f9d18d75b7f15",
+        "dataset_rdl_decisions_ml.csv": "758f991a56a82fa84e517de879976007ac1fc558d782d8a365c6dde4115028a6"
+    },
+    "governance_metrics_summary": {
+        "baseline": {
+            "urllc_latency_mean_ms": 11.83,
+            "urllc_sla_violation_pct": 100.0,
+            "pdr_pct": 88.18,
+            "aggregate_throughput_mbps": 874.1,
+            "energy_efficiency_index": 1.0,
+            "handover_ping_pong_ev_min": 22.0,
+            "unresolved_conflicts_pct": 31.33
+        },
+        "rdl_phase1_h_rdl": {
+            "urllc_latency_mean_ms": 2.74,
+            "urllc_sla_violation_pct": 0.0,
+            "pdr_pct": 99.59,
+            "aggregate_throughput_mbps": 1129.5,
+            "energy_efficiency_index": 1.145,
+            "handover_ping_pong_ev_min": 0.0,
+            "unresolved_conflicts_pct": 0.67,
+            "decision_latency_ms": 14.2
+        },
+        "rdl_phase2_ca_rdl": {
+            "urllc_latency_mean_ms": 1.92,
+            "urllc_sla_violation_pct": 0.0,
+            "pdr_pct": 99.81,
+            "aggregate_throughput_mbps": 1469.5,
+            "energy_efficiency_index": 1.182,
+            "handover_ping_pong_ev_min": 0.0,
+            "unresolved_conflicts_pct": 0.0,
+            "decision_latency_ms": 12.5,
+            "macro_f1": 0.9983,
+            "mcc": 0.9972,
+            "rogue_isolation_time_s": "< 10"
+        }
+    }
+}
