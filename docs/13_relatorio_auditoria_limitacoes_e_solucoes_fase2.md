@@ -79,13 +79,18 @@ graph TD
 Na versão preliminar da Fase 2, o método `extract_features` formatava o vetor de observação local em um tamanho fixo de 10 elementos ($s_t \in \mathbb{R}^{10}$), alocando posições exclusivamente para as duas primeiras propostas contidas no lote (`involved_xapps[:2]`). Quando um terceiro agente (`traffic-steering` ou `isac-radar`) emitia comandos simultaneamente, seus atributos eram descartados, gerando cegueira contextual no Crítico Centralizado.
 
 #### Solução de Engenharia e Formulação Matemática
-1. **Normalização Modular por Proposta:** Cada proposta de ação $a_i = \langle x_i, n_i, p_i, V_i(p), \text{prio}_i, t_i \rangle$ é codificada em uma sub-tupla normalizada contínua:
-   $$s_t^{(i)} = \left[ \text{ID}_{\text{norm}}(x_i), \, \text{Code}(p_i), \, \text{Val}_{\text{norm}}(V_i(p)), \, \frac{\text{prio}_i}{100.0}, \, \mathbb{I}_{\text{conflict}}(a_i) \right]$$
 
-2. **Vetor de Estado Global Elástico para o Crítico Centralizado:**
-   O Crítico Centralizado $V_\psi(s_t^{\text{global}})$ recebe a concatenação elástica de todas as $N$ observações ativas até $N_{\max} = 6$:
-   $$s_t^{\text{global}} = \left[ s_t^{(1)} \;\Vert\; s_t^{(2)} \;\Vert\; \dots \;\Vert\; s_t^{(N)} \;\Vert\; \mathbf{s}_{\text{telemetry}} \right] \in \mathbb{R}^{D_{\mathrm{obs}} \cdot N}$$
-   onde a dimensão de observação individual é $D_{\mathrm{obs}} = 10$, permitindo que o Crítico avalie interações entre até 6 xApps concorrentes sem truncamento.
+* **1. Normalização Modular por Proposta:**  
+  Cada proposta de ação $a_i = \langle x_i, n_i, p_i, V_i(p), \mathrm{prio}_i, t_i \rangle$ é codificada em uma sub-tupla normalizada contínua:
+
+$$s_t^{(i)} = \left[ \mathrm{ID}_{\mathrm{norm}}(x_i), \, \mathrm{Code}(p_i), \, \mathrm{Val}_{\mathrm{norm}}(V_i(p)), \, \frac{\mathrm{prio}_i}{100.0}, \, \mathbb{I}_{\mathrm{conflict}}(a_i) \right]$$
+
+* **2. Vetor de Estado Global Elástico para o Crítico Centralizado:**  
+  O Crítico Centralizado $V_\psi(s_t^{\mathrm{global}})$ recebe a concatenação elástica de todas as $N$ observações ativas até $N_{\max} = 6$:
+
+$$s_t^{\mathrm{global}} = \left[ s_t^{(1)} \;\Vert\; s_t^{(2)} \;\Vert\; \dots \;\Vert\; s_t^{(N)} \;\Vert\; \mathbf{s}_{\mathrm{telem}} \right] \in \mathbb{R}^{D_{\mathrm{obs}} \cdot N}$$
+
+onde a dimensão de observação individual é $D_{\mathrm{obs}} = 10$, permitindo que o Crítico avalie interações entre até 6 xApps concorrentes sem truncamento.
 
 ---
 
@@ -112,22 +117,29 @@ graph LR
 ```
 
 #### Solução de Engenharia e Formulação Matemática
-1. **Formulação do Processo de Decisão de Markov com Restrições (CMDP):**
-   O problema de otimização multiagente é reformulado como a maximização do retorno sujeito a $K$ restrições operacionais de custo:
-   $$\max_{\theta_i} \mathbb{E}_{\tau \sim \pi_{\theta_i}} \left[ \sum_{t=0}^T \gamma^t R_t \right] \quad \text{sujeito a} \quad J_{C_k}(\pi_{\theta_i}) = \mathbb{E}_{\tau \sim \pi_{\theta_i}} \left[ \sum_{t=0}^T \gamma^t C_k(s_t, a_t) \right] \le d_k, \quad \forall k \in \{1, \dots, K\}$$
-   onde:
-   * $C_1(s_t, a_t) = \mathbb{I}(P_{\text{tx}} > 23\text{ dBm})$ penaliza violação de potência de rádio;
-   * $C_2(s_t, a_t) = \mathbb{I}(\text{PRB}_{\text{quota}} > 100\%)$ penaliza sobre-alocação física de espectro;
-   * $d_k = 0.05$ é o orçamento máximo tolerável de risco ($5\%$).
 
-2. **Função Lagrangiana e Função de Perda Clipped Safe-PPO:**
-   $$\mathcal{L}_{\mathrm{Safe\text{-}CLIP}}(\theta_i) = -\hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta_i) \hat{A}_i^t, \, \text{clip}(r_t(\theta_i), 1-\epsilon, 1+\epsilon) \hat{A}_i^t \right) \right] - \beta_{\text{ent}} \mathcal{H}(\pi_{\theta_i}) + \sum_{k=1}^K \lambda_k \cdot \max\left(0, \overline{C}_{k,t} - d_k\right)$$
-   onde $r_t(\theta_i) = \frac{\pi_{\theta_i}(a_{i,t} | o_{i,t})}{\pi_{\theta_i,\text{old}}(a_{i,t} | o_{i,t})}$, $\epsilon = 0.20$ e $\beta_{\text{ent}} = 0.01$.
+* **1. Formulação do Processo de Decisão de Markov com Restrições (CMDP):**  
+  O problema de otimização multiagente é reformulado como a maximização do retorno sujeito a $K$ restrições operacionais de custo:
 
-3. **Atualização Dual dos Multiplicadores de Lagrange:**
-   A cada época de otimização $j$, o multiplicador $\lambda_k$ é ajustado por gradiente ascendente:
-   $$\lambda_k^{(j+1)} = \max\left(0, \, \lambda_k^{(j)} + \alpha_{\text{cost}} \left( \overline{C}_k^{(j)} - d_k \right)\right)$$
-   onde $\alpha_{\text{cost}} = 0.01$. Se o modelo violar restrições, $\lambda_k$ cresce exponencialmente, forçando o gradiente da política a afastar-se de ações perigosas.
+$$\max_{\theta_i} \mathbb{E}_{\tau \sim \pi_{\theta_i}} \left[ \sum_{t=0}^T \gamma^t R_t \right] \quad \text{sujeito a} \quad J_{C_k}(\pi_{\theta_i}) = \mathbb{E}_{\tau \sim \pi_{\theta_i}} \left[ \sum_{t=0}^T \gamma^t C_k(s_t, a_t) \right] \le d_k, \quad \forall k \in \{1, \dots, K\}$$
+
+onde:
+* $C_1(s_t, a_t) = \mathbb{I}(P_{\mathrm{tx}} > 23.0\text{ dBm})$ penaliza violação de potência de rádio;
+* $C_2(s_t, a_t) = \mathbb{I}(\mathrm{PRB}_{\mathrm{quota}} > 100.0\%)$ penaliza sobre-alocação física de espectro;
+* $d_k = 0.05$ é o orçamento máximo tolerável de risco ($5\%$).
+
+* **2. Função Lagrangiana e Função de Perda Clipped Safe-PPO:**
+
+$$\mathcal{L}_{\mathrm{Safe\text{-}PPO}}(\theta_i) = -\hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta_i) \hat{A}_i^t, \, \mathrm{clip}(r_t(\theta_i), 1-\epsilon, 1+\epsilon) \hat{A}_i^t \right) \right] - \beta_{\mathrm{ent}} \mathcal{H}(\pi_{\theta_i}) + \sum_{k=1}^K \lambda_k \cdot \max\left(0, \overline{C}_{k,t} - d_k\right)$$
+
+onde $r_t(\theta_i) = \frac{\pi_{\theta_i}(a_{i,t} \mid o_{i,t})}{\pi_{\theta_i,\mathrm{old}}(a_{i,t} \mid o_{i,t})}$, $\epsilon = 0.20$ e $\beta_{\mathrm{ent}} = 0.01$.
+
+* **3. Atualização Dual dos Multiplicadores de Lagrange:**  
+  A cada época de otimização $j$, o multiplicador $\lambda_k$ é ajustado por gradiente ascendente:
+
+$$\lambda_k^{(j+1)} = \max\left(0, \, \lambda_k^{(j)} + \alpha_{\mathrm{cost}} \left( \overline{C}_k^{(j)} - d_k \right)\right)$$
+
+onde $\alpha_{\mathrm{cost}} = 0.01$. Se o modelo violar restrições, $\lambda_k$ cresce exponencialmente, forçando o gradiente da política a afastar-se de ações perigosas.
 
 ---
 
@@ -184,17 +196,20 @@ graph LR
 ```
 
 #### Solução de Engenharia e Formulação Matemática
-1. **Grafo Causal Multidimensional Expansível:**
-   A topologia causal $\mathcal{G} = (\mathcal{V}_{\text{RCP}} \cup \mathcal{V}_{\text{KPI}}, \mathcal{E})$ foi expandida no `PerceptionAgent`, incorporando:
-   * `BEAM_DOWNTILT` $\longrightarrow \{\text{L1M.DL-sinr}, \text{Beam.RSRP}, \text{InterCell.Interference}, \text{DRB.UEThpDl}\}$;
-   * `A3_OFFSET` $\longrightarrow \{\text{Mobility.HandoverRate}, \text{Mobility.PingPongRate}, \text{RRU.PrbUsedDl}\}$;
-   * `ISAC_SENSING_RATIO` $\longrightarrow \{\text{Radar.DetectionProb}, \text{Radar.ResolutionRange}, \text{DRB.UEThpDl}\}$;
-   * `CARRIER_AGG_RATIO` $\longrightarrow \{\text{SCell.PrbUsedDl}, \text{DRB.UEThpDl}\}$.
 
-2. **Modelagem de Acoplamento Espacial Multi-Célula:**
-   Para nós gNodeB vizinhos $n_a, n_b$ com distância inter-site $d(n_a, n_b) < 200\text{ m}$, a interferência cruzada no downlink é modelada por:
-   $$I_{\text{inter}}(n_a, n_b) = P_{\text{tx}}(n_b) \cdot G_{\text{tx}}(\theta_b, \phi_b) \cdot \text{PL}(d(n_a, n_b))^{-1}$$
-   Quando a xApp de energia altera $P_{\text{tx}}(n_b)$ ou o tilt do feixe `BEAM_DOWNTILT`, o `PerceptionAgent` identifica proativamente o impacto no $\text{SINR}(n_a)$, classificando o evento como **Conflito Indireto Multi-Célula**.
+* **1. Grafo Causal Multidimensional Expansível:**  
+  A topologia causal $\mathcal{G} = (\mathcal{V}_{\mathrm{RCP}} \cup \mathcal{V}_{\mathrm{KPI}}, \mathcal{E})$ foi expandida no `PerceptionAgent`, incorporando:
+  * `BEAM_DOWNTILT` $\longrightarrow \{\text{L1M.DL-sinr}, \text{Beam.RSRP}, \text{InterCell.Interference}, \text{DRB.UEThpDl}\}$;
+  * `A3_OFFSET` $\longrightarrow \{\text{Mobility.HandoverRate}, \text{Mobility.PingPongRate}, \text{RRU.PrbUsedDl}\}$;
+  * `ISAC_SENSING_RATIO` $\longrightarrow \{\text{Radar.DetectionProb}, \text{Radar.ResolutionRange}, \text{DRB.UEThpDl}\}$;
+  * `CARRIER_AGG_RATIO` $\longrightarrow \{\text{SCell.PrbUsedDl}, \text{DRB.UEThpDl}\}$.
+
+* **2. Modelagem de Acoplamento Espacial Multi-Célula:**  
+  Para nós gNodeB vizinhos $n_a, n_b$ com distância inter-site $d(n_a, n_b) < 200\text{ m}$, a interferência cruzada no downlink é modelada por:
+
+$$I_{\mathrm{inter}}(n_a, n_b) = P_{\mathrm{tx}}(n_b) \cdot G_{\mathrm{tx}}(\theta_b, \phi_b) \cdot \mathrm{PL}(d(n_a, n_b))^{-1}$$
+
+Quando a xApp de energia altera $P_{\mathrm{tx}}(n_b)$ ou o tilt do feixe `BEAM_DOWNTILT`, o `PerceptionAgent` identifica proativamente o impacto no $\mathrm{SINR}(n_a)$, classificando o evento como **Conflito Indireto Multi-Célula**.
 
 ---
 
@@ -242,16 +257,18 @@ stateDiagram-v2
 ```
 
 #### Solução de Engenharia e Modelagem Matemática
-1. **Janela de Decisão Adaptativa com *Fast-Flush*:**
-   A duração da janela de agregação $T_{\mathrm{window}}(t)$ é modulada dinamicamente:
-   $$T_{\mathrm{window}}(t) = \begin{cases} T_{\mathrm{fast}} \le 5\text{ ms}, & \text{se } \exists a_i \in \mathrm{Buffer} : \mathrm{prio}_i \ge 80 \;\lor\; \mathrm{Delay}_{\mathrm{URLLC}} > 15.0\text{ ms} \\ T_{\mathrm{dyn}} \in [50\text{ ms}, 200\text{ ms}], & \text{caso contrário} \end{cases}$$
 
-2. **Mecanismo Comportamental Zero-Trust e Quarentena Automática:**
-   O `RefinementAgent` mantém um registro temporal de infrações $\mathcal{H}_{\mathrm{viol}}(x_i) = \{t_1, t_2, \dots\}$. O estado de quarentena é ativado por:
-   $$\mathrm{Quarantine}(x_i) = \begin{cases} \text{true}, & \text{se } \sum_{t \in [t_{\mathrm{now}} - W, t_{\mathrm{now}}]} \mathbb{I}_{\mathrm{violation}}(x_i, t) \ge M_{\mathrm{thresh}} \\ \text{false}, & \text{caso contrário} \end{cases}$$
-   onde a janela de monitoramento é $W = 10.0\text{ s}$ e o limiar é $M_{\mathrm{thresh}} = 3$ violações.
-   
-   Ao ser colocada em quarentena, todas as propostas da xApp são descartadas silenciosamente no barramento por $T_{\text{quarantine}} = 30.0\text{ s}$, emitindo a métrica `rdl_zero_trust_quarantined_xapps_total` para o Prometheus.
+* **1. Janela de Decisão Adaptativa com *Fast-Flush*:**  
+  A duração da janela de agregação $T_{\mathrm{window}}(t)$ é modulada dinamicamente:
+
+$$T_{\mathrm{window}}(t) = \begin{cases} T_{\mathrm{fast}} \le 5\text{ ms}, & \text{se } \exists a_i \in \mathrm{Buffer} : \mathrm{prio}_i \ge 80 \;\lor\; \mathrm{Delay}_{\mathrm{URLLC}} > 15.0\text{ ms} \\ T_{\mathrm{dyn}} \in [50\text{ ms}, 200\text{ ms}], & \text{caso contrário} \end{cases}$$
+
+* **2. Mecanismo Comportamental Zero-Trust e Quarentena Automática:**  
+  O `RefinementAgent` mantém um registro temporal de infrações $\mathcal{H}_{\mathrm{viol}}(x_i) = \{t_1, t_2, \dots\}$. O estado de quarentena é ativado por:
+
+$$\mathrm{Quarantine}(x_i) = \begin{cases} \text{true}, & \text{se } \sum_{t \in [t_{\mathrm{now}} - W, t_{\mathrm{now}}]} \mathbb{I}_{\mathrm{violation}}(x_i, t) \ge M_{\mathrm{thresh}} \implies \text{Bloqueio por } 30.0\text{ s} \\ \text{false}, & \text{caso contrário} \end{cases}$$
+
+onde a janela de monitoramento é $W = 10.0\text{ s}$ e o limiar é $M_{\mathrm{thresh}} = 3$ violações. Ao ser colocada em quarentena, todas as propostas da xApp são descartadas silenciosamente no barramento por $T_{\mathrm{quarantine}} = 30.0\text{ s}$, emitindo a métrica `rdl_zero_trust_quarantined_xapps_total` para o Prometheus.
 
 
 ---
