@@ -1,4 +1,4 @@
-# xApp RDL — Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL) e Evolução Hierárquica
+# xApp RDL - Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL) e Evolução Hierárquica
 
 [![Open RAN](https://img.shields.io/badge/O--RAN-Near--RT--RIC-orange.svg)](https://o-ran.org)
 [![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](https://github.com/georgebarbosa3090/XApp-RDL-F2)
