@@ -218,9 +218,12 @@ echo -e "Compilando com ${BUILD_JOBS} threads paralelas para estabilidade de mem
 
 echo -e "\n${GREEN}======================================================================${NC}"
 echo -e "${GREEN}  ns-3 NORI / 5G-LENA compilado com sucesso!                          ${NC}"
-echo -e "${GREEN}  Diretório: ${NS3_DIR}                                                ${NC}"
+echo -e "${GREEN}  Diretório ns-3 : ${NS3_DIR}                                         ${NC}"
+echo -e "${GREEN}  Diretório xApp : ${BASE_DIR}                                        ${NC}"
 echo -e "${GREEN}======================================================================${NC}"
-echo -e "Para rodar os benchmarks do projeto xApp RDL, acerte o diretório do projeto e execute:"
-echo -e "  ${YELLOW}cd ~/XApp-RDL-F1 && make run-baseline${NC}"
-echo -e "  ${YELLOW}cd ~/XApp-RDL-F1 && make helm-deploy${NC}"
-echo -e "  ${YELLOW}cd ~/XApp-RDL-F1 && make run-rdl${NC}\n"
+echo -e "Para rodar os benchmarks e experimentos da xApp RDL Fase 2, execute:"
+echo -e "  ${YELLOW}cd ${BASE_DIR} && make run-baseline${NC}"
+echo -e "  ${YELLOW}cd ${BASE_DIR} && make helm-deploy-f2${NC}"
+echo -e "  ${YELLOW}cd ${BASE_DIR} && make run-rdl${NC}"
+echo -e "  ${YELLOW}cd ${BASE_DIR} && make analyze-benchmarks${NC}\n"
+

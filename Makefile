@@ -1,4 +1,4 @@
-.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate sync-ns3-scratch setup-ns3 run-scenario1 run-scenario1-baseline run-scenario2 run-scenario2-baseline run-all-scenarios run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
 NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
@@ -26,6 +26,8 @@ test:
 # Deploy Helm Exclusivo para RDL Fase 2 (CA-RDL / MARL)
 # Premissa: Near-RT RIC e as 3 Reference xApps ja estao rodando!
 # -------------------------------------------------------------
+helm-deploy: helm-deploy-f2
+
 helm-deploy-f2:
 	@echo "Implantando/Atualizando exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
 	bash scripts/deploy_rdl_phase2.sh
@@ -82,16 +84,40 @@ cluster-delete:
 # -------------------------------------------------------------
 # Simulações ns-3 e Pipelines Experimentais
 # -------------------------------------------------------------
+sync-ns3-scratch:
+	@echo "Sincronizando cenários C++ com o diretório scratch do ns-3 ($(NS3_DIR)/scratch)..."
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp -f simulations/ns3/*.cc $(NS3_DIR)/scratch/
+
 setup-ns3:
 	bash scripts/setup_ns3.sh
 
-run-baseline:
+run-scenario1: sync-ns3-scratch
+	@echo "Executando Cenário 1: Energy Saving vs QoS (EEVS) com E2 ativo..."
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+
+run-scenario1-baseline: sync-ns3-scratch
+	@echo "Executando Cenário 1: Energy Saving vs QoS (Baseline / Standalone)..."
+	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30"
+
+run-scenario2: sync-ns3-scratch
+	@echo "Executando Cenário 2: Traffic Steering vs Slicing (TVS) com E2 ativo..."
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+
+run-scenario2-baseline: sync-ns3-scratch
+	@echo "Executando Cenário 2: Traffic Steering vs Slicing (Baseline / Standalone)..."
+	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
+
+run-all-scenarios:
+	bash scripts/run_all_scenarios_suite.sh
+
+run-baseline: sync-ns3-scratch
 	bash scripts/run_baseline_experiment.sh
 
-run-rdl:
+run-rdl: sync-ns3-scratch
 	bash scripts/run_rdl_experiment.sh
 
-run-experiments:
+run-experiments: sync-ns3-scratch
 	bash scripts/run_full_experiment.sh
 
 run-suite:
@@ -114,3 +140,4 @@ sync:
 
 auto-sync:
 	@bash scripts/git_auto_sync.sh $(INTERVAL)
+
