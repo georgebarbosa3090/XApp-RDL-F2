@@ -51,8 +51,8 @@ helm-uninstall-f2:
 status-f2:
 	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="
 	@kubectl get pods -n $(NAMESPACE) -o wide
-	@echo "
-=== Pod da xApp RDL Fase 2 ==="
+	@echo ""
+	@echo "=== Pod da xApp RDL Fase 2 ==="
 	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide
 
 logs-f2:
@@ -61,8 +61,8 @@ logs-f2:
 test-f2:
 	@echo "Testando endpoints da xApp RDL Fase 2 (CA-RDL / MARL)..."
 	@curl -i http://localhost:8080/health || true
-	@echo "
-Métricas Prometheus:"
+	@echo ""
+	@echo "Métricas Prometheus:"
 	@curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_" || true
 
 test-3xapps:
