@@ -255,7 +255,7 @@ onde $\gamma = 0.99$, $\lambda = 0.95$ e $d_t \in \{0, 1\}$ é o indicador de t�
 #### 4. Função de Perda Clipped Surrogate do Ator ($L(\theta_i)$) com Safe-RL CMDP
 Para assegurar atualizações de política estáveis e garantir conformidade estrita com restrições operacionais (Constrained MDP com multiplicadores de Lagrange):
 
-$$L(\theta_i) = -\hat{\mathbb{E}}_t \left[ \min \left( r_t(\theta_i) \hat{A}_i^t, \, \operatorname{clip}(r_t(\theta_i), 1-\epsilon, 1+\epsilon) \hat{A}_i^t \right) \right] - \beta_{\mathrm{ent}} \mathcal{H}(\pi_{\theta_i}) + \lambda_{\mathrm{lagrange}} \cdot \max(0, \, \overline{C}_t - d_{\mathrm{budget}})$$
+$$L(\theta_i) = -\hat{\mathbb{E}}_t \left[ \min \left( r_t(\theta_i) \hat{A}_i^t, \, \mathrm{clip}(r_t(\theta_i), 1-\epsilon, 1+\epsilon) \hat{A}_i^t \right) \right] - \beta_{\mathrm{ent}} \mathcal{H}(\pi_{\theta_i}) + \lambda_{\mathrm{lagrange}} \cdot \max(0, \, \overline{C}_t - d_{\mathrm{budget}})$$
 
 onde:
 * $r_t(\theta_i) = \frac{\pi_{\theta_i}(a_{i,t} \mid o_{i,t})}{\pi_{\theta_i,\mathrm{old}}(a_{i,t} \mid o_{i,t})}$ é a razão de verossimilhança da política (*probability ratio*);
@@ -296,7 +296,7 @@ onde os pesos de ponderação são modulados dinamicamente através da interface
 
 O operador de projeção determinística do **Refinement Agent** assegura que nenhuma ação executada ($a_{\mathrm{exec}}$) viole as leis físicas de propagação e limites de hardware:
 
-$$a_{\mathrm{exec}} = \operatorname{SafeGuard}(a_t^*) = \begin{cases} a_t^*, & \text{se todas as restrições físicas forem atendidas} \\ a_{\mathrm{fallback}}, & \text{caso contrário (Veto Determinístico)} \end{cases}$$
+$$a_{\mathrm{exec}} = \mathrm{SafeGuard}(a_t^*) = \begin{cases} a_t^*, & \text{se todas as restrições físicas forem atendidas} \\ a_{\mathrm{fallback}}, & \text{caso contrário (Veto Determinístico)} \end{cases}$$
 
 As condições estritas avaliadas são:
 

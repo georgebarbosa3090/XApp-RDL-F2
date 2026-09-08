@@ -91,7 +91,7 @@ $$C_k(\pi) = \mathbb{E}_{\tau \sim \pi} \left[ \sum_{t=0}^{T} \gamma^t c_k(s_t, 
 
 Onde $c_1$ representa a violação de latência URLLC ($> 5\text{ ms}$), $c_2$ a perda de pacotes e $c_3$ o desgaste de potência de transmissão de rádio. A otimização é resolvida em tempo real através do **Método Primal-Dual com Multiplicadores de Lagrange Dinâmicos**:
 
-$$\mathcal{L}(\pi, \boldsymbol{\lambda}) = \mathbb{E}[R(\tau)] - \sum_{k=1}^{K} \lambda_k \left( \mathbb{E}[c_k(\tau)] - d_k \right)$$
+$$\mathcal{L}(\pi, \vec{\lambda}) = \mathbb{E}[R(\tau)] - \sum_{k=1}^{K} \lambda_k \left( \mathbb{E}[c_k(\tau)] - d_k \right)$$
 
 #### B. Spatio-Temporal Graph Neural Networks (GNN-MARL)
 A topologia de rede é estruturada como um grafo direcionado $\mathcal{G}_t = (\mathcal{V}_t, \mathcal{E}_t)$, onde:

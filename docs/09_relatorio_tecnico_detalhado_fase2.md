@@ -224,7 +224,7 @@ $$R_t = w_{\mathrm{qos}} \cdot f_{\mathrm{qos}}(t) + w_{\mathrm{ee}} \cdot f_{\m
 
 Para garantir estabilidade no treinamento e evitar atualizações de política destrutivas no plano de controle:
 
-$$L^{\mathrm{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \operatorname{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
+$$L^{\mathrm{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \mathrm{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
 
 * **Razão de probabilidade:** $r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta,\mathrm{old}}(a_t \mid s_t)}$
 * **Parâmetro de corte:** $\epsilon = 0.20$
