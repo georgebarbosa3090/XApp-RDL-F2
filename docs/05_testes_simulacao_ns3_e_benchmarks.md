@@ -144,6 +144,10 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **xApps Envolvidas:** `ricxapp-beamformer`, `ricxapp-traffic-steering` e `ricxapp-qos-xslice`
 * **Dinâmica:** Otimização coordenada de *vertical downtilt* ($6^\circ-8^\circ$), agregação de portadoras FR1 ($3.5\text{ GHz}$) + FR3 ($10.5\text{ GHz}$) e quotas de fatiamento sob mobilidade heterogênea (estáticos, pedestres e veiculares).
 * **Topologia:** 3 gNodeBs em corredor urbano UMi ($1000\text{ m} \times 400\text{ m}$), 60 UEs, antenas UPA $16 \times 4$.
+* **Comando para Execução:**
+  ```bash
+  make run-scenario3
+  ```
 
 ---
 
@@ -152,6 +156,10 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **xApps Envolvidas:** `ricxapp-isac-radar` vs `ricxapp-qos-xslice`
 * **Dinâmica:** Competição direta por símbolos OFDM e feixes direcionais entre sensoriamento radar ($\Delta R = \frac{c}{2B}$) e tráfego de dados de ultra-alta capacidade.
 * **Topologia:** 2 gNodeBs ISAC Dual-Function operando a $28\text{ GHz}$ ($400\text{ MHz}$ de banda), 30 UEs e alvos móveis.
+* **Comando para Execução:**
+  ```bash
+  make run-scenario4
+  ```
 
 ---
 
@@ -160,6 +168,10 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **xApps Envolvidas:** `ricxapp-rogue-xapp` vs todas as xApps legítimas (`qos-xslice`, `energy-saving`, etc.)
 * **Dinâmica:** Injeção contínua de ações conflitantes e maliciosas de alta frequência ($5\text{ Hz}$); contenção via *Lockout Cooling Window* de 5 segundos e *Safety Guards*.
 * **Topologia:** Grade $2 \times 2$ com 4 gNodeBs e 40 UEs.
+* **Comando para Execução:**
+  ```bash
+  make run-scenario5
+  ```
 
 ---
 

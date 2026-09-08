@@ -63,6 +63,10 @@ graph LR
   - 60 UEs sob mobilidade heterogênea (20 Estáticos, 20 Pedestres a $3-5\text{ km/h}$, 20 Veiculares a $54\text{ km/h}$).
 * **xApps Envolvidas:** `xApp-Beamformer` (Downtilt elétrico E2SM-RC Style 10), `xApp-TrafficSteering` (A3 Offset) e `xApp-PRBQuota` (ORIGAMI PIOR).
 * **Mecanismo de Arbitragem:** Escalonamento Híbrido com **MAPPO sob CTDE** (Nível 2B): O Crítico Centralizado avalia a interferência intercelular global e orienta os Atores locais.
+* **Comando para Execução:**
+  ```bash
+  make run-scenario3
+  ```
 
 ![Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO](figures/scenario_3_5ga_multicarrier_mimo.png)
 
@@ -75,6 +79,10 @@ graph LR
 * **Topologia & Frequência:** 2 gNBs ISAC Dual-Function operando em $28\text{ GHz}$ mmWave ($400\text{ MHz}$ de largura de banda) com 30 UEs de dados e alvos de rastreamento radar em movimento.
 * **Conflito:** Competição direta por símbolos OFDM e feixes de transmissão entre a `xApp-RadarSensing` (exige resolução fina $\Delta R = \frac{c}{2B}$) e a `xApp-eMBB-Plus` (demanda vazão $> 1\text{ Gbps}$).
 * **Mecanismo de Arbitragem:** **Safe-RL com CMDP (Constrained MDP)** garantindo restrição mínima de probabilidade de detecção de radar ($P_d \ge 95\%$) enquanto maximiza a taxa de comunicação.
+* **Comando para Execução:**
+  ```bash
+  make run-scenario4
+  ```
 
 ![Cenário 4: 6G ISAC Sensing vs Communication](figures/scenario_4_6g_isac_sensing_coexistence.png)
 
@@ -82,6 +90,10 @@ graph LR
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
 * **Topologia & Operação:** Grade $2 \times 2$ com 4 gNBs e 40 UEs sob alta carga estocástica. Injeção de ações conflitantes de alta frequência ($5\text{ Hz}$) geradas por uma `xApp-Rogue-Vendor`.
 * **Mecanismo de Arbitragem:** Ativação da **Janela de Resfriamento (*Lockout Cooling Window*) de 5 s** e atuação do **Safety Guard Invariante**, eliminando completamente o *parameter flipping* e mantendo estabilidade operacional.
+* **Comando para Execução:**
+  ```bash
+  make run-scenario5
+  ```
 
 ![Cenário 5: 6G Cross-Tier Multi-Loop Governance & Anti-Rogue Shield](figures/scenario_5_6g_cross_tier_governance.png)
 
