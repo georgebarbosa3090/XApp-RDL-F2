@@ -1,11 +1,11 @@
-# xApp RDL - Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL) e Evolução Hierárquica
+# xApp RDL — Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL)
 
 [![Open RAN](https://img.shields.io/badge/O--RAN-Near--RT--RIC-orange.svg)](https://o-ran.org)
 [![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](https://github.com/georgebarbosa3090/XApp-RDL-F2)
 [![Helm](https://img.shields.io/badge/Helm-Release%20ricxapp--iqos--xapp--rdl--f2-informational.svg)](deploy/helm/iqos-xapp-rdl)
 [![Kubernetes](https://img.shields.io/badge/K8s-Namespace%20ricxapp-326CE5.svg)](deploy/kubernetes)
-[![AI Engine](https://img.shields.io/badge/AI--Engine-MAPPO%20%2F%20Actor--Critic%20%2F%20Hierarchical-brightgreen.svg)](src/agents/marl)
-[![Tests](https://img.shields.io/badge/Tests-Passing-success.svg)](tests/)
+[![AI Engine](https://img.shields.io/badge/AI--Engine-MAPPO%20%2F%20Actor--Critic-brightgreen.svg)](src/agents/marl)
+[![Tests](https://img.shields.io/badge/Tests-18%2F18%20Passing-success.svg)](tests/)
 
 ---
 
@@ -13,207 +13,123 @@
 
 | Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
 | :---: | :--- | :---: | :---: |
-| **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote (200 ms), heurísticas TVS/EEVS e Safety Guards físicos.* | **Concluída e Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
-| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Motor Hierárquico Escalonado (Heurística → Utilidade → MAPPO CTDE).* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
-| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch / Intent-Driven)**<br/>*Inteligência Cross-Tier (rApp ⇄ xApp ⇄ dApp), GNN Espaço-Temporal, XAI e O-Cloud 6G.* | **Em Especificação / Roadmap** | [Volume 12](docs/12_rdl_autonoma_e_federada_6g.md) |
+| **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote (200ms), heurísticas TVS/EEVS e Safety Guards físicos.* | **Concluída e Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
+| **Fase 2 (Atual)** | **RDL Baseada em Contexto (CA-RDL)**<br/>*Aprendizado por Reforço Multiagente (MARL / MAPPO) e cognição contextual.* | **Ativa / Em Produção** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
+| **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch)**<br/>*Inteligência distribuída, orquestração por intenção (Intent-Driven) e O-Cloud 6G.* | **Roadmap / Planejada** | *Em especificação futura* |
 
 ---
 
-## 1. Visão Geral da Fase 2 (CA-RDL) e Arquitetura Hierárquica Escalonada
+## 1. Visão Geral da Fase 2 (CA-RDL)
 
-A **xApp RDL Fase 2 (Context-Aware RDL)** é o motor de arbitragem cognitiva e autônoma de conflitos para o **Near-RT RIC (RAN Intelligent Controller)** no ecossistema O-RAN.
+A **xApp RDL Fase 2 (Context-Aware RDL)** é o motor de arbitragem cognitiva e autônoma de conflitos para o **Near-RT RIC (RAN Intelligent Controller)** do ecossistema O-RAN.
 
-A arquitetura opera sob um **Motor de Decisão Hierárquico Escalonado em 3 Níveis** acoplado a um **Safety Guard Invariante Determinístico**:
+Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado por Reforço Multi-Agente (MARL / MAPPO - Multi-Agent Proximal Policy Optimization)** com:
+1. **Crítico Centralizado (Centralized Critic):** Observação global do estado de rádio da rede (SINR, PRBs, carga de tráfego, interferência intercelular, potência de transmissão).
+2. **Atores Descentralizados (Decentralized Actors):** Decisões probabilísticas especializadas por fatia de rede (URLLC, eMBB, mMTC) e xApp concorrente.
+3. **Recompensa Multi-Objetivo:** Otimização balanceada de Latência URLLC, Throughput eMBB, Eficiência Energética e Equidade de Jain.
+4. **Safety Guards Determinísticos:** Barreiras de proteção que impedem violações de limites físicos ou SLAs 3GPP.
 
 ```mermaid
 graph TD
     subgraph NearRTRIC["Near-RT RIC (Namespace: ricxapp)"]
-        subgraph RDL_F2["xApp RDL (ricxapp-iqos-xapp-rdl-f2)"]
+        subgraph RDL_F2["xApp RDL Fase 2 (ricxapp-iqos-xapp-rdl-f2)"]
             PA["1. Perception Agent<br/>(Telemetria KPM & Feature Engineering)"]
-            
-            subgraph Engine["Motor de Decisão Hierárquico Escalonado"]
-                RA1["Nível 1 (H-RDL): Heurística Rápida & Prioridade (&lt; 1 ms)"]
-                RA2["Nível 2A (CA-RDL): Utilidade Contextual / NDT (TVS/EEVS/COMIX)"]
-                RA3["Nível 2B (CA-RDL): MAPPO Multiagente Cooperativo CTDE"]
-            end
-            
-            RE["3. Refinement Agent & Safety Guard<br/>(Limites Físicos & Lockout 5s Anti-Flapping)"]
+            RA["2. Reasoning Agent<br/>(Motor MAPPO Centralized-Critic / Actor-Critic)"]
+            RE["3. Refinement Agent<br/>(Safety Guards Determinísticos)"]
+            IC["4. Intent Classifier<br/>(Modulação Dinâmica de Pesos)"]
         end
 
-        XAPPS["Reference xApps Concorrentes<br/>(ricxapp-qos-xslice | ricxapp-energy-saving | ricxapp-traffic-steering)"]
+        XAPPS["Reference xApps Concorrentes (Já em Execução)<br/>(ricxapp-qos-xslice | ricxapp-energy-saving | ricxapp-traffic-steering)"]
     end
 
-    gNB["gNodeB 5G NR (ns-3 / 5G-LENA + NORI)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| PA
-    XAPPS -->|"Propostas de Ação (RMR / REST)"| PA
-    PA -->|"Vetor de Estado s_t"| Engine
-    Engine -->|"Ações Harmonizadas"| RE
-    RE -->|"Comando E2SM-RC Seguro"| gNB
+    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| NearRTRIC
+    XAPPS -->|"Ações Propostas (RMR)"| PA
+    PA -->|"Vetor de Estado s_t"| RA
+    IC -->|"Pesos de Recompensa (w_qos, w_ee, w_pen)"| RA
+    RA -->|"Ações Otimizadas a_t"| RE
+    RE -->|"Ações Harmonizadas e Seguras"| gNB
 ```
 
 ---
 
-## 2. Modelagem Matemática e Funções de Decisão
+## 2. Arquitetura e Cenários Simulados
 
-A tomada de decisão do CA-RDL é regida por funções matemáticas estritas que garantem determinismo, convergência e conformidade com as restrições físicas da rede de rádio 5G/6G:
+### 2.1. Arquitetura de Co-Simulação Fim-a-Fim (ns-3 + Near-RT RIC)
+![Arquitetura de Co-Simulação](docs/figures/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
 
-### 2.1. Função de Roteamento Escalonado e Complexidade $C(c, s)$
-
-A política de despacho dinâmico seleciona a camada de computação ótima de acordo com a complexidade do conflito:
-
-$$\mathcal{D}(s, c) = \begin{cases} \mathcal{D}_H(c), & \text{se } C(c, s) \le \tau_1 \\ \mathcal{D}_U(s, c), & \text{se } \tau_1 < C(c, s) \le \tau_2 \\ \mathcal{D}_{\mathrm{MAPPO}}(s, c), & \text{se } C(c, s) > \tau_2 \end{cases}$$
-
-Onde as camadas hierárquicas de computação são:
-* **Nível 1 — Heurística e Prioridade (H-RDL):** Resolução direta em tempo $O(1)$ ($< 1\text{ ms}$) usando funções de precedência $\Phi(a_k)$ (estilo ORIGAMI PIOR).
-* **Nível 2A — Utilidade Contextual & NDT (COMIX / 6G-SMART MLO):** Avaliação combinatorial sobre o *Power Set* $2^N$ das propostas de ação concorrentes.
-* **Nível 2B — Coordenação Multiagente com MAPPO (CA-RDL):** Resolução de conflitos indiretos de alta dimensionalidade via *Multi-Agent PPO*.
-
-O **Estimador de Complexidade** $C(c, s)$ quantifica os fatores contextuais de acoplamento:
-
-$$C(c, s) = \alpha_1 \mathbb{I}_{\mathrm{ind}}(c) + \alpha_2 \frac{N_{\mathrm{xapp}}}{N_{\max}} + \alpha_3 \frac{|\Delta \mathrm{prio}|}{\mathrm{prio}_{\max}} + \alpha_4 \mathrm{Degrad}_{\mathrm{SLA}}(s)$$
-
-### 2.2. Taxonomia Matemática de Conflitos O-RAN
-
-1. **Conflito Direto (Direct Conflict - DC):**
-   $$C_{\mathrm{direct}}(a_i, a_j) = \begin{cases} 1, & \text{se } n_i = n_j \wedge p_i = p_j \wedge x_i \neq x_j \wedge V_i(p) \neq V_j(p) \\ 0, & \text{caso contrário} \end{cases}$$
-
-2. **Conflito Indireto (Indirect Conflict - IC):**
-   $$C_{\mathrm{indirect}}(a_i, a_j) = \begin{cases} 1, & \text{se } e(a_i, p_m), e(a_j, p_n), e(p_m, k), e(p_n, k) \in \mathcal{E} \quad (p_m \neq p_n, x_i \neq x_j) \\ 0, & \text{caso contrário} \end{cases}$$
-
-### 2.3. Funções de Utilidade de SLA (Nível 2A)
-
-Para cada subconjunto de ações candidatas $j \in 2^N$:
-
-* **TVS (*Throughput Violation-based Selection*):**
-  $$s_j^{\mathrm{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\mathrm{total}}}}$$
-  *Prioriza a eliminação estrita de violações de SLA de vazão ($C_u$) e latência.*
-
-* **EEVS (*Energy Efficiency Violation-based Selection*):**
-  $$s_j^{\mathrm{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\mathrm{total}}}}$$
-  *Penaliza transmissões ineficientes que degradem o índice Bits/Joule da célula.*
-
-### 2.4. Coordenação Multiagente MAPPO sob CTDE (Nível 2B)
-
-* **Resíduo de Bellman e Vantagem GAE (*Generalized Advantage Estimation*):**
-  $$\delta_t^V = r_t + \gamma V_\psi(s_{t+1}) (1 - d_t) - V_\psi(s_t)$$
-  $$\hat{A}_i^t = \sum_{l=0}^\infty (\gamma \lambda)^l \delta_{t+l}^V \quad (\gamma = 0.99, \, \lambda = 0.95)$$
-
-* **Função de Perda Clipped do Ator ($L(\theta_i)$):**
-  $$L(\theta_i) = -\hat{\mathbb{E}}_t \left[ \min \left( r_t(\theta_i) \hat{A}_i^t, \, \mathrm{clip}(r_t(\theta_i), 1-\epsilon, 1+\epsilon) \hat{A}_i^t \right) \right] - \beta_{\mathrm{ent}} \mathcal{H}(\pi_{\theta_i})$$
-  $$\text{onde} \quad r_t(\theta_i) = \frac{\pi_{\theta_i}(a_{i,t} \mid o_{i,t})}{\pi_{\theta_i,\mathrm{old}}(a_{i,t} \mid o_{i,t})}$$
-
-* **Função de Perda do Crítico Centralizado ($L(\psi)$):**
-  $$L(\psi) = \hat{\mathbb{E}}_t \left[ \left( V_\psi(s_t) - \hat{R}_t \right)^2 \right] \quad \text{com} \quad \hat{R}_t = \hat{A}_t + V_{\psi,\mathrm{old}}(s_t)$$
-
-* **Função de Recompensa Multi-Objetivo Ponderada por Intenções A1 ($R_t$):**
-  $$R_t = w_{\mathrm{qos}} f_{\mathrm{qos}}(t) + w_{\mathrm{ee}} f_{\mathrm{ee}}(t) - w_{\mathrm{pen}} \mathrm{Pen}(t) - w_{\mathrm{stab}} \mathrm{Osc}(t)$$
-  onde os pesos $w_{\mathrm{qos}}, w_{\mathrm{ee}}, w_{\mathrm{pen}}, w_{\mathrm{stab}}$ são sincronizados via A1 Policy.
-
-### 2.5. Funções de Blindagem Invariante e Safety Guards (Camada 3)
-
-Antes de qualquer despacho via E2SM-RC, o `RefinementAgent` valida as restrições físicas de rádio:
-
-* **Barreira de Frequência Temporal (*Temporal Throttling*):**
-  $$\Delta t_{\mathrm{control}} = t_{\mathrm{now}} - t_{\mathrm{last}} \ge 1000\text{ ms}$$
-
-* **Restrição de Potência de Transmissão ($P_{\mathrm{tx}}$):**
-  $$-10.0\text{ dBm} \le P_{\mathrm{tx}} \le 23.0\text{ dBm} \quad (\text{Macro gNodeB: } \le 43.0\text{ dBm})$$
-
-* **Restrição de Quota de Recursos Físicos ($\mathrm{PRB}_{\mathrm{quota}}$):**
-  $$0.0\% \le \mathrm{PRB}_{\mathrm{quota}} \le 100.0\%$$
-
-* **Janela de Resfriamento Anti-Flapping (*Lockout Cooling Window*):**
-  $$T_{\mathrm{lockout}} = 5.0\text{ s}$$
+### 2.2. Topologia Espacial e Conflito de Fatias de Rádio
+![Topologia Espacial](docs/figures/cenario_1_topologia_tvs_conflict.png)
 
 ---
 
 ## 3. Início Rápido (Quickstart)
 
+### 3.1. Executar Testes Unitários:
 ```bash
-# 1. Executar testes unitários e de integração
 make test
+# Executa os 18 testes unitários (PyTorch MARL, MAPPO, Perception, Refinement) com 100% de sucesso
+```
 
-# 2. Fazer o deploy isolado da RDL Fase 2 no Kubernetes/k3d
-make helm-deploy-f2-f2
+### 3.2. Implantar a xApp RDL Fase 2 via Helm:
+*Premissa: O Near-RT RIC e as 3 Reference xApps já estão rodando no cluster k3d.*
+```bash
+# Instala/Atualiza exclusivamente a release 'ricxapp-iqos-xapp-rdl-f2' (v2.0.0)
+make helm-deploy-f2
 
-# 3. Acompanhar streaming contínuo de logs em tempo real
+# Verificar status dos pods
+make status-f2
+
+# Acompanhar streaming de logs do motor MARL
 make logs-f2
 
-# 4. Executar simulações ns-3 (5G-LENA + NORI) e suite de benchmarks
-make run-suite
+# Testar endpoints de healthcheck e métricas Prometheus
+make test-f2
+```
 
-# 5. Desinstalação da xApp RDL ao final dos testes:
-make helm-uninstall-f2      # Desinstala a release Fase 2
-make helm-uninstall-f1      # Desinstala a release Fase 1
-make uninstall-all-rdl      # Desinstala todas as releases
+### 3.3. Executar Simulação ns-3 e Suíte de Experimentos:
+```bash
+# Executa a suíte experimental completa e gera relatórios comparativos
+make run-suite
 ```
 
 ---
 
-## 4. Desempenho e Validação Experimental Multidimensional
+## 4. Desempenho e Validação Experimental
 
-Resultados empíricos obtidos na co-simulação 5G NR, 5G-Advanced e 6G (5G-LENA + NORI) comparando a operação desregulada (**Baseline**), a governança heurística da **Fase 1 (H-RDL)** e o motor escalonado da **Fase 2 (CA-RDL)**:
+Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comparando a operação desregulada (**Baseline**) com a governança da **Fase 1 (H-RDL)**:
 
-### 4.1. QoS, Latência e Confiabilidade Telecom
+![Métricas Experimentais Reais](docs/figures/cenario_4_comparativo_multidimensional_metricas.png)
 
-| Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL (Heurística) | Fase 2: CA-RDL (MARL) | Ganho vs Baseline |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| **QoS & Latência URLLC** | Latência Média URLLC | `11.41 ms` | `2.85 ms` | **`1.85 ms`** | **-83.8% de redução** |
-| | Latência Percentil 99 (P99) | `18.66 ms` | `3.59 ms` | **`2.40 ms`** | **-87.1% de cauda** |
-| | Violação de SLA (> 5ms) | `93.33%` | `0.0%` | **`0.0%`** | **100% de cumprimento** |
-| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `39.28%` | `99.53%` | **`99.85%`** | **+154.2% de entrega** |
-| | Taxa de Perda (PLR %) | `60.72%` | `0.47%` | **`0.15%`** | **-99.8% de perda** |
-| **Sustentabilidade** | Ganho Bits/Joule (EE) | `1.00x` | `+14.5%` | **`+18.2%`** | **Operação Green** |
-
-### 4.2. Camada Física (PHY), Bandas, Feixes, PRB, Handover e Slices
-
-| Domínio Técnico | Métrica Específica | Baseline (Sem RDL) | Fase 1 (H-RDL) | Fase 2 (CA-RDL) | Impacto de Rede (Fase 2) |
-| :--- | :--- | :---: | :---: | :---: | :--- |
-| **SINR & Interferência** | SINR Médio Downlink | `14.2 dB` | `18.5 dB` | **`21.4 dB`** | **+7.2 dB** (Modulação MCS 24/28) |
-| | SINR de Borda (P05) | `-2.1 dB` | `3.4 dB` | **`5.8 dB`** | **+7.9 dB** (Sem queda de chamadas) |
-| | Interferência Co-Canal | `-72.4 dBm` | `-79.8 dBm` | **`-84.5 dBm`** | **-12.1 dBm** de supressão |
-| **Bandas & Feixes** | Largura de Banda Alocada | `50 MHz` | `100 MHz` | **`100 MHz`** | Uso ótimo de espectro na banda $n78$ |
-| | Ganho Feixe UPA 16x4 | `N/A (Omni)` | `12.0 dBi` | **`15.8 dBi`** | Downtilt dinâmico $6^\circ-8^\circ$ |
-| **Fatiamento & PRB** | Taxa Utilização PRB | `98.4% (Sat.)`| `74.2%` | **`68.5%`** | Sem saturação de canal |
-| | Índice Equidade Jain | `0.48` | `0.78` | **`0.88`** | Distribuição justa de recursos |
-| **Mobilidade & Tráfego**| Throughput Agregado | `412 Mbps` | `620 Mbps` | **`785 Mbps`** | **+90.5%** de vazão de dados |
-| | Handover Ping-Pong | `22 ev/min` | `0 ev/min` | **`0 ev/min`** | **100% eliminado** |
-| | Desbalanceamento Carga | `48.5%` | `18.2%` | **`11.4%`** | Carga homogênea entre gNBs |
-
-### 4.3. Resiliência sob xApp Descalibrada (Rogue xApp), Lockout Cooling e Safety Guard
-
-| Métrica de Governança / Resiliência | Baseline (Sem RDL) | Operação RDL (Lockout 5s + Safety Guard) | Comportamento Observado |
-| :--- | :---: | :---: | :--- |
-| **Parameter Flipping (Oscilações)** | `120 ev/min` (5 Hz) | **`0 ev/min` (Totalmente suprimido)** | Supressão total de tempestade de sinalização E2 |
-| **Tempo de Detecção & Bloqueio** | $\infty$ (Sem detecção) | **`< 25 ms`** | Ação imediata no loop Near-RT |
-| **Veto Determinístico do Safety Guard** | `0.0%` (Executa tudo) | **`100.0%` dos comandos ilegais vetados** | Limites de potência $[-10, 23]\text{ dBm}$ estritamente preservados |
-| **Janela de Resfriamento (Lockout)** | `0 s` | **`5.0 s fixos`** | Alinhado com horizonte preditivo forward-rolling |
-| **Taxa de Recuperação de SLA** | `12.5%` (Colapso) | **`100.0%` (Sem degradação)** | Tráfego legítimo totalmente blindado |
+| Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL (Heurística) | Impacto / Ganho |
+| :--- | :--- | :---: | :---: | :---: |
+| **QoS & Latência URLLC** | Latência Média URLLC | `11.41 ms` | **`2.85 ms`** | **-75.0% de redução** |
+| | Latência Percentil 99 (P99) | `18.66 ms` | **`3.59 ms`** | **-80.8% de cauda** |
+| | Violação de SLA (> 5ms) | `93.33%` | **`0.0%`** | **100% de cumprimento** |
+| **Confiabilidade & Perda** | Taxa de Entrega (PDR %) | `39.28%` | **`99.53%`** | **+153.4% de entrega** |
+| | Taxa de Perda (PLR %) | `60.72%` | **`0.47%`** | **-99.2% de perda** |
+| **Governança & Conflitos** | Conflitos Não Mitigados | `34.67%` | **`0.67%`** | **-98.1% de conflitos** |
+| | Eficiência de Arbitragem | `0.0%` | **`98.7%`** | **+98.7 p.p.** |
+| | Latência de Decisão RDL | `N/A` | **`14.2 ms`** | `Meta Near-RT < 50ms` |
+| | Handover Ping-Pong | `22 ev/min` | **`0 ev/min`** | **100% eliminado** |
+| **Eficiência Energética** | Ganho Bits/Joule | `1.00x` | **`+14.5%`** | **Operação sustentável** |
 
 ---
 
-## 5. Estrutura Documental Temática
+## 5. Estrutura Documental da Fase 2
 
 | Volume Documental | Título do Documento | Descrição e Escopo |
 | :--- | :--- | :--- |
-| **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, motor hierárquico escalonado, formulação MAPPO (CTDE com GAE) e Safety Guards. |
-| **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas e namespaces `ricplt`/`ricxapp`. |
-| **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação Helm Exclusivo para Fase 2 | Deploy isolado da release `ricxapp-iqos-xapp-rdl-f2` sem reinstalar componentes de plataforma. |
-| **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, cenários EEVS e TVS, e datasets experimentais de telemetria. |
-| **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus (`/metrics`), Grafana Dashboards e injeção de tráfego de teste. |
-| **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos técnicos e conformidade com padrões O-RAN Alliance. |
-| **[Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md)** | Proposta Arquitetural e Requisitos — RDL Fase 3 | Especificação de governança autônoma 6G, controle cross-tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp) e Safe-RL. |
-| **[Volume 09](docs/09_relatorio_tecnico_detalhado_fase2.md)** | Relatório Técnico Detalhado da Fase 2 | Documento consolidado e exaustivo de arquitetura, código, simulações e resultados da Fase 2. |
-| **[Volume 10](docs/10_matriz_validade_e_pontos_de_atencao_fase3.md)** | Matriz de Validade e Pontos de Atenção Críticos | Análise formal de validade (interna, temporal, sinalização, externalidade, estatística) e roadmap. |
-| **[Volume 11](docs/11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md)** | Cenários de Teste 5G, 5GA, 6G e Requisitos | Especificação formal dos cenários C++ (.cc), características de canal e matriz de métricas. |
-| **[Volume 12](docs/12_rdl_autonoma_e_federada_6g.md)** | RDL Autônoma e Federada 6G (Zero-Touch / Intent-Driven) | Inteligência Cross-Tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp), ST-GNN, FedMARL, XAI e O-Cloud 6G. |
-| **[Volume 13](docs/13_relatorio_auditoria_limitacoes_e_solucoes_fase2.md)** | Relatório de Auditoria, Limitações e Soluções da Fase 2 | Diagnóstico técnico dos 6 eixos críticos de limitação e superação arquitetural comprovada. |
-| **[Volume 14](docs/14_relatorio_resultados_e_desempenho_comparativo_fase2.md)** | Relatório de Resultados Experimentais e Tabela de Desempenho Comparativo | Avaliação empírica exaustiva, 6 xApps concorrentes, campanha multi-semente ($N=30$) e tabela Antes vs Depois. |
+| **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, formulação MAPPO/Actor-Critic e modelagem de utilidade. |
+| **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas. |
+| **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação e Automação de Deploy (Helm & K8s) | Procedimentos de implantação do zero (Greenfield) e deploy isolado (Brownfield). |
+| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Diagnósticos | Procedimentos operacionais, streaming de logs e auditoria de memória. |
+| **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, `NrPointToPointEpcHelper` e datasets. |
+| **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus, Kiali Dashboard e injeção de tráfego. |
+| **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos e conformidade O-RAN Alliance. |
 
 ---
 
 ## 6. Repositórios Oficiais
- 
- * **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
- * **Fase 2 (CA-RDL / MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)
- * **Repositório de Dados Brutos (Google Drive):** [https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x](https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x)
 
+* **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
+* **Fase 2 (CA-RDL / MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)
