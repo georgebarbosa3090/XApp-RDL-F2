@@ -1,4 +1,4 @@
-.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate sync-ns3-scratch setup-ns3 run-scenario1 run-scenario1-baseline run-scenario2 run-scenario2-baseline run-all-scenarios run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate sync-ns3-scratch setup-ns3 run-scenario1 run-scenario1-baseline run-scenario2 run-scenario2-baseline run-scenario3 run-scenario4 run-scenario5 run-all-scenarios run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
 NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
@@ -108,7 +108,19 @@ run-scenario2-baseline: sync-ns3-scratch
 	@echo "Executando Cenário 2: Traffic Steering vs Slicing (Baseline / Standalone)..."
 	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
 
-run-all-scenarios:
+run-scenario3: sync-ns3-scratch
+	@echo "Executando Cenário 3: 5G-Advanced Multi-Carrier (FR1/FR3) & Massive MIMO UPA..."
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl5gaMulticarrierMimo=level_all" && ./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=40"
+
+run-scenario4: sync-ns3-scratch
+	@echo "Executando Cenário 4: 6G ISAC (Sensoriamento Radar vs Comunicação 28 GHz)..."
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl6gIsacSensingCoexistence=level_all" && ./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --sensingRatio=0.35 --simTime=30"
+
+run-scenario5: sync-ns3-scratch
+	@echo "Executando Cenário 5: 6G Governança Cross-Tier & Escudo Anti-Rogue xApp..."
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl6gCrossTierGovernance=level_all" && ./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --lockout=true --simTime=35"
+
+run-all-scenarios: sync-ns3-scratch
 	bash scripts/run_all_scenarios_suite.sh
 
 run-baseline: sync-ns3-scratch
