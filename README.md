@@ -207,6 +207,7 @@ Resultados empíricos obtidos na co-simulação 5G NR, 5G-Advanced e 6G (5G-LENA
 | **[Volume 11](docs/11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md)** | Cenários de Teste 5G, 5GA, 6G e Requisitos | Especificação formal dos cenários C++ (.cc), características de canal e matriz de métricas. |
 | **[Volume 12](docs/12_rdl_autonoma_e_federada_6g.md)** | RDL Autônoma e Federada 6G (Zero-Touch / Intent-Driven) | Inteligência Cross-Tier (rApp $\leftrightarrow$ xApp $\leftrightarrow$ dApp), ST-GNN, FedMARL, XAI e O-Cloud 6G. |
 | **[Volume 13](docs/13_relatorio_auditoria_limitacoes_e_solucoes_fase2.md)** | Relatório de Auditoria, Limitações e Soluções da Fase 2 | Diagnóstico técnico dos 6 eixos críticos de limitação e superação arquitetural comprovada. |
+| **[Volume 14](docs/14_relatorio_resultados_e_desempenho_comparativo_fase2.md)** | Relatório de Resultados Experimentais e Tabela de Desempenho Comparativo | Avaliação empírica exaustiva, 6 xApps concorrentes, campanha multi-semente ($N=30$) e tabela Antes vs Depois. |
 
 ---
 
