@@ -160,7 +160,7 @@ def run_suite(push_git=True, custom_date=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Orquestrador da Suíte de Experimentos xApp RDL")
-    parser.add_argument("--push", action="store_true", default=True, help="Envia automaticamente as alterações para o GitHub")
+    parser.add_argument("--push", "--push-git", dest="push", action="store_true", default=True, help="Envia automaticamente as alterações para o GitHub")
     parser.add_argument("--no-push", dest="push", action="store_false", help="Não faz push automático para o GitHub")
     parser.add_argument("--date", default=None, help="Força uma data YYYY-MM-DD específica")
     args = parser.parse_args()

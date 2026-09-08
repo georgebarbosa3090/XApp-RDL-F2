@@ -75,5 +75,5 @@ else
     PYTHON_CMD="python3"
 fi
 
-$PYTHON_CMD "$PROJECT_DIR/scripts/run_experiment_suite.py" --push-git
+$PYTHON_CMD "$PROJECT_DIR/scripts/run_experiment_suite.py" --push
 
