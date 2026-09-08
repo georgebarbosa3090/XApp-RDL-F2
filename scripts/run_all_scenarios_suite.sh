@@ -60,6 +60,20 @@ for ENTRY in "${SCENARIOS[@]}"; do
 done
 
 echo "=============================================================================="
-echo " [*] Suíte de Simulação 5G/5GA/6G Concluída!"
+echo " [*] Suíte de Simulação 5G/5GA/6G Concluída com Sucesso!"
 echo " [*] Logs e métricas salvos em: $PROJECT_DIR/data/results_suite/"
 echo "=============================================================================="
+
+# Atualização de relatórios analíticos, gráficos e push automático para o GitHub
+echo ""
+echo "[+] Consolidando relatórios analíticos e sincronizando com o GitHub..."
+if [ -f "$PROJECT_DIR/.venv/bin/python" ]; then
+    PYTHON_CMD="$PROJECT_DIR/.venv/bin/python"
+elif [ -f "$PROJECT_DIR/.venv/Scripts/python.exe" ]; then
+    PYTHON_CMD="$PROJECT_DIR/.venv/Scripts/python.exe"
+else
+    PYTHON_CMD="python3"
+fi
+
+$PYTHON_CMD "$PROJECT_DIR/scripts/run_experiment_suite.py" --push-git
+

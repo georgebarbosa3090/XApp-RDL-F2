@@ -133,6 +133,14 @@ if [ -d "$EXP_DIR" ] && [ "$EXP_DIR" != "$BASE_DIR/experiments/results" ]; then
     cp -r "$EXP_DIR"/* "$BASE_DIR/experiments/results/latest/" 2>/dev/null || true
 fi
 
+# Sincronização automática com o GitHub
+echo ""
+echo "[Git] Sincronizando relatórios e datasets atualizados com o GitHub..."
+cd "$BASE_DIR"
+git add experiments/results/ data/ docs/ 2>/dev/null || true
+git commit -m "chore(experiments): auto-update benchmarks, datasets and reports (run-rdl) [skip ci]" 2>/dev/null || true
+git push origin main 2>/dev/null || echo "[AVISO] Git push ignorado ou sem conexão remota."
+
 echo ""
 echo "========================================================================"
 echo "[OK] Experimento com xApp RDL Fase 2 (CA-RDL / MARL) concluido!"
