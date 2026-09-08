@@ -1,5 +1,7 @@
 .PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
+NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
+
 IMAGE_NAME ?= iqos-xapp-rdl
 IMAGE_TAG ?= 2.0.0
 CHART_DIR ?= deploy/helm/iqos-xapp-rdl
