@@ -46,8 +46,13 @@ int main (int argc, char *argv[])
     cmd.AddValue ("ueNum", "Quantidade total de UEs", ueNum);
     cmd.AddValue ("simTime", "Tempo total de simulacao", simTime);
     cmd.AddValue ("sensingRatio", "Fracao de potencia/tempo para sensoriamento", sensingPowerRatio);
+    cmd.AddValue ("ricIp", "Endereco IP do Near-RT RIC", ricIp);
+    cmd.AddValue ("ricPort", "Porta SCTP do E2Term", ricPort);
     cmd.AddValue ("seed", "Semente aleatoria", randomSeed);
     cmd.Parse (argc, argv);
+
+    (void)ricIp;
+    (void)ricPort;
 
     SeedManager::SetSeed (randomSeed);
     SeedManager::SetRun (1);
@@ -157,7 +162,7 @@ int main (int argc, char *argv[])
 
     NS_LOG_INFO ("=== Resultados do Cenario 6G ISAC (Sensoriamento vs Comunicacao) ===");
     NS_LOG_INFO ("Throughput de Comunicacao: " << totalCommThp << " Mbps");
-    NS_LOG_INFO ("Atraso Medio de Pacotes: " << (avgDelay / max(1UL, stats.size ())) << " ms");
+    NS_LOG_INFO ("Atraso Medio de Pacotes: " << (avgDelay / std::max((size_t)1, stats.size ())) << " ms");
     NS_LOG_INFO ("Resolucao de Distancia do Radar (Delta R): " << radarResolutionMeters << " metros");
     NS_LOG_INFO ("Probabilidade de Deteccao de Alvo (Pd): " << (detectionProbability * 100.0) << " %");
 

@@ -151,7 +151,7 @@ int main (int argc, char *argv[])
 
     NS_LOG_INFO ("=== Resultados do Cenario 6G Cross-Tier & Anti-Rogue Shield ===");
     NS_LOG_INFO ("Throughput Global: " << totalThroughput << " Mbps");
-    NS_LOG_INFO ("Atraso Medio de Pacotes: " << (avgDelay / max(1UL, stats.size ())) << " ms");
+    NS_LOG_INFO ("Atraso Medio de Pacotes: " << (avgDelay / std::max((size_t)1, stats.size ())) << " ms");
     NS_LOG_INFO ("Oscilacoes de Controle (Parameter Flipping): " << simulatedFlippingCount << " eventos");
     NS_LOG_INFO ("Status do Lockout de 5s: " << (enableAntiFlappingLockout ? "ATIVO (0 oscilacoes)" : "DESATIVADO (alta instabilidade)"));
 
