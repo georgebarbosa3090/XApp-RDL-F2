@@ -96,31 +96,83 @@ make run-scenario2 NS3_DIR=/caminho/do/ns-3-oran
 
 ---
 
-## 3. Detalhamento e Execução dos 2 Cenários de Conflito em Tempo Real
+## 3. Detalhamento dos Cenários de Simulação e Concorrência das 6 xApps
 
-A validação experimental da Fase 2 contempla **dois cenários críticos de contenção de rádio**:
+A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abrange uma matriz de **6 xApps concorrentes** operando sobre **5 cenários de simulação C++ no ns-3/5G-LENA/NORI** cobrindo 5G NR, 5G-Advanced (Rel. 18/19) e 6G AI-Native (IMT-2030):
 
-### 3.1. Cenário 1: Conflito Economia de Energia vs QoS / Slicing (EEVS)
+### 3.0. Matriz das 6 xApps de Referência
+
+| # | xApp de Referência | Diretório no Projeto | Objetivo / Ação Controlada | Tipo de Conflito Mitigado |
+| :-: | :--- | :--- | :--- | :--- |
+| **1** | `ricxapp-qos-xslice` | [`reference-xapps/qos-xslice`](reference-xapps/qos-xslice) | Alocação de fatias (Slices) e garantia estrita de SLA URLLC/eMBB | Concorrência por Quotas de PRB e Prioridade |
+| **2** | `ricxapp-energy-saving` | [`reference-xapps/energy-saving`](reference-xapps/energy-saving) | Redução de potência TX ($P_{\mathrm{tx}}$) e suspensão de portadoras | Degradação de SLA de usuários de borda |
+| **3** | `ricxapp-traffic-steering` | [`reference-xapps/traffic-steering`](reference-xapps/traffic-steering) | Handover forçado por offset A3 e balanceamento de carga | Handover Ping-Pong e instabilidade de célula |
+| **4** | `ricxapp-beamformer` | [`reference-xapps/beamformer`](reference-xapps/beamformer) | Controle de Downtilt elétrico e feixes Massive MIMO UPA ($16 \times 4$) | Interferência Intercelular e perda de cobertura |
+| **5** | `ricxapp-isac-radar` | [`reference-xapps/isac-radar`](reference-xapps/isac-radar) | Alocação de feixes/símbolos de sensoriamento mmWave ($28\text{ GHz}$) | Competição de espectro ISAC vs Fluxos de Dados |
+| **6** | `ricxapp-rogue-xapp` | [`reference-xapps/rogue-xapp`](reference-xapps/rogue-xapp) | Injeção de políticas conflitantes e anomalias de alta frequência ($5\text{ Hz}$) | Conflitos não-cooperativos e *Parameter Flipping* |
+
+---
+
+### 3.1. Cenário 1: Conflito Economia de Energia vs QoS / Slicing (EEVS — 5G NR)
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_energy_vs_qos.cc`](simulations/ns3/scenario_rdl_energy_vs_qos.cc)
-* **Dinâmica:** A xApp `ricxapp-energy-saving` propõe redução de potência de transmissão (`TX_POWER`) e throttling de PRB para reduzir consumo elétrico, colidindo frontalmente com a xApp `ricxapp-qos-xslice`, que exige garantia de SLA com baixa latência para fatias URLLC e alto throughput para eMBB.
-* **Topologia:** 1 Macro gNB (Banda Alta) + 1 Micro gNB (Small Cell), 20 UEs com carga dinâmica.
-* **Comando para Execução:**
+* **xApps Envolvidas:** `ricxapp-energy-saving` vs `ricxapp-qos-xslice`
+* **Dinâmica:** A xApp `energy-saving` propõe redução de potência de transmissão (`TX_POWER`) e throttling de PRB para reduzir consumo elétrico, colidindo com a `qos-xslice`, que exige garantia de SLA com baixa latência para URLLC.
+* **Topologia:** 1 Macro gNB ($3.5\text{ GHz}$, $50\text{ MHz}$) + 1 Micro gNB (Small Cell), 20 UEs com carga dinâmica.
+* **Comandos:**
   ```bash
-  make run-scenario1
-  # Modo Baseline (sem RDL): make run-scenario1-baseline
+  make run-scenario1          # Modo RDL com interface E2 ativa
+  make run-scenario1-baseline # Modo Baseline (sem RDL)
   ```
 
 ---
 
-### 3.2. Cenário 2: Conflito Traffic Steering vs QoS / Handover Ping-Pong (TVS)
+### 3.2. Cenário 2: Conflito Traffic Steering vs QoS / Handover Ping-Pong (TVS — 5G NR)
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](simulations/ns3/scenario_rdl_tvs_conflict.cc)
-* **Dinâmica:** A xApp `ricxapp-traffic-steering` tenta balancear carga forçando handovers de UEs entre as duas células, gerando risco de instabilidade, handover ping-pong e degradação severa da fatia URLLC gerida pela xApp `ricxapp-qos-xslice`.
+* **xApps Envolvidas:** `ricxapp-traffic-steering` vs `ricxapp-qos-xslice`
+* **Dinâmica:** A xApp `traffic-steering` tenta balancear carga forçando handovers de UEs entre duas células, gerando risco de instabilidade, handover ping-pong e degradação da fatia URLLC.
 * **Topologia:** 2 gNodeBs separadas por 80 metros, 30 UEs divididos em 3 fatias de rede (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
-* **Comando para Execução:**
+* **Comandos:**
   ```bash
-  make run-scenario2
-  # Modo Baseline (sem RDL): make run-scenario2-baseline
+  make run-scenario2          # Modo RDL com interface E2 ativa
+  make run-scenario2-baseline # Modo Baseline (sem RDL)
   ```
+
+---
+
+### 3.3. Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO UPA (16x4)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc`](simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc)
+* **xApps Envolvidas:** `ricxapp-beamformer`, `ricxapp-traffic-steering` e `ricxapp-qos-xslice`
+* **Dinâmica:** Otimização coordenada de *vertical downtilt* ($6^\circ-8^\circ$), agregação de portadoras FR1 ($3.5\text{ GHz}$) + FR3 ($10.5\text{ GHz}$) e quotas de fatiamento sob mobilidade heterogênea (estáticos, pedestres e veiculares).
+* **Topologia:** 3 gNodeBs em corredor urbano UMi ($1000\text{ m} \times 400\text{ m}$), 60 UEs, antenas UPA $16 \times 4$.
+
+---
+
+### 3.4. Cenário 4: Coexistência 6G ISAC (Radar Sensing vs Comunicação mmWave 28 GHz)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc`](simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc)
+* **xApps Envolvidas:** `ricxapp-isac-radar` vs `ricxapp-qos-xslice`
+* **Dinâmica:** Competição direta por símbolos OFDM e feixes direcionais entre sensoriamento radar ($\Delta R = \frac{c}{2B}$) e tráfego de dados de ultra-alta capacidade.
+* **Topologia:** 2 gNodeBs ISAC Dual-Function operando a $28\text{ GHz}$ ($400\text{ MHz}$ de banda), 30 UEs e alvos móveis.
+
+---
+
+### 3.5. Cenário 5: Governança Cross-Tier 6G & Escudo Anti-Rogue xApp
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
+* **xApps Envolvidas:** `ricxapp-rogue-xapp` vs todas as xApps legítimas (`qos-xslice`, `energy-saving`, etc.)
+* **Dinâmica:** Injeção contínua de ações conflitantes e maliciosas de alta frequência ($5\text{ Hz}$); contenção via *Lockout Cooling Window* de 5 segundos e *Safety Guards*.
+* **Topologia:** Grade $2 \times 2$ com 4 gNodeBs e 40 UEs.
+
+---
+
+### 3.6. Execução Automatizada da Suíte Completa de Todos os Cenários
+Para executar a suíte completa de todos os 5 cenários com múltiplas sementes aleatórias ($N=30$):
+```bash
+make run-all-scenarios
+# Ou diretamente: bash scripts/run_all_scenarios_suite.sh
+```
+
+> [!NOTE]
+> Para especificações aprofundadas de modelagem matemática, equações de recompensa MARL e formulação teórica de cada cenário, consulte o [Volume 11: Especificação de Cenários 5G/5GA/6G](docs/11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md).
+
 
 ---
 
