@@ -1,7 +1,7 @@
 # Relatório de Avaliação Estatística Rigorosa Multi-Semente (N = 30)
 
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (H-RDL Reforçada)  
-**Checksum do Dataset (SHA-256):** `f0378f6cc0b0347b368c305aef6305055e22776f3d5788c5449f9d18d75b7f15`  
+**Checksum do Dataset (SHA-256):** `dc6a59598585cb84e173bc51941ed2c52e0eb71334cc60c6dc56b5a9ed607fe9`  
 **Ambiente:** ns-3 5G-LENA 3.5 GHz (n78) + Near-RT RIC  
 
 ## Tabela de Médias, Desvios Padrão, Intervalos de Confiança (IC 95%) e Significância

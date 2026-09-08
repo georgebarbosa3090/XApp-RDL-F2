@@ -3,7 +3,7 @@
     "protocol": "N = 30 Sementes Pseudoaleat\u00f3rias Independentes (Seeds 1001 a 1030)",
     "compiler_target": "5G-LENA Release-16 NR + ns-O-RAN (NORI)",
     "radio_channel": "Banda n78 (3.5 GHz), 100 MHz BWP, Numerologia mu=1",
-    "dataset_sha256": "f0378f6cc0b0347b368c305aef6305055e22776f3d5788c5449f9d18d75b7f15",
+    "dataset_sha256": "dc6a59598585cb84e173bc51941ed2c52e0eb71334cc60c6dc56b5a9ed607fe9",
     "sample_size": 30,
     "confidence_level": "95% (t-Student distribution)"
 }

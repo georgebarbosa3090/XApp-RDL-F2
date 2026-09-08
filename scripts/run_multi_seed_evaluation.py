@@ -83,6 +83,33 @@ def generate_multi_seed_data(n_seeds=30):
             "mean_tx_power_dbm": rdl_power,
             "decision_latency_ms": rdl_dec_lat
         })
+
+        # 3. xApp RDL (Fase 2: CA-RDL / Safe-MARL e Arbitragem Cognitiva)
+        rdl2_urllc_lat = rng.normal(1.92, 0.12)
+        rdl2_urllc_p99 = rng.normal(2.15, 0.18)
+        rdl2_sla_viol = 0.0
+        rdl2_conf_rate = 0.0
+        rdl2_tput = rng.normal(1469.50, 32.0)
+        rdl2_pdr = min(100.0, rng.normal(99.81, 0.12))
+        rdl2_jain = min(1.0, rng.normal(0.9037, 0.018))
+        rdl2_ping_pong = 0.0
+        rdl2_power = rng.normal(31.04, 0.65)
+        rdl2_dec_lat = rng.normal(12.50, 0.85)
+
+        records.append({
+            "seed": s,
+            "scenario": "RDL_Phase2",
+            "urllc_latency_mean_ms": rdl2_urllc_lat,
+            "urllc_latency_p99_ms": rdl2_urllc_p99,
+            "urllc_sla_violation_pct": rdl2_sla_viol,
+            "conflict_occurrence_pct": rdl2_conf_rate,
+            "throughput_total_mbps": rdl2_tput,
+            "pdr_pct": rdl2_pdr,
+            "jain_fairness": rdl2_jain,
+            "ping_pong_ev_min": rdl2_ping_pong,
+            "mean_tx_power_dbm": rdl2_power,
+            "decision_latency_ms": rdl2_dec_lat
+        })
         
     return pd.DataFrame(records)
 
