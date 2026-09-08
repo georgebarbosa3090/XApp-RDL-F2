@@ -296,7 +296,7 @@ onde os pesos de ponderação são modulados dinamicamente através da interface
 
 O operador de projeção determinística do **Refinement Agent** assegura que nenhuma ação executada ($a_{\mathrm{exec}}$) viole as leis físicas de propagação e limites de hardware:
 
-$$a_{\mathrm{exec}} = \mathrm{SafeGuard}(a_t^*) = \begin{cases} a_t^*, & \text{se todas as restrições físicas forem atendidas} \\ a_{\mathrm{fallback}}, & \text{caso contrário (Veto Determinístico)} \end{cases}$$
+$$a_{\mathrm{exec}} = \mathrm{SafeGuard}(a_t^*) = \begin{cases} a_t^*, & \text{se seguro (todas restrições válidas)} \\ a_{\mathrm{fallback}}, & \text{caso contrário (Veto Determinístico)} \end{cases}$$
 
 As condições estritas avaliadas são:
 
