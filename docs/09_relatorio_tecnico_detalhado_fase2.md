@@ -147,8 +147,8 @@ Avalia todas as combinações de subconjuntos possíveis ($2^N$ combinações) d
 
 | Política de SLA | Fórmula de Pontuação | Objetivo Primário |
 | :--- | :--- | :--- |
-| **TVS** (*Throughput Violation-based Selection*) | $$s_j^{\text{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$ | Prioriza a eliminação estrita de violações de SLA de vazão ($C_u$) e latência. |
-| **EEVS** (*Energy Efficiency Violation-based Selection*) | $$s_j^{\text{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\text{total}}}}$$ | Penaliza potências excessivas ($E_u$) que degradam a eficiência energética ($\text{Throughput}/\text{Watt}$). |
+| **TVS** (*Throughput Violation-based Selection*) | $$s_j^{\mathrm{TVS}}(t) = - \sum_{u \in \mathcal{U}} C_u(t) - \frac{1}{1 + e^{-P_{\mathrm{total}}}}$$ | Prioriza a eliminação estrita de violações de SLA de vazão ($C_u$) e latência. |
+| **EEVS** (*Energy Efficiency Violation-based Selection*) | $$s_j^{\mathrm{EEVS}}(t) = - \sum_{u \in \mathcal{U}} E_u(t) - \frac{1}{1 + e^{-P_{\mathrm{total}}}}$$ | Penaliza potências excessivas ($E_u$) que degradam a eficiência energética ($\mathrm{Throughput}/\mathrm{Watt}$). |
 
 ---
 
@@ -202,31 +202,31 @@ No módulo [`mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravit
 
 O coordenador [`MAPPOCoordinator`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py) calcula a recompensa multi-objetivo $R_t$ a cada transição de estado da rede:
 
-$$R_t = w_{\text{qos}} \cdot f_{\text{qos}}(t) + w_{\text{ee}} \cdot f_{\text{ee}}(t) - w_{\text{pen}} \cdot \text{Pen}(t)$$
+$$R_t = w_{\mathrm{qos}} \cdot f_{\mathrm{qos}}(t) + w_{\mathrm{ee}} \cdot f_{\mathrm{ee}}(t) - w_{\mathrm{pen}} \cdot \mathrm{Pen}(t)$$
 
 **Pesos Padrão de Ponderação:**
-* $w_{\text{qos}} = 0.60$ (Prioridade para Qualidade de Serviço e SLA)
-* $w_{\text{ee}} = 0.30$ (Prioridade para Eficiência Energética)
-* $w_{\text{pen}} = 0.10$ (Penalidade para Conflitos / Contenção não mitigada)
+* $w_{\mathrm{qos}} = 0.60$ (Prioridade para Qualidade de Serviço e SLA)
+* $w_{\mathrm{ee}} = 0.30$ (Prioridade para Eficiência Energética)
+* $w_{\mathrm{pen}} = 0.10$ (Penalidade para Conflitos / Contenção não mitigada)
 
 #### Componentes Detalhados da Função de Recompensa:
 
 | Componente | Símbolo | Condição / Regra de Cálculo | Valor Retornado |
 | :--- | :--- | :--- | :--- |
-| **Qualidade de Serviço (QoS)** | $f_{\text{qos}}(t)$ | Se `Delay_URLLC < 15.0 ms` | `(Priority(a_t) / 10.0) + 0.5` |
+| **Qualidade de Serviço (QoS)** | $f_{\mathrm{qos}}(t)$ | Se `Delay_URLLC < 15.0 ms` | `(Priority(a_t) / 10.0) + 0.5` |
 | | | Se `Delay_URLLC >= 15.0 ms` | `(Priority(a_t) / 10.0) - 0.5` |
-| **Eficiência Energética (EE)** | $f_{\text{ee}}(t)$ | Modulação de potência / economia de energia (`power` ou `es`) | `1.0` |
+| **Eficiência Energética (EE)** | $f_{\mathrm{ee}}(t)$ | Modulação de potência / economia de energia (`power` ou `es`) | `1.0` |
 | | | Caso neutro / sem alteração de potência | `0.5` |
-| **Penalidade de Conflito** | $\text{Pen}(t)$ | Conflito plenamente resolvido e harmonizado | `0.0` (Sem penalidade) |
+| **Penalidade de Conflito** | $\mathrm{Pen}(t)$ | Conflito plenamente resolvido e harmonizado | `0.0` (Sem penalidade) |
 | | | Conflito não resolvido / contenção de recursos | `1.0` (Penalidade máxima) |
 
 ### 6.2. Função de Perda dos Atores com PPO-Clip
 
 Para garantir estabilidade no treinamento e evitar atualizações de política destrutivas no plano de controle:
 
-$$L^{\text{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
+$$L^{\mathrm{CLIP}}(\theta) = \hat{\mathbb{E}}_t \left[ \min\left( r_t(\theta)\hat{A}_t, \, \operatorname{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t \right) \right]$$
 
-* **Razão de probabilidade:** $r_t(\theta) = \frac{\pi_\theta(a_t | s_t)}{\pi_{\theta,\text{old}}(a_t | s_t)}$
+* **Razão de probabilidade:** $r_t(\theta) = \frac{\pi_\theta(a_t \mid s_t)}{\pi_{\theta,\mathrm{old}}(a_t \mid s_t)}$
 * **Parâmetro de corte:** $\epsilon = 0.20$
 * **Vantagem $\hat{A}_t$:** Calculada via Generalized Advantage Estimation (GAE) com $\gamma = 0.99$ e $\lambda = 0.95$.
 
