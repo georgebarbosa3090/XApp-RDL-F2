@@ -140,8 +140,9 @@ A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (C
 
 | Artefato Gerado | Caminho no Repositório | Descrição |
 | :--- | :--- | :--- |
-| **Dataset Multi-Semente ($N=30$)** | [`experiments/results/data/dataset_multi_seed_metrics.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/dataset_multi_seed_metrics.csv) | 60 registros tabulados (30 Baseline + 30 RDL) |
-| **Dataset de Decisões ML** | [`experiments/results/data/dataset_rdl_decisions_ml.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/dataset_rdl_decisions_ml.csv) | 450 amostras com 24 features de classificação |
+| **Dataset Multi-Semente ($N=30$)** | [`experiments/results/data/dataset_multi_seed_metrics.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/data/dataset_multi_seed_metrics.csv) | 90 registros tabulados (30 Baseline + 30 RDL1 + 30 RDL2) |
+| **Dataset de Decisões ML** | [`experiments/results/data/dataset_rdl_decisions_ml.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/data/dataset_rdl_decisions_ml.csv) | 450 amostras com 24 features de classificação |
+| **Repositório de Dados Brutos (Google Drive)** | [Google Drive (Raw Traces / XML / PCAP)](https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x) | Traces completos por semente e pacotes compactados |
 | **Manifesto Criptográfico** | [`experiments/results/reports/manifest_experiment.json`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/manifest_experiment.json) | Hash SHA-256 e proveniência dos dados |
 | **Relatório Estatístico Formal** | [`experiments/results/reports/relatorio_estatistico_multi_semente.md`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/relatorio_estatistico_multi_semente.md) | Testes $t$-Student, ANOVA e Mann-Whitney U |
 | **Relatório Comparativo Detalhado** | [`experiments/results/reports/relatorio_comparativo_detalhado.md`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/relatorio_comparativo_detalhado.md) | Métricas detalhadas de classificação ML e QoS |

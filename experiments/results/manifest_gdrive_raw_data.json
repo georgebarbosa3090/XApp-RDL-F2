@@ -1,0 +1,29 @@
+{
+  "experiment_name": "xApp-RDL-Phase2-MultiSeed-Campaign",
+  "timestamp_utc": "2026-09-08T14:05:24.792515Z",
+  "gdrive_folder_id": "1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x",
+  "gdrive_folder_url": "https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x",
+  "packages": [
+    {
+      "scenario": "baseline",
+      "filename": "raw_traces_baseline_seeds_1001_1030.zip",
+      "filepath": "C:\\Users\\george.barbosa\\.gemini\\antigravity\\scratch\\iqos-xapp-rdl-phase2\\experiments\\results\\raw\\raw_traces_baseline_seeds_1001_1030.zip",
+      "size_mb": 0.01,
+      "sha256": "f3529f458b5f07903de8322bac2e63188401c3093e41b2616711db3b9c7bba07"
+    },
+    {
+      "scenario": "rdl_phase1",
+      "filename": "raw_traces_rdl_phase1_seeds_1001_1030.zip",
+      "filepath": "C:\\Users\\george.barbosa\\.gemini\\antigravity\\scratch\\iqos-xapp-rdl-phase2\\experiments\\results\\raw\\raw_traces_rdl_phase1_seeds_1001_1030.zip",
+      "size_mb": 0.01,
+      "sha256": "7e2ae0e19eadcfc04ad563dd97f05e5601bb94365a210b84fa07b8c0949646bf"
+    },
+    {
+      "scenario": "rdl_phase2",
+      "filename": "raw_traces_rdl_phase2_seeds_1001_1030.zip",
+      "filepath": "C:\\Users\\george.barbosa\\.gemini\\antigravity\\scratch\\iqos-xapp-rdl-phase2\\experiments\\results\\raw\\raw_traces_rdl_phase2_seeds_1001_1030.zip",
+      "size_mb": 0.01,
+      "sha256": "b243239f75cb3af96b4ac35abafc28defd9d18299a0e3a623895199b4a5cb3b2"
+    }
+  ]
+}

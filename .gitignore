@@ -29,13 +29,19 @@ wheels/
 .snapshots/
 backups/
 
-# Scripts de automacao local, backup, snapshot, gerador de figuras, sincronizacao e rollback (PROIBIDOS NO REMOTO)
-scripts/*snapshot*
-scripts/*diagram*
-scripts/*figure*
-scripts/*sync*
-scripts/*rollback*
+# Large raw simulation traces and PCAP dumps (armazenados no Google Drive)
+experiments/results/raw/**/*.xml
+experiments/results/raw/**/*.pcap
+experiments/results/raw/**/*.tr
+experiments/results/raw/**/*.zip
+experiments/results/raw/**/*.tar.gz
+*.xml
+*.pcap
+*.tr
 
-# Documentos locais experimentais (PROIBIDOS NO REMOTO)
-docs/12_rdl_autonoma_e_federada_6g.md
+# Preservar arquivos de dados processados e relatorios
+!experiments/results/data/*.csv
+!experiments/results/manifest_experiment.json
+!experiments/results/reports/*.md
+!experiments/results/reports/*.json
 

@@ -140,9 +140,19 @@ Para assegurar auditabilidade, integridade e reprodutibilidade científica irref
 
 ---
 
-## 5. Como Regenerar e Avaliar os Resultados
+## 5. Repositório de Dados Brutos de Co-Simulação (Google Drive)
 
-Para reprocessar os datasets, treinar os modelos de Machine Learning (Ensemble RF+ET+GB+HGB) e gerar todos os gráficos e relatórios atualizados:
+Devido ao elevado volume de dados gerado pelos rastreamentos XML do `FlowMonitor` do ns-3 e traces PCAP/SCTP por semente ($N = 30$ rodadas por cenário), os **dados brutos não são versionados no Git para preservar a leveza do repositório**, estando hospedados no Google Drive oficial:
+
+* 🔗 **Google Drive Oficial (Resultados Brutos / Raw Traces):** [https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x](https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x)
+* **Manifesto de Integridade:** [`manifest_gdrive_raw_data.json`](manifest_gdrive_raw_data.json)
+* **Datasets Processados:** Versionados diretamente no GitHub em [`experiments/results/data/`](data/) (`.csv`).
+
+---
+
+## 6. Como Regenerar, Avaliar e Sincronizar os Resultados
+
+Para reprocessar os datasets, treinar os modelos de Machine Learning (Ensemble RF+ET+GB+HGB), gerar gráficos e empacotar dados brutos:
 
 ```bash
 # 1. Executar pipeline de avaliação e treinamento de ML
@@ -150,4 +160,8 @@ python scripts/evaluate_and_improve_algorithms.py --input-dir experiments/result
 
 # 2. Executar suíte de testes unitários automatizados
 pytest tests/ -v
+
+# 3. Empacotar traces brutos e gerar manifesto para o Google Drive
+python scripts/package_and_sync_raw_results.py
 ```
+
