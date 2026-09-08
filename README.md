@@ -133,7 +133,7 @@ Antes de qualquer despacho via E2SM-RC, o `RefinementAgent` valida as restriçõ
 make test
 
 # 2. Fazer o deploy isolado da RDL Fase 2 no Kubernetes/k3d
-make helm-deploy-f2
+make helm-deploy-f2-f2
 
 # 3. Acompanhar streaming contínuo de logs em tempo real
 make logs-f2

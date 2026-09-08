@@ -1,4 +1,4 @@
-.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f1 helm-uninstall-f2 uninstall-all-rdl helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-scenario1 run-scenario2 run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate setup-ns3 run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
 
 IMAGE_NAME ?= iqos-xapp-rdl
 IMAGE_TAG ?= 2.0.0
@@ -7,7 +7,6 @@ NAMESPACE_RIC ?= ricplt
 NAMESPACE ?= ricxapp
 RELEASE_NAME_F2 ?= ricxapp-iqos-xapp-rdl-f2
 CLUSTER_NAME ?= rancher-lab
-NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
 # -------------------------------------------------------------
 # Build e Testes Locais da xApp RDL Fase 2
@@ -21,10 +20,10 @@ build-no-cache:
 test:
 	PYTHONPATH=. pytest tests/ -v
 
-helm-deploy: helm-deploy-f2
-
-helm-uninstall: helm-uninstall-f2
-
+# -------------------------------------------------------------
+# Deploy Helm Exclusivo para RDL Fase 2 (CA-RDL / MARL)
+# Premissa: Near-RT RIC e as 3 Reference xApps ja estao rodando!
+# -------------------------------------------------------------
 helm-deploy-f2:
 	@echo "Implantando/Atualizando exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
 	bash scripts/deploy_rdl_phase2.sh
@@ -41,27 +40,16 @@ helm-upgrade-f2:
 	  --set env.rmrWaitForReady="false" \
 	  --set env.enableTorch="true"
 
-helm-uninstall-f1:
-	@echo "Removendo a xApp RDL Fase 1 (ricxapp-iqos-xapp-rdl)..."
-	helm uninstall ricxapp-iqos-xapp-rdl -n $(NAMESPACE) || echo "Release ricxapp-iqos-xapp-rdl nao encontrada."
-
 helm-uninstall-f2:
 	@echo "Removendo exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
 	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) || echo "Release $(RELEASE_NAME_F2) nao encontrada."
 
-uninstall-all-rdl:
-	@echo "Removendo todas as versoes da xApp RDL (Fase 1 e Fase 2)..."
-	helm uninstall ricxapp-iqos-xapp-rdl -n $(NAMESPACE) 2>/dev/null || true
-	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) 2>/dev/null || true
-
 status-f2:
 	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="
 	@kubectl get pods -n $(NAMESPACE) -o wide
-	@echo "\n=== Pod da xApp RDL Fase 2 ==="
+	@echo "
+=== Pod da xApp RDL Fase 2 ==="
 	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide
-
-watch-pods-f2:
-	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -w
 
 logs-f2:
 	kubectl logs -l app=$(RELEASE_NAME_F2) -n $(NAMESPACE) -f
@@ -69,7 +57,8 @@ logs-f2:
 test-f2:
 	@echo "Testando endpoints da xApp RDL Fase 2 (CA-RDL / MARL)..."
 	@curl -i http://localhost:8080/health || true
-	@echo "\nMétricas Prometheus:"
+	@echo "
+Métricas Prometheus:"
 	@curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_" || true
 
 test-3xapps:
@@ -77,7 +66,7 @@ test-3xapps:
 	bash scripts/verify_3_xapps.sh
 
 # -------------------------------------------------------------
-# Gestao do Cluster k3d (se necessario)
+# Gestão do Cluster k3d (se necessário)
 # -------------------------------------------------------------
 cluster-create:
 	@echo "Criando cluster k3d $(CLUSTER_NAME)..."
@@ -93,56 +82,6 @@ cluster-delete:
 # -------------------------------------------------------------
 setup-ns3:
 	bash scripts/setup_ns3.sh
-
-run-scenario1:
-	@echo "Executando Cenário 1: Energy Saving vs QoS (EEVS) com logs em tempo real..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-
-run-scenario1-baseline:
-	@echo "Executando Baseline Cenário 1: Energy Saving vs QoS (EEVS) [enableE2=false]..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30"
-
-run-scenario2:
-	@echo "Executando Cenário 2: Traffic Steering vs QoS (TVS) com logs em tempo real..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-
-run-scenario2-baseline:
-	@echo "Executando Baseline Cenário 2: Traffic Steering vs QoS (TVS) [enableE2=false]..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
-
-run-scenario3:
-	@echo "Executando Cenário 3 (5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO)..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --simTime=40"
-
-run-scenario4:
-	@echo "Executando Cenário 4 (6G ISAC Radar Sensing vs Comunicação 28 GHz)..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --sensingRatio=0.35 --simTime=30"
-
-run-scenario5:
-	@echo "Executando Cenário 5 (6G Governança Cross-Tier & Anti-Rogue Shield)..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc $(NS3_DIR)/scratch/
-	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --lockout=true --simTime=35"
-
-run-all-scenarios:
-	@echo "Executando suíte completa de todos os 5 cenários (5G, 5GA, 6G)..."
-	bash scripts/run_all_scenarios_suite.sh
-
-helm-deploy-reference-xapps:
-	@echo "Implantando todas as 6 Reference xApps no namespace $(NAMESPACE)..."
-	bash scripts/deploy_reference_xapps.sh
 
 run-baseline:
 	bash scripts/run_baseline_experiment.sh
@@ -160,6 +99,16 @@ analyze-benchmarks:
 	python3 scripts/run_experiment_suite.py
 
 view-results:
-	@cat experiments/results/relatorio_comparativo.md 2>/dev/null || echo "Execute a suite primeiro."
+	@cat experiments/results/relatorio_comparativo.md
 
+push-results:
+	@echo "Sincronizando resultados com o GitHub..."
+	git add experiments/results/ docs/ scripts/
+	git commit -m "chore(experiments): upload latest ns-3 MARL benchmark results [skip ci]" || echo "Nenhum dado novo."
+	git push origin main || echo "Aviso no push."
 
+sync:
+	@bash scripts/git_sync.sh "$(MSG)"
+
+auto-sync:
+	@bash scripts/git_auto_sync.sh $(INTERVAL)
