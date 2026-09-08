@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<FlowMonitor scenario="rdl_phase2" seed="1018" timestamp="2026-09-08T14:05:24.759487Z">
+  <FlowStats>
+    <Flow flowId="1" slice="URLLC" txPackets="1000" />
+    <Flow flowId="2" slice="eMBB" txPackets="1000" />
+    <Flow flowId="3" slice="mMTC" txPackets="1000" />
+    <Flow flowId="4" slice="URLLC" txPackets="1000" />
+    <Flow flowId="5" slice="eMBB" txPackets="1000" />
+    <Flow flowId="6" slice="mMTC" txPackets="1000" />
+    <Flow flowId="7" slice="URLLC" txPackets="1000" />
+    <Flow flowId="8" slice="eMBB" txPackets="1000" />
+    <Flow flowId="9" slice="mMTC" txPackets="1000" />
+    <Flow flowId="10" slice="URLLC" txPackets="1000" />
+    <Flow flowId="11" slice="eMBB" txPackets="1000" />
+    <Flow flowId="12" slice="mMTC" txPackets="1000" />
+    <Flow flowId="13" slice="URLLC" txPackets="1000" />
+    <Flow flowId="14" slice="eMBB" txPackets="1000" />
+    <Flow flowId="15" slice="mMTC" txPackets="1000" />
+    <Flow flowId="16" slice="URLLC" txPackets="1000" />
+    <Flow flowId="17" slice="eMBB" txPackets="1000" />
+    <Flow flowId="18" slice="mMTC" txPackets="1000" />
+    <Flow flowId="19" slice="URLLC" txPackets="1000" />
+    <Flow flowId="20" slice="eMBB" txPackets="1000" />
+    <Flow flowId="21" slice="mMTC" txPackets="1000" />
+    <Flow flowId="22" slice="URLLC" txPackets="1000" />
+    <Flow flowId="23" slice="eMBB" txPackets="1000" />
+    <Flow flowId="24" slice="mMTC" txPackets="1000" />
+    <Flow flowId="25" slice="URLLC" txPackets="1000" />
+    <Flow flowId="26" slice="eMBB" txPackets="1000" />
+    <Flow flowId="27" slice="mMTC" txPackets="1000" />
+    <Flow flowId="28" slice="URLLC" txPackets="1000" />
+    <Flow flowId="29" slice="eMBB" txPackets="1000" />
+    <Flow flowId="30" slice="mMTC" txPackets="1000" />
+  </FlowStats>
+</FlowMonitor>

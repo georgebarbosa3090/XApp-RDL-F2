@@ -29,19 +29,14 @@ wheels/
 .snapshots/
 backups/
 
-# Large raw simulation traces and PCAP dumps (armazenados no Google Drive)
-experiments/results/raw/**/*.xml
-experiments/results/raw/**/*.pcap
-experiments/results/raw/**/*.tr
-experiments/results/raw/**/*.zip
-experiments/results/raw/**/*.tar.gz
-*.xml
-*.pcap
-*.tr
+# Dados Brutos e Traces Experimentais (Autorizados para versionamento no GitHub)
+!experiments/results/raw/
+!experiments/results/raw/**
 
 # Preservar arquivos de dados processados e relatorios
 !experiments/results/data/*.csv
 !experiments/results/manifest_experiment.json
 !experiments/results/reports/*.md
 !experiments/results/reports/*.json
+
 
