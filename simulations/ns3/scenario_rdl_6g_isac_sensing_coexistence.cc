@@ -111,9 +111,7 @@ int main (int argc, char *argv[])
     internet.Install (ueNodes);
     Ipv4InterfaceContainer ueIpIface = nrEpcHelper->AssignUeIpv4Address (NetDeviceContainer (ueDevs));
 
-    for (uint32_t i = 0; i < ueDevs.GetN (); ++i) {
-        nrHelper->AttachToClosestGnb (ueDevs.Get (i), gNbDevs);
-    }
+    nrHelper->AttachToClosestGnb (ueDevs, gNbDevs);
 
     // Trafego de Dados Ultrarrapido
     uint16_t port = 2345;

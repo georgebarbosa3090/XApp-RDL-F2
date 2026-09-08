@@ -136,16 +136,18 @@ int main (int argc, char *argv[])
     nrHelper->SetBeamformingHelper (idealBeamformingHelper);
     nrHelper->SetEpcHelper (nrEpcHelper);
 
-    // Bandwidth Part FR1 (3.5 GHz, 100 MHz)
+    // Bandwidth Parts: Multi-Carrier FR1 (3.5 GHz, 100 MHz) e FR3 (10.5 GHz, 200 MHz)
     CcBwpCreator ccBwpCreator;
     CcBwpCreator::SimpleOperationBandConf bandConfFr1 (centralFreqFr1, bandwidthFr1, 1);
+    CcBwpCreator::SimpleOperationBandConf bandConfFr3 (centralFreqFr3, bandwidthFr3, 1);
     OperationBandInfo bandFr1 = ccBwpCreator.CreateOperationBandContiguousCc (bandConfFr1);
+    OperationBandInfo bandFr3 = ccBwpCreator.CreateOperationBandContiguousCc (bandConfFr3);
 
     Config::SetDefault ("ns3::ThreeGppChannelModel::UpdatePeriod", TimeValue (MilliSeconds (100)));
     Config::SetDefault ("ns3::ThreeGppPropagationLossModel::ShadowingEnabled", BooleanValue (true));
     nrHelper->SetSchedulerAttribute ("FixedMcsDl", BooleanValue (false));
 
-    BandwidthPartInfoPtrVector allBwps = CcBwpCreator::GetAllBwps ({bandFr1});
+    BandwidthPartInfoPtrVector allBwps = CcBwpCreator::GetAllBwps ({bandFr1, bandFr3});
 
     // 4. Antenas UPA e Beamforming
     nrHelper->SetGnbAntennaAttribute ("NumRows", UintegerValue (4));
@@ -164,9 +166,7 @@ int main (int argc, char *argv[])
     internet.Install (ueNodes);
     Ipv4InterfaceContainer ueIpIface = nrEpcHelper->AssignUeIpv4Address (NetDeviceContainer (ueDevs));
 
-    for (uint32_t i = 0; i < ueDevs.GetN (); ++i) {
-        nrHelper->AttachToClosestGnb (ueDevs.Get (i), gNbDevs);
-    }
+    nrHelper->AttachToClosestGnb (ueDevs, gNbDevs);
 
     // 6. Aplicacoes e Fatiamento de Trafego (URLLC, eMBB, mMTC)
     uint16_t port = 1234;
