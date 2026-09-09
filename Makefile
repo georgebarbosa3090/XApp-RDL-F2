@@ -23,10 +23,15 @@ test:
 	PYTHONPATH=. pytest tests/ -v
 
 # -------------------------------------------------------------
-# Deploy Helm Exclusivo para RDL Fase 2 (CA-RDL / MARL)
-# Premissa: Near-RT RIC e as 3 Reference xApps ja estao rodando!
+# Deploy Helm Exclusivo ou Coexistência Completa (H-RDL + CA-RDL + 6 xApps)
 # -------------------------------------------------------------
 helm-deploy: helm-deploy-f2
+
+deploy-full-coexistence: deploy-dual-rdl-6xapps
+
+deploy-dual-rdl-6xapps:
+	@echo "Implantando ecossistema de coexistência completa (H-RDL F1 + CA-RDL F2 + 6 Reference xApps)..."
+	bash scripts/deploy_dual_rdl_6xapps.sh
 
 helm-deploy-f2:
 	@echo "Implantando/Atualizando exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."

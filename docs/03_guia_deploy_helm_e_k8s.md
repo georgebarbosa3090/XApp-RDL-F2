@@ -10,23 +10,30 @@
 
 ## 1. Visão Geral e Matriz de Cenários de Deploy
 
-O ciclo de vida da **xApp RDL Fase 2 (CA-RDL / MARL)** suporta dois modos de implantação no cluster Kubernetes (k3d / K8s puro):
+O ciclo de vida da **xApp RDL Fase 2 (CA-RDL / MARL)** suporta três modos de implantação no cluster Kubernetes (k3d / K8s puro):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                              MATRIZ DE DEPLOY DA FASE 2                                │
 ├───────────────────────────────────┬────────────────────────────────────────────────────┤
 │ Cenário A: Greenfield (Do Zero)   │ Cluster novo ou limpo:                             │
-│                                   │ 1. Cria cluster k3d com portas O-RAN expostas      │
-│                                   │ 2. Cria namespaces 'ricplt' e 'ricxapp'            │
+│                                   │ 1. Cria cluster k3d (1, 2 ou 3 nós)                │
+│                                   │ 2. Cria namespaces 'ricplt' e 'ricxapp' com Istio  │
 │                                   │ 3. Instala Near-RT RIC (DBAAS Redis, RMR)          │
-│                                   │ 4. Instala Reference xApps (QoS, Energy, TS, ...)  │
+│                                   │ 4. Instala as 6 Reference xApps                    │
 │                                   │ 5. Instala xApp RDL Fase 2 (CA-RDL / MARL)         │
 ├───────────────────────────────────┼────────────────────────────────────────────────────┤
 │ Cenário B: Brownfield (Isolado)   │ Infraestrutura já ativa:                           │
 │                                   │ 1. Mantém Near-RT RIC e Reference xApps operando   │
 │                                   │ 2. Instala/Atualiza apenas a release               │
 │                                   │    'ricxapp-iqos-xapp-rdl-f2' (v2.0.0)             │
+├───────────────────────────────────┼────────────────────────────────────────────────────┤
+│ Cenário C: Coexistência Completa  │ Bancada Científica e Benchmarks:                   │
+│ (Dual RDL + 6 xApps Concorrentes) │ 1. Near-RT RIC (ricplt: Redis, E2Term, SubMgr)     │
+│                                   │ 2. H-RDL Fase 1 (v1.1.0 Determinística)            │
+│                                   │ 3. CA-RDL Fase 2 (v2.0.0 MARL / MAPPO)             │
+│                                   │ 4. Todas as 6 Reference xApps ativas simultâneas   │
+│                                   │ 5. Injeção contínua de tráfego e Kiali live mesh   │
 └───────────────────────────────────┴────────────────────────────────────────────────────┘
 ```
 
@@ -142,7 +149,73 @@ make helm-upgrade-f2
 
 ---
 
-## 4. Validação, Healthcheck e Monitoramento
+## 4. Cenário C: Implantação de Coexistência Completa (H-RDL + CA-RDL Concorrentes + 6 Reference xApps)
+
+Este cenário é ideal para **avaliações científicas comparativas**, benchmarking simultâneo de algoritmos e testes de governança hierárquica. Ele implanta a pilha completa do Near-RT RIC, as 6 Reference xApps e **ambas as versões do motor RDL operando concorrentemente**:
+
+```mermaid
+graph TD
+    subgraph RIC["Namespace ricplt (Near-RT RIC)"]
+        DBAAS["ricplt-dbaas (Redis SDL)"]
+        E2TERM["service-ricplt-e2term-rmr"]
+        SUBMGR["service-ricplt-submgr-rmr"]
+    end
+
+    subgraph XAPP["Namespace ricxapp (Service Mesh Istio)"]
+        subgraph RDLs["Motores RDL Concorrentes"]
+            RDL_F1["ricxapp-iqos-xapp-rdl-f1<br/>(H-RDL v1.1.0 Heurística)"]
+            RDL_F2["ricxapp-iqos-xapp-rdl-f2<br/>(CA-RDL v2.0.0 MARL MAPPO)"]
+        end
+
+        subgraph REFS["6 Reference xApps"]
+            X1["ricxapp-qos-xslice (:8082 / :8083)"]
+            X2["ricxapp-energy-saving (:8084 / :8085)"]
+            X3["ricxapp-traffic-steering (:8086 / :8087)"]
+            X4["ricxapp-beamformer (:8088 / :8089)"]
+            X5["ricxapp-isac-radar (:8090 / :8091)"]
+            X6["ricxapp-rogue-stress (:8092 / :8093)"]
+        end
+
+        GEN["traffic-generator<br/>(Injeção Contínua Multi-xApp)"]
+    end
+
+    REFS -->|Propostas de Ação (RMR)| RDL_F1
+    REFS -->|Propostas de Ação (RMR)| RDL_F2
+    RDL_F1 <-->|Contexto SDL| DBAAS
+    RDL_F2 <-->|Contexto SDL| DBAAS
+    GEN -->|Sondas HTTP / Métricas| XAPP
+```
+
+### 4.1. Mapeamento de Workloads e Releases no Cenário C:
+
+| Componente | Release Helm / Deployment | Versão | Portas Istio / Protocolos | Finalidade |
+| :--- | :--- | :---: | :--- | :--- |
+| **Near-RT RIC DBAAS** | `deployment-ricplt-dbaas-redis` | `1.0.0` | `tcp-redis: 6379` | Shared Data Layer (SDL) |
+| **H-RDL Fase 1** | `ricxapp-iqos-xapp-rdl-f1` | `1.1.0` | `http-health: 8080`, `tcp-rmr-data: 4560` | Arbitragem Heurística / Baseline |
+| **CA-RDL Fase 2** | `ricxapp-iqos-xapp-rdl-f2` | `2.0.0` | `http-health: 8080`, `http-metrics: 8081`, `tcp-rmr-data: 4560` | Arbitragem Cognitiva MARL / MAPPO |
+| **1. QoS xSlice** | `ricxapp-qos-xslice` | `1.1.0` | `http-health: 8082`, `http-metrics: 8083`, `tcp-rmr-data: 4562` | Quotas PRB / Fatiamento 5G |
+| **2. Energy Saving** | `ricxapp-energy-saving` | `1.1.0` | `http-health: 8084`, `http-metrics: 8085`, `tcp-rmr-data: 4563` | Economia de Energia / Power Off |
+| **3. Traffic Steering** | `ricxapp-traffic-steering` | `1.1.0` | `http-health: 8086`, `http-metrics: 8087`, `tcp-rmr-data: 4564` | Handover A3 Offset |
+| **4. Beamformer** | `ricxapp-beamformer` | `1.1.0` | `http-health: 8088`, `http-metrics: 8089`, `tcp-rmr-data: 4565` | Massive MIMO / Downtilt elétrico |
+| **5. ISAC Radar** | `ricxapp-isac-radar` | `1.1.0` | `http-health: 8090`, `http-metrics: 8091`, `tcp-rmr-data: 4566` | Coexistência Sensoriamento 6G |
+| **6. Rogue Stress** | `ricxapp-rogue-stress` | `1.1.0` | `http-health: 8092`, `http-metrics: 8093`, `tcp-rmr-data: 4567` | Injeção de Anomalias / Ataques |
+| **Gerador de Carga** | `traffic-generator` | `latest` | Client Outbound | Injeção Contínua para Kiali Mesh |
+
+---
+
+### 4.2. Executar o Deploy Completo em 1 Comando:
+
+```bash
+# Executa a implantação do Near-RT RIC, H-RDL, CA-RDL e 6 Reference xApps:
+make deploy-full-coexistence
+
+# Ou script direto:
+bash scripts/deploy_dual_rdl_6xapps.sh
+```
+
+---
+
+## 5. Validação, Healthcheck e Monitoramento
 
 ### 4.1. Visualizar Status dos Pods em Todos os Namespaces:
 ```bash
@@ -177,26 +250,26 @@ make test-3xapps
 
 ---
 
-## 5. Limpeza e Reset do Ambiente (Tear Down)
+## 6. Limpeza e Reset do Ambiente (Tear Down)
 
-### 5.1. Limpeza Completa de Todos os Recursos O-RAN (Mantendo o Cluster Ativo):
+### 6.1. Limpeza Completa de Todos os Recursos O-RAN (Mantendo o Cluster Ativo):
 Remove todas as releases Helm, todos os Pods/Services nos namespaces `ricxapp` e `ricplt` e deleta os namespaces:
 ```bash
 make clean-all
 # ou: ./scripts/cleanup_all.sh
 ```
 
-### 5.2. Desinstalar Apenas a xApp RDL Fase 2:
+### 6.2. Desinstalar Apenas a xApp RDL Fase 2:
 ```bash
 make helm-uninstall-f2
 ```
 
-### 5.3. Desinstalar Todas as xApps (RDL Fase 1 e Fase 2):
+### 6.3. Desinstalar Todas as xApps (RDL Fase 1 e Fase 2):
 ```bash
 make uninstall-all-rdl
 ```
 
-### 5.4. Destruir ou Recriar o Cluster k3d por Completo:
+### 6.4. Destruir ou Recriar o Cluster k3d por Completo:
 ```bash
 # Destrói o cluster k3d e todos os contêineres/volumes associados:
 make cluster-delete
@@ -207,7 +280,7 @@ make cluster-recreate
 
 ---
 
-## 6. Mapeamento de Portas e Serviços O-RAN
+## 7. Mapeamento de Portas e Serviços O-RAN
 
 | Serviço / Componente | Namespace | Tipo | Porta do Contêiner | Porta Mapeada no Host | Finalidade |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -219,10 +292,13 @@ make cluster-recreate
 | **QoS xSlice xApp** | `ricxapp` | ClusterIP | `8082` / `4562` | `8082` | Fatiamento de Rede e Controle de Banda |
 | **Energy Saving xApp** | `ricxapp` | ClusterIP | `8084` / `4563` | `8084` | Desligamento de Células / Economia de Energia |
 | **Traffic Steering xApp** | `ricxapp` | ClusterIP | `8086` / `4564` | `8086` | Handover e Redirecionamento de Tráfego |
+| **Beamformer xApp** | `ricxapp` | ClusterIP | `8088` / `4565` | `8088` | Massive MIMO / Downtilt elétrico |
+| **ISAC Radar xApp** | `ricxapp` | ClusterIP | `8090` / `4566` | `8090` | Sensoriamento Radar e Coexistência 6G |
+| **Rogue Stress xApp** | `ricxapp` | ClusterIP | `8092` / `4567` | `8092` | Injeção de Anomalias e Testes de Estresse |
 
 ---
 
-## 7. Resumo dos Targets do Makefile
+## 8. Resumo dos Targets do Makefile
 
 | Comando Makefile | Ação Executada | Escopo de Impacto |
 | :--- | :--- | :--- |
@@ -232,6 +308,7 @@ make cluster-recreate
 | **`make cluster-delete`** | Destrói cluster k3d `rancher-lab` | Infraestrutura K8s |
 | **`make cluster-recreate`** | Deleta e recria o cluster k3d do zero | Infraestrutura K8s |
 | **`make clean-all`** | Limpeza automatizada de todos os pods, xApps e namespaces | Namespaces `ricxapp`/`ricplt` |
+| **`make deploy-full-coexistence`** | Deploy completo de H-RDL F1 + CA-RDL F2 + 6 Reference xApps | Todo o Cluster |
 | **`make build`** | Compila a imagem Docker `iqos-xapp-rdl:2.0.0` | Imagem Local |
 | **`make test`** | Executa os testes unitários (pytest) | Local |
 | **`make helm-deploy-f2`** | Deploy exclusivo da release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` |
