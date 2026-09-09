@@ -7,11 +7,11 @@ metadata:
     app: ricxapp-iqos-xapp-rdl
 spec:
   ports:
-  - name: rmr-data
+  - name: tcp-rmr-data
     port: 4560
     protocol: TCP
     targetPort: 4560
-  - name: rmr-route
+  - name: tcp-rmr-route
     port: 4561
     protocol: TCP
     targetPort: 4561

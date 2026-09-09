@@ -53,10 +53,10 @@ spec:
             - name: W_PEN
               value: {{ if and .Values.env .Values.env.wPen }}{{ .Values.env.wPen | quote }}{{ else }}"0.1"{{ end }}
           ports:
-            - name: rmr-data
+            - name: tcp-rmr-data
               containerPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.dataPort | default 4560 }}{{ else }}4560{{ end }}
               protocol: TCP
-            - name: rmr-route
+            - name: tcp-rmr-route
               containerPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.routePort | default 4561 }}{{ else }}4561{{ end }}
               protocol: TCP
             - name: http-health

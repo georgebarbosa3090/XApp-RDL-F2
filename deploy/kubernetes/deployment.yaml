@@ -39,10 +39,10 @@ spec:
           value: "INFO"
         ports:
         - containerPort: 4560
-          name: rmr-data
+          name: tcp-rmr-data
           protocol: TCP
         - containerPort: 4561
-          name: rmr-route
+          name: tcp-rmr-route
           protocol: TCP
         - containerPort: 8080
           name: http-health

@@ -40,7 +40,7 @@ spec:
         - containerPort: 8085
           name: http-metrics
         - containerPort: 4563
-          name: rmr-data
+          name: tcp-rmr-data
         resources:
           requests:
             cpu: 100m

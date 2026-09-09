@@ -21,10 +21,28 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
         - |
-          echo "Iniciando gerador de carga contínuo para a xApp RDL..."
+          echo "Iniciando gerador de carga continuo multi-xApp para a malha Istio/Kiali..."
+          ENDPOINTS="
+          http://ricxapp-iqos-xapp-rdl-http:8080/health
+          http://ricxapp-iqos-xapp-rdl-http:8081/metrics
+          http://ricxapp-iqos-xapp-rdl-f2-http:8080/health
+          http://ricxapp-iqos-xapp-rdl-f2-http:8081/metrics
+          http://ricxapp-qos-xslice-http:8082/health
+          http://ricxapp-qos-xslice-http:8083/metrics
+          http://ricxapp-energy-saving-http:8084/health
+          http://ricxapp-energy-saving-http:8085/metrics
+          http://ricxapp-traffic-steering-http:8086/health
+          http://ricxapp-traffic-steering-http:8087/metrics
+          http://ricxapp-beamformer:8088/health
+          http://ricxapp-beamformer:8089/metrics
+          http://ricxapp-isac-radar:8090/health
+          http://ricxapp-isac-radar:8091/metrics
+          http://ricxapp-rogue-stress:8092/health
+          http://ricxapp-rogue-stress:8093/metrics
+          "
           while true; do
-            curl -s http://ricxapp-iqos-xapp-rdl-http.ricxapp.svc.cluster.local:8080/health >/dev/null || true
-            curl -s http://ricxapp-iqos-xapp-rdl-http.ricxapp.svc.cluster.local:8080/ready >/dev/null || true
-            curl -s http://ricxapp-iqos-xapp-rdl-http.ricxapp.svc.cluster.local:8081/metrics >/dev/null || true
-            sleep 0.2
+            for url in $ENDPOINTS; do
+              curl -s --connect-timeout 1 "$url" >/dev/null 2>&1 || true
+            done
+            sleep 0.5
           done

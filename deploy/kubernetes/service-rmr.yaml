@@ -10,11 +10,11 @@ spec:
   selector:
     app: ricxapp-iqos-xapp-rdl
   ports:
-  - name: rmr-data
+  - name: tcp-rmr-data
     port: 4560
     targetPort: 4560
     protocol: TCP
-  - name: rmr-route
+  - name: tcp-rmr-route
     port: 4561
     targetPort: 4561
     protocol: TCP

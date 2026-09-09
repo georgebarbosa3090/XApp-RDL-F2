@@ -10,10 +10,10 @@ spec:
     - port: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.dataPort | default 4560 }}{{ else }}4560{{ end }}
       targetPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.dataPort | default 4560 }}{{ else }}4560{{ end }}
       protocol: TCP
-      name: rmr-data
+      name: tcp-rmr-data
     - port: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.routePort | default 4561 }}{{ else }}4561{{ end }}
       targetPort: {{ if and .Values.service .Values.service.rmr }}{{ .Values.service.rmr.routePort | default 4561 }}{{ else }}4561{{ end }}
       protocol: TCP
-      name: rmr-route
+      name: tcp-rmr-route
   selector:
     {{- include "iqos-xapp-rdl.selectorLabels" . | nindent 4 }}

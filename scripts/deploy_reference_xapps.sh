@@ -84,20 +84,25 @@ spec:
         command: ["python", "-u", "-c"]
         args:
           - |
-            import http.server, socketserver, os
-            port = int(os.environ.get("HTTP_PORT", 8080))
+            import http.server, socketserver, os, threading
+            http_port = int(os.environ.get("HTTP_PORT", 8080))
+            metrics_port = int(os.environ.get("METRICS_PORT", 8081))
             app_name = os.environ.get("APP_NAME", "xapp")
             class StubHandler(http.server.SimpleHTTPRequestHandler):
                 def do_GET(self):
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(f'{{"status":"UP","app":"{app_name}"}}\n'.encode("utf-8"))
+                    self.wfile.write(f'{{"status":"UP","app":"{app_name}","path":"{self.path}"}}\n'.encode("utf-8"))
                 def log_message(self, format, *args):
                     pass
-            print(f"[*] {app_name} online on port {port}")
-            with socketserver.TCPServer(("", port), StubHandler) as httpd:
-                httpd.serve_forever()
+            def serve(p):
+                with socketserver.TCPServer(("", p), StubHandler) as httpd:
+                    httpd.serve_forever()
+            print(f"[*] {app_name} online on http:{http_port} metrics:{metrics_port}")
+            t = threading.Thread(target=serve, args=(metrics_port,), daemon=True)
+            t.start()
+            serve(http_port)
         env:
         - name: APP_NAME
           value: "${APP_NAME}"
@@ -108,11 +113,11 @@ spec:
         - name: RMR_PORT
           value: "${RMR_PORT}"
         ports:
-        - name: http
+        - name: http-health
           containerPort: ${HTTP_PORT}
-        - name: metrics
+        - name: http-metrics
           containerPort: ${METRICS_PORT}
-        - name: rmr
+        - name: tcp-rmr-data
           containerPort: ${RMR_PORT}
         resources:
           limits:
@@ -131,12 +136,15 @@ spec:
   selector:
     app: ${APP_NAME}
   ports:
-  - name: http
+  - name: http-health
     port: ${HTTP_PORT}
     targetPort: ${HTTP_PORT}
-  - name: metrics
+  - name: http-metrics
     port: ${METRICS_PORT}
     targetPort: ${METRICS_PORT}
+  - name: tcp-rmr-data
+    port: ${RMR_PORT}
+    targetPort: ${RMR_PORT}
 EOF
 done
 
