@@ -12,7 +12,7 @@
 
 A **xApp RDL (Resource and Decision Layer) Fase 2 (CA-RDL)** foi desenvolvida para resolver as contenções destrutivas, colisões de parâmetros e interferências cruzadas de KPIs geradas pela execução simultânea de múltiplas xApps desacopladas no **Near-RT RIC**.
 
-Após a auditoria técnica descrita no [Volume 13](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/docs/13_relatorio_auditoria_limitacoes_e_solucoes_fase2.md), todas as **6 limitações estruturais** identificadas na versão preliminar da Fase 2 foram formalmente superadas e validadas:
+Após a auditoria técnica descrita no [Volume 13](docs/13_relatorio_auditoria_limitacoes_e_solucoes_fase2.md), todas as **6 limitações estruturais** identificadas na versão preliminar da Fase 2 foram formalmente superadas e validadas:
 1. **Dimensionalidade Rígida ($N=2 \to N=6$):** Generalização do extrator de observação para concorrência de até 6 xApps ativas sem truncamento;
 2. **Safe-RL via CMDP:** Otimização da política sob Processo de Decisão de Markov com Restrições (CMDP) e atualização dual de multiplicadores de Lagrange ($\lambda_k$), eliminando comandos inseguros no gradiente;
 3. **Grafo Causal Multidimensional & Multi-célula:** Cobertura de 7 Parâmetros de Controle (RCPs) e 12 KPIs com modelagem explícita de interferência inter-célula ($I_{\mathrm{inter}}$);
@@ -147,13 +147,13 @@ A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (C
 
 | Artefato Gerado | Caminho no Repositório | Descrição |
 | :--- | :--- | :--- |
-| **Dataset Multi-Semente ($N=30$)** | [`experiments/results/data/dataset_multi_seed_metrics.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/data/dataset_multi_seed_metrics.csv) | 90 registros tabulados (30 Baseline + 30 RDL1 + 30 RDL2) |
-| **Dataset de Decisões ML** | [`experiments/results/data/dataset_rdl_decisions_ml.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/data/dataset_rdl_decisions_ml.csv) | 450 amostras com 24 features de classificação |
+| **Dataset Multi-Semente ($N=30$)** | [`experiments/results/data/dataset_multi_seed_metrics.csv`](experiments/results/data/dataset_multi_seed_metrics.csv) | 90 registros tabulados (30 Baseline + 30 RDL1 + 30 RDL2) |
+| **Dataset de Decisões ML** | [`experiments/results/data/dataset_rdl_decisions_ml.csv`](experiments/results/data/dataset_rdl_decisions_ml.csv) | 450 amostras com 24 features de classificação |
 | **Repositório de Dados Brutos (Google Drive)** | [Google Drive (Raw Traces / XML / PCAP)](https://drive.google.com/drive/folders/1dC5g5iAVqGcdiXKQPyyUxES1rNjdZw8x) | Traces completos por semente e pacotes compactados |
-| **Manifesto Criptográfico** | [`experiments/results/reports/manifest_experiment.json`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/manifest_experiment.json) | Hash SHA-256 e proveniência dos dados |
-| **Relatório Estatístico Formal** | [`experiments/results/reports/relatorio_estatistico_multi_semente.md`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/relatorio_estatistico_multi_semente.md) | Testes $t$-Student, ANOVA e Mann-Whitney U |
-| **Relatório Comparativo Detalhado** | [`experiments/results/reports/relatorio_comparativo_detalhado.md`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/relatorio_comparativo_detalhado.md) | Métricas detalhadas de classificação ML e QoS |
-| **Suíte de Testes Automatizados** | [`tests/`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/) | Testes unitários e de integração ($100\%$ aprovados) |
+| **Manifesto Criptográfico** | [`experiments/results/reports/manifest_experiment.json`](experiments/results/manifest_experiment.json) | Hash SHA-256 e proveniência dos dados |
+| **Relatório Estatístico Formal** | [`experiments/results/reports/relatorio_estatistico_multi_semente.md`](experiments/results/relatorio_estatistico_multi_semente.md) | Testes $t$-Student, ANOVA e Mann-Whitney U |
+| **Relatório Comparativo Detalhado** | [`experiments/results/reports/relatorio_comparativo_detalhado.md`](experiments/results/relatorio_comparativo_detalhado.md) | Métricas detalhadas de classificação ML e QoS |
+| **Suíte de Testes Automatizados** | [`tests/`](tests/) | Testes unitários e de integração ($100\%$ aprovados) |
 
 ---
 
@@ -162,4 +162,4 @@ A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (C
 A superação das 6 limitações da Fase 2 consolidou a xApp RDL como um componente pronto para ambientes O-RAN de produção em escala industrial:
 1. **Determinismo & Segurança Garantidos:** A combinação do motor escalonado com Safe-RL CMDP e Refinement Agent assegura zero violação física de rádio;
 2. **Escalabilidade Comprovada:** Suporte a até 6 xApps concorrentes com latência média de decisão de $3.85\text{ ms}$, perfeitamente compatível com a janela Near-RT ($10\text{ ms} - 1000\text{ ms}$);
-3. **Evolução Natural para Fase 3:** O pipeline atual estabelece a base para os grafos espaço-temporais (Spatio-Temporal GNN), Federated MARL e orquestração semântica via Large Language Models (LLM-to-Policy) formalizados no [Volume 08](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/docs/08_proposta_arquitetural_rdl_fase3.md).
+3. **Evolução Natural para Fase 3:** O pipeline atual estabelece a base para os grafos espaço-temporais (Spatio-Temporal GNN), Federated MARL e orquestração semântica via Large Language Models (LLM-to-Policy) formalizados no [Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md).

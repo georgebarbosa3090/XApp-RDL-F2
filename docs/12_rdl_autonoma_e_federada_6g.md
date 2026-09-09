@@ -95,7 +95,7 @@ $$\alpha_{ij} = \frac{\exp\left( \text{LeakyReLU}\left( \mathbf{a}^T [\mathbf{W}
 
 ## 4. Raciocínio Multi-Agente: MAPPO com CTDE e Retornos GAE Rigorosos
 
-O motor de raciocínio da xApp-RDL opera sob o paradigma de **Treinamento Centralizado com Execução Descentralizada (CTDE - *Centralized Training with Decentralized Execution*)**, implementado no módulo [`src/agents/marl/mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py):
+O motor de raciocínio da xApp-RDL opera sob o paradigma de **Treinamento Centralizado com Execução Descentralizada (CTDE - *Centralized Training with Decentralized Execution*)**, implementado no módulo [`src/agents/marl/mappo_agent.py`](src/agents/marl/mappo_agent.py):
 
 ### 4.1. Arquitetura de Redes Neurais Ator-Crítico
 

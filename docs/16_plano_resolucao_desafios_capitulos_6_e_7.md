@@ -213,36 +213,36 @@ Em resposta à auditoria formal consolidada (Seções 9.1 a 9.8 do relatório de
   - Índices $[6..11]$: Máscara de presença de propostas em 6 bits booleanos.
   - Índices $[12..59]$: 6 blocos canônicos de propostas $\times$ 8 atributos (Hash da xApp, Hash do Nó, Tipo de Parâmetro, Valor Normalizado por Tipo, Prioridade Linear, Frescor Temporal, Validade Estrutural e KPI Alvo).
 - **Preservação de Prioridade:** Normalização estrita linear `float(priority) / 100.0`, preservando a ordenação original: $40 \to 0.40$, $50 \to 0.50$, $80 \to 0.80$, $90 \to 0.90$.
-- **Validação:** [test_observation_contract.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_observation_contract.py).
+- **Validação:** [test_observation_contract.py](tests/test_observation_contract.py).
 
 ### 5.2 (9.2) Vínculo Inequívoco Política-Ação e Decisão de No-Op
 - **Implementação:** O coordenador MAPPO aplica *Action Masking* estrito na distribuição $\pi_\theta(a|s)$. Ação $a \in [0, N-1]$ seleciona deterministicamente a proposta correspondente; ação $a = \text{action\_dim}-1$ ou retorno nulo aciona a decisão de **No-Op** (deferimento).
 - **Semântica de No-Op:** Em `src/agents/reasoning_agent.py`, No-Op retorna `winning_actions = []` e `modified_value = None`, garantindo que nenhuma mensagem espúria de controle E2 seja emitida.
-- **Validação:** [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+- **Validação:** [test_policy_action_binding.py](tests/test_policy_action_binding.py).
 
 ### 5.3 (9.3) Indisponibilidade Contextual Estrita e Encaminhamento Conservador
 - **Implementação:** Em `src/agents/perception_agent.py`, `get_kpm_report(node_id)` valida a presença do nó e a validade temporal ($\text{TTL} \le 1.0\text{ s}$). Caso o nó não esteja cadastrado ou a telemetria esteja expirada, retorna `(None, False)`.
 - **Comportamento no Pipeline:** Em `src/rdl_xapp.py`, na ausência de contexto confiável, o sistema executa obrigatoriamente o encaminhamento conservador para a **Heurística Segura de Nível 1** (`_resolve_by_heuristic()`).
-- **Validação:** [test_audit_fixes_comprehensive.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_audit_fixes_comprehensive.py).
+- **Validação:** [test_audit_fixes_comprehensive.py](tests/test_audit_fixes_comprehensive.py).
 
 ### 5.4 (9.4) Validação Pública de Limites de Hardware por Tipo de Célula
 - **Implementação:** Em `src/agents/refinement_agent.py`, os métodos públicos `validate(resolution, conflict)` e `validate_single_action(action)` repassam explicitamente o `node_id = action.node_id` para a função de limites físicos.
 - **Limites Físicos:** Teto de potência de transmissão diferenciado: **Macro gNodeB (43 dBm / 20W)** versus **Small Cell (23 dBm / 200mW)**. Propostas que excedam o perfil da célula são rejeitadas e registradas na FSM Zero-Trust.
-- **Validação:** [test_audit_fixes_comprehensive.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_audit_fixes_comprehensive.py) e [test_refinement_agent.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_refinement_agent.py).
+- **Validação:** [test_audit_fixes_comprehensive.py](tests/test_audit_fixes_comprehensive.py) e [test_refinement_agent.py](tests/test_refinement_agent.py).
 
 ### 5.5 (9.5) Codecs ASN.1 / APER Nativos e Shim Híbrido
-- **Implementação:** Criou-se [src/e2/asn1_shim.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/asn1_shim.py) para prover interoperabilidade contínua (pycrate nativo em nós O-RAN de produção + emulador estrutural puro em Python para ambientes de CI e testes). Corrigidos os imports em `src/rdl_xapp.py` para utilizar diretamente `KpmDecoder` e `RCEncoder`.
+- **Implementação:** Criou-se [src/e2/asn1_shim.py](src/e2/asn1_shim.py) para prover interoperabilidade contínua (pycrate nativo em nós O-RAN de produção + emulador estrutural puro em Python para ambientes de CI e testes). Corrigidos os imports em `src/rdl_xapp.py` para utilizar diretamente `KpmDecoder` e `RCEncoder`.
 - **Perfis de Parâmetros e Validação:** Dicionário `PARAM_PROFILES` completo com fatores de escala de ponto fixo e validação estrita de faixa admissível (`min <= encoded_val <= max`), com rejeição imediata de parâmetros desconhecidos via `ValueError`.
-- **Validação:** [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py) e [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
+- **Validação:** [test_e2_encoding_decoding.py](tests/test_e2_encoding_decoding.py) e [test_aper_codecs.py](tests/test_aper_codecs.py).
 
 ### 5.6 (9.6) Instrumentação Monotônica Decomposta
 - **Implementação:** Medição de latência com `time.perf_counter()` decomposta em:
   $$T_{\text{total}} \ge T_{\text{queue}} + T_{\text{perception}} + T_{\text{reasoning}} + T_{\text{refinement}} + T_{\text{e2\_encode}}$$
-- **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+- **Validação:** [test_latency_components.py](tests/test_latency_components.py).
 
 ### 5.7 (9.7 e 9.8) Rastreabilidade Estrita e Empacotamento de Traces Brutos
 - **Implementação:** Script `scripts/package_and_sync_raw_results.py` atualizado com suporte aos parâmetros `--mode demo|experiment` e `--strict`. No modo estrito de experimentação, a ausência de arquivos brutos emite erro formal (`FileNotFoundError`), impedindo a criação silenciosa de dados sintéticos e garantindo integridade criptográfica SHA-256 no manifesto.
-- **Validação:** [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+- **Validação:** [test_provenance_check.py](tests/test_provenance_check.py).
 
 ---
 
@@ -277,24 +277,24 @@ flowchart TD
   - Função `_stable_hash(s, mod)` com digest MD5 determinístico independente de semente do runtime.
   - Verificação de No-Op (`action_idx == self.action_dim - 1` ou `action_idx >= n_proposals`) executada **antes** de qualquer indexação de propostas no coordenador MAPPO, retornando estritamente `(None, confidence)`.
   - Log de advertência explícito para excesso de propostas ($N > 6$), alocando os 6 primeiros slots no vetor $D=60$ de forma reprodutível e documentada.
-- **Validação:** `test_deterministic_feature_hashing` em [test_observation_contract.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_observation_contract.py) e `test_action_cardinality_and_noop_disambiguation_with_many_proposals` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+- **Validação:** `test_deterministic_feature_hashing` em [test_observation_contract.py](tests/test_observation_contract.py) e `test_action_cardinality_and_noop_disambiguation_with_many_proposals` em [test_policy_action_binding.py](tests/test_policy_action_binding.py).
 
 ### 6.2 Vínculo Rigoroso Política-Ação e Gradiente Safe-RL Ativo (11.4)
 - **Problemática:** Multiplicação ad-hoc das probabilidades por fatores de prioridade durante a inferência distorcia a política aprendida $\pi_\theta(a|s)$. O teste de gradiente não continha transições com custo não-nulo ($c_t > 0$).
 - **Solução Implementada:**
   - Contrato formal entre treinamento e inferência: a distribuição mascarada gerada pelo ator governa diretamente a seleção de ação sem perturbações ad-hoc.
   - Teste de gradiente com transições de custo positivo ($c_t = 1.0 > d = 0.1$), validando a ativação da Vantagem Penalizada Conjunta $\hat{A}^{\text{safe}} = \hat{A}^R - \lambda \hat{A}^C$, perdas finitas e atualização positiva do multiplicador de Lagrange $\lambda > 0$.
-- **Validação:** `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` e `test_pure_policy_inference_without_ad_hoc_reweighting` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+- **Validação:** `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` e `test_pure_policy_inference_without_ad_hoc_reweighting` em [test_policy_action_binding.py](tests/test_policy_action_binding.py).
 
 ### 6.3 Agregação Multimétrica na Telemetria KPM (11.5)
 - **Problemática:** `KpmDecoder.decode_indication()` produzia 1 relatório individual por métrica preenchendo as demais com zero, causando sobrescrita indesejada do estado de KPM por nó.
 - **Solução Implementada:** Agregação de todas as medições pertencentes ao mesmo par `(node_id, ue_id)` em uma única estrutura unificada contendo `drb_thp_dl`, `drb_thp_ul`, `drb_delay_dl` e `prb_used_dl` antes do retorno.
-- **Validação:** `test_kpm_decoder_fallback` em [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
+- **Validação:** `test_kpm_decoder_fallback` em [test_aper_codecs.py](tests/test_aper_codecs.py).
 
 ### 6.4 Codificação Completa de PDU E2SM-RC e Decodificação Reversível (11.5)
 - **Problemática:** `RCEncoder` construía o cabeçalho mas retornava apenas o corpo da mensagem binária.
 - **Solução Implementada:** Implementação de `encode_control_pdu(node_id, param, value) -> Tuple[bytes, bytes]` retornando `(header_aper, msg_aper)`, além de métodos dedicados `decode_control_header()` e `decode_control_message()`.
-- **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py).
+- **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](tests/test_e2_encoding_decoding.py).
 
 ### 6.5 Separação Rígida de Modos e Teste Negativo de Proveniência (11.6)
 - **Problemática:** Exportação de dados sintéticos e experimentais para os mesmos destinos e ausência de teste negativo que force a rejeição de dados sintéticos no modo estrito.
@@ -302,14 +302,14 @@ flowchart TD
   - Isolamento estrito de diretórios de exportação: `experiments/results/demo/` (dados sintéticos estocásticos calibrados) e `experiments/results/experiment/` (traces brutos experimentais ns-3).
   - Marcador de proveniência `synthetic="true"` nos dados sintéticos e validação estrita em `verify_raw_traces_exist()` que rejeita traces falsos em modo de experimento.
   - Cálculo de conclusões dinâmicas no relatório estatístico com base no número exato de métricas significantes via ANOVA ($p < 0.05$).
-- **Validação:** `test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+- **Validação:** `test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode` em [test_provenance_check.py](tests/test_provenance_check.py).
 
 ### 6.6 Instrumentação Monotônica de Fila e Correção da Integração Contínua (11.2 & 11.7)
 - **Problemática:** Medição de tempo no runtime não contabilizava espera na fila; falha no build Docker na esteira CI por troca de diretório de contexto.
 - **Solução Implementada:**
   - Registro de `arrival_monotonic = time.perf_counter()` em cada ação ao entrar no buffer, calculando $T_{\text{queue}} = t_{\text{dequeue}} - t_{\text{enqueue}}$ e incorporando no log de decisão.
   - Correção do workflow `.github/workflows/ci.yml` para executar `docker build -t muriloavlis/iqos-xapp:latest -f docker/Dockerfile .` a partir da raiz do repositório.
-- **Validação:** `test_decomposed_latency_pipeline_monotonic` em [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+- **Validação:** `test_decomposed_latency_pipeline_monotonic` em [test_latency_components.py](tests/test_latency_components.py).
 
 ---
 
@@ -347,20 +347,20 @@ flowchart TD
   - Remoção completa da multiplicação ad-hoc por prioridade: `decide()` obtém `probs = leader_agent.actor.get_action_probs(obs_t, mask_t)` e seleciona o argmax da distribuição mascarada diretamente.
   - Armazenamento de `action_mask` em cada item de transição no `rollout_buffer`.
   - No loop de otimização PPO (`MAPPOAgent.update`), as novas probabilidades e entropia são avaliadas sobre a distribuição mascarada `self.actor.get_action_probs(obs_t, action_masks_t)`.
-- **Validação:** `test_pure_policy_inference_without_ad_hoc_reweighting` e `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+- **Validação:** `test_pure_policy_inference_without_ad_hoc_reweighting` e `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` em [test_policy_action_binding.py](tests/test_policy_action_binding.py).
 
 ### 7.2 Rejeição Estrita de Telemetria Inválida sem Injeção de Dados Artificiais (12.4)
 - **Problemática:** Falha na decodificação APER de telemetria E2SM-KPM injetava valores fixos de simulação (`15.5 Mbps`, `45 PRBs`), mascarando erros de protocolo em modo experimental.
 - **Solução Implementada:**
   - Em `src/e2/kpm_decoder.py`, exceções de decodificação APER ou bytes corrompidos geram log de advertência e retornam estritamente `[]` (lista vazia).
   - A ausência de telemetria faz com que `PerceptionAgent.get_kpm_report()` retorne `(None, False)`, acionando de forma transparente o fallback conservador para a Heurística de Nível 1.
-- **Validação:** `test_kpm_decoder_rejection_on_invalid_payload` e `test_kpm_decoder_valid_aper_multimetric_aggregation` em [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
+- **Validação:** `test_kpm_decoder_rejection_on_invalid_payload` e `test_kpm_decoder_valid_aper_multimetric_aggregation` em [test_aper_codecs.py](tests/test_aper_codecs.py).
 
 ### 7.3 Despacho de PDU Completo E2SM-RC no Runtime de Produção (12.4)
 - **Problemática:** O runtime `src/rdl_xapp.py` invocava `encode_control_request` (interface legado que gerava apenas a mensagem APER), deixando de transmitir o cabeçalho APER padronizado pelo O-RAN WG3.
 - **Solução Implementada:**
   - Em `src/rdl_xapp.py` (`_send_control`), o sistema chama `encode_control_pdu(node_id, parameter, value)` e inclui no dicionário de controle RMR os campos `header_aper_bytes`, `msg_aper_bytes` e `aper_bytes` (para retrocompatibilidade com adaptadores E2 legados).
-- **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py).
+- **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](tests/test_e2_encoding_decoding.py).
 
 ### 7.4 Validação Estruturada com ElementTree e Conclusões Dinâmicas com Trade-offs (12.5)
 - **Problemática:** A busca por marcadores sintéticos usava substring de texto nos primeiros 512 caracteres, falhando com aspas simples ou arquivos sem marcador, e as conclusões do relatório estatístico afirmavam ganho estático de Jain mesmo quando havia trade-off (-1.6%).
@@ -368,14 +368,14 @@ flowchart TD
   - Utilização do parser estruturado `xml.etree.ElementTree` em `verify_raw_traces_exist()`, validando atributos em qualquer estilo de aspas e exigindo confirmação positiva de elementos `<Flow>` com contadores de pacotes numéricos válidos.
   - Isolamento estrito de diretórios de saída (`experiments/results/demo/` vs `experiments/results/experiment/`).
   - Geração dinâmica da conclusão nº 2 no relatório estatístico, respeitando rigorosamente o sinal da variação percentual: reporta ganho se $\Delta > 0$ ou compromisso/trade-off quando $\Delta < 0$.
-- **Validação:** `test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows` e `test_verify_raw_traces_accepts_valid_experimental_xml` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+- **Validação:** `test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows` e `test_verify_raw_traces_accepts_valid_experimental_xml` em [test_provenance_check.py](tests/test_provenance_check.py).
 
 ### 7.5 Decomposição Monotônica e Nomenclatura da Latência Total (12.6)
 - **Problemática:** A latência denominada "total" não incorporava a espera na fila nem o tempo de codificação APER, e os testes de latência não passavam pela fila do runtime.
 - **Solução Implementada:**
   - Instrumentação de $T_{\text{proc}} = T_{\text{perception}} + T_{\text{reasoning}} + T_{\text{refinement}}$, $T_{\text{e2\_encode}}$ no envio e cálculo formal de $T_{\text{cycle\_total}} = T_{\text{queue}} + T_{\text{proc}} + T_{\text{e2\_encode}}$.
   - Alinhamento de nomenclatura de testes: `test_heuristic_decision_low_latency_budget` e adição de `test_full_runtime_queue_and_decision_latency_breakdown`.
-- **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+- **Validação:** [test_latency_components.py](tests/test_latency_components.py).
 
 ---
 
@@ -405,9 +405,9 @@ flowchart TD
 ### 8.1 Correção de Importação, Anotações Futuras e Shims de Observabilidade (13.3)
 - **Problemática:** O método `_send_control` em `src/rdl_xapp.py` declarava tipo de retorno `Tuple[bool, float]` sem importar `Tuple`, causando `NameError` durante o carregamento no Python 3.10. Além disso, dependências de web server (`uvicorn`/`fastapi`/`pydantic`) impediam o carregamento limpo em ambientes de CI mínimos.
 - **Solução Implementada:**
-  - Inserção de `from __future__ import annotations` e `from typing import Dict, Any, List, Optional, Tuple` em [src/rdl_xapp.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py).
+  - Inserção de `from __future__ import annotations` e `from typing import Dict, Any, List, Optional, Tuple` em [src/rdl_xapp.py](src/rdl_xapp.py).
   - Implementação de shims leves com graceful fallback em `src/infrastructure/config_manager.py`, `src/observability/health_server.py` e `src/observability/metrics.py`, garantindo que o runtime instancie de forma transparente mesmo na ausência de bibliotecas web opcionais.
-- **Validação:** `test_rdl_xapp_runtime_full_cycle_and_payload_dispatch` em [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+- **Validação:** `test_rdl_xapp_runtime_full_cycle_and_payload_dispatch` em [test_latency_components.py](tests/test_latency_components.py).
 
 ### 8.2 Invariantes Físicos Estritos em Traces Experimentais ($0 \le n_{rx} \le n_{tx}$) (13.4)
 - **Problemática:** A validação estrutural com `ElementTree` verificava apenas os 5 primeiros fluxos e não checava numericamente se a contagem de pacotes recebidos era não-negativa e menor ou igual aos transmitidos.
@@ -416,7 +416,7 @@ flowchart TD
     $$0 \le n_{rx} \le n_{tx} \quad \forall f \in \mathcal{F}$$
   - Bloqueio imediato com `ValueError` para qualquer trace com contadores negativos ($n_{rx} < 0$), não-numéricos ou violações de conservação ($n_{rx} > n_{tx}$).
   - Geração de traces experimentais brutos completos em `scripts/generate_experimental_raw_traces.py` com `txPackets`, `rxPackets`, `lostPackets`, `delaySum` e `jitterSum`.
-- **Validação:** `test_verify_raw_traces_rejects_physical_invariant_violations` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+- **Validação:** `test_verify_raw_traces_rejects_physical_invariant_violations` em [test_provenance_check.py](tests/test_provenance_check.py).
 
 ### 8.3 Teste de Aceitação Integrado de Ponta a Ponta do Runtime (13.6)
 - **Problemática:** Os testes de latência anteriores instanciavam agentes isoladamente, sem exercitar o componente público `RDLxApp` nem verificar a formatação real do payload despachado ao barramento RMR.
@@ -427,7 +427,7 @@ flowchart TD
     3. Aciona o laço síncrono de decisão `_process_action_group`;
     4. Intercepta o despacho RMR `RIC_CONTROL_REQ` e valida a presença dos campos `node_id`, `parameter`, `value`, `header_aper_bytes` e `msg_aper_bytes`;
     5. Confirma a medição monotônica do tempo de codificação $T_{\text{e2\_encode}}$ retornado por `_send_control`.
-- **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+- **Validação:** [test_latency_components.py](tests/test_latency_components.py).
 
 ---
 
@@ -500,12 +500,12 @@ flowchart TD
 
 ### 11.2 Fase Operacional 1: Escuta e Sondagem do Ambiente Experimental
 1. **Decodificação ASN.1 APER de Telemetria Sem Fallback Artificial:**
-   - Em [src/e2/kpm_decoder.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/kpm_decoder.py), payloads corrompidos ou ilegíveis agora são **estritamente rejeitados** (`return []`), eliminando definitivamente a injeção espúria de medições estáticas.
+   - Em [src/e2/kpm_decoder.py](src/e2/kpm_decoder.py), payloads corrompidos ou ilegíveis agora são **estritamente rejeitados** (`return []`), eliminando definitivamente a injeção espúria de medições estáticas.
    - A agregação multimétrica por par `(node_id, ue_id)` consolida vazão, PRB e atraso na mesma janela de medição, evitando sobrescritas parciais.
 2. **Topologia Multi-gNB e Validade Temporal por Nó (TTL):**
-   - O [PerceptionAgent](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/perception_agent.py) inicializa com topologia de 3 células (`gnb_01`, `gnb_02`, `gnb_03`).
+   - O [PerceptionAgent](src/agents/perception_agent.py) inicializa com topologia de 3 células (`gnb_01`, `gnb_02`, `gnb_03`).
    - Consultas a nós não cadastrados ou com medições mais antigas que $1000\text{ ms}$ retornam explicitamente `(None, False)`.
-   - O runtime [RDLxApp](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py) intercepta a indisponibilidade de contexto e força a resolução pelo **Nível 1 (Heurística Determinística Conservadora)**, registrando o motivo no log de auditoria.
+   - O runtime [RDLxApp](src/rdl_xapp.py) intercepta a indisponibilidade de contexto e força a resolução pelo **Nível 1 (Heurística Determinística Conservadora)**, registrando o motivo no log de auditoria.
 
 ### 11.3 Fase Operacional 2: Implantação e Orquestração Multi-xApp
 O ecossistema experimental foi configurado com 6 xApps especializadas operando simultaneamente contra a RAN:
@@ -526,7 +526,7 @@ As simulações abrangeram **30 sementes independentes (1001 a 1030)** para os 3
 - **Cenário 3 (Fase 2 - CA-RDL):** Coordenação Multiagente Context-Aware Safe-RL (MAPPO + CMDP Lagrange) com refinamento Zero-Trust.
 
 #### Verificação Rigorosa das Invariantes Físicas de Fluxo
-O script de empacotamento estrito [scripts/package_and_sync_raw_results.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/package_and_sync_raw_results.py) valida **todos os elementos `<Flow>`** em cada arquivo XML, garantindo conservação física estrita:
+O script de empacotamento estrito [scripts/package_and_sync_raw_results.py](scripts/package_and_sync_raw_results.py) valida **todos os elementos `<Flow>`** em cada arquivo XML, garantindo conservação física estrita:
 $$\forall \text{ flow}_i \in \text{FlowMonitor}: \quad 0 \le n_{\text{rx}, i} \le n_{\text{tx}, i} \quad \land \quad n_{\text{lost}, i} = n_{\text{tx}, i} - n_{\text{rx}, i}$$
 $$\text{Rejeicao: } n_{\text{rx}} < 0 \quad \lor \quad n_{\text{rx}} > n_{\text{tx}} \quad \lor \quad \text{synthetic} = \text{true}$$
 
@@ -595,7 +595,7 @@ classDiagram
    - ANOVA One-Way de 3 grupos com cálculo de $F$, $p$, tamanho de efeito $\eta^2 = \frac{SS_{\text{between}}}{SS_{\text{total}}}$ e $d$ de Cohen.
    - Manifesto criptográfico SHA-256 gerado automaticamente para todos os artefatos.
 7. **Correção do Runtime no Commit `8fcacd3` (Sétima Auditoria):**
-   - Adicionado `from __future__ import annotations` e importação de `Tuple` em [src/rdl_xapp.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py), eliminando o `NameError` em Python 3.10.
+   - Adicionado `from __future__ import annotations` e importação de `Tuple` em [src/rdl_xapp.py](src/rdl_xapp.py), eliminando o `NameError` em Python 3.10.
    - Criados shims resilientes de infraestrutura em `src/infrastructure/config_manager.py` e `src/observability/`, permitindo testes unitários e operacionais robustos em qualquer ambiente de CI/CD.
 
 ### 11.6 Resultados Experimentais Consolidados (30 Sementes)

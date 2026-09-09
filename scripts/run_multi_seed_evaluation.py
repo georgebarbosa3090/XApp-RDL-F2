@@ -295,21 +295,25 @@ def export_manifest_and_report(df, stats_results, mode="demo"):
 
     conclusion_2 = f"2. **Separação entre Ganho Global e Incremental:** A H-RDL fornece a base de contenção de conflitos e segurança de rádio, enquanto a CA-RDL adiciona coordenação contextual multiagente com {jain_text}."
 
+    rel_mode_dir = os.path.relpath(mode_dir, ROOT_DIR).replace("\\", "/")
     md_lines.extend([
         "",
         "## Conclusões da Validação Estatística (Computadas Dinamicamente)",
         f"1. **Rejeição da Hipótese Nula ($H_0$):** A ANOVA One-Way de 3 grupos confirma diferenciação estatisticamente significante ($p < 0.05$) em {sig_count} de {total_metrics} métricas analisadas.",
         conclusion_2,
-        f"3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `{csv_sha}` registrado em manifesto versionado em `{mode_dir}`."
+        f"3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `{csv_sha}` registrado em manifesto versionado em `{rel_mode_dir}`."
     ])
     
     report_path = os.path.join(mode_dir, "relatorio_estatistico_multi_semente.md")
     with open(report_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md_lines))
         
-    print(f"[OK] Dataset salvo em:    {csv_path}")
-    print(f"[OK] Manifesto salvo em:  {manifest_path}")
-    print(f"[OK] Relatório salvo em:  {report_path}")
+    rel_csv_path = os.path.relpath(csv_path, ROOT_DIR).replace("\\", "/")
+    rel_manifest_path = os.path.relpath(manifest_path, ROOT_DIR).replace("\\", "/")
+    rel_report_path = os.path.relpath(report_path, ROOT_DIR).replace("\\", "/")
+    print(f"[OK] Dataset salvo em:    {rel_csv_path}")
+    print(f"[OK] Manifesto salvo em:  {rel_manifest_path}")
+    print(f"[OK] Relatório salvo em:  {rel_report_path}")
 
 def main():
     parser = argparse.ArgumentParser(description="Motor de Avaliação Estatística Multi-Semente")
@@ -323,11 +327,12 @@ def main():
     
     if args.mode == "experiment":
         traces_path = os.path.join(RESULTS_DIR, "data", "dataset_multi_seed_metrics.csv")
+        rel_traces_path = os.path.relpath(traces_path, ROOT_DIR).replace("\\", "/")
         if not os.path.exists(traces_path):
-            print(f"[ERRO CRÍTICO EXPERIMENTAL] Arquivo de traces brutos ausente: {traces_path}", file=sys.stderr)
+            print(f"[ERRO CRÍTICO EXPERIMENTAL] Arquivo de traces brutos ausente: {rel_traces_path}", file=sys.stderr)
             print("No modo --mode experiment, é obrigatório executar simulações ns-3 reais (ex: make run-all-scenarios) antes da consolidação.", file=sys.stderr)
             sys.exit(1)
-        print(f"[*] Carregando traces empíricos brutos de: {traces_path}")
+        print(f"[*] Carregando traces empíricos brutos de: {rel_traces_path}")
         df = pd.read_csv(traces_path)
         
         # Validação estrita de integridade e proveniência do dataset experimental

@@ -14,7 +14,7 @@
     {
       "scenario": "baseline",
       "filename": "raw_traces_baseline_seeds_1001_1030.zip",
-      "filepath": "/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/raw/raw_traces_baseline_seeds_1001_1030.zip",
+      "filepath": "experiments/results/raw/raw_traces_baseline_seeds_1001_1030.zip",
       "file_count": 30,
       "size_mb": 0.03,
       "sha256": "b2b6551cc47bca5d740272086363600d2ce7de0cb594ffd5ea0b9e05965e0426"
@@ -22,7 +22,7 @@
     {
       "scenario": "rdl_phase1",
       "filename": "raw_traces_rdl_phase1_seeds_1001_1030.zip",
-      "filepath": "/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/raw/raw_traces_rdl_phase1_seeds_1001_1030.zip",
+      "filepath": "experiments/results/raw/raw_traces_rdl_phase1_seeds_1001_1030.zip",
       "file_count": 30,
       "size_mb": 0.02,
       "sha256": "8eb8c5e771a39fe78000a9d7c03a9d067fa105d03ab0726569f7618c104c85fa"
@@ -30,7 +30,7 @@
     {
       "scenario": "rdl_phase2",
       "filename": "raw_traces_rdl_phase2_seeds_1001_1030.zip",
-      "filepath": "/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/raw/raw_traces_rdl_phase2_seeds_1001_1030.zip",
+      "filepath": "experiments/results/raw/raw_traces_rdl_phase2_seeds_1001_1030.zip",
       "file_count": 30,
       "size_mb": 0.02,
       "sha256": "9955ce2f577a86ab40b1cf467352bfef50f4fccde0bf4961375f42260f09ddf1"

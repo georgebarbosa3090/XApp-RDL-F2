@@ -23,4 +23,4 @@
 ## Conclusões da Validação Estatística (Computadas Dinamicamente)
 1. **Rejeição da Hipótese Nula ($H_0$):** A ANOVA One-Way de 3 grupos confirma diferenciação estatisticamente significante ($p < 0.05$) em 10 de 10 métricas analisadas.
 2. **Separação entre Ganho Global e Incremental:** A H-RDL fornece a base de contenção de conflitos e segurança de rádio, enquanto a CA-RDL adiciona coordenação contextual com ganhos incrementais em vazão, latência URLLC e equidade de Jain.
-3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `706d4d03d8cc3ca0471aad28b431ae8d6dcc3bde11f34f554b362a7e18818b9f` registrado em manifesto versionado em `/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/demo`.
+3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `706d4d03d8cc3ca0471aad28b431ae8d6dcc3bde11f34f554b362a7e18818b9f` registrado em manifesto versionado em `experiments/results/demo`.

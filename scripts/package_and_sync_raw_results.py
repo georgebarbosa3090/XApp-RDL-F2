@@ -154,10 +154,11 @@ def package_scenario_raw_data(scenario_name: str, min_seed: int, max_seed: int) 
                     
     size_mb = os.path.getsize(zip_path) / (1024 * 1024)
     sha256 = calculate_sha256(zip_path)
+    rel_zip_path = os.path.relpath(zip_path, BASE_DIR).replace("\\", "/")
     return {
         "scenario": scenario_name,
         "filename": os.path.basename(zip_path),
-        "filepath": zip_path,
+        "filepath": rel_zip_path,
         "file_count": file_count,
         "size_mb": round(size_mb, 2),
         "sha256": sha256
@@ -211,7 +212,8 @@ def main():
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
         
-    print(f"\n[OK] Manifesto de dados brutos salvo em: {manifest_path}")
+    rel_manifest_path = os.path.relpath(manifest_path, BASE_DIR).replace("\\", "/")
+    print(f"\n[OK] Manifesto de dados brutos salvo em: {rel_manifest_path}")
     
     # Criar documentacao explicativa no diretorio raw/
     readme_raw_path = os.path.join(RAW_DIR, "README.md")

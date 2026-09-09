@@ -35,7 +35,7 @@ graph LR
 ### 2.1. Cenários 5G NR (Fase 1 e Fase 2)
 
 #### Cenário 1: EEVS (Eficiência Energética vs. Garantia de SLA URLLC)
-* **Arquivo C++:** [`simulations/ns3/scenario_rdl_energy_vs_qos.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_energy_vs_qos.cc)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_energy_vs_qos.cc`](simulations/ns3/scenario_rdl_energy_vs_qos.cc)
 * **Topologia:** 1 Macro gNB (Banda n78 $3.5\text{ GHz}, 50\text{ MHz}$) + 1 Small Cell, 20 UEs com carga dinâmica.
 * **Conflito:** `xApp-Energy` tenta reduzir potência de transmissão para $15\text{ dBm}$ enquanto `xApp-QoS` exige potência $> 23\text{ dBm}$ para manter atraso URLLC $< 5\text{ ms}$.
 * **Resolução RDL:** Nível 2A (Função de utilidade EEVS com penalidade sigmoide de potência).
@@ -43,7 +43,7 @@ graph LR
 ![Cenário 1: Energy Saving vs QoS (EEVS)](figures/scenario_1_eevs_energy_vs_qos.png)
 
 #### Cenário 2: TVS (Traffic Steering vs. Slicing e Handover)
-* **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_tvs_conflict.cc)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](simulations/ns3/scenario_rdl_tvs_conflict.cc)
 * **Topologia:** 2 gNBs adjacentes com zona de sobreposição e 30 UEs divididos em 3 fatias (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
 * **Conflito:** `xApp-TrafficSteering` força handover de UEs de borda por carga, enquanto `xApp-Slicing` altera quotas de PRB, gerando instabilidade na fronteira.
 * **Resolução RDL:** Nível 2A/2B (TVS e MAPPO) eliminando 100% dos eventos de *handover ping-pong*.
@@ -55,7 +55,7 @@ graph LR
 ### 2.2. Cenário 5G-Advanced: Multi-Carrier, Massive MIMO e Fatiamento Dinâmico
 
 #### Cenário 3: Multi-Carrier FR1/FR3 & Massive MIMO UPA (16x4)
-* **Arquivo C++:** [`simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc`](simulations/ns3/scenario_rdl_5ga_multicarrier_mimo.cc)
 * **Topologia & Espectro:**
   - 3 gNBs em corredor urbano UMi ($1000\text{ m} \times 400\text{ m}$, ISD $500\text{ m}$);
   - Espectro Multi-Portadora: FR1 ($3.5\text{ GHz}, 100\text{ MHz}, 273\text{ PRBs}$) + FR3 Upper Mid-Band ($10.5\text{ GHz}, 200\text{ MHz}$);
@@ -75,7 +75,7 @@ graph LR
 ### 2.3. Cenários 6G AI-Native (IMT-2030)
 
 #### Cenário 4: Coexistência ISAC (Sensoriamento Radar vs. Comunicação de Dados)
-* **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc`](simulations/ns3/scenario_rdl_6g_isac_sensing_coexistence.cc)
 * **Topologia & Frequência:** 2 gNBs ISAC Dual-Function operando em $28\text{ GHz}$ mmWave ($400\text{ MHz}$ de largura de banda) com 30 UEs de dados e alvos de rastreamento radar em movimento.
 * **Conflito:** Competição direta por símbolos OFDM e feixes de transmissão entre a `xApp-RadarSensing` (exige resolução fina $\Delta R = \frac{c}{2B}$) e a `xApp-eMBB-Plus` (demanda vazão $> 1\text{ Gbps}$).
 * **Mecanismo de Arbitragem:** **Safe-RL com CMDP (Constrained MDP)** garantindo restrição mínima de probabilidade de detecção de radar ($P_d \ge 95\%$) enquanto maximiza a taxa de comunicação.
@@ -87,7 +87,7 @@ graph LR
 ![Cenário 4: 6G ISAC Sensing vs Communication](figures/scenario_4_6g_isac_sensing_coexistence.png)
 
 #### Cenário 5: Governança Cross-Tier e Escudo Anti-Rogue xApp
-* **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
+* **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
 * **Topologia & Operação:** Grade $2 \times 2$ com 4 gNBs e 40 UEs sob alta carga estocástica. Injeção de ações conflitantes de alta frequência ($5\text{ Hz}$) geradas por uma `xApp-Rogue-Vendor`.
 * **Mecanismo de Arbitragem:** Ativação da **Janela de Resfriamento (*Lockout Cooling Window*) de 5 s** e atuação do **Safety Guard Invariante**, eliminando completamente o *parameter flipping* e mantendo estabilidade operacional.
 * **Comando para Execução:**

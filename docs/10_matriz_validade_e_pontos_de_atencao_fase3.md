@@ -70,14 +70,14 @@ Em vez disso, a xApp-RDL opera sob um **Motor de Decisão Hierárquico Escalonad
 
 ## 3. Soluções Concretas Implementadas no Código
 
-### 3.1. MAPPO com GAE Completo e CTDE Real ([`src/agents/marl/mappo_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/marl/mappo_agent.py))
+### 3.1. MAPPO com GAE Completo e CTDE Real ([`src/agents/marl/mappo_agent.py`](src/agents/marl/mappo_agent.py))
 - **Buffer de Rollout Operacional:** Coleta transições completas contendo $(o_t, s_t^{\text{global}}, a_t, \log \pi(a_t), r_t, d_t)$.
 - **Cálculo Real de GAE:**
   $$\delta_t = r_t + \gamma V(s_{t+1}) (1 - d_t) - V(s_t), \quad \hat{A}_t = \delta_t + \gamma \lambda (1 - d_t) \hat{A}_{t+1}$$
 - **Otimização por Gradiente Adam:** Atualização iterativa de pesos do Ator (clipped objective com termo de entropia) e do Crítico (MSE Loss) em múltiplas épocas PPO.
 - **Coordenação Multiagente Efetiva:** A função `decide()` consulta a política de cada agente envolvido e combina o valor do Crítico Centralizado e a recompensa multi-objetivo normalizada.
 
-### 3.2. Motor de Raciocínio Hierárquico Escalonado ([`src/agents/reasoning_agent.py`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/agents/reasoning_agent.py))
+### 3.2. Motor de Raciocínio Hierárquico Escalonado ([`src/agents/reasoning_agent.py`](src/agents/reasoning_agent.py))
 - **Estimador de Complexidade $C(c, s)$:** Roteia conflitos diretos simples para o Nível 1 ($< 1\text{ ms}$), conflitos multi-objetivo para o Nível 2A (Utilidade Contextual / NDT Proativo) e conflitos não-lineares de alta dimensão para o Nível 2B (MAPPO).
 - **Janela de Resfriamento (Lockout de 5s):** Bloqueia reenvio de ações conflitantes rejeitadas durante 5 segundos para suprimir oscilações de controle.
 - **Ingestão Dinâmica de Telemetria KPM:** O estado da rede é alimentado diretamente a partir do relatório KPM decodificado pela camada de percepção (`DRB.UEThpDl`, `QoS.FlowDelay`, `RRU.PrbTotDl`).
