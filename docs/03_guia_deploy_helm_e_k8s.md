@@ -37,18 +37,33 @@ O ciclo de vida da **xApp RDL Fase 2 (CA-RDL / MARL)** suporta dois modos de imp
 Este cenário é o recomendado quando você está iniciando em uma máquina nova ou após recriar o ambiente. **Nenhum componente O-RAN precisa estar previamente instalado.**
 
 ### 2.1. Passo 1: Criar o Cluster Kubernetes (k3d) com Portas O-RAN Expostas
-```bash
-# Cria o cluster k3d com as portas O-RAN (SCTP 36422, HTTP 8080/8081, RMR 4560/4561):
-make cluster-create
 
-# Ou comando equivalente direto:
-k3d cluster create rancher-lab \
-  --servers 1 --agents 0 \
-  --port "36422:36422/SCTP@server:0" \
-  --port "8080:8080@server:0" \
-  --port "8081:8081@server:0" \
-  --port "4560:4560@server:0" \
-  --port "4561:4561@server:0"
+Você pode escolher entre **3 topologias de cluster** de acordo com sua capacidade de memória RAM e objetivo:
+
+#### Opção 1: 1 Nó Único (Single-Node — Padrão / Minimalista)
+```bash
+make cluster-create-1node
+# ou comando direto:
+k3d cluster create rancher-lab --servers 1 --agents 0 \
+  --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
+mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
+```
+
+#### Opção 2: 2 Nós (Dual-Node — Segregação RIC vs xApps)
+```bash
+make cluster-create-2nodes
+# ou comando direto:
+k3d cluster create rancher-lab --servers 1 --agents 1 \
+  --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
+mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
+```
+
+#### Opção 3: 3 Nós (Triple-Node — Alta Performance & Bancada MARL)
+```bash
+make cluster-create-3nodes
+# ou comando direto:
+k3d cluster create rancher-lab --servers 1 --agents 2 \
+  --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
 mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
 ```
 

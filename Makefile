@@ -70,16 +70,49 @@ test-3xapps:
 	bash scripts/verify_3_xapps.sh
 
 # -------------------------------------------------------------
-# Gestão do Cluster k3d (se necessário)
+# Gestão do Cluster k3d (Topologias: 1 Nó, 2 Nós, 3 Nós)
 # -------------------------------------------------------------
-cluster-create:
-	@echo "Criando cluster k3d $(CLUSTER_NAME)..."
-	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 0 --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
+cluster-create: cluster-create-1node
+
+cluster-create-1node:
+	@echo "Criando cluster k3d $(CLUSTER_NAME) [Topologia: 1 Nó Único (Control-Plane + Worker)]..."
+	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 0 \
+	  --port "36422:36422/SCTP@server:0" \
+	  --port "8080:8080@server:0" \
+	  --port "8081:8081@server:0" \
+	  --port "4560:4560@server:0" \
+	  --port "4561:4561@server:0"
+	mkdir -p ~/.kube
+	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
+	@kubectl label namespace ricxapp istio-injection=enabled --overwrite 2>/dev/null || true
+	@kubectl label namespace ricplt istio-injection=enabled --overwrite 2>/dev/null || true
+
+cluster-create-2nodes:
+	@echo "Criando cluster k3d $(CLUSTER_NAME) [Topologia: 2 Nós (1 Server + 1 Agent)]..."
+	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 1 \
+	  --port "36422:36422/SCTP@server:0" \
+	  --port "8080:8080@server:0" \
+	  --port "8081:8081@server:0" \
+	  --port "4560:4560@server:0" \
+	  --port "4561:4561@server:0"
+	mkdir -p ~/.kube
+	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
+
+cluster-create-3nodes:
+	@echo "Criando cluster k3d $(CLUSTER_NAME) [Topologia: 3 Nós (1 Server + 2 Agents)]..."
+	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 2 \
+	  --port "36422:36422/SCTP@server:0" \
+	  --port "8080:8080@server:0" \
+	  --port "8081:8081@server:0" \
+	  --port "4560:4560@server:0" \
+	  --port "4561:4561@server:0"
 	mkdir -p ~/.kube
 	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
 
 cluster-delete:
 	k3d cluster delete $(CLUSTER_NAME)
+
+cluster-recreate: cluster-delete cluster-create-1node
 
 clean-all:
 	@bash scripts/cleanup_all.sh
