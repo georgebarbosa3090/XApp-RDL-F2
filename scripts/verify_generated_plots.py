@@ -13,6 +13,13 @@ req_files = [
     "experiments/results/plots/cenario_5_vazao_throughput_e_jain_fairness.png",
     "experiments/results/plots/cenario_4_comparativo_multidimensional_metricas.png",
     "experiments/results/plots/cenario_2_tradeoff_energy_vs_qos.png",
+    "experiments/results/plots/fig_slice_urllc_latencia_temporal.png",
+    "experiments/results/plots/fig_slice_embb_vazao_temporal.png",
+    "experiments/results/plots/fig_slice_embb_latencia_temporal.png",
+    "experiments/results/plots/fig_slice_mmtc_latencia_temporal.png",
+    "experiments/results/plots/fig_slice_mmtc_taxa_sucesso_temporal.png",
+    "experiments/results/plots/fig_slice_isac_sensoriamento_temporal.png",
+    "experiments/results/plots/fig_multi_slice_dinamica_temporal_painel.png",
 ]
 
 all_ok = True
@@ -25,6 +32,6 @@ for rf in req_files:
     print(f"[{status}] {rf} ({size/1024:.1f} KB)")
 
 if all_ok:
-    print("\n[SUCESSO] Todas as 12 figuras solicitadas existem e estao em alta resolucao!")
+    print(f"\n[SUCESSO] Todas as {len(req_files)} figuras solicitadas existem e estao em alta resolucao!")
 else:
     print("\n[ERRO] Algumas figuras estao faltando!")
