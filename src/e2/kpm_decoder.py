@@ -109,36 +109,25 @@ class KpmDecoder:
     def decode(self, indication_header: bytes, indication_message: bytes, default_node_id: str = "gnb_01") -> List[KpmMeasurement]:
         """
         Decodifica o payload E2SM-KPM via APER.
+        Retorna lista de KpmMeasurement ou lista vazia [] em caso de payload inválido ou corrompido.
         """
         results = []
         try:
-            # Parse Message
             msg = E2SM_KPM_IndicationMessage()
-            try:
-                msg.from_aper(indication_message)
-                msg_val = msg()
-                node = msg_val.get('nodeID', default_node_id)
-                ue = msg_val.get('ueID', "ue_01")
-                
-                for item in msg_val.get('measData', []):
-                    results.append(KpmMeasurement(
-                        node_id=node,
-                        ue_id=ue,
-                        metric_name=item['metricName'],
-                        value=float(item['metricValue']),
-                        timestamp=0
-                    ))
-                return results
-            except Exception as e:
-                # Simulação MOCK (Fallback estrito se os bytes recebidos não forem APER válido)
-                logger.debug(f"Decodificação APER Falhou: {e}. Usando fallback KPM.")
-                pass
-                
-            # MOCK
-            results.append(KpmMeasurement(default_node_id, "ue_01", "DRB.UEThpDl", 15.5, 0))
-            results.append(KpmMeasurement(default_node_id, "ue_01", "RRU.PrbUsedDl", 45.0, 0))
+            msg.from_aper(indication_message)
+            msg_val = msg()
+            node = msg_val.get('nodeID', default_node_id)
+            ue = msg_val.get('ueID', "ue_01")
             
+            for item in msg_val.get('measData', []):
+                results.append(KpmMeasurement(
+                    node_id=node,
+                    ue_id=ue,
+                    metric_name=item['metricName'],
+                    value=float(item['metricValue']),
+                    timestamp=0
+                ))
+            return results
         except Exception as e:
-            logger.error(f"Erro no decoder KPM: {e}")
-            
-        return results
+            logger.warning(f"Rejeição de telemetria inválida ou corrompida no decoder E2SM-KPM: {e}")
+            return []

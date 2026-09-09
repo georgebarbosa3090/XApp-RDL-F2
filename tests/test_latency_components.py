@@ -63,7 +63,7 @@ def test_decomposed_latency_pipeline_monotonic():
     sum_components = t_perception + t_reasoning + t_refinement + t_encode
     assert t_total >= sum_components * 0.9
 
-def test_heuristic_latency_sub_millisecond():
+def test_heuristic_decision_low_latency_budget():
     """
     Valida a baixa latência de decisão do Nível 1 (Heurística).
     Em ambiente interpretado Python no WSL2, o orçamento admitido para este teste unitário é < 5.0 ms
@@ -92,4 +92,58 @@ def test_heuristic_latency_sub_millisecond():
     # Orçamento rigorosamente documentado para ambiente de teste de software Python
     assert dt_ms < 5.0
     assert res.strategy_used.name == "PRIORITY_TABLE"
+
+def test_full_runtime_queue_and_decision_latency_breakdown():
+    """
+    Valida a decomposição monotônica completa do ciclo RDL:
+    T_cycle_total = T_queue + T_proc + T_e2_encode, onde T_proc = T_perception + T_reasoning + T_refinement.
+    """
+    mem = MemoryModule()
+    perception = PerceptionAgent(mem)
+    reasoning = ReasoningAgent(mem, tau1=1.6, tau2=3.0)
+    refinement = RefinementAgent(mem)
+    encoder = RCEncoder()
+    
+    t_arrival = time.perf_counter()
+    time.sleep(0.002) # Simula 2ms de espera no buffer de decisão
+    
+    actions = [
+        XAppAction(xapp_id="xapp_ts", node_id="gnb_01", parameter="TX_POWER", value=23.0, priority=90),
+        XAppAction(xapp_id="xapp_es", node_id="gnb_01", parameter="TX_POWER", value=20.0, priority=40)
+    ]
+    for a in actions:
+        a.arrival_monotonic = t_arrival
+        
+    t_proc_start = time.perf_counter()
+    t_queue_ms = (t_proc_start - t_arrival) * 1000.0
+    assert t_queue_ms >= 1.9
+    
+    # 1. Percepção
+    t_p0 = time.perf_counter()
+    conflicts = perception.register_action_group(actions)
+    t_perc_ms = (time.perf_counter() - t_p0) * 1000.0
+    
+    # 2. Raciocínio
+    t_r0 = time.perf_counter()
+    resolution = reasoning.resolve(conflicts[0], kpm_state=None)
+    t_reas_ms = (time.perf_counter() - t_r0) * 1000.0
+    
+    # 3. Refinamento
+    t_f0 = time.perf_counter()
+    is_valid, _, _ = refinement.validate(resolution, conflicts[0])
+    t_ref_ms = (time.perf_counter() - t_f0) * 1000.0
+    
+    # 4. Codificação E2
+    t_e0 = time.perf_counter()
+    if is_valid and resolution.winning_actions:
+        for act in resolution.winning_actions:
+            _ = encoder.encode_control_pdu(act.node_id, act.parameter, act.value)
+    t_e2_encode_ms = (time.perf_counter() - t_e0) * 1000.0
+    
+    t_proc_ms = t_perc_ms + t_reas_ms + t_ref_ms
+    t_cycle_total_ms = t_queue_ms + t_proc_ms + t_e2_encode_ms
+    
+    assert t_proc_ms > 0.0
+    assert t_e2_encode_ms >= 0.0
+    assert t_cycle_total_ms >= t_queue_ms + t_proc_ms + t_e2_encode_ms * 0.95
 

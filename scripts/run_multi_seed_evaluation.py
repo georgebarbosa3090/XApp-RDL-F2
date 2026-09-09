@@ -228,15 +228,11 @@ def export_manifest_and_report(df, stats_results, mode="demo"):
     os.makedirs(mode_dir, exist_ok=True)
     os.makedirs(RESULTS_DIR, exist_ok=True)
     
-    # Salva no subdiretório do modo e no diretório raiz de resultados
-    csv_paths = [
-        os.path.join(mode_dir, "dataset_multi_seed_metrics.csv"),
-        os.path.join(RESULTS_DIR, "dataset_multi_seed_metrics.csv")
-    ]
-    for p in csv_paths:
-        df.to_csv(p, index=False)
+    # Salva exclusivamente no subdiretório isolado do modo
+    csv_path = os.path.join(mode_dir, "dataset_multi_seed_metrics.csv")
+    df.to_csv(csv_path, index=False)
     
-    with open(csv_paths[0], "rb") as f:
+    with open(csv_path, "rb") as f:
         csv_sha = hashlib.sha256(f.read()).hexdigest()
         
     manifest = {
@@ -252,13 +248,9 @@ def export_manifest_and_report(df, stats_results, mode="demo"):
         "statistical_tests": "ANOVA One-Way (3 Grupos: Baseline, H-RDL, CA-RDL), Effect Size (eta-squared), Welch t-test (Pairwise), Mann-Whitney U (Pairwise)"
     }
     
-    manifest_paths = [
-        os.path.join(mode_dir, "manifest_experiment.json"),
-        os.path.join(RESULTS_DIR, "manifest_experiment.json")
-    ]
-    for p in manifest_paths:
-        with open(p, "w", encoding="utf-8") as f:
-            json.dump(manifest, f, indent=4)
+    manifest_path = os.path.join(mode_dir, "manifest_experiment.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=4)
         
     md_lines = [
         f"# Relatório de Avaliação Estatística Rigorosa Multi-Semente (Modo: {mode.upper()})",
@@ -289,25 +281,35 @@ def export_manifest_and_report(df, stats_results, mode="demo"):
         
         md_lines.append(f"| **{r['label']}** | {b_str} | {p1_str} | **{p2_str}** | **{incr_str}** | `{f_str}` | `{p_anova_str}` | `{eta_str}` |")
         
+    # Análise dinâmica de efeitos e trade-offs
+    jain_metric = next((r for r in stats_results if r['metric'] == 'jain_fairness'), None)
+    tput_metric = next((r for r in stats_results if r['metric'] == 'throughput_total_mbps'), None)
+    lat_metric = next((r for r in stats_results if r['metric'] == 'urllc_latency_mean_ms'), None)
+
+    jain_text = ""
+    if jain_metric:
+        if jain_metric['diff_incr_pct'] >= 0:
+            jain_text = f"ganho incremental de +{jain_metric['diff_incr_pct']:.1f}% no índice de Jain"
+        else:
+            jain_text = f"compromisso (trade-off) de {jain_metric['diff_incr_pct']:.1f}% no índice de Jain em favor da maximização de vazão ({tput_metric['diff_incr_pct']:+.1f}%) e redução de latência URLLC ({lat_metric['diff_incr_pct']:+.1f}%)" if tput_metric and lat_metric else f"variação de {jain_metric['diff_incr_pct']:.1f}% na equidade de Jain"
+
+    conclusion_2 = f"2. **Separação entre Ganho Global e Incremental:** A H-RDL fornece a base de contenção de conflitos e segurança de rádio, enquanto a CA-RDL adiciona coordenação contextual multiagente com {jain_text}."
+
     md_lines.extend([
         "",
         "## Conclusões da Validação Estatística (Computadas Dinamicamente)",
         f"1. **Rejeição da Hipótese Nula ($H_0$):** A ANOVA One-Way de 3 grupos confirma diferenciação estatisticamente significante ($p < 0.05$) em {sig_count} de {total_metrics} métricas analisadas.",
-        "2. **Separação entre Ganho Global e Incremental:** A H-RDL fornece a base de contenção de conflitos e segurança de rádio, enquanto a CA-RDL adiciona coordenação contextual com ganhos incrementais em vazão, latência URLLC e equidade de Jain.",
+        conclusion_2,
         f"3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `{csv_sha}` registrado em manifesto versionado em `{mode_dir}`."
     ])
     
-    report_paths = [
-        os.path.join(mode_dir, "relatorio_estatistico_multi_semente.md"),
-        os.path.join(RESULTS_DIR, "relatorio_estatistico_multi_semente.md")
-    ]
-    for p in report_paths:
-        with open(p, "w", encoding="utf-8") as f:
-            f.write("\n".join(md_lines))
+    report_path = os.path.join(mode_dir, "relatorio_estatistico_multi_semente.md")
+    with open(report_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(md_lines))
         
-    print(f"[OK] Dataset salvo em:    {csv_paths[0]}")
-    print(f"[OK] Manifesto salvo em:  {manifest_paths[0]}")
-    print(f"[OK] Relatório salvo em:  {report_paths[0]}")
+    print(f"[OK] Dataset salvo em:    {csv_path}")
+    print(f"[OK] Manifesto salvo em:  {manifest_path}")
+    print(f"[OK] Relatório salvo em:  {report_path}")
 
 def main():
     parser = argparse.ArgumentParser(description="Motor de Avaliação Estatística Multi-Semente")
@@ -327,6 +329,19 @@ def main():
             sys.exit(1)
         print(f"[*] Carregando traces empíricos brutos de: {traces_path}")
         df = pd.read_csv(traces_path)
+        
+        # Validação estrita de integridade e proveniência do dataset experimental
+        required_cols = {"seed", "scenario", "urllc_latency_mean_ms", "throughput_total_mbps", "jain_fairness"}
+        if not required_cols.issubset(df.columns):
+            missing_cols = required_cols - set(df.columns)
+            print(f"[ERRO CRÍTICO EXPERIMENTAL] Dataset corrompido ou incompleto. Colunas ausentes: {missing_cols}", file=sys.stderr)
+            sys.exit(1)
+            
+        required_scenarios = {"Baseline", "RDL_Phase1", "RDL_Phase2"}
+        found_scenarios = set(df["scenario"].unique())
+        if not required_scenarios.issubset(found_scenarios):
+            print(f"[ERRO CRÍTICO EXPERIMENTAL] Cenários ausentes no dataset experimental: {required_scenarios - found_scenarios}", file=sys.stderr)
+            sys.exit(1)
     else:
         print("[*] Modo DEMO ativado: Gerando observações sintéticas estocasticamente calibradas para validação de pipeline.")
         df = generate_multi_seed_data(n_seeds=args.n_seeds)

@@ -70,3 +70,49 @@ def test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode(tmp_path,
     with pytest.raises(ValueError, match="Rejeição de integridade experimental"):
         verify_raw_traces_exist(["baseline"], range(1001, 1003))
 
+def test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows(tmp_path, monkeypatch):
+    """Valida que atributos com aspas simples e XML sem fluxos são rejeitados via ElementTree."""
+    import scripts.package_and_sync_raw_results as pkg_module
+    
+    fake_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    
+    sc_dir = fake_raw_dir / "baseline"
+    sc_dir.mkdir(parents=True)
+    
+    # 1. Teste com aspas simples: synthetic='true'
+    file_single_quote = sc_dir / "flowmonitor_seed_1001.xml"
+    file_single_quote.write_text("<FlowMonitor synthetic='true' mode='demo'><FlowStats/></FlowMonitor>", encoding="utf-8")
+    
+    with pytest.raises(ValueError, match="Rejeição de integridade experimental"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+        
+    # 2. Teste sem fluxos de telemetria
+    file_single_quote.write_text("<FlowMonitor><FlowStats/></FlowMonitor>", encoding="utf-8")
+    with pytest.raises(ValueError, match="não conformes"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+
+def test_verify_raw_traces_accepts_valid_experimental_xml(tmp_path, monkeypatch):
+    """Valida que arquivos XML com estrutura válida de FlowMonitor e contadores de pacotes são aceitos."""
+    import scripts.package_and_sync_raw_results as pkg_module
+    
+    fake_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    
+    sc_dir = fake_raw_dir / "baseline"
+    sc_dir.mkdir(parents=True)
+    
+    valid_xml = sc_dir / "flowmonitor_seed_1001.xml"
+    valid_xml.write_text(
+        '<FlowMonitor execution_id="run_ns3_001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" txPackets="1000" rxPackets="998" delaySum="1.92" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    
+    # Não deve lançar exceção
+    verify_raw_traces_exist(["baseline"], range(1001, 1002))
+
+

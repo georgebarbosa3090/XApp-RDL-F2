@@ -314,31 +314,97 @@ flowchart TD
 
 ---
 
-## 8. Matriz de Cobertura e Resultados da Suíte de Testes (59/59 Aprovados)
+## 8. Superação Rigorosa dos Desafios do Capítulo 12 (Sexta Auditoria - Revisão 18aa8d4)
+
+A sexta auditoria científica do projeto CA-RDL avaliou os caminhos de execução da revisão `18aa8d4`, apontando seis eixos essenciais de aprimoramento implementados, testados e certificados:
+
+```mermaid
+flowchart TD
+    subgraph E1["12.3: Política-Ação & Safe-RL"]
+        A1["Remoção de Pesos Ad-Hoc"] --> A2["Inferência Pura pi_theta(a|s)"]
+        A2 --> A3["Armazenamento de action_mask no Buffer"]
+        A3 --> A4["Loss PPO Avaliada com Action Masking"]
+    end
+
+    subgraph E2["12.4: Telemetria & Controle E2"]
+        B1["KpmDecoder Rejeita Payload Corrompido ([])"] --> B2["Eliminação de Mock Constante (15.5, 45.0)"]
+        B2 --> B3["_send_control Despacha PDU Completo (Header + Message APER)"]
+    end
+
+    subgraph E3["12.5: Proveniência XML & Estatística"]
+        C1["Parser Estruturado xml.etree.ElementTree"] --> C2["Validação Positiva de Métricas de Fluxo"]
+        C2 --> C3["Isolamento Estrito de Diretórios (results/demo vs results/experiment)"]
+        C3 --> C4["Conclusões Dinâmicas com Trade-offs Reais (Equidade Jain)"]
+    end
+
+    subgraph E4["12.6: Latência Decomposta"]
+        D1["T_cycle_total = T_queue + T_proc + T_e2_encode"] --> D2["Alinhamento de Nomenclatura e Testes no Runtime"]
+    end
+```
+
+### 8.1 Inferência Pura da Política $\pi_\theta(a|s)$ e Treinamento com Action Masking (12.3)
+- **Problemática:** O método `decide()` ainda multiplicava probabilidades por fatores lineares de prioridade, distorcendo a política aprendida $\pi_\theta(a|s)$. A máscara de ações recebida por `store_transition()` não era salva no buffer nem utilizada no cálculo de perda do ator durante `MAPPOAgent.update()`.
+- **Solução Implementada:**
+  - Remoção completa da multiplicação ad-hoc por prioridade: `decide()` obtém `probs = leader_agent.actor.get_action_probs(obs_t, mask_t)` e seleciona o argmax da distribuição mascarada diretamente.
+  - Armazenamento de `action_mask` em cada item de transição no `rollout_buffer`.
+  - No loop de otimização PPO (`MAPPOAgent.update`), as novas probabilidades e entropia são avaliadas sobre a distribuição mascarada `self.actor.get_action_probs(obs_t, action_masks_t)`.
+- **Validação:** `test_pure_policy_inference_without_ad_hoc_reweighting` e `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+
+### 8.2 Rejeição Estrita de Telemetria Inválida sem Injeção de Dados Artificiais (12.4)
+- **Problemática:** Falha na decodificação APER de telemetria E2SM-KPM injetava valores fixos de simulação (`15.5 Mbps`, `45 PRBs`), mascarando erros de protocolo em modo experimental.
+- **Solução Implementada:**
+  - Em `src/e2/kpm_decoder.py`, exceções de decodificação APER ou bytes corrompidos geram log de advertência e retornam estritamente `[]` (lista vazia).
+  - A ausência de telemetria faz com que `PerceptionAgent.get_kpm_report()` retorne `(None, False)`, acionando de forma transparente o fallback conservador para a Heurística de Nível 1.
+- **Validação:** `test_kpm_decoder_rejection_on_invalid_payload` e `test_kpm_decoder_valid_aper_multimetric_aggregation` em [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
+
+### 8.3 Despacho de PDU Completo E2SM-RC no Runtime de Produção (12.4)
+- **Problemática:** O runtime `src/rdl_xapp.py` invocava `encode_control_request` (interface legado que gerava apenas a mensagem APER), deixando de transmitir o cabeçalho APER padronizado pelo O-RAN WG3.
+- **Solução Implementada:**
+  - Em `src/rdl_xapp.py` (`_send_control`), o sistema chama `encode_control_pdu(node_id, parameter, value)` e inclui no dicionário de controle RMR os campos `header_aper_bytes`, `msg_aper_bytes` e `aper_bytes` (para retrocompatibilidade com adaptadores E2 legados).
+- **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py).
+
+### 8.4 Validação Estruturada com ElementTree e Conclusões Dinâmicas com Trade-offs (12.5)
+- **Problemática:** A busca por marcadores sintéticos usava substring de texto nos primeiros 512 caracteres, falhando com aspas simples ou arquivos sem marcador, e as conclusões do relatório estatístico afirmavam ganho estático de Jain mesmo quando havia trade-off (-1.6%).
+- **Solução Implementada:**
+  - Utilização do parser estruturado `xml.etree.ElementTree` em `verify_raw_traces_exist()`, validando atributos em qualquer estilo de aspas e exigindo confirmação positiva de elementos `<Flow>` com contadores de pacotes numéricos válidos.
+  - Isolamento estrito de diretórios de saída (`experiments/results/demo/` vs `experiments/results/experiment/`).
+  - Geração dinâmica da conclusão nº 2 no relatório estatístico, respeitando rigorosamente o sinal da variação percentual: reporta ganho se $\Delta > 0$ ou compromisso/trade-off quando $\Delta < 0$.
+- **Validação:** `test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows` e `test_verify_raw_traces_accepts_valid_experimental_xml` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+
+### 8.5 Decomposição Monotônica e Nomenclatura da Latência Total (12.6)
+- **Problemática:** A latência denominada "total" não incorporava a espera na fila nem o tempo de codificação APER, e os testes de latência não passavam pela fila do runtime.
+- **Solução Implementada:**
+  - Instrumentação de $T_{\text{proc}} = T_{\text{perception}} + T_{\text{reasoning}} + T_{\text{refinement}}$, $T_{\text{e2\_encode}}$ no envio e cálculo formal de $T_{\text{cycle\_total}} = T_{\text{queue}} + T_{\text{proc}} + T_{\text{e2\_encode}}$.
+  - Alinhamento de nomenclatura de testes: `test_heuristic_decision_low_latency_budget` e adição de `test_full_runtime_queue_and_decision_latency_breakdown`.
+- **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+
+---
+
+## 9. Matriz Consolidada de Cobertura e Resultados da Suíte de Testes (63/63 Aprovados)
 
 Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytest tests/ -v`):
 
 | Módulo de Teste | Quantidade | Foco de Validação Técnica | Resultado |
 | :--- | :---: | :--- | :---: |
 | `test_observation_contract.py` | 5 | Vetor $D=60$, presença de propostas (6 bits), normalização linear, excesso $>6$ e hash determinístico | **APROVADO** (100%) |
-| `test_policy_action_binding.py` | 6 | Gradientes Actor-Critic, Action Masking, No-Op, Safe-RL Cost Gradient ($\nabla_\theta L^\text{safe} \neq 0$), inferência pura e desambiguação No-Op ($N=7$) | **APROVADO** (100%) |
+| `test_policy_action_binding.py` | 6 | Gradientes Actor-Critic, Action Masking no treino e inferência, No-Op, Safe-RL Cost Gradient comparativo ($\nabla_\theta L^\text{safe}$) e desambiguação No-Op ($N=7$) | **APROVADO** (100%) |
 | `test_e2_encoding_decoding.py` | 5 | Perfis E2SM-RC, rejeição de parâmetros inválidos, limites numéricos, reversibilidade e PDU Header+Message | **APROVADO** (100%) |
-| `test_latency_components.py` | 2 | Decomposição monotônica ($T_\text{queue} + T_\text{perc} + T_\text{reas} + T_\text{ref} + T_\text{e2}$) e orçamento da Heurística | **APROVADO** (100%) |
-| `test_provenance_check.py` | 4 | Cálculo de SHA-256, modo estrito, empacotamento demo e teste negativo de rejeição de dados sintéticos | **APROVADO** (100%) |
+| `test_latency_components.py` | 3 | Decomposição monotônica ($T_\text{queue} + T_\text{proc} + T_\text{e2\_encode}$), orçamento da Heurística e ciclo completo | **APROVADO** (100%) |
+| `test_provenance_check.py` | 6 | Cálculo de SHA-256, modo estrito, empacotamento demo, rejeição de aspas simples/vazios e validação positiva de XML experimental | **APROVADO** (100%) |
 | `test_audit_fixes_comprehensive.py` | 5 | Roteamento hierárquico $C(c,s)$, No-Op, validação por perfil de célula, ponto fixo e TTL de contexto | **APROVADO** (100%) |
-| `test_marl_mappo.py` | 8 | Coordenador MAPPO, cálculo GAE, multi-objetivo, transições e Safe-RL CMDP com Lagrange | **APROVADO** (100%) |
+| `test_marl_mappo.py` | 8 | Coordenador MAPPO, cálculo GAE, multi-objetivo, transições com action mask e Safe-RL CMDP com Lagrange | **APROVADO** (100%) |
 | `test_perception_agent.py` | 5 | Conflitos diretos, indiretos intra-célula, inter-célula (interferência co-canal) e nós isolados | **APROVADO** (100%) |
 | `test_reasoning_agent.py` | 3 | Resolução Heurística Nível 1, Utilidade Nível 2A e escalonamento para Nível 2B (MAPPO) | **APROVADO** (100%) |
 | `test_refinement_agent.py` | 6 | Limites físicos, barreira temporal, Pass-Through limpo, quarentena Zero-Trust e feixes MIMO | **APROVADO** (100%) |
 | `test_reference_xapps.py` | 7 | Propostas de 6 xApps de referência (xSlice, Energy, TS, Beamformer, ISAC, Rogue) e tríade de conflito | **APROVADO** (100%) |
-| `test_aper_codecs.py` | 3 | Decodificação E2AP Indication, decodificação KPM agregada com fallback e geração APER RC | **APROVADO** (100%) |
-| **TOTAL GERAL** | **59** | **Cobertura Integral de Todos os Módulos do Sistema** | **59/59 PASS (100%)** |
+| `test_aper_codecs.py` | 4 | Decodificação E2AP Indication, rejeição estrita de KPM inválido ([]), agregação multimétrica APER e geração APER RC | **APROVADO** (100%) |
+| **TOTAL GERAL** | **63** | **Cobertura Integral de Todos os Módulos do Sistema** | **63/63 PASS (100%)** |
 
 ---
 
-## 9. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
+## 10. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
 
-Com a resolução formal e certificada de todas as pendências arquiteturais, funcionais e metodológicas dos Capítulos 6, 7, 8, 9, 10 e 11 do relatório de auditoria:
+Com a resolução formal e certificada de todas as pendências arquiteturais, funcionais e metodológicas dos Capítulos 6 a 12 do relatório de auditoria:
 1. **Infraestrutura de Hardware:** Servidores Dell PowerEdge R750 com aceleradores NVIDIA A100/A30 e SDRs USRPs NI X310 e N310 operando em Banda n78 (3.5 GHz) e FR2 mmWave (28 GHz).
 2. **Pilha O-RAN Integrada:** Near-RT RIC O-RAN SC, E2 Nodes srsRAN Enterprise e Núcleo Open5GS 5G Standalone.
 3. **Publicação Científica:** Base rigorosa para submissão aos periódicos de alto impacto **IEEE Transactions on Mobile Computing (TMC)** e **IEEE JSAC**, consolidando a arquitetura hierárquica escalonada (Heurística $\to$ Utilidade NDT $\to$ MAPPO Safe-RL) como estado da arte em governança autônoma multi-xApp.

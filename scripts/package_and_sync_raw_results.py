@@ -49,10 +49,14 @@ def create_dummy_raw_traces_if_missing(scenarios, seeds_range):
                         f.write(f'    <Flow flowId="{flow_id}" slice="{slice_type}" txPackets="1000" rxPackets="998" delaySum="1.92" />\n')
                     f.write('  </FlowStats>\n</FlowMonitor>\n')
 
+import xml.etree.ElementTree as ET
+
 def verify_raw_traces_exist(scenarios, seeds_range):
-    """Verifica se todos os arquivos brutos experimentais existem e rejeita arquivos sintéticos ou demonstrativos."""
+    """Verifica estruturalmente se todos os arquivos brutos experimentais existem e são autênticos via ElementTree."""
     missing = []
     synthetic_found = []
+    invalid_format = []
+    
     for sc in scenarios:
         sc_dir = os.path.join(RAW_DIR, sc)
         if not os.path.isdir(sc_dir):
@@ -64,12 +68,38 @@ def verify_raw_traces_exist(scenarios, seeds_range):
                 missing.append(seed_file)
             else:
                 try:
-                    with open(seed_file, "r", encoding="utf-8") as f:
-                        header = f.read(512)
-                        if 'synthetic="true"' in header or 'mode="demo"' in header:
-                            synthetic_found.append(seed_file)
-                except Exception:
-                    pass
+                    tree = ET.parse(seed_file)
+                    root = tree.getroot()
+                    
+                    # 1. Verifica atributos explícitos de demonstração/sintéticos (independente de aspas)
+                    is_synth = root.attrib.get("synthetic", "").lower() in ("true", "1", "yes")
+                    is_demo = root.attrib.get("mode", "").lower() in ("demo", "synthetic")
+                    
+                    if is_synth or is_demo:
+                        synthetic_found.append(seed_file)
+                        continue
+                        
+                    # 2. Verificação positiva de metadados experimentais e estrutura de fluxos
+                    flows = root.findall(".//Flow")
+                    if not flows:
+                        invalid_format.append(f"{seed_file} (estrutura FlowMonitor sem nós <Flow> de telemetria física)")
+                        continue
+                        
+                    # Validação de integridade numérica dos contadores de pacotes
+                    valid_flow_data = False
+                    for f_elem in flows[:5]:
+                        tx = f_elem.attrib.get("txPackets")
+                        rx = f_elem.attrib.get("rxPackets")
+                        if tx is not None and rx is not None and int(tx) > 0:
+                            valid_flow_data = True
+                            break
+                            
+                    if not valid_flow_data:
+                        invalid_format.append(f"{seed_file} (contadores de pacotes tx/rx nulos ou ausentes)")
+                        
+                except Exception as e:
+                    invalid_format.append(f"{seed_file} (falha de leitura/parse XML: {e})")
+
     if missing:
         raise FileNotFoundError(
             f"Modo estrito ativado: {len(missing)} arquivos de trace brutos ausentes na cadeia de custódia:\n"
@@ -82,6 +112,11 @@ def verify_raw_traces_exist(scenarios, seeds_range):
             f"Foram detectados {len(synthetic_found)} traces sintéticos de demonstração no diretório experimental:\n"
             + "\n".join(synthetic_found[:10])
             + "\nNo modo --mode experiment, todos os traces devem ser originários de execuções físicas/ns-3 reais."
+        )
+    if invalid_format:
+        raise ValueError(
+            f"Modo estrito ativado: {len(invalid_format)} arquivos de trace brutos inválidos ou não conformes:\n"
+            + "\n".join(invalid_format[:10])
         )
 
 def package_scenario_raw_data(scenario_name: str, min_seed: int, max_seed: int) -> dict:

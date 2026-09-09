@@ -206,6 +206,8 @@ if TORCH_AVAILABLE and nn is not None:
             global_obs_t = torch.FloatTensor(np.array(global_obs_list))
             actions_t = torch.LongTensor(np.array(actions_list))
             old_log_probs_t = torch.FloatTensor(np.array(old_log_probs_list))
+            masks_list = [t.get("action_mask", np.ones(self.action_dim, dtype=np.float32)) for t in rollout_buffer]
+            action_masks_t = torch.FloatTensor(np.array(masks_list))
 
             # 2. Avaliar valores via rede Critic Centralizada V_\phi(s_t^{global})
             with torch.no_grad():
@@ -240,8 +242,8 @@ if TORCH_AVAILABLE and nn is not None:
             total_entropy = 0.0
 
             for _ in range(self.ppo_epochs):
-                # Avaliação atual da política do Ator
-                probs = self.actor(obs_t)
+                # Avaliação atual da política do Ator com Action Masking
+                probs = self.actor.get_action_probs(obs_t, action_masks_t)
                 dist = torch.distributions.Categorical(probs)
                 new_log_probs = dist.log_prob(actions_t)
                 entropy = dist.entropy().mean()
@@ -650,22 +652,13 @@ class MAPPOCoordinator:
         
         if PYTORCH_AVAILABLE and isinstance(leader_agent, MAPPOAgent):
             obs_t = torch.FloatTensor(obs).unsqueeze(0)
+            mask_t = torch.FloatTensor(valid_mask.astype(np.float32)).unsqueeze(0)
             with torch.no_grad():
-                probs = leader_agent.actor(obs_t).squeeze(0).numpy()
+                probs_t = leader_agent.actor.get_action_probs(obs_t, mask_t)
+                probs = probs_t.squeeze(0).numpy()
                 
-            # Aplica máscara de ações inválidas com ponderação determinística por prioridade
-            masked_probs = np.where(valid_mask, probs, 0.0)
-            for i, act in enumerate(conflict.involved_xapps[:self.action_dim - 1]):
-                prio_norm = float(act.priority) / 100.0 if act.priority > 10 else float(act.priority) / 10.0
-                masked_probs[i] *= (1.0 + prio_norm * 2.0)
-            prob_sum = np.sum(masked_probs)
-            if prob_sum > 1e-6:
-                masked_probs /= prob_sum
-                action_idx = int(np.argmax(masked_probs))
-                confidence = float(masked_probs[action_idx])
-            else:
-                action_idx = self.action_dim - 1
-                confidence = 0.85
+            action_idx = int(np.argmax(probs))
+            confidence = float(probs[action_idx])
         else:
             action_idx, log_prob = leader_agent.select_action(obs)
             if action_idx >= n_proposals and action_idx != self.action_dim - 1:
@@ -695,7 +688,7 @@ class MAPPOCoordinator:
         """Alias de compatibilidade para armazenar transição no buffer."""
         if global_obs is None:
             global_obs = np.tile(obs, self.n_agents)[:self.obs_dim * self.n_agents]
-        self.record_transition(obs, action, log_prob, reward, global_obs, done, cost)
+        self.record_transition(obs, action, log_prob, reward, global_obs, done, cost, action_mask)
 
     def record_transition(
         self, 
@@ -705,9 +698,20 @@ class MAPPOCoordinator:
         reward: float, 
         global_obs: np.ndarray, 
         done: bool = False,
-        cost: float = 0.0
+        cost: float = 0.0,
+        action_mask: Optional[Any] = None
     ):
-        """Armazena transição no buffer de rollout para treino dos agentes incluindo custo Safe-RL."""
+        """Armazena transição no buffer de rollout para treino dos agentes incluindo custo Safe-RL e action mask."""
+        if action_mask is None:
+            mask = np.ones(self.action_dim, dtype=np.float32)
+        else:
+            mask = np.array(action_mask, dtype=np.float32)
+            if len(mask) < self.action_dim:
+                padded_mask = np.zeros(self.action_dim, dtype=np.float32)
+                padded_mask[:len(mask)] = mask
+                padded_mask[self.action_dim - 1] = 1.0 # No-Op sempre admissível
+                mask = padded_mask
+
         self.rollout_buffer.append({
             "obs": obs,
             "action": action,
@@ -715,7 +719,8 @@ class MAPPOCoordinator:
             "reward": reward,
             "global_obs": global_obs,
             "done": done,
-            "cost": cost
+            "cost": cost,
+            "action_mask": mask
         })
 
     def train_step(self, batch_size: Optional[int] = None) -> Dict[str, float]:

@@ -244,25 +244,29 @@ class RDLxApp:
             is_valid, level, reason = self.refinement.validate(resolution, conflict)
             t_ref_ms = (time.perf_counter() - t_ref_0) * 1000.0
             
-            latency_total_s = time.perf_counter() - t0_perf
-            latency_ms = latency_total_s * 1000.0
-            
-            logger.info(
-                f"⏱️ Decisão RDL Concluída em {latency_ms:.2f}ms "
-                f"(Espera Fila: {t_queue_ms:.2f}ms, Percepção: {t_perc_ms:.2f}ms, Raciocínio: {t_reas_ms:.2f}ms, Refinamento: {t_ref_ms:.2f}ms)"
-            )
-            
-            self.memory.add_resolution(resolution)
-            self.metrics.record_resolution(resolution, latency_total_s)
+            t_proc_ms = t_perc_ms + t_reas_ms + t_ref_ms
+            t_e2_encode_ms = 0.0
             
             if is_valid and resolution.winning_actions:
                 for act in resolution.winning_actions:
                     logger.info("Conflito Resolvido", conflict=conflict.conflict_id, strategy=resolution.strategy_used.name, action=act.parameter)
-                    self._send_control(act.node_id, act.parameter, act.value)
+                    _, enc_ms = self._send_control(act.node_id, act.parameter, act.value)
+                    t_e2_encode_ms += enc_ms
             elif not resolution.winning_actions:
                 logger.info("ℹ️ Decisão No-Op / Deferida pelo MAPPO (nenhuma ação de controle despachada)")
             else:
                 logger.warning("Resolução Rejeitada ou Lote Vazio / Quarentena", reason=reason)
+
+            t_cycle_total_ms = t_queue_ms + t_proc_ms + t_e2_encode_ms
+            latency_total_s = t_cycle_total_ms / 1000.0
+            
+            logger.info(
+                f"⏱️ Ciclo Total RDL Concluído em {t_cycle_total_ms:.2f}ms "
+                f"(Espera Fila: {t_queue_ms:.2f}ms, Processamento: {t_proc_ms:.2f}ms [Percepção: {t_perc_ms:.2f}ms, Raciocínio: {t_reas_ms:.2f}ms, Refinamento: {t_ref_ms:.2f}ms], Codificação E2: {t_e2_encode_ms:.2f}ms)"
+            )
+            
+            self.memory.add_resolution(resolution)
+            self.metrics.record_resolution(resolution, latency_total_s)
 
         # 2. Despacho Contínuo de Ações Limpas (Conflict-Free Pass-Through Pipeline)
         clean_actions = [
@@ -297,13 +301,14 @@ class RDLxApp:
                         # Processa fora do lock para não travar RMR
                         threading.Thread(target=self._process_action_group, args=(actions_to_process,), daemon=True).start()
 
-    def _send_control(self, node_id: str, parameter: str, value: float):
+    def _send_control(self, node_id: str, parameter: str, value: float) -> Tuple[bool, float]:
+        t_enc_0 = time.perf_counter()
         try:
             tx_id = str(uuid.uuid4())
             self.pending_transactions[tx_id] = now_ts()
             
-            # Encodifica APER ASN.1 Nativo
-            aper_payload = self.rc_encoder.encode_control_request(node_id, parameter, value)
+            # Encodifica APER ASN.1 Nativo Completo (Header + Message)
+            header_aper, msg_aper = self.rc_encoder.encode_control_pdu(node_id, parameter, value)
             
             # Formata para o dispatcher RMR do E2 Term
             payload_dict = {
@@ -311,7 +316,9 @@ class RDLxApp:
                 "node_id": node_id,
                 "parameter": parameter,
                 "value": value,
-                "aper_bytes": aper_payload.hex() if hasattr(aper_payload, "hex") else str(aper_payload)
+                "header_aper_bytes": header_aper.hex() if hasattr(header_aper, "hex") else str(header_aper),
+                "msg_aper_bytes": msg_aper.hex() if hasattr(msg_aper, "hex") else str(msg_aper),
+                "aper_bytes": msg_aper.hex() if hasattr(msg_aper, "hex") else str(msg_aper) # Retrocompatibilidade
             }
             payload_bytes = json.dumps(payload_dict).encode('utf-8')
             
@@ -319,10 +326,12 @@ class RDLxApp:
         except Exception as e:
             logger.error(f"Falha ao gerar APER Control: {e}")
             success = False
+        t_enc_ms = (time.perf_counter() - t_enc_0) * 1000.0
         if success:
-            logger.info("RIC_CONTROL_REQUEST enviado com sucesso", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
+            logger.info("RIC_CONTROL_REQUEST enviado com sucesso (Header + Message APER)", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
         else:
             logger.error("Falha ao enviar RIC_CONTROL_REQUEST")
+        return success, t_enc_ms
 
 if __name__ == "__main__":
     app = RDLxApp()
