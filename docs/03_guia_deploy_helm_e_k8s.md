@@ -67,6 +67,15 @@ k3d cluster create rancher-lab --servers 1 --agents 2 \
 mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
 ```
 
+> [!IMPORTANT]
+> **Como alterar a topologia se o cluster `rancher-lab` já existir:**  
+> Se o cluster já estiver criado e você tentar criar outra topologia, o k3d acusará o erro:  
+> `FATA[0000] Failed to create cluster 'rancher-lab' because a cluster with that name already exists`  
+> **Solução:** Remova o cluster existente antes de criar a nova topologia:
+> ```bash
+> make cluster-delete && make cluster-create-2nodes
+> ```
+
 ### 2.2. Passo 2: Criar os Namespaces O-RAN
 ```bash
 kubectl create namespace ricplt --dry-run=client -o yaml | kubectl apply -f -
@@ -170,20 +179,30 @@ make test-3xapps
 
 ## 5. Limpeza e Reset do Ambiente (Tear Down)
 
-### 5.1. Desinstalar Apenas a xApp RDL Fase 2:
+### 5.1. Limpeza Completa de Todos os Recursos O-RAN (Mantendo o Cluster Ativo):
+Remove todas as releases Helm, todos os Pods/Services nos namespaces `ricxapp` e `ricplt` e deleta os namespaces:
+```bash
+make clean-all
+# ou: ./scripts/cleanup_all.sh
+```
+
+### 5.2. Desinstalar Apenas a xApp RDL Fase 2:
 ```bash
 make helm-uninstall-f2
 ```
 
-### 5.2. Desinstalar Todas as xApps (RDL Fase 1 e Fase 2):
+### 5.3. Desinstalar Todas as xApps (RDL Fase 1 e Fase 2):
 ```bash
 make uninstall-all-rdl
 ```
 
-### 5.3. Limpeza Completa (Destruir Cluster e Recursos):
+### 5.4. Destruir ou Recriar o Cluster k3d por Completo:
 ```bash
-# Remove o cluster k3d e todos os contêineres/volumes associados:
+# Destrói o cluster k3d e todos os contêineres/volumes associados:
 make cluster-delete
+
+# Recria um cluster limpo do zero (1 Nó):
+make cluster-recreate
 ```
 
 ---
@@ -207,8 +226,12 @@ make cluster-delete
 
 | Comando Makefile | Ação Executada | Escopo de Impacto |
 | :--- | :--- | :--- |
-| **`make cluster-create`** | Provisiona cluster k3d com portas O-RAN | Infraestrutura K8s |
-| **`make cluster-delete`** | Destrói cluster k3d e limpa recursos | Infraestrutura K8s |
+| **`make cluster-create-1node`** | Cria cluster k3d com 1 Nó (Control-Plane + Worker) | Infraestrutura K8s |
+| **`make cluster-create-2nodes`** | Cria cluster k3d com 2 Nós (1 Server + 1 Agent) | Infraestrutura K8s |
+| **`make cluster-create-3nodes`** | Cria cluster k3d com 3 Nós (1 Server + 2 Agents) | Infraestrutura K8s |
+| **`make cluster-delete`** | Destrói cluster k3d `rancher-lab` | Infraestrutura K8s |
+| **`make cluster-recreate`** | Deleta e recria o cluster k3d do zero | Infraestrutura K8s |
+| **`make clean-all`** | Limpeza automatizada de todos os pods, xApps e namespaces | Namespaces `ricxapp`/`ricplt` |
 | **`make build`** | Compila a imagem Docker `iqos-xapp-rdl:2.0.0` | Imagem Local |
 | **`make test`** | Executa os testes unitários (pytest) | Local |
 | **`make helm-deploy-f2`** | Deploy exclusivo da release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` |
@@ -217,4 +240,4 @@ make cluster-delete
 | **`make status-f2`** | Exibe status detalhado dos pods no namespace `ricxapp` | Diagnóstico |
 | **`make logs-f2`** | Streaming de logs da xApp RDL Fase 2 | Diagnóstico |
 | **`make test-f2`** | Testa endpoints `/health` e `/metrics` da Fase 2 | Diagnóstico |
-| **`make test-3xapps`** | Verifica saúde das 3 Reference xApps | Diagnóstico |
+| **`make test-3xapps`** | Verifica saúde das Reference xApps | Diagnóstico |
