@@ -1,11 +1,11 @@
-from typing import Tuple, Dict, Any, List
+from __future__ import annotations
+from typing import Tuple, Dict, Any, List, Optional
 import time
+from enum import Enum
 from src.conflict_types import ConflictEvent, ResolutionAction, XAppAction
 from src.observability.logging import setup_logger
 
 logger = setup_logger("RefinementAgent")
-
-from enum import Enum
 
 class XAppLifecycleState(Enum):
     ACTIVE = "ACTIVE"
@@ -169,8 +169,8 @@ class RefinementAgent:
                 self._record_violation(action.xapp_id, now, f"Control frequency exceeded for {target_key}")
                 return False, 1, f"Control frequency exceeded for {target_key}"
                 
-            # 2. Limites físicos de parâmetros de rádio
-            valid_bounds, bounds_reason = self._validate_parameter_bounds(action.parameter, action.value)
+            # 2. Limites físicos de parâmetros de rádio diferenciados por tipo de célula (Macro vs Small Cell)
+            valid_bounds, bounds_reason = self._validate_parameter_bounds(action.parameter, action.value, node_id=action.node_id)
             if not valid_bounds:
                 self._record_violation(action.xapp_id, now, bounds_reason)
                 return False, 1, bounds_reason
@@ -207,8 +207,8 @@ class RefinementAgent:
             self._record_violation(action.xapp_id, now, f"Control frequency exceeded for {target_key}")
             return False, 1, f"Control frequency exceeded for {target_key}"
             
-        # 2. Limites físicos de parâmetros de rádio
-        valid_bounds, bounds_reason = self._validate_parameter_bounds(action.parameter, action.value)
+        # 2. Limites físicos de parâmetros de rádio diferenciados por tipo de célula
+        valid_bounds, bounds_reason = self._validate_parameter_bounds(action.parameter, action.value, node_id=action.node_id)
         if not valid_bounds:
             self._record_violation(action.xapp_id, now, bounds_reason)
             return False, 1, bounds_reason

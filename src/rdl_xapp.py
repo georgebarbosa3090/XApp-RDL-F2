@@ -209,23 +209,29 @@ class RDLxApp:
             self.memory.add_conflict(conflict)
             self.metrics.record_conflict(conflict)
             
-            # Telemetria com validação de TTL por nó
+            # Telemetria com validação estrita de TTL por nó
             kpm_state = None
+            context_available = True
             if conflict.involved_xapps:
                 target_node = conflict.involved_xapps[0].node_id
-                kpm_rep, is_valid = self.perception.get_kpm_report(target_node)
-                if kpm_rep and is_valid:
+                kpm_rep, is_valid_kpm = self.perception.get_kpm_report(target_node)
+                if kpm_rep and is_valid_kpm:
                     kpm_state = {
                         "DRB.UEThpDl": kpm_rep.drb_thp_dl,
                         "DRB.UEThpUl": kpm_rep.drb_thp_ul,
                         "QoS.FlowDelay": kpm_rep.drb_delay_dl,
                         "RRU.PrbTotDl": float(kpm_rep.prb_used_dl)
                     }
-                elif not is_valid:
-                    logger.warning("Contexto KPM expirado (TTL > 1s). Revertendo para Heurística Segura.", node=target_node)
+                else:
+                    context_available = False
+                    logger.warning("Contexto KPM expirado ou indisponível (TTL > 1s). Encaminhamento conservador obrigatório para Heurística Segura.", node=target_node)
             
             t_reas_0 = time.perf_counter()
-            resolution = self.reasoning.resolve(conflict, kpm_state=kpm_state)
+            if not context_available:
+                # Encaminhamento conservador obrigatório conforme Seção 9.3 da auditoria
+                resolution = self.reasoning._resolve_by_heuristic(conflict, time.time())
+            else:
+                resolution = self.reasoning.resolve(conflict, kpm_state=kpm_state)
             t_reas_ms = (time.perf_counter() - t_reas_0) * 1000.0
             
             t_ref_0 = time.perf_counter()
@@ -247,6 +253,8 @@ class RDLxApp:
                 for act in resolution.winning_actions:
                     logger.info("Conflito Resolvido", conflict=conflict.conflict_id, strategy=resolution.strategy_used.name, action=act.parameter)
                     self._send_control(act.node_id, act.parameter, act.value)
+            elif not resolution.winning_actions:
+                logger.info("ℹ️ Decisão No-Op / Deferida pelo MAPPO (nenhuma ação de controle despachada)")
             else:
                 logger.warning("Resolução Rejeitada ou Lote Vazio / Quarentena", reason=reason)
 

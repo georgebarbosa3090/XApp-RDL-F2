@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Set
+from __future__ import annotations
+from typing import Dict, List, Optional, Set, Tuple
 from src.conflict_types import XAppAction, ConflictEvent, ConflictType, ConflictSeverity, KPMReport
 import networkx as nx
 import itertools
@@ -70,7 +71,7 @@ class PerceptionAgent:
     def get_kpm_report(self, node_id: str, now_ts: Optional[float] = None) -> Tuple[Optional[KPMReport], bool]:
         """
         Recupera telemetria do nó específico e valida expiração temporal (TTL).
-        Retorna (report, is_valid). Se expirada, is_valid é False (indisponibilidade contextual).
+        Se o nó não estiver cadastrado ou a telemetria expirou, retorna (None, False) (indisponibilidade contextual estrita).
         """
         import time
         ts = now_ts or time.time()
@@ -78,7 +79,7 @@ class PerceptionAgent:
             report, report_ts = self.kpm_by_node[node_id]
             is_valid = (ts - report_ts) <= self.kpm_ttl_s
             return report, is_valid
-        return self.latest_kpm, (self.latest_kpm is not None)
+        return None, False
 
     def get_active_xapps(self) -> Dict[str, List[XAppAction]]:
         active = {}

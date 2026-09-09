@@ -25,7 +25,8 @@ wheels/
 .idea/
 
 # Local agents and snapshots
-.agents/
+.agents/*
+!.agents/skills/
 .snapshots/
 backups/
 

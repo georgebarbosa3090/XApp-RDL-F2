@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List, Tuple, Dict, Optional, Any
 from src.conflict_types import ConflictEvent, ResolutionAction, ResolutionStrategy, XAppAction, ConflictType
 from src.infrastructure.sdl_repository import SdlRepository
@@ -247,6 +248,7 @@ class ReasoningAgent:
     def _resolve_by_marl(self, conflict: ConflictEvent, kpm_state: Optional[Dict[str, float]], now_ts: float) -> ResolutionAction:
         """
         Nível 2B (CA-RDL MAPPO): Coordenação Multiagente Cooperativa com CTDE.
+        Preserva a decisão de No-Op (não atuar / deferir) retornando winning_actions vazio.
         """
         winning_action, confidence = self.mappo.decide(conflict, kpm_state)
         
@@ -256,8 +258,9 @@ class ReasoningAgent:
             winning_list = [winning_action]
             mod_val = winning_action.value
         else:
-            winning_list = [conflict.involved_xapps[0]] if conflict.involved_xapps else []
-            mod_val = conflict.involved_xapps[0].value if conflict.involved_xapps else None
+            # No-Op: Decisão explícita da política de não interferir ou adiar o controle
+            winning_list = []
+            mod_val = None
         
         return ResolutionAction(
             conflict_id=conflict.conflict_id,
