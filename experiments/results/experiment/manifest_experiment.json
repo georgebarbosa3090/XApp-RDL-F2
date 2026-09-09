@@ -6,7 +6,7 @@
     "protocol": "N = 30 Sementes Independentes (Seeds 1001 a 1030)",
     "compiler_target": "5G-LENA Release-16 NR + ns-O-RAN (NORI)",
     "radio_channel": "Banda n78 (3.5 GHz), 100 MHz BWP, Numerologia mu=1",
-    "dataset_sha256": "c755ec622299f72ea241a1ce2aeaf973e7f84843d651844fc2c0d7c4a1f88655",
+    "dataset_sha256": "bdfe34bbee5c456c4f38b2ed0640d0492f5dc27dace6b2bcc63949c5ce1268ba",
     "sample_size": 30,
     "confidence_level": "95% (t-Student distribution)",
     "statistical_tests": "ANOVA One-Way (3 Grupos: Baseline, H-RDL, CA-RDL), Effect Size (eta-squared), Welch t-test (Pairwise), Mann-Whitney U (Pairwise)"

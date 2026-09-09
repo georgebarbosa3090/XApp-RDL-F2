@@ -88,8 +88,8 @@ def test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows(tmp_p
         verify_raw_traces_exist(["baseline"], range(1001, 1002))
         
     # 2. Teste sem fluxos de telemetria
-    file_single_quote.write_text("<FlowMonitor><FlowStats/></FlowMonitor>", encoding="utf-8")
-    with pytest.raises(ValueError, match="não conformes"):
+    file_single_quote.write_text("<FlowMonitor scenario='baseline' seed='1001' execution_id='run_01'><FlowStats/></FlowMonitor>", encoding="utf-8")
+    with pytest.raises(ValueError, match="sem nós <Flow>"):
         verify_raw_traces_exist(["baseline"], range(1001, 1002))
 
 def test_verify_raw_traces_accepts_valid_experimental_xml(tmp_path, monkeypatch):
@@ -104,9 +104,9 @@ def test_verify_raw_traces_accepts_valid_experimental_xml(tmp_path, monkeypatch)
     
     valid_xml = sc_dir / "flowmonitor_seed_1001.xml"
     valid_xml.write_text(
-        '<FlowMonitor execution_id="run_ns3_001">'
+        '<FlowMonitor scenario="baseline" seed="1001" execution_id="run_ns3_001">'
         '  <FlowStats>'
-        '    <Flow flowId="1" txPackets="1000" rxPackets="998" delaySum="1.92" />'
+        '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="998" lostPackets="2" delaySum="1.92" jitterSum="0.19" />'
         '  </FlowStats>'
         '</FlowMonitor>',
         encoding="utf-8"
@@ -128,9 +128,9 @@ def test_verify_raw_traces_rejects_physical_invariant_violations(tmp_path, monke
     # 1. Caso rxPackets negativo: rxPackets="-5"
     bad_xml_1 = sc_dir / "flowmonitor_seed_1001.xml"
     bad_xml_1.write_text(
-        '<FlowMonitor execution_id="run_ns3_001">'
+        '<FlowMonitor scenario="baseline" seed="1001" execution_id="run_ns3_001">'
         '  <FlowStats>'
-        '    <Flow flowId="1" txPackets="10" rxPackets="-5" />'
+        '    <Flow flowId="1" slice="URLLC" txPackets="10" rxPackets="-5" lostPackets="15" delaySum="1.0" jitterSum="0.1" />'
         '  </FlowStats>'
         '</FlowMonitor>',
         encoding="utf-8"
@@ -140,9 +140,9 @@ def test_verify_raw_traces_rejects_physical_invariant_violations(tmp_path, monke
         
     # 2. Caso rxPackets > txPackets: tx="10" rx="999"
     bad_xml_1.write_text(
-        '<FlowMonitor execution_id="run_ns3_001">'
+        '<FlowMonitor scenario="baseline" seed="1001" execution_id="run_ns3_001">'
         '  <FlowStats>'
-        '    <Flow flowId="1" txPackets="10" rxPackets="999" />'
+        '    <Flow flowId="1" slice="URLLC" txPackets="10" rxPackets="999" lostPackets="0" delaySum="1.0" jitterSum="0.1" />'
         '  </FlowStats>'
         '</FlowMonitor>',
         encoding="utf-8"
@@ -165,12 +165,12 @@ def test_verify_raw_traces_rejects_lost_packets_and_metadata_mismatch(tmp_path, 
     xml_lost_mismatch.write_text(
         '<FlowMonitor scenario="baseline" seed="1001" execution_id="run_ns3_001">'
         '  <FlowStats>'
-        '    <Flow flowId="1" txPackets="1000" rxPackets="990" lostPackets="5" />'
+        '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="990" lostPackets="5" delaySum="1.9" jitterSum="0.1" />'
         '  </FlowStats>'
         '</FlowMonitor>',
         encoding="utf-8"
     )
-    with pytest.raises(ValueError, match="violação de conservação n_lost == n_tx - n_rx"):
+    with pytest.raises(ValueError, match="violação estrita da conservação n_lost == n_tx - n_rx"):
         verify_raw_traces_exist(["baseline"], range(1001, 1002))
         
     # 2. Cenário divergente no cabeçalho XML
@@ -178,12 +178,38 @@ def test_verify_raw_traces_rejects_lost_packets_and_metadata_mismatch(tmp_path, 
     xml_sc_mismatch.write_text(
         '<FlowMonitor scenario="rdl_phase1" seed="1001" execution_id="run_ns3_001">'
         '  <FlowStats>'
-        '    <Flow flowId="1" txPackets="1000" rxPackets="990" lostPackets="10" />'
+        '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="990" lostPackets="10" delaySum="1.9" jitterSum="0.1" />'
         '  </FlowStats>'
         '</FlowMonitor>',
         encoding="utf-8"
     )
     with pytest.raises(ValueError, match="cenário nos metadados"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+
+    # 3. Semente não-numérica no cabeçalho XML
+    xml_seed_invalid = sc_dir / "flowmonitor_seed_1001.xml"
+    xml_seed_invalid.write_text(
+        '<FlowMonitor scenario="baseline" seed="not_a_number" execution_id="run_ns3_001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="990" lostPackets="10" delaySum="1.9" jitterSum="0.1" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="atributo 'seed' não numérico"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+
+    # 4. execution_id ausente na raiz
+    xml_exec_missing = sc_dir / "flowmonitor_seed_1001.xml"
+    xml_exec_missing.write_text(
+        '<FlowMonitor scenario="baseline" seed="1001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="990" lostPackets="10" delaySum="1.9" jitterSum="0.1" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="atributo obrigatório 'execution_id' ausente"):
         verify_raw_traces_exist(["baseline"], range(1001, 1002))
 
 

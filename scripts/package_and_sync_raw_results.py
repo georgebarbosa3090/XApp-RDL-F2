@@ -79,19 +79,32 @@ def verify_raw_traces_exist(scenarios, seeds_range):
                         synthetic_found.append(seed_file)
                         continue
                         
-                    # 2. Verificação de associação de metadados: cenário e semente
+                    # 2. Verificação Positiva de Contrato de Schema: Atributos Obrigatórios na Raiz
                     sc_attr = root.attrib.get("scenario")
-                    if sc_attr and sc_attr != sc:
+                    if not sc_attr:
+                        invalid_format.append(f"{seed_file} (atributo obrigatório 'scenario' ausente na raiz)")
+                        continue
+                    if sc_attr != sc:
                         invalid_format.append(f"{seed_file} (cenário nos metadados '{sc_attr}' difere do diretório '{sc}')")
                         continue
+                        
                     seed_attr = root.attrib.get("seed")
-                    if seed_attr:
-                        try:
-                            if int(seed_attr) != seed:
-                                invalid_format.append(f"{seed_file} (semente nos metadados '{seed_attr}' difere do arquivo '{seed}')")
-                                continue
-                        except ValueError:
-                            pass
+                    if not seed_attr:
+                        invalid_format.append(f"{seed_file} (atributo obrigatório 'seed' ausente na raiz)")
+                        continue
+                    try:
+                        seed_int = int(seed_attr)
+                        if seed_int != seed:
+                            invalid_format.append(f"{seed_file} (semente nos metadados '{seed_attr}' difere do arquivo '{seed}')")
+                            continue
+                    except ValueError:
+                        invalid_format.append(f"{seed_file} (atributo 'seed' não numérico: '{seed_attr}')")
+                        continue
+
+                    exec_id = root.attrib.get("execution_id")
+                    if not exec_id:
+                        invalid_format.append(f"{seed_file} (atributo obrigatório 'execution_id' ausente na raiz)")
+                        continue
 
                     # 3. Verificação positiva de estrutura de fluxos
                     flows = root.findall(".//Flow")
@@ -99,40 +112,36 @@ def verify_raw_traces_exist(scenarios, seeds_range):
                         invalid_format.append(f"{seed_file} (estrutura FlowMonitor sem nós <Flow> de telemetria física)")
                         continue
                         
-                    # Validação estrita de invariantes físicos em TODOS os fluxos: 0 <= n_rx <= n_tx e n_lost = n_tx - n_rx
+                    # Validação estrita de invariantes físicos em TODOS os fluxos: 0 <= n_rx <= n_tx e n_lost = n_tx - n_rx obrigatório
                     has_positive_tx = False
                     flow_invariant_error = None
                     for f_elem in flows:
                         tx_val = f_elem.attrib.get("txPackets")
                         rx_val = f_elem.attrib.get("rxPackets")
                         lost_val = f_elem.attrib.get("lostPackets")
-                        if tx_val is None or rx_val is None:
-                            flow_invariant_error = "contadores txPackets ou rxPackets ausentes"
+                        delay_val = f_elem.attrib.get("delaySum")
+                        
+                        if tx_val is None or rx_val is None or lost_val is None or delay_val is None:
+                            flow_invariant_error = "atributos obrigatórios (txPackets, rxPackets, lostPackets, delaySum) ausentes no nó <Flow>"
                             break
                         try:
                             tx = int(tx_val)
                             rx = int(rx_val)
+                            lost = int(lost_val)
+                            _ = float(delay_val)
                         except ValueError:
-                            flow_invariant_error = f"contadores não numéricos: tx={tx_val}, rx={rx_val}"
+                            flow_invariant_error = f"contadores não numéricos: tx={tx_val}, rx={rx_val}, lost={lost_val}, delay={delay_val}"
                             break
                         
-                        if tx < 0 or rx < 0:
-                            flow_invariant_error = f"contadores negativos: tx={tx}, rx={rx}"
+                        if tx < 0 or rx < 0 or lost < 0:
+                            flow_invariant_error = f"contadores negativos: tx={tx}, rx={rx}, lost={lost}"
                             break
                         if rx > tx:
                             flow_invariant_error = f"violação física de conservação de pacotes rx > tx: tx={tx}, rx={rx}"
                             break
-                            
-                        # Validação estrita da conservação física de pacotes: n_lost = n_tx - n_rx
-                        if lost_val is not None:
-                            try:
-                                lost = int(lost_val)
-                                if lost != (tx - rx):
-                                    flow_invariant_error = f"violação de conservação n_lost == n_tx - n_rx: lost={lost}, tx-rx={tx-rx}"
-                                    break
-                            except ValueError:
-                                flow_invariant_error = f"contador lostPackets não numérico: {lost_val}"
-                                break
+                        if lost != (tx - rx):
+                            flow_invariant_error = f"violação estrita da conservação n_lost == n_tx - n_rx: lost={lost}, esperado={tx - rx}"
+                            break
                                 
                         if tx > 0:
                             has_positive_tx = True

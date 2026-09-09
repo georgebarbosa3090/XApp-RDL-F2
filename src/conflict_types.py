@@ -29,6 +29,37 @@ class XAppAction:
     value: float
     priority: int
     timestamp: float = field(default_factory=time.time)
+    t_arrival: float = 0.0
+    t_selection: float = 0.0
+    t_encode_start: float = 0.0
+    t_dispatch_start: float = 0.0
+    t_dispatch_end: float = 0.0
+    t_ack: float = 0.0
+    arrival_monotonic: float = 0.0 # Retrocompatibilidade
+
+    def __post_init__(self):
+        if self.t_arrival == 0.0:
+            now = time.perf_counter()
+            self.t_arrival = now
+            self.arrival_monotonic = now
+
+    @property
+    def queue_delay_ms(self) -> float:
+        if self.t_selection > 0 and self.t_arrival > 0:
+            return max(0.0, (self.t_selection - self.t_arrival) * 1000.0)
+        return 0.0
+
+    @property
+    def processing_delay_ms(self) -> float:
+        if self.t_dispatch_end > 0 and self.t_selection > 0:
+            return max(0.0, (self.t_dispatch_end - self.t_selection) * 1000.0)
+        return 0.0
+
+    @property
+    def rtt_ack_ms(self) -> Optional[float]:
+        if self.t_ack > 0 and self.t_dispatch_start > 0:
+            return max(0.0, (self.t_ack - self.t_dispatch_start) * 1000.0)
+        return None
 
 @dataclass
 class ConflictEvent:

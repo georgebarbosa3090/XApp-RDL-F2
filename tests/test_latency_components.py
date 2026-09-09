@@ -223,16 +223,31 @@ def test_rdl_xapp_runtime_full_cycle_and_payload_dispatch(monkeypatch):
     assert t_disp >= 0.0
 
 def test_rdl_xapp_control_ack_monotonic_rtt(monkeypatch):
-    """Valida o cálculo monotônico do RTT de confirmação no recebimento de RIC_CONTROL_ACK."""
+    """Valida o cálculo monotônico do RTT de confirmação no recebimento de RIC_CONTROL_ACK com correlação de ação e precisão controlada."""
     import json
     from src.rdl_xapp import RDLxApp
     
     app = RDLxApp(config_path="configs/config-file.json")
     
-    # Registra uma transação simulada com timestamp monotônico
+    # Registra uma transação simulada com ação vinculada e timestamp monotônico
     tx_id = "test-trans-monotonic-01"
-    app.pending_transactions[tx_id] = time.perf_counter()
-    time.sleep(0.003) # Simula 3ms de processamento no E2 Node
+    act = XAppAction(xapp_id="xapp_test", node_id="gnb_01", parameter="TX_POWER", value=23.0, priority=90)
+    act.t_arrival = 100.000
+    act.t_selection = 100.002
+    act.t_encode_start = 100.003
+    act.t_dispatch_start = 100.004
+    act.t_dispatch_end = 100.005
+    
+    app.pending_transactions[tx_id] = {
+        "t_dispatch_start": act.t_dispatch_start,
+        "action": act,
+        "node_id": act.node_id,
+        "parameter": act.parameter,
+        "value": act.value
+    }
+    
+    # Mock do relógio para o momento exato da chegada do ACK (ex: 8ms depois do despacho)
+    monkeypatch.setattr(time, "perf_counter", lambda: 100.012)
     
     ack_payload = json.dumps({
         "transaction_id": tx_id,
@@ -244,5 +259,67 @@ def test_rdl_xapp_control_ack_monotonic_rtt(monkeypatch):
     
     # Transação deve ter sido consumida do dicionário pendente
     assert tx_id not in app.pending_transactions
+    assert act.t_ack == 100.012
+    assert act.rtt_ack_ms == pytest.approx(8.0, abs=0.01)
+    assert act.queue_delay_ms == pytest.approx(2.0, abs=0.01)
+    assert act.processing_delay_ms == pytest.approx(3.0, abs=0.01)
+
+def test_operational_transport_readiness_enforcement(monkeypatch):
+    """Valida a exigência estrita de prontidão operacional: se transporte obrigatório estiver ativado e RMR nativo ausente, aborta."""
+    from src.rdl_xapp import RDLxApp
+    
+    monkeypatch.setenv("REQUIRE_OPERATIONAL_TRANSPORT", "true")
+    monkeypatch.setattr("src.rdl_xapp.HAS_RICXAPPFRAME", False)
+    
+    with pytest.raises(RuntimeError, match="TRANSPORTE O-RAN OPERACIONAL OBRIGATÓRIO NÃO DISPONÍVEL"):
+        _ = RDLxApp(config_path="configs/config-file.json")
+
+def test_control_failure_and_unsuccessful_dispatch(monkeypatch):
+    """Valida o tratamento de falhas no envio RMR e o recebimento de RIC_CONTROL_FAILURE."""
+    import json
+    from src.rdl_xapp import RDLxApp
+    
+    app = RDLxApp(config_path="configs/config-file.json")
+    
+    # 1. Simula falha no envio RMR (rmr_send retorna False)
+    monkeypatch.setattr(app.xapp, "rmr_send", lambda payload, mtype: False)
+    act = XAppAction(xapp_id="xapp_fail", node_id="gnb_01", parameter="TX_POWER", value=20.0, priority=50)
+    success, t_enc, t_disp = app._send_control("gnb_01", "TX_POWER", 20.0, action=act)
+    assert success is False
+    assert t_disp >= 0.0
+    
+    # 2. Simula recebimento de RIC_CONTROL_FAILURE para uma transação pendente
+    tx_id = "test-fail-tx-01"
+    app.pending_transactions[tx_id] = {
+        "t_dispatch_start": time.perf_counter(),
+        "action": act,
+        "node_id": "gnb_01",
+        "parameter": "TX_POWER",
+        "value": 20.0
+    }
+    fail_payload = json.dumps({
+        "transaction_id": tx_id,
+        "error": "E2_NODE_TIMEOUT",
+        "node_id": "gnb_01"
+    }).encode('utf-8')
+    app._control_failure_handler(app.xapp, {"payload": fail_payload}, None)
+    assert tx_id not in app.pending_transactions
+
+def test_concurrent_actions_individual_latency_isolation():
+    """Valida que ações concorrentes em lote retêm seus próprios timestamps de chegada e filas individualizadas."""
+    act1 = XAppAction(xapp_id="xapp_1", node_id="gnb_01", parameter="TX_POWER", value=23.0, priority=90, t_arrival=10.000)
+    act2 = XAppAction(xapp_id="xapp_2", node_id="gnb_01", parameter="TX_POWER", value=20.0, priority=40, t_arrival=10.005)
+    
+    t_sel = 10.020
+    act1.t_selection = t_sel
+    act2.t_selection = t_sel
+    act1.t_dispatch_end = 10.025
+    act2.t_dispatch_end = 10.028
+    
+    # Atraso de fila calculado individualmente
+    assert act1.queue_delay_ms == pytest.approx(20.0, abs=0.01)
+    assert act2.queue_delay_ms == pytest.approx(15.0, abs=0.01)
+    assert act1.processing_delay_ms == pytest.approx(5.0, abs=0.01)
+    assert act2.processing_delay_ms == pytest.approx(8.0, abs=0.01)
 
 

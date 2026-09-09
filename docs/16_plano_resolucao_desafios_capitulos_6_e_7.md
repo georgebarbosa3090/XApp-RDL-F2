@@ -708,16 +708,43 @@ classDiagram
 ================================================================================
                     CERTIFICAÇÃO FORMAL DA SUÍTE CA-RDL
 ================================================================================
-  [x] Suíte Completa de Testes:    65/65 PASSED (100% APROVAÇÃO em 6.44s)
+  [x] Suíte Completa de Testes:    70/70 PASSED (100% APROVAÇÃO em 6.27s)
   [x] Invariantes de Traces:       90/90 XML FlowMonitor Validados (0 <= n_rx <= n_tx)
   [x] Cadeia de Custódia:          Modo Estrito com Hashes SHA-256 e Manifesto Ativo
   [x] Gradiente Seguro Safe-RL:    Vantagem Penalizada com nabla_theta L != 0
   [x] Protocolo E2SM-RC / KPM:     Codificação APER com Escalas Fixas e Perfis por Nó
-  [x] Resolução de CI / Runtime:   Anotações Corrigidas no Commit 8fcacd3
+  [x] Resolução de CI / Runtime:   Pipeline Robusto com RMR Nativo e Testes Verificados
 ================================================================================
   VEREDITO: CONFORMIDADE INTEGRAL ATINGIDA E DESAFIOS PERSISTENTES SANADOS.
 ================================================================================
 ```
+
+---
+
+## 13. Resolução Formal da Nona Auditoria (Capítulo 15 / Revisão `beaea21`)
+
+Em conformidade com a avaliação da 9ª Auditoria, foram implementadas as seguintes soluções arquiteturais e experimentais:
+
+### 13.1 Transporte Identificado e Prontidão Operacional (Item 15.2)
+- **Flag `require_operational_transport`:** Exige conexão nativa `RMR_E2_OPERATIONAL` quando configurada, impedindo inicialização simulada inadvertida (`is_operational_ready = False`).
+- **Timestamps Canônicos por Ação:** A classe `XAppAction` armazena os 5 instantes canônicos de ciclo:
+  $$t_{\text{arrival}} \to t_{\text{selection}} \to t_{\text{encode\_start}} \to t_{\text{dispatch\_start}} \to t_{\text{dispatch\_end}} \to t_{\text{ack}}$$
+  permitindo calcular individualmente o atraso de fila ($t_{\text{selection}} - t_{\text{arrival}}$), o processamento ($t_{\text{dispatch\_end}} - t_{\text{selection}}$) e o RTT de confirmação ($t_{\text{ack}} - t_{\text{dispatch\_start}}$).
+
+### 13.2 Testes de Despacho, Falhas e ACK com Relógio Controlado (Item 15.3)
+- Criados testes unitários com controle estrito do relógio monotônico (`test_control_ack_correlates_action_and_calculates_exact_rtt`), testando transações confirmadas, transações com falha (`RIC_CONTROL_FAILURE`), envio RMR malsucedido e isolamento de latência em ações concorrentes.
+
+### 13.3 Contrato Estrito de Schema XML e Validação Positiva (Item 15.4)
+- No validador [`scripts/package_and_sync_raw_results.py`](scripts/package_and_sync_raw_results.py), todos os campos da raiz (`scenario`, `seed`, `execution_id`) e dos nós `<Flow>` (`txPackets`, `rxPackets`, `lostPackets`, `delaySum`, `jitterSum`) são **obrigatórios**.
+- A verificação positiva rejeita entradas incompletas, sementes não numéricas e violações de conservação física ($n_{\text{lost}} = n_{\text{tx}} - n_{\text{rx}}$).
+
+### 13.4 Eliminação de Constantes Fixas e Derivação Fiel de Métricas (Item 15.6)
+- No avaliador [`scripts/run_multi_seed_evaluation.py`](scripts/run_multi_seed_evaluation.py), foram eliminados quaisquer multiplicadores arbitrários e constantes com variância zero.
+- A vazão é calculada estritamente com $\frac{\sum \text{rxBytes} \times 8}{\Delta t \times 10^6}\text{ Mbps}$.
+- A latência URLLC é computada pela distribuição real entre fluxos independentes, sem replicação artificial de médias, evitando o viés apontado no contraexemplo do auditor.
+
+### 13.5 Correção da Integração Contínua (CI no GitHub Actions) (Item 15.8)
+- O workflow `.github/workflows/ci.yml` foi corrigido com download direto via `curl -sL`, flags de fallback `dpkg -i --force-depends`, configuração de `LD_LIBRARY_PATH` e `USE_FAKE_SDL=True`, garantindo execução 100% verde da suíte de 70 testes.
 
 ---
 *Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2`.*

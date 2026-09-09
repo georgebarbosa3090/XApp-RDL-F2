@@ -21,11 +21,11 @@ jobs:
         
     - name: Install RMR C Libraries
       run: |
-        sudo apt-get update && sudo apt-get install -y --no-install-recommends wget dpkg gcc python3-dev
-        wget --content-disposition https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr_4.9.0_amd64.deb/download.deb || true
-        if [ -f rmr_4.9.0_amd64.deb ]; then sudo dpkg -i rmr_4.9.0_amd64.deb; fi
-        wget --content-disposition https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr-dev_4.9.0_amd64.deb/download.deb || true
-        if [ -f rmr-dev_4.9.0_amd64.deb ]; then sudo dpkg -i rmr-dev_4.9.0_amd64.deb; fi
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends curl dpkg gcc python3-dev
+        curl -sL https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr_4.9.0_amd64.deb/download.deb -o rmr_4.9.0_amd64.deb || true
+        if [ -s rmr_4.9.0_amd64.deb ]; then sudo dpkg -i --force-depends rmr_4.9.0_amd64.deb || sudo apt-get install -f -y; fi
+        curl -sL https://packagecloud.io/o-ran-sc/release/packages/debian/stretch/rmr-dev_4.9.0_amd64.deb/download.deb -o rmr-dev_4.9.0_amd64.deb || true
+        if [ -s rmr-dev_4.9.0_amd64.deb ]; then sudo dpkg -i --force-depends rmr-dev_4.9.0_amd64.deb || sudo apt-get install -f -y; fi
         sudo ldconfig || true
         rm -f *.deb
         
@@ -39,6 +39,7 @@ jobs:
       env:
         PYTHONPATH: .
         USE_FAKE_SDL: "True"
+        LD_LIBRARY_PATH: "/usr/local/lib:/usr/lib"
       run: |
         pytest tests/ -v
         

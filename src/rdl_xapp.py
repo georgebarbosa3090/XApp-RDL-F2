@@ -90,20 +90,33 @@ class RDLxApp:
         self.WINDOW_DURATION_MS = self.config.get("decision_window_ms", 200)
         self.window_start = 0.0
         
-        # 6. Rastreamento de Transacoes Assincronas E2
-        self.pending_transactions: Dict[str, float] = {}
+        # 6. Rastreamento de Transacoes Assincronas E2 (Armazena timestamp e ação associada)
+        self.pending_transactions: Dict[str, Dict[str, Any]] = {}
         
         self.running = False
         
         # 7. Framework Xapp e Modo de Transporte
         fake_sdl = os.environ.get("USE_FAKE_SDL", "True").lower() == "true"
+        self.require_operational_transport = (
+            os.environ.get("REQUIRE_OPERATIONAL_TRANSPORT", "false").lower() == "true"
+            or self.config.get("require_operational_transport", False)
+        )
         self.xapp = Xapp(entrypoint=self._entrypoint, rmr_port=4560, use_fake_sdl=fake_sdl)
         self.is_mock_transport = getattr(self.xapp, "is_mock_transport", not HAS_RICXAPPFRAME)
         self.transport_mode = "MOCK_TRANSPORT_SHIM" if self.is_mock_transport else "RMR_E2_OPERATIONAL"
+        self.is_operational_ready = not self.is_mock_transport
+        
+        if self.require_operational_transport and self.is_mock_transport:
+            logger.error("❌ FALHA DE PRONTIDÃO OPERACIONAL: Transporte nativo RMR_E2_OPERATIONAL exigido, mas apenas MOCK_TRANSPORT_SHIM disponível.")
+            raise RuntimeError(
+                "TRANSPORTE O-RAN OPERACIONAL OBRIGATÓRIO NÃO DISPONÍVEL: "
+                "O ambiente exige conexão nativa C RMR/E2, mas o socket nativo não foi carregado."
+            )
+
         if self.is_mock_transport:
-            logger.info("ℹ️ Transporte RMR inicializado em modo MOCK_TRANSPORT_SHIM (Ambiente local / CI sem RMR nativo)")
+            logger.info("ℹ️ Transporte RMR inicializado em modo MOCK_TRANSPORT_SHIM (Ambiente local / CI de desenvolvimento)")
         else:
-            logger.info("📡 Transporte RMR inicializado em modo RMR_E2_OPERATIONAL (Conexão nativa C O-RAN)")
+            logger.info("📡 Transporte RMR inicializado em modo RMR_E2_OPERATIONAL (Conexão nativa C O-RAN pronta)")
             
         self.xapp.register_callback(self._default_handler, 0)
         self.xapp.register_callback(self._kpm_indication_handler, RIC_INDICATION)
@@ -165,7 +178,8 @@ class RDLxApp:
                     value=data['value'],
                     priority=data.get('priority', 50)
                 )
-                action.arrival_monotonic = time.perf_counter()
+                action.t_arrival = time.perf_counter()
+                action.arrival_monotonic = action.t_arrival
                 with self.buffer_lock:
                     if not self.proposal_buffer:
                         self.window_start = time.perf_counter()
@@ -183,16 +197,21 @@ class RDLxApp:
             xapp_instance.rmr_free(sbuf)
 
     def _control_ack_handler(self, xapp_instance: Xapp, summary: Dict[str, Any], sbuf: Any):
-        """Trata confirmações de execução de controle emitidas pelo E2 Node / E2Term com timestamp monotônico."""
+        """Trata confirmações de execução de controle emitidas pelo E2 Node / E2Term com timestamp monotônico e correlação de ação."""
+        t_ack_now = time.perf_counter()
         payload = summary.get("payload")
         if payload:
             try:
                 data = json.loads(payload.decode('utf-8'))
                 tx_id = data.get("transaction_id")
                 if tx_id and tx_id in self.pending_transactions:
-                    t_start = self.pending_transactions.pop(tx_id)
-                    rtt_ms = (time.perf_counter() - t_start) * 1000.0
-                    logger.info("RIC_CONTROL_ACK recebido e confirmado (Monotônico)", transaction_id=tx_id, rtt_ms=f"{rtt_ms:.3f}ms")
+                    tx_info = self.pending_transactions.pop(tx_id)
+                    t_start = tx_info["t_dispatch_start"]
+                    act = tx_info.get("action")
+                    if act:
+                        act.t_ack = t_ack_now
+                    rtt_ms = (t_ack_now - t_start) * 1000.0
+                    logger.info("RIC_CONTROL_ACK recebido e confirmado", transaction_id=tx_id, rtt_ms=f"{rtt_ms:.3f}ms", action=act.parameter if act else None)
             except Exception as e:
                 logger.debug(f"Erro ao decodificar RIC_CONTROL_ACK: {e}")
         logger.info("Recebido RIC_CONTROL_ACK", summary=summary)
@@ -200,6 +219,17 @@ class RDLxApp:
             xapp_instance.rmr_free(sbuf)
 
     def _control_failure_handler(self, xapp_instance: Xapp, summary: Dict[str, Any], sbuf: Any):
+        """Trata notificações de falha no E2 Node / E2Term."""
+        payload = summary.get("payload")
+        if payload:
+            try:
+                data = json.loads(payload.decode('utf-8'))
+                tx_id = data.get("transaction_id")
+                if tx_id and tx_id in self.pending_transactions:
+                    tx_info = self.pending_transactions.pop(tx_id)
+                    logger.warning("RIC_CONTROL_FAILURE recebido para transação pendente", transaction_id=tx_id, info=tx_info)
+            except Exception as e:
+                logger.debug(f"Erro ao processar RIC_CONTROL_FAILURE: {e}")
         logger.warning("Recebido RIC_CONTROL_FAILURE", summary=summary)
         if xapp_instance and sbuf:
             xapp_instance.rmr_free(sbuf)
@@ -284,9 +314,11 @@ class RDLxApp:
             t_e2_dispatch_ms = 0.0
             
             if is_valid and resolution.winning_actions:
+                t_sel_now = time.perf_counter()
                 for act in resolution.winning_actions:
+                    act.t_selection = t_sel_now
                     logger.info("Conflito Resolvido", conflict=conflict.conflict_id, strategy=resolution.strategy_used.name, action=act.parameter)
-                    _, enc_ms, disp_ms = self._send_control(act.node_id, act.parameter, act.value)
+                    _, enc_ms, disp_ms = self._send_control(act.node_id, act.parameter, act.value, action=act)
                     t_e2_encode_ms += enc_ms
                     t_e2_dispatch_ms += disp_ms
             elif not resolution.winning_actions:
@@ -313,12 +345,13 @@ class RDLxApp:
         
         for clean_act in clean_actions:
             t_ref_clean_0 = time.perf_counter()
+            clean_act.t_selection = t_ref_clean_0
             is_safe, level, reason = self.refinement.validate_single_action(clean_act)
             t_ref_clean_ms = (time.perf_counter() - t_ref_clean_0) * 1000.0
             
             if is_safe:
                 logger.info("Ação Limpa Despachada (Pass-Through)", xapp=clean_act.xapp_id, param=clean_act.parameter, val=clean_act.value)
-                _, enc_clean_ms, disp_clean_ms = self._send_control(clean_act.node_id, clean_act.parameter, clean_act.value)
+                _, enc_clean_ms, disp_clean_ms = self._send_control(clean_act.node_id, clean_act.parameter, clean_act.value, action=clean_act)
                 t_clean_total_ms = t_queue_ms + t_ref_clean_ms + enc_clean_ms + disp_clean_ms
                 logger.info(
                     f"⏱️ Ação Limpa (Pass-Through) Despachada em {t_clean_total_ms:.2f}ms "
@@ -346,12 +379,14 @@ class RDLxApp:
                         # Processa fora do lock para não travar RMR
                         threading.Thread(target=self._process_action_group, args=(actions_to_process,), daemon=True).start()
 
-    def _send_control(self, node_id: str, parameter: str, value: float) -> Tuple[bool, float, float]:
+    def _send_control(self, node_id: str, parameter: str, value: float, action: Optional[XAppAction] = None) -> Tuple[bool, float, float]:
         """
         Codifica a PDU APER e despacha via RMR.
         Retorna: (success: bool, t_encode_ms: float, t_dispatch_ms: float)
         """
         t_enc_0 = time.perf_counter()
+        if action:
+            action.t_encode_start = t_enc_0
         tx_id = str(uuid.uuid4())
         try:
             # Encodifica APER ASN.1 Nativo Completo (Header + Message)
@@ -372,16 +407,29 @@ class RDLxApp:
             t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
             
             # Timestamp monotônico para cálculo de RTT de confirmação no ACK
-            self.pending_transactions[tx_id] = time.perf_counter()
-            
             t_disp_0 = time.perf_counter()
+            if action:
+                action.t_dispatch_start = t_disp_0
+            self.pending_transactions[tx_id] = {
+                "t_dispatch_start": t_disp_0,
+                "action": action,
+                "node_id": node_id,
+                "parameter": parameter,
+                "value": value
+            }
+            
             success = self.xapp.rmr_send(payload=payload_bytes, mtype=RIC_CONTROL_REQ)
-            t_dispatch_ms = (time.perf_counter() - t_disp_0) * 1000.0
+            t_disp_end = time.perf_counter()
+            t_dispatch_ms = (t_disp_end - t_disp_0) * 1000.0
+            if action:
+                action.t_dispatch_end = t_disp_end
         except Exception as e:
             logger.error(f"Falha ao gerar/despachar APER Control: {e}")
             t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
             t_dispatch_ms = 0.0
             success = False
+            if action:
+                action.t_dispatch_end = time.perf_counter()
             
         if success:
             logger.info(
