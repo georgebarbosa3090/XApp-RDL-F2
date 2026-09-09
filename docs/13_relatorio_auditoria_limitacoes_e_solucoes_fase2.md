@@ -28,32 +28,57 @@ Simultaneamente, a auditoria identificou **6 eixos críticos de limitação** no
 
 ## 2. Matriz Consolidada de Limitações e Superação Arquitetural
 
+Para proporcionar clareza máxima e leitura modular, o mapeamento entre as limitações diagnosticadas e as soluções de engenharia implementadas é desacoplado em três eixos temáticos fundamentais:
+
+### 2.1. Eixo de Representação de Estado e Otimização Segura (Limitações L1 & L2)
 ```mermaid
-graph TD
-    subgraph Limitacoes["Limitações Diagnosticadas na Fase 2 Inicial"]
-        L1["L1: Vetor de Observação Rígido<br/>(Truncamento para N=2 xApps)"]
-        L2["L2: MARL sem Restrição no Treino<br/>(Segurança 100% a posteriori)"]
+flowchart LR
+    subgraph Diagnostico_Eixo1["Limitações de Estado & Aprendizado"]
+        L1["L1: Vetor de Observação Rígido<br/>(Truncamento fixo para N=2 xApps)"]
+        L2["L2: MARL sem Restrição no Treino<br/>(Ações inseguras durante exploração)"]
+    end
+
+    subgraph Solucao_Eixo1["Superação de Engenharia"]
+        S1["S1: Vetor de Estado Elástico N-xApps<br/>(Dimensionamento s_t ∈ ℝ^(D_obs × N), N ≤ 6)"]
+        S2["S2: Safe-RL CMDP com Lagrange<br/>(Dual Update de λ_k & Gradiente Penalizado)"]
+    end
+
+    L1 ==>|Generalização Dimensional| S1
+    L2 ==>|Otimização Restrita no Treino| S2
+```
+
+### 2.2. Eixo de Topologia Causal e Protocolos O-RAN (Limitações L3 & L4)
+```mermaid
+flowchart LR
+    subgraph Diagnostico_Eixo2["Limitações de Topologia & Protocolo"]
         L3["L3: Grafo KPI Estático Local<br/>(Sem Beamforming, A3 e Multi-Célula)"]
-        L4["L4: Codecs E2SM Parciais<br/>(Apenas IDs 1, 2, 3 legados)"]
-        L5["L5: Janela Fixa &amp; Sem Zero-Trust<br/>(Latência URLLC e Rogue xApps)"]
-        L6["L6: Dispersão Metodológica<br/>(Validade Estatística &amp; Reprodutibilidade)"]
+        L4["L4: Codecs E2SM Parciais<br/>(Apenas Parâmetros 1, 2, 3 legados)"]
     end
 
-    subgraph Solucoes["Soluções de Engenharia Aplicadas e Validadas"]
-        S1["S1: Vetor de Estado Dinâmico N-xApps<br/>(Dimensionamento Elástico s_t &isin; R^(obs_dim &times; N))"]
-        S2["S2: Safe-RL CMDP com Lagrange<br/>(Dual Update &amp; Gradiente com Restrição)"]
-        S3["S3: Grafo Multidimensional 5G-Adv/6G<br/>(BEAM_DOWNTILT, A3_OFFSET, ISAC e Inter-Cell)"]
-        S4["S4: Cobertura Integral E2SM-RC/KPM<br/>(Styles 1, 2, 3, 10, 11 &amp; IDs 1 a 11)"]
-        S5["S5: Janela Adaptativa + Quarentena<br/>(Fast-Flush &lt; 5ms &amp; Zero-Trust 30s)"]
-        S6["S6: Matriz de 7 Dimensões de Validade<br/>(30 Seeds, IC 95%, ANOVA, p &lt; 0.001, SHA-256)"]
+    subgraph Solucao_Eixo2["Superação de Engenharia"]
+        S3["S3: Grafo Multidimensional 5G-Adv/6G<br/>(Downtilt, A3_Offset, ISAC & Inter-Cell I_inter)"]
+        S4["S4: Cobertura Integral E2SM-RC/KPM<br/>(Styles 1, 2, 3, 10, 11 & RAN Parameter IDs 1 a 11)"]
     end
 
-    L1 ==>|Generalização| S1
-    L2 ==>|Otimização Restrita| S2
-    L3 ==>|Topologia Causal| S3
-    L4 ==>|Conformidade WG3| S4
-    L5 ==>|Resiliência &amp; SLA| S5
-    L6 ==>|Rigor Científico| S6
+    L3 ==>|Topologia Causal Estendida| S3
+    L4 ==>|Conformidade O-RAN WG3| S4
+```
+
+### 2.3. Eixo de Resiliência Temporal e Validade Científica (Limitações L5 & L6)
+```mermaid
+flowchart LR
+    subgraph Diagnostico_Eixo3["Limitações Temporais & Metodológicas"]
+        L5["L5: Janela Fixa & Sem Isolamento<br/>(Latência URLLC e vulnerabilidade a Rogue xApps)"]
+        L6["L6: Dispersão Metodológica<br/>(Falta de protocolo estatístico unificado)"]
+    end
+
+    subgraph Solucao_Eixo3["Superação de Engenharia"]
+        S5["S5: Janela Adaptativa + Quarentena<br/>(Fast-Flush < 5 ms & Zero-Trust 30 s)"]
+        S6["S6: Matriz de 7 Dimensões de Validade<br/>(30 Seeds, IC 95%, ANOVA p < 0.001, SHA-256)"]
+    end
+
+    L5 ==>|Resiliência Near-RT & SLA| S5
+    L6 ==>|Rigor Científico & Reprodutibilidade| S6
 ```
 
 ### Tabela Comparativa de Superação Arquitetural:
@@ -99,21 +124,24 @@ onde a dimensão de observação individual é $D_{\mathrm{obs}} = 10$, permitin
 #### Diagnóstico Técnico
 O treinamento convencional do PPO otimizava unicamente a recompensa agregada $R_t$. Em fases exploratórias do treinamento, o Ator frequentemente sugeria ações de potência ou alocação de PRBs fora dos envelopes de hardware. Embora o `RefinementAgent` vetasse a execução dessas ações a jusante, a política do Ator continuava recebendo gradientes sem penalização direcionada, retardando a convergência em regime seguro.
 
-```mermaid
-graph LR
-    subgraph Treinamento_Convencional["Treinamento Convencional (Sem Safe-RL)"]
-        A1["Ator &pi;&theta;"] -->|"Ação Insegura a_t"| ENV["Ambiente 5G"]
-        ENV -->|"Recompensa R_t"| A1
-        REF1["RefinementAgent (Veto a posteriori)"] -.->|"Descarta comando ilegal"| ENV
-    end
+Para evidenciar a evolução arquitetural, os fluxos de treinamento antes e depois do Safe-RL são desacoplados a seguir:
 
-    subgraph Treinamento_SafeRL["Treinamento Safe-RL CMDP com Multiplicador de Lagrange (Fase 2 Aprimorada)"]
-        A2["Ator &pi;&theta;"] -->|"Ação a_t"| CMDP{"Avaliador de Custo C_k(s, a)"}
-        CMDP -->|"C_k &gt; d_k (Violação)"| LAG["Dual Update &lambda;_k"]
-        LAG -->|"Gradiente com Penalidade Lagrangiana"| A2
-        A2 -->|"Ação Pré-Condicionada Segura"| REF2["RefinementAgent (Safety Guard)"]
-        REF2 -->|"Comando 100% Conforme"| GNB["gNodeB 5G NR"]
-    end
+#### Fluxo A: Treinamento Convencional (Sem Safe-RL — Veto a Posteriori)
+```mermaid
+flowchart LR
+    A1["Ator π_θ"] -->|"Ação Insegura a_t"| ENV["Ambiente 5G NR"]
+    ENV -->|"Recompensa R_t"| A1
+    REF1["RefinementAgent (Veto a posteriori)"] -.->|"Descarta comando ilegal"| ENV
+```
+
+#### Fluxo B: Treinamento Safe-RL CMDP com Multiplicador de Lagrange (Fase 2 Aprimorada)
+```mermaid
+flowchart LR
+    A2["Ator π_θ"] -->|"Ação a_t"| CMDP{"Avaliador de Custo C_k(s, a)"}
+    CMDP -->|"C_k > d_k (Violação)"| LAG["Dual Update λ_k"]
+    LAG -->|"Gradiente com Penalidade Lagrangiana"| A2
+    A2 -->|"Ação Pré-Condicionada Segura"| REF2["RefinementAgent (Safety Guard)"]
+    REF2 -->|"Comando 100% Conforme"| GNB["gNodeB 5G NR"]
 ```
 
 #### Solução de Engenharia e Formulação Matemática
@@ -139,60 +167,53 @@ onde $r_t(\theta_i) = \frac{\pi_{\theta_i}(a_{i,t} \mid o_{i,t})}{\pi_{\theta_i,
 
 $$\lambda_k^{(j+1)} = \max\left(0, \, \lambda_k^{(j)} + \alpha_{\mathrm{cost}} \left( \overline{C}_k^{(j)} - d_k \right)\right)$$
 
-onde $\alpha_{\mathrm{cost}} = 0.01$. Se o modelo violar restrições, $\lambda_k$ cresce exponencialmente, forçando o gradiente da política a afastar-se de ações perigosas.
+onde $\alpha_{\mathrm{cost}} = 0.01$. Se o modelo violar restrições, $\lambda_k$ cresce progressivamente, forçando o gradiente da política a afastar-se de ações perigosas.
 
 ---
 
 ### 3.3. Limitação 3: Grafo de Dependências Causal Estático e Falta de Relações Multi-Célula
 
 #### Diagnóstico Técnico
-O `PerceptionAgent` utilizava um dicionário estático contendo apenas 3 RCPs em escopo estritamente local (célula isolada). Não havia suporte para novas capacidades 5G-Advanced/6G (MIMO Massive, ISAC e Carrier Aggregation) nem modelagem de interferência co-canal cruzada entre gNodeBs vizinhas em cenários densos (Urban Microcell ISD $< 200\text{ m}$).
+O `PerceptionAgent` utilizava um dicionário estático contendo apenas 3 RCPs em escopo estritamente local (célula isolada). Não havia suporte para novas capacidades 5G-Advanced/6G (MIMO Massive, ISAC e Carrier Aggregation) nem modelagem de interferência co-canal cruzada entre gNodeBs vizinhas em cenários densos (Urban Microcell ISD $< 200\text{ ms}$).
 
+Para facilitar o entendimento, o grafo causal multidimensional é desacoplado em camadas funcionais:
+
+#### Camada A: Controle de Recursos de Rádio e Potência
 ```mermaid
-graph LR
-    subgraph RCPs["Parâmetros de Controle RAN (RCPs 5G-Adv/6G)"]
-        PRB["PRB_QUOTA"]
-        SCHED["SCHEDULER_WEIGHT"]
-        TX["TX_POWER"]
-        TILT["BEAM_DOWNTILT"]
-        A3["A3_OFFSET"]
-        ISAC["ISAC_SENSING_RATIO"]
-        CA["CARRIER_AGG_RATIO"]
-    end
+flowchart TD
+    PRB["PRB_QUOTA"] --> THP["DRB.UEThpDl (Vazão)"]
+    PRB --> PRBU["RRU.PrbUsedDl (Ocupação PRB)"]
+    SCHED["SCHEDULER_WEIGHT"] --> THP
+    SCHED --> DLY["DRB.RlcSduDelayDl (Latência)"]
+    TX["TX_POWER"] --> SINR["L1M.DL-sinr (Qualidade Canal)"]
+    TX --> THP
+    TX --> PWR["Energy.PowerConsumption"]
+    TILT["BEAM_DOWNTILT"] --> SINR
+    TILT --> RSRP["Beam.RSRP"]
+    TILT --> INTER["InterCell.Interference"]
+    TILT --> THP
+```
 
-    subgraph KPIs["Indicadores de Desempenho (KPIs)"]
-        THP["DRB.UEThpDl (Vazão)"]
-        DLY["DRB.RlcSduDelayDl (Latência)"]
-        PRBU["RRU.PrbUsedDl (Ocupação PRB)"]
-        SINR["L1M.DL-sinr (Qualidade Canal)"]
-        PWR["Energy.PowerConsumption"]
-        RSRP["Beam.RSRP (Potência Feixe)"]
-        INTER["InterCell.Interference"]
-        HO["Mobility.HandoverRate"]
-        PP["Mobility.PingPongRate"]
-        RAD_DET["Radar.DetectionProb"]
-        RAD_RES["Radar.ResolutionRange"]
-        SCELL["SCell.PrbUsedDl"]
-    end
+#### Camada B: Mobilidade, Sensoriamento ISAC e Agregação de Portadoras
+```mermaid
+flowchart TD
+    A3["A3_OFFSET"] --> HO["Mobility.HandoverRate"]
+    A3 --> PP["Mobility.PingPongRate"]
+    A3 --> PRBU["RRU.PrbUsedDl"]
+    ISAC["ISAC_SENSING_RATIO"] --> RAD_DET["Radar.DetectionProb"]
+    ISAC --> RAD_RES["Radar.ResolutionRange"]
+    ISAC --> THP["DRB.UEThpDl"]
+    CA["CARRIER_AGG_RATIO"] --> SCELL["SCell.PrbUsedDl"]
+    CA --> THP
+```
 
-    subgraph SLA["Metas de Nível de Serviço (SLA)"]
-        SLA_URLLC["SLA URLLC (&lt; 5 ms)"]
-        SLA_EE["Eficiência Energética (Bits/J)"]
-        SLA_ISAC["Acurácia de Sensoriamento"]
-    end
-
-    PRB --> THP & PRBU
-    SCHED --> THP & DLY
-    TX --> SINR & THP & PWR
-    TILT --> SINR & RSRP & INTER & THP
-    A3 --> HO & PP & PRBU
-    ISAC --> RAD_DET & RAD_RES & THP
-    CA --> SCELL & THP
-
-    DLY --> SLA_URLLC
-    SINR --> SLA_URLLC
-    PWR --> SLA_EE
-    RAD_DET --> SLA_ISAC
+#### Camada C: Mapeamento de KPIs para Metas de SLA
+```mermaid
+flowchart LR
+    DLY["DRB.RlcSduDelayDl"] --> SLA_URLLC["SLA URLLC (< 5 ms)"]
+    SINR["L1M.DL-sinr"] --> SLA_URLLC
+    PWR["Energy.PowerConsumption"] --> SLA_EE["Eficiência Energética (Bits/J)"]
+    RAD_DET["Radar.DetectionProb"] --> SLA_ISAC["Acurácia de Sensoriamento (6G)"]
 ```
 
 #### Solução de Engenharia e Formulação Matemática
@@ -245,10 +266,10 @@ stateDiagram-v2
     OperacaoNormal --> InfracaoDetectada: Comando Ilegal ou Fora de Faixa
     InfracaoDetectada --> OperacaoNormal: Infrações < 3 na janela de 10s
     
-    InfracaoDetectada --> QuarentenaZeroTrust: >= 3 Infrações Graves na Janela W=10s
+    InfracaoDetectada --> QuarentenaZeroTrust: ≥ 3 Infrações Graves na Janela W = 10s
     
     state QuarentenaZeroTrust {
-        [*] --> BloqueioTotal: Descarte Imediato de Mensagens
+        [*] --> BloqueioTotal: Descarte Imediato no Barramento
         BloqueioTotal --> AlertaSeguranca: Notificação Prometheus & Logs
         AlertaSeguranca --> ContagemTempo: Janela T_quarantine = 30s
     }
@@ -261,7 +282,7 @@ stateDiagram-v2
 * **1. Janela de Decisão Adaptativa com *Fast-Flush*:**  
   A duração da janela de agregação $T_{\mathrm{window}}(t)$ é modulada dinamicamente:
 
-$$T_{\mathrm{window}}(t) = \begin{cases} T_{\mathrm{fast}} \le 5\text{ ms}, & \text{se } \exists a_i \in \mathrm{Buffer} : \mathrm{prio}_i \ge 80 \;\lor\; \mathrm{Delay}_{\mathrm{URLLC}} > 15.0\text{ ms} \\ T_{\mathrm{dyn}} \in [50\text{ ms}, 200\text{ ms}], & \text{caso contrário} \end{cases}$$
+$$T_{\mathrm{window}}(t) = \begin{cases} T_{\mathrm{fast}} \le 5\text{ ms}, & \text{se } \exists a_i \in \mathrm{Buffer} : \mathrm{prio}_i \ge 80 \lor \mathrm{Delay}_{\mathrm{URLLC}} > 15.0\text{ ms} \\ T_{\mathrm{dyn}} \in [50\text{ ms}, 200\text{ ms}], & \text{caso contrário} \end{cases}$$
 
 * **2. Mecanismo Comportamental Zero-Trust e Quarentena Automática:**  
   O `RefinementAgent` mantém um registro temporal de infrações $\mathcal{H}_{\mathrm{viol}}(x_i) = \{t_1, t_2, \dots\}$. O estado de quarentena é ativado por:
@@ -270,6 +291,10 @@ $$\mathrm{Quarantine}(x_i) = \begin{cases} \text{true}, & \text{se } \sum_{t \in
 
 onde a janela de monitoramento é $W = 10.0\text{ s}$ e o limiar é $M_{\mathrm{thresh}} = 3$ violações. Ao ser colocada em quarentena, todas as propostas da xApp são descartadas silenciosamente no barramento por $T_{\mathrm{quarantine}} = 30.0\text{ s}$, emitindo a métrica `rdl_zero_trust_quarantined_xapps_total` para o Prometheus.
 
+* **3. Modelagem Matemática das Restrições Invariantes de Segurança (Camada 3):**  
+  O operador de projeção determinística do `RefinementAgent` assegura que nenhuma ação executada ($a_{\mathrm{exec}}$) viole as leis físicas de propagação e limites de hardware:
+
+$$a_{\mathrm{exec}} = \mathrm{SafeGuard}(a_t) = \begin{cases} a_t, & \text{se todas as restrições físicas forem atendidas} \\ \mathrm{proj}(a_t), & \text{se houver violação corrigível} \\ \mathrm{veto}, & \text{se a ação for estritamente ilegal} \end{cases}$$
 
 ---
 
@@ -289,7 +314,7 @@ A metodologia experimental foi estruturada em **7 dimensões formais de validade
 | **4. Validade de Construção** | Conformidade com O-RAN WG3 TS.E2SM-RC v01.03, WG3 E2AP v02.03 e interfaces RMR. | Encoders ASN.1 APER binários estritamente alinhados com o padrão O-RAN. |
 | **5. Blindagem Invariante** | Impossibilidade matemática de despacho de ações fora do envelope físico $[-10, 23]\text{ dBm}$ e $[0, 100]\%$. | Dupla camada de proteção: Safe-RL CMDP no treino + Safety Guard no despacho. |
 | **6. Validade Externa** | Canal 3GPP TR 38.901 Urban Microcell (UMi), banda $n78$ ($3.5\text{ GHz}$), largura de banda de $100\text{ MHz}$ e mobilidade mista. | Co-simulação ns-3.40 (5G-LENA + NORI) com 30 UEs (URLLC, eMBB e mMTC). |
-| **7. Reprodutibilidade** | Manifesto de proveniência criptográfica (SHA-256) e cobertura total de testes unitários. | Checksums em `manifest_experiment.json` e 26/26 testes automatizados aprovados no pytest. |
+| **7. Reprodutibilidade** | Manifesto de proveniência criptográfica (SHA-256) e cobertura total de testes unitários. | Checksums em `manifest_experiment.json` e suíte de testes automatizados aprovados no pytest. |
 
 ---
 

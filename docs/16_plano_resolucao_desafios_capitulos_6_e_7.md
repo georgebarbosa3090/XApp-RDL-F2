@@ -16,26 +16,25 @@ A validação científica e a prontidão operacional da **Context-Aware Resource
 
 Este documento consolida a **resolução matemática, arquitetural, de software e de evidências experimentais** para ambas as rodadas.
 
+### 1.1. Trilha de Resolução da Rodada 1 (Capítulos 6 e 7)
 ```mermaid
-flowchart TD
-    subgraph R1["Rodada 1 (Capítulos 6 e 7)"]
-        A1["6.1 Unificação Configuração"] --> A2["6.2 Safe-RL PPO-Lagrangian A_safe"]
-        A2 --> A3["6.3 Topologia e Contexto"]
-        A3 --> A4["6.4 Codificação ASN.1 E2SM-RC"]
-        A4 --> A5["6.5 threading.Event Fast-Flush"]
-        A5 --> A6["6.6 Separação Demo vs Experimento"]
-    end
+flowchart LR
+    A1["6.1 Unificação Configuração"] --> A2["6.2 Safe-RL PPO-Lagrangian A_safe"]
+    A2 --> A3["6.3 Topologia e Contexto"]
+    A3 --> A4["6.4 Codificação ASN.1 E2SM-RC"]
+    A4 --> A5["6.5 threading.Event Fast-Flush"]
+    A5 --> A6["6.6 Separação Demo vs Experimento"]
+```
 
-    subgraph R2["Rodada 2 (Capítulo 8 - Seções 8.2 a 8.8)"]
-        B1["8.2 Coordenador D=60 (6 xApps) + Topologia Auto"] --> B2["8.3 Action Masking Estrito na Política Neural"]
-        B2 --> B3["8.4 Dicionário PARAM_PROFILES + FSM Zero-Trust + Macro/Small Cell"]
-        B3 --> B4["8.5 Relógio Monotônico time.perf_counter com Decomposição"]
-        B4 --> B5["8.6 Modo --mode experiment Estrito (Aborta sem traces)"]
-        B5 --> B6["8.7 Suíte Completa test_audit_fixes_comprehensive.py"]
-    end
-
-    R1 --> R2
-    R2 --> Ready["8.8 Encerramento Integral e Prontidão Testbed UFPA PCT"]
+### 1.2. Trilha de Resolução da Rodada 2 (Capítulo 8 - Seções 8.2 a 8.8)
+```mermaid
+flowchart LR
+    B1["8.2 Coordenador D=60 (6 xApps)"] --> B2["8.3 Action Masking Estrito"]
+    B2 --> B3["8.4 PARAM_PROFILES & FSM Zero-Trust"]
+    B3 --> B4["8.5 Monotônico perf_counter"]
+    B4 --> B5["8.6 Modo --mode experiment Estrito"]
+    B5 --> B6["8.7 Suíte de Testes Automatizada"]
+    B6 --> Ready["8.8 Encerramento & Prontidão Testbed"]
 ```
 
 ---
@@ -204,11 +203,11 @@ Criou-se a suíte de testes unitários e de integração `tests/test_audit_fixes
 
 ---
 
-## 6. Resolução Definitiva dos Apontamentos da Seção 9 (Sprint 1 Executado e Validado)
+## 5. Resolução Definitiva dos Apontamentos da Seção 9 (Sprint 1 Executado e Validado)
 
 Em resposta à auditoria formal consolidada (Seções 9.1 a 9.8 do relatório de superação de desafios), implementou-se e homologou-se o conjunto integral de correções do **Sprint 1**, respaldado por uma suíte de **53 testes automatizados (100% aprovados)**:
 
-### 6.1 (9.1) Contrato Canônico de Observação ($D=60$) e Preservação de Prioridade
+### 5.1 (9.1) Contrato Canônico de Observação ($D=60$) e Preservação de Prioridade
 - **Implementação:** Em `src/agents/marl/mappo_agent.py`, o método `extract_features()` foi padronizado no vetor canônico $D=60$:
   - Índices $[0..5]$: Metadados globais e telemetria KPM (Throughput DL/UL, Delay QoS, PRB Tot, SINR DL).
   - Índices $[6..11]$: Máscara de presença de propostas em 6 bits booleanos.
@@ -216,38 +215,38 @@ Em resposta à auditoria formal consolidada (Seções 9.1 a 9.8 do relatório de
 - **Preservação de Prioridade:** Normalização estrita linear `float(priority) / 100.0`, preservando a ordenação original: $40 \to 0.40$, $50 \to 0.50$, $80 \to 0.80$, $90 \to 0.90$.
 - **Validação:** [test_observation_contract.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_observation_contract.py).
 
-### 6.2 (9.2) Vínculo Inequívoco Política-Ação e Decisão de No-Op
+### 5.2 (9.2) Vínculo Inequívoco Política-Ação e Decisão de No-Op
 - **Implementação:** O coordenador MAPPO aplica *Action Masking* estrito na distribuição $\pi_\theta(a|s)$. Ação $a \in [0, N-1]$ seleciona deterministicamente a proposta correspondente; ação $a = \text{action\_dim}-1$ ou retorno nulo aciona a decisão de **No-Op** (deferimento).
 - **Semântica de No-Op:** Em `src/agents/reasoning_agent.py`, No-Op retorna `winning_actions = []` e `modified_value = None`, garantindo que nenhuma mensagem espúria de controle E2 seja emitida.
 - **Validação:** [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
 
-### 6.3 (9.3) Indisponibilidade Contextual Estrita e Encaminhamento Conservador
+### 5.3 (9.3) Indisponibilidade Contextual Estrita e Encaminhamento Conservador
 - **Implementação:** Em `src/agents/perception_agent.py`, `get_kpm_report(node_id)` valida a presença do nó e a validade temporal ($\text{TTL} \le 1.0\text{ s}$). Caso o nó não esteja cadastrado ou a telemetria esteja expirada, retorna `(None, False)`.
 - **Comportamento no Pipeline:** Em `src/rdl_xapp.py`, na ausência de contexto confiável, o sistema executa obrigatoriamente o encaminhamento conservador para a **Heurística Segura de Nível 1** (`_resolve_by_heuristic()`).
 - **Validação:** [test_audit_fixes_comprehensive.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_audit_fixes_comprehensive.py).
 
-### 6.4 (9.4) Validação Pública de Limites de Hardware por Tipo de Célula
+### 5.4 (9.4) Validação Pública de Limites de Hardware por Tipo de Célula
 - **Implementação:** Em `src/agents/refinement_agent.py`, os métodos públicos `validate(resolution, conflict)` e `validate_single_action(action)` repassam explicitamente o `node_id = action.node_id` para a função de limites físicos.
 - **Limites Físicos:** Teto de potência de transmissão diferenciado: **Macro gNodeB (43 dBm / 20W)** versus **Small Cell (23 dBm / 200mW)**. Propostas que excedam o perfil da célula são rejeitadas e registradas na FSM Zero-Trust.
 - **Validação:** [test_audit_fixes_comprehensive.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_audit_fixes_comprehensive.py) e [test_refinement_agent.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_refinement_agent.py).
 
-### 6.5 (9.5) Codecs ASN.1 / APER Nativos e Shim Híbrido
+### 5.5 (9.5) Codecs ASN.1 / APER Nativos e Shim Híbrido
 - **Implementação:** Criou-se [src/e2/asn1_shim.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/asn1_shim.py) para prover interoperabilidade contínua (pycrate nativo em nós O-RAN de produção + emulador estrutural puro em Python para ambientes de CI e testes). Corrigidos os imports em `src/rdl_xapp.py` para utilizar diretamente `KpmDecoder` e `RCEncoder`.
 - **Perfis de Parâmetros e Validação:** Dicionário `PARAM_PROFILES` completo com fatores de escala de ponto fixo e validação estrita de faixa admissível (`min <= encoded_val <= max`), com rejeição imediata de parâmetros desconhecidos via `ValueError`.
 - **Validação:** [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py) e [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
 
-### 6.6 (9.6) Instrumentação Monotônica Decomposta
+### 5.6 (9.6) Instrumentação Monotônica Decomposta
 - **Implementação:** Medição de latência com `time.perf_counter()` decomposta em:
   $$T_{\text{total}} \ge T_{\text{queue}} + T_{\text{perception}} + T_{\text{reasoning}} + T_{\text{refinement}} + T_{\text{e2\_encode}}$$
 - **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
 
-### 6.7 (9.7 e 9.8) Rastreabilidade Estrita e Empacotamento de Traces Brutos
+### 5.7 (9.7 e 9.8) Rastreabilidade Estrita e Empacotamento de Traces Brutos
 - **Implementação:** Script `scripts/package_and_sync_raw_results.py` atualizado com suporte aos parâmetros `--mode demo|experiment` e `--strict`. No modo estrito de experimentação, a ausência de arquivos brutos emite erro formal (`FileNotFoundError`), impedindo a criação silenciosa de dados sintéticos e garantindo integridade criptográfica SHA-256 no manifesto.
 - **Validação:** [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
 
 ---
 
-## 7. Superação Formal dos Desafios dos Capítulos 10 e 11 (Revisões 5a19149 e d436f5f)
+## 6. Superação Formal dos Desafios dos Capítulos 10 e 11 (Revisões 5a19149 e d436f5f)
 
 Com base nas rodadas de auditoria científica detalhadas nos Capítulos 10 e 11 do *Relatório de Superação de Desafios da CA-RDL*, todas as problemáticas remanescentes foram matematicamente modeladas, implementadas nos caminhos públicos e validadas por testes de regressão:
 
@@ -272,7 +271,7 @@ flowchart TD
     end
 ```
 
-### 7.1 Identificadores Determinísticos e Desambiguação de No-Op (10.4 & 11.3)
+### 6.1 Identificadores Determinísticos e Desambiguação de No-Op (10.4 & 11.3)
 - **Problemática:** `hash()` nativo varia com `PYTHONHASHSEED`, gerando representações inconsistentes entre processos. Em lotes com $N \ge 7$ propostas, o índice 6 era interpretado como a 7ª proposta e não como a ação reservada de No-Op.
 - **Solução Implementada:**
   - Função `_stable_hash(s, mod)` com digest MD5 determinístico independente de semente do runtime.
@@ -280,24 +279,24 @@ flowchart TD
   - Log de advertência explícito para excesso de propostas ($N > 6$), alocando os 6 primeiros slots no vetor $D=60$ de forma reprodutível e documentada.
 - **Validação:** `test_deterministic_feature_hashing` em [test_observation_contract.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_observation_contract.py) e `test_action_cardinality_and_noop_disambiguation_with_many_proposals` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
 
-### 7.2 Vínculo Rigoroso Política-Ação e Gradiente Safe-RL Ativo (11.4)
+### 6.2 Vínculo Rigoroso Política-Ação e Gradiente Safe-RL Ativo (11.4)
 - **Problemática:** Multiplicação ad-hoc das probabilidades por fatores de prioridade durante a inferência distorcia a política aprendida $\pi_\theta(a|s)$. O teste de gradiente não continha transições com custo não-nulo ($c_t > 0$).
 - **Solução Implementada:**
   - Contrato formal entre treinamento e inferência: a distribuição mascarada gerada pelo ator governa diretamente a seleção de ação sem perturbações ad-hoc.
   - Teste de gradiente com transições de custo positivo ($c_t = 1.0 > d = 0.1$), validando a ativação da Vantagem Penalizada Conjunta $\hat{A}^{\text{safe}} = \hat{A}^R - \lambda \hat{A}^C$, perdas finitas e atualização positiva do multiplicador de Lagrange $\lambda > 0$.
 - **Validação:** `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` e `test_pure_policy_inference_without_ad_hoc_reweighting` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
 
-### 7.3 Agregação Multimétrica na Telemetria KPM (11.5)
+### 6.3 Agregação Multimétrica na Telemetria KPM (11.5)
 - **Problemática:** `KpmDecoder.decode_indication()` produzia 1 relatório individual por métrica preenchendo as demais com zero, causando sobrescrita indesejada do estado de KPM por nó.
 - **Solução Implementada:** Agregação de todas as medições pertencentes ao mesmo par `(node_id, ue_id)` em uma única estrutura unificada contendo `drb_thp_dl`, `drb_thp_ul`, `drb_delay_dl` e `prb_used_dl` antes do retorno.
 - **Validação:** `test_kpm_decoder_fallback` em [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
 
-### 7.4 Codificação Completa de PDU E2SM-RC e Decodificação Reversível (11.5)
+### 6.4 Codificação Completa de PDU E2SM-RC e Decodificação Reversível (11.5)
 - **Problemática:** `RCEncoder` construía o cabeçalho mas retornava apenas o corpo da mensagem binária.
 - **Solução Implementada:** Implementação de `encode_control_pdu(node_id, param, value) -> Tuple[bytes, bytes]` retornando `(header_aper, msg_aper)`, além de métodos dedicados `decode_control_header()` e `decode_control_message()`.
 - **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py).
 
-### 7.5 Separação Rígida de Modos e Teste Negativo de Proveniência (11.6)
+### 6.5 Separação Rígida de Modos e Teste Negativo de Proveniência (11.6)
 - **Problemática:** Exportação de dados sintéticos e experimentais para os mesmos destinos e ausência de teste negativo que force a rejeição de dados sintéticos no modo estrito.
 - **Solução Implementada:**
   - Isolamento estrito de diretórios de exportação: `experiments/results/demo/` (dados sintéticos estocásticos calibrados) e `experiments/results/experiment/` (traces brutos experimentais ns-3).
@@ -305,7 +304,7 @@ flowchart TD
   - Cálculo de conclusões dinâmicas no relatório estatístico com base no número exato de métricas significantes via ANOVA ($p < 0.05$).
 - **Validação:** `test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
 
-### 7.6 Instrumentação Monotônica de Fila e Correção da Integração Contínua (11.2 & 11.7)
+### 6.6 Instrumentação Monotônica de Fila e Correção da Integração Contínua (11.2 & 11.7)
 - **Problemática:** Medição de tempo no runtime não contabilizava espera na fila; falha no build Docker na esteira CI por troca de diretório de contexto.
 - **Solução Implementada:**
   - Registro de `arrival_monotonic = time.perf_counter()` em cada ação ao entrar no buffer, calculando $T_{\text{queue}} = t_{\text{dequeue}} - t_{\text{enqueue}}$ e incorporando no log de decisão.
@@ -314,7 +313,7 @@ flowchart TD
 
 ---
 
-## 8. Superação Rigorosa dos Desafios do Capítulo 12 (Sexta Auditoria - Revisão 18aa8d4)
+## 7. Superação Rigorosa dos Desafios do Capítulo 12 (Sexta Auditoria - Revisão 18aa8d4)
 
 A sexta auditoria científica do projeto CA-RDL avaliou os caminhos de execução da revisão `18aa8d4`, apontando seis eixos essenciais de aprimoramento implementados, testados e certificados:
 
@@ -342,7 +341,7 @@ flowchart TD
     end
 ```
 
-### 8.1 Inferência Pura da Política $\pi_\theta(a|s)$ e Treinamento com Action Masking (12.3)
+### 7.1 Inferência Pura da Política $\pi_\theta(a|s)$ e Treinamento com Action Masking (12.3)
 - **Problemática:** O método `decide()` ainda multiplicava probabilidades por fatores lineares de prioridade, distorcendo a política aprendida $\pi_\theta(a|s)$. A máscara de ações recebida por `store_transition()` não era salva no buffer nem utilizada no cálculo de perda do ator durante `MAPPOAgent.update()`.
 - **Solução Implementada:**
   - Remoção completa da multiplicação ad-hoc por prioridade: `decide()` obtém `probs = leader_agent.actor.get_action_probs(obs_t, mask_t)` e seleciona o argmax da distribuição mascarada diretamente.
@@ -350,20 +349,20 @@ flowchart TD
   - No loop de otimização PPO (`MAPPOAgent.update`), as novas probabilidades e entropia são avaliadas sobre a distribuição mascarada `self.actor.get_action_probs(obs_t, action_masks_t)`.
 - **Validação:** `test_pure_policy_inference_without_ad_hoc_reweighting` e `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
 
-### 8.2 Rejeição Estrita de Telemetria Inválida sem Injeção de Dados Artificiais (12.4)
+### 7.2 Rejeição Estrita de Telemetria Inválida sem Injeção de Dados Artificiais (12.4)
 - **Problemática:** Falha na decodificação APER de telemetria E2SM-KPM injetava valores fixos de simulação (`15.5 Mbps`, `45 PRBs`), mascarando erros de protocolo em modo experimental.
 - **Solução Implementada:**
   - Em `src/e2/kpm_decoder.py`, exceções de decodificação APER ou bytes corrompidos geram log de advertência e retornam estritamente `[]` (lista vazia).
   - A ausência de telemetria faz com que `PerceptionAgent.get_kpm_report()` retorne `(None, False)`, acionando de forma transparente o fallback conservador para a Heurística de Nível 1.
 - **Validação:** `test_kpm_decoder_rejection_on_invalid_payload` e `test_kpm_decoder_valid_aper_multimetric_aggregation` em [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
 
-### 8.3 Despacho de PDU Completo E2SM-RC no Runtime de Produção (12.4)
+### 7.3 Despacho de PDU Completo E2SM-RC no Runtime de Produção (12.4)
 - **Problemática:** O runtime `src/rdl_xapp.py` invocava `encode_control_request` (interface legado que gerava apenas a mensagem APER), deixando de transmitir o cabeçalho APER padronizado pelo O-RAN WG3.
 - **Solução Implementada:**
   - Em `src/rdl_xapp.py` (`_send_control`), o sistema chama `encode_control_pdu(node_id, parameter, value)` e inclui no dicionário de controle RMR os campos `header_aper_bytes`, `msg_aper_bytes` e `aper_bytes` (para retrocompatibilidade com adaptadores E2 legados).
 - **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py).
 
-### 8.4 Validação Estruturada com ElementTree e Conclusões Dinâmicas com Trade-offs (12.5)
+### 7.4 Validação Estruturada com ElementTree e Conclusões Dinâmicas com Trade-offs (12.5)
 - **Problemática:** A busca por marcadores sintéticos usava substring de texto nos primeiros 512 caracteres, falhando com aspas simples ou arquivos sem marcador, e as conclusões do relatório estatístico afirmavam ganho estático de Jain mesmo quando havia trade-off (-1.6%).
 - **Solução Implementada:**
   - Utilização do parser estruturado `xml.etree.ElementTree` em `verify_raw_traces_exist()`, validando atributos em qualquer estilo de aspas e exigindo confirmação positiva de elementos `<Flow>` com contadores de pacotes numéricos válidos.
@@ -371,7 +370,7 @@ flowchart TD
   - Geração dinâmica da conclusão nº 2 no relatório estatístico, respeitando rigorosamente o sinal da variação percentual: reporta ganho se $\Delta > 0$ ou compromisso/trade-off quando $\Delta < 0$.
 - **Validação:** `test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows` e `test_verify_raw_traces_accepts_valid_experimental_xml` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
 
-### 8.5 Decomposição Monotônica e Nomenclatura da Latência Total (12.6)
+### 7.5 Decomposição Monotônica e Nomenclatura da Latência Total (12.6)
 - **Problemática:** A latência denominada "total" não incorporava a espera na fila nem o tempo de codificação APER, e os testes de latência não passavam pela fila do runtime.
 - **Solução Implementada:**
   - Instrumentação de $T_{\text{proc}} = T_{\text{perception}} + T_{\text{reasoning}} + T_{\text{refinement}}$, $T_{\text{e2\_encode}}$ no envio e cálculo formal de $T_{\text{cycle\_total}} = T_{\text{queue}} + T_{\text{proc}} + T_{\text{e2\_encode}}$.
@@ -380,7 +379,7 @@ flowchart TD
 
 ---
 
-## 9. Matriz Consolidada de Cobertura e Resultados da Suíte de Testes (63/63 Aprovados)
+## 8. Matriz Consolidada de Cobertura e Resultados da Suíte de Testes (63/63 Aprovados)
 
 Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytest tests/ -v`):
 
@@ -402,7 +401,7 @@ Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytes
 
 ---
 
-## 10. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
+## 9. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
 
 Com a resolução formal e certificada de todas as pendências arquiteturais, funcionais e metodológicas dos Capítulos 6 a 12 do relatório de auditoria:
 1. **Infraestrutura de Hardware:** Servidores Dell PowerEdge R750 com aceleradores NVIDIA A100/A30 e SDRs USRPs NI X310 e N310 operando em Banda n78 (3.5 GHz) e FR2 mmWave (28 GHz).
@@ -411,5 +410,3 @@ Com a resolução formal e certificada de todas as pendências arquiteturais, fu
 
 ---
 *Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2`.*
-
-

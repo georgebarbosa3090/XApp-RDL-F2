@@ -20,40 +20,47 @@ Após a auditoria técnica descrita no [Volume 13](file:///c:/Users/george.barbo
 5. **Janela Adaptativa com Fast-Flush e Quarentena Zero-Trust:** Redução da latência de fila URLLC para $4.2\text{ ms}$ e isolamento automático por $30\text{ s}$ contra *Rogue xApps*;
 6. **Matriz de 7 Dimensões de Validade Científica:** Campanha multi-semente rigorosa ($N = 30$ runs, seeds 1001 a 1030), análise de variância ANOVA ($F = 854.2, p < 10^{-15}$), Intervalos de Confiança (IC 95%) e proveniência com hash SHA-256.
 
-```mermaid
-graph TD
-    subgraph Near_RT_RIC["Near-RT RIC (Namespace: ricxapp)"]
-        subgraph XAPPS["Reference xApps Concorrentes Ativas"]
-            X1["ricxapp-qos-xslice<br/>(SLA URLLC / PRB 80%)"]
-            X2["ricxapp-energy-saving<br/>(Green RAN / Potência 15-20 dBm)"]
-            X3["ricxapp-traffic-steering<br/>(Mobilidade A3 / Handover)"]
-            X4["ricxapp-beamformer<br/>(Massive MIMO / Downtilt 3D)"]
-            X5["ricxapp-isac-radar<br/>(Sensoriamento Conjunto 6G)"]
-            X6["ricxapp-rogue<br/>(Gerador de Anomalias / Teste Zero-Trust)"]
-        end
+Para maximizar a clareza arquitetural, a topologia de implantação e o motor interno de decisão são desacoplados nos diagramas a seguir:
 
-        subgraph CA_RDL["xApp CA-RDL Fase 2 Aprimorada"]
-            PA["1. Perception Agent<br/>• Grafo Causal 7 RCPs & 12 KPIs<br/>• Acoplamento Espacial I_inter<br/>• Vetor Elástico s_t (N=6)"]
-            
-            subgraph Engine["Motor de Decisão Hierárquico Escalonado"]
-                RA1["Nível 1: Heurística Rápida (&le; 1 ms)"]
-                RA2["Nível 2A: Utilidade Contextual (TVS/EEVS)"]
-                RA3["Nível 2B: Safe-RL MAPPO (CMDP + Lagrange)"]
-            end
-            
-            RE["3. Refinement Agent &amp; Safety Guard<br/>• Fast-Flush &le; 5 ms<br/>• Envelopes Físicos [-10, 23] dBm & PRB [0, 100]%<br/>• Quarentena Zero-Trust 30s"]
-            RC["4. RC Encoder (Styles 1, 2, 3, 10, 11)"]
-        end
+### 1.1. Topologia do Ecossistema Multi-xApp e Barramento Near-RT RIC
+```mermaid
+flowchart TD
+    subgraph XAPPS["Reference xApps Concorrentes (Namespace: ricxapp)"]
+        X1["ricxapp-qos-xslice<br/>(SLA URLLC / PRB 80%)"]
+        X2["ricxapp-energy-saving<br/>(Green RAN / Potência 15-20 dBm)"]
+        X3["ricxapp-traffic-steering<br/>(Mobilidade A3 / Handover)"]
+        X4["ricxapp-beamformer<br/>(Massive MIMO / Downtilt 3D)"]
+        X5["ricxapp-isac-radar<br/>(Sensoriamento Conjunto 6G)"]
+        X6["ricxapp-rogue<br/>(Gerador de Anomalias / Teste Zero-Trust)"]
     end
 
-    gNB["gNodeB 5G-LENA / ns-3 (Banda n78 / FR1 + FR3 mmWave)"]
+    subgraph Mediator["Plataforma Near-RT RIC"]
+        RDL["xApp CA-RDL Fase 2 Aprimorada<br/>(Mediador & Coordenador Autônomo)"]
+    end
 
-    XAPPS -->|"Propostas de Ação (RMR / REST)"| PA
+    gNB["gNodeB 5G-LENA / ns-3<br/>(Banda n78 / FR1 + FR3 mmWave)"]
+
+    XAPPS -->|"Propostas de Ação (RMR / REST)"| RDL
+    RDL -->|"E2SM-RC Control Message (mtype: 12010)"| gNB
+    gNB -->|"E2SM-KPM Telemetria (mtype: 12050)"| RDL
+```
+
+### 1.2. Pipeline Interno de Decisão Hierárquica da CA-RDL
+```mermaid
+flowchart LR
+    IN["Entrada de Propostas & Telemetria"] --> PA["1. Perception Agent<br/>• Grafo Causal 7 RCPs & 12 KPIs<br/>• Acoplamento Espacial I_inter<br/>• Vetor Elástico s_t ∈ ℝ^60"]
+
+    subgraph Engine["2. Motor Hierárquico Escalonado"]
+        direction TB
+        RA1["Nível 1: Heurística Rápida (≤ 1 ms)"]
+        RA2["Nível 2A: Utilidade Contextual (TVS/EEVS)"]
+        RA3["Nível 2B: Safe-RL MAPPO (CMDP + Lagrange)"]
+    end
+
     PA --> Engine
-    Engine --> RE
-    RE --> RC
-    RC -->|"E2SM-RC Control Message (mtype: 12010)"| gNB
-    gNB -->|"E2SM-KPM Telemetria (mtype: 12050)"| PA
+    Engine --> RE["3. Refinement Agent & Safety Guard<br/>• Fast-Flush ≤ 5 ms<br/>• Envelopes Físicos [-10, 23] dBm & PRB ≤ 100%<br/>• Quarentena Zero-Trust (30s)"]
+    RE --> RC["4. RC Encoder (Styles 1, 2, 3, 10, 11)"]
+    RC --> OUT["Despacho E2SM-RC para gNodeB"]
 ```
 
 ---
@@ -146,7 +153,7 @@ A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (C
 | **Manifesto Criptográfico** | [`experiments/results/reports/manifest_experiment.json`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/manifest_experiment.json) | Hash SHA-256 e proveniência dos dados |
 | **Relatório Estatístico Formal** | [`experiments/results/reports/relatorio_estatistico_multi_semente.md`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/relatorio_estatistico_multi_semente.md) | Testes $t$-Student, ANOVA e Mann-Whitney U |
 | **Relatório Comparativo Detalhado** | [`experiments/results/reports/relatorio_comparativo_detalhado.md`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/relatorio_comparativo_detalhado.md) | Métricas detalhadas de classificação ML e QoS |
-| **Suíte de Testes Automatizados** | [`tests/`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/) | 32 testes unitários e de integração ($100\%$ aprovados) |
+| **Suíte de Testes Automatizados** | [`tests/`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/) | Testes unitários e de integração ($100\%$ aprovados) |
 
 ---
 

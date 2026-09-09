@@ -11,29 +11,32 @@
 
 A Fase 2 introduz uma arquitetura orientada a agentes cognitivos com **Aprendizado por Reforço Multiagente (MARL)** baseado no paradigma **MAPPO (Multi-Agent Proximal Policy Optimization)** com **Treinamento Centralizado e Execução Descentralizada (CTDE)**.
 
+Para máxima clareza e manutenibilidade, a arquitetura é estruturada em três camadas funcionais desacopladas:
+
+### 1.1. Camada de Percepção (Perception Layer)
 ```mermaid
-graph TD
-    subgraph "Perception Layer (PerceptionAgent)"
-        E2["E2SM-KPM Metrics (gNodeB)"] --> FE["Feature Engineering & Normalização"]
-        XAPP_IN["Propostas das 3 xApps (RMR)"] --> FE
-        FE --> S_T["Vetor de Estado Global: s_t"]
-    end
+flowchart LR
+    E2["Métricas E2SM-KPM<br/>(gNodeB 5G NR)"] --> FE["Feature Engineering &<br/>Normalização Robusta"]
+    XAPP_IN["Propostas das xApps<br/>(Barramento RMR / REST)"] --> FE
+    FE --> S_T["Vetor de Estado Global Concatenado<br/>s_t ∈ ℝ^(D_obs × N)"]
+```
 
-    subgraph "Reasoning Layer (ReasoningAgent - MAPPO)"
-        S_T --> CRITIC["Crítico Centralizado: V_phi(s_t)<br/>(Estima o Valor Global da Rede)"]
-        S_T --> ACT_URLLC["Ator Descentralizado: pi_theta1(a_1|o_1)<br/>(Fatia URLLC)"]
-        S_T --> ACT_EMBB["Ator Descentralizado: pi_theta2(a_2|o_2)<br/>(Fatia eMBB)"]
-        S_T --> ACT_ES["Ator Descentralizado: pi_theta3(a_3|o_3)<br/>(Energy Saving)"]
-    end
+### 1.2. Camada de Raciocínio e Coordenação (Reasoning Layer - MAPPO CTDE)
+```mermaid
+flowchart TD
+    S_T["Vetor de Estado s_t"] --> CRITIC["Crítico Centralizado: V_ψ(s_t)<br/>(Avaliação de Valor Global da Rede)"]
+    S_T --> ACT_URLLC["Ator 1: π_θ1(a_1 | o_1)<br/>(Fatia URLLC - Prioridade SLA)"]
+    S_T --> ACT_EMBB["Ator 2: π_θ2(a_2 | o_2)<br/>(Fatia eMBB - Capacidade/Vazão)"]
+    S_T --> ACT_ES["Ator 3: π_θ3(a_3 | o_3)<br/>(Energy Saving - Otimização Green)"]
+```
 
-    subgraph "Refinement Layer (RefinementAgent)"
-        ACT_URLLC --> SG["Safety Guards Determinísticos<br/>(Limites Físicos de Potência e PRB)"]
-        ACT_EMBB --> SG
-        ACT_ES --> SG
-        SG --> HARMONIZED["Ações Harmonizadas e Seguras: a*_t"]
-    end
-
-    HARMONIZED --> E2_OUT["Interface E2 / E2SM-RC -> gNodeB"]
+### 1.3. Camada de Refinamento e Despacho E2 (Refinement Layer & Safety Guards)
+```mermaid
+flowchart LR
+    ACT_OUT["Propostas de Ações<br/>{a_1, a_2, ..., a_N}"] --> SG["Safety Guards Determinísticos<br/>• Envelopes Físicos [-10, 23] dBm & PRB ≤ 100%<br/>• Quarentena Zero-Trust (30s)"]
+    SG --> HARMONIZED["Ações Harmonizadas e Seguras: a*_t"]
+    HARMONIZED --> E2_ENC["Codificador ASN.1 APER<br/>(E2SM-RC Control Message)"]
+    E2_ENC --> E2_OUT["gNodeB 5G-LENA / ns-3<br/>(Interface E2 / mtype: 12010)"]
 ```
 
 ---
@@ -42,19 +45,19 @@ graph TD
 
 ### 2.1. Espaço de Estados Global ($\mathcal{S}$)
 O vetor de estado $s_t \in \mathcal{S}$ capturado pelo `PerceptionAgent` inclui:
-$$s_t = \left[ 	ext{SINR}_t, 	ext{RSRP}_t, 	ext{PRB}_{	ext{demanded}}, 	ext{PRB}_{	ext{available}}, 	ext{Load}_{	ext{traffic}}, P_{tx}, N_{ue}, 	ext{ConflictFlag}, 	ext{SliceType} ight]$$
+$$s_t = \left[ \text{SINR}_t, \, \text{RSRP}_t, \, \text{PRB}_{\text{demanded}}, \, \text{PRB}_{\text{available}}, \, \text{Load}_{\text{traffic}}, \, P_{\text{tx}}, \, N_{\text{ue}}, \, \text{ConflictFlag}, \, \text{SliceType} \right]$$
 
 ### 2.2. Função de Perda do Ator (Clipping PPO)
-Cada ator descentralizado $\pi_{	heta_i}$ otimiza a política com o mecanismo de clipagem de probabilidade:
-$$L^{CLIP}(	heta_i) = \hat{\mathbb{E}}_t \left[ \min \left( r_t(	heta_i) \hat{A}_t, 	ext{clip}(r_t(	heta_i), 1 - \epsilon, 1 + \epsilon) \hat{A}_t ight) ight]$$
-Onde $r_t(	heta_i) = rac{\pi_{	heta_i}(a_i | o_i)}{\pi_{	heta_i, 	ext{old}}(a_i | o_i)}$ e $\hat{A}_t$ é a vantagem calculada pelo Crítico Centralizado via GAE (Generalized Advantage Estimation).
+Cada ator descentralizado $\pi_{\theta_i}$ otimiza a política com o mecanismo de clipagem de probabilidade:
+$$L^{\text{CLIP}}(\theta_i) = \hat{\mathbb{E}}_t \left[ \min \left( r_t(\theta_i) \hat{A}_t, \, \text{clip}(r_t(\theta_i), 1 - \epsilon, 1 + \epsilon) \hat{A}_t \right) \right]$$
+onde $r_t(\theta_i) = \frac{\pi_{\theta_i}(a_i \mid o_i)}{\pi_{\theta_i, \text{old}}(a_i \mid o_i)}$ e $\hat{A}_t$ é a vantagem calculada pelo Crítico Centralizado via GAE (*Generalized Advantage Estimation*).
 
 ### 2.3. Função de Recompensa Multi-Objetivo ($R_t$)
 A recompensa unificada equilibra múltiplos objetivos ponderados pelo `IntentClassifier`:
-$$R_t = w_{qos} R_{qos}(t) + w_{ee} R_{ee}(t) - w_{pen} P_{viol}(t)$$
-* **$R_{qos}(t)$:** Proximidade do cumprimento do SLA URLLC ($	ext{Delay} \le 5	ext{ ms}$).
-* **$R_{ee}(t)$:** Eficiência energética calculada em $rac{	ext{Throughput (Mbps)}}{P_{tx} (	ext{Watts})}$.
-* **$P_{viol}(t)$:** Penalidade proporcional a conflitos não mitigados e violações de recursos.
+$$R_t = w_{\text{qos}} R_{\text{qos}}(t) + w_{\text{ee}} R_{\text{ee}}(t) - w_{\text{pen}} P_{\text{viol}}(t)$$
+* **$R_{\text{qos}}(t)$:** Proximidade do cumprimento do SLA URLLC ($\text{Delay} \le 5.0\text{ ms}$).
+* **$R_{\text{ee}}(t)$:** Eficiência energética calculada em $\frac{\text{Throughput (Mbps)}}{P_{\text{tx}} (\text{Watts})}$.
+* **$P_{\text{viol}}(t)$:** Penalidade proporcional a conflitos não mitigados e violações de recursos.
 
 ---
 
