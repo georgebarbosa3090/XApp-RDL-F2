@@ -5,6 +5,7 @@ metadata:
   namespace: ricplt
   labels:
     app: ricplt-dbaas
+    version: "1.0.0"
     app.kubernetes.io/name: ricplt-dbaas
 spec:
   replicas: 1
@@ -15,6 +16,9 @@ spec:
     metadata:
       labels:
         app: ricplt-dbaas
+        version: "1.0.0"
+      annotations:
+        sidecar.istio.io/inject: "true"
     spec:
       containers:
       - name: redis
@@ -22,7 +26,7 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 6379
-          name: redis
+          name: tcp-redis
         resources:
           requests:
             cpu: 50m

@@ -12,8 +12,11 @@ echo "==========================================================================
 echo " [*] Iniciando Implantacao Automatizada das Reference xApps no K8s ($NAMESPACE)"
 echo "=============================================================================="
 
-# 1. Garantir namespace
+# 1. Garantir namespace com injecao automatica do Istio Sidecar (Envoy)
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace "ricplt" --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null || true
+kubectl label namespace "$NAMESPACE" istio-injection=enabled --overwrite 2>/dev/null || true
+kubectl label namespace "ricplt" istio-injection=enabled --overwrite 2>/dev/null || true
 
 # 2. Garantir que as imagens necessárias (1.1.0 e 2.0.0) estejam presentes nos nós containerd do k3d
 echo "[+] Sincronizando imagens Docker nos nós do cluster k3d..."
@@ -65,6 +68,7 @@ metadata:
   namespace: ${NAMESPACE}
   labels:
     app: ${APP_NAME}
+    version: "1.1.0"
     tier: reference-xapp
 spec:
   replicas: 1
@@ -75,7 +79,10 @@ spec:
     metadata:
       labels:
         app: ${APP_NAME}
+        version: "1.1.0"
         tier: reference-xapp
+      annotations:
+        sidecar.istio.io/inject: "true"
     spec:
       containers:
       - name: ${APP_NAME}

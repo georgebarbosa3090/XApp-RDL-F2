@@ -5,6 +5,7 @@ metadata:
   namespace: ricxapp
   labels:
     app: ricxapp-traffic-steering
+    version: "1.1.0"
     app.kubernetes.io/name: traffic-steering
     app.kubernetes.io/part-of: reference-xapps
 spec:
@@ -16,7 +17,9 @@ spec:
     metadata:
       labels:
         app: ricxapp-traffic-steering
+        version: "1.1.0"
       annotations:
+        sidecar.istio.io/inject: "true"
         prometheus.io/scrape: "true"
         prometheus.io/port: "8087"
         prometheus.io/path: "/metrics"

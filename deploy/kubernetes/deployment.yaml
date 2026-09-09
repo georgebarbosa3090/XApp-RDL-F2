@@ -5,6 +5,7 @@ metadata:
   namespace: ricxapp
   labels:
     app: ricxapp-iqos-xapp-rdl
+    version: "2.0.0"
     app.kubernetes.io/name: iqos-xapp-rdl
     app.kubernetes.io/instance: rdl-f1
 spec:
@@ -16,7 +17,9 @@ spec:
     metadata:
       labels:
         app: ricxapp-iqos-xapp-rdl
+        version: "2.0.0"
       annotations:
+        sidecar.istio.io/inject: "true"
         prometheus.io/scrape: "true"
         prometheus.io/port: "8081"
         prometheus.io/path: "/metrics"

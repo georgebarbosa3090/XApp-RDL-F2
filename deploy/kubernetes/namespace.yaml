@@ -4,6 +4,7 @@ metadata:
   name: ricplt
   labels:
     app.kubernetes.io/part-of: o-ran-sc
+    istio-injection: enabled
 ---
 apiVersion: v1
 kind: Namespace
@@ -11,3 +12,4 @@ metadata:
   name: ricxapp
   labels:
     app.kubernetes.io/part-of: o-ran-sc
+    istio-injection: enabled

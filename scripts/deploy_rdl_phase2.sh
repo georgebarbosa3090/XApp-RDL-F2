@@ -57,7 +57,11 @@ else
     fi
 fi
 
-# 3.1. Reinicia pods de reference xApps caso estejam aguardando imagem
+# 3.0. Garantir injecao automatica do Istio Sidecar (Envoy)
+kubectl label namespace ${NAMESPACE_XAPP} istio-injection=enabled --overwrite 2>/dev/null || true
+kubectl label namespace ${NAMESPACE_RIC} istio-injection=enabled --overwrite 2>/dev/null || true
+
+# 3.1. Reinicia pods de reference xApps caso estejam aguardando imagem ou sidecar
 kubectl rollout restart deployment ricxapp-qos-xslice -n ${NAMESPACE_XAPP} 2>/dev/null || true
 kubectl rollout restart deployment ricxapp-energy-saving -n ${NAMESPACE_XAPP} 2>/dev/null || true
 kubectl rollout restart deployment ricxapp-traffic-steering -n ${NAMESPACE_XAPP} 2>/dev/null || true
