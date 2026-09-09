@@ -156,3 +156,37 @@ Ou executar a injeção sob demanda via terminal:
    - ☑ **Request Rates:** Exibe a taxa de requisições por segundo (RPS / HTTP RPS) em cada aresta do grafo.
    - ☑ **Response Time:** Exibe a latência média de resposta em milissegundos.
    - ☑ **Security:** Exibe cadeados indicando mTLS ativo entre os proxies Envoy.
+
+---
+
+## 7. Registro de Auditoria e Resolução de Não-Conformidades da Malha Istio
+
+### 7.1. Diagnóstico dos Alertas no Kiali (`ricplt` e `ricxapp`)
+
+Durante a validação operacional da malha no Kiali, foram identificadas e auditadas as seguintes não-conformidades de infraestrutura:
+
+1. **`Pod has no Istio sidecar` / `Istio sidecar container not found in Pod(s)`**:
+   * **Causa Raiz:** O namespace `ricplt` (e `ricxapp`) não possuía a label `istio-injection=enabled`.
+   * **Impacto:** Os Pods operavam como container único (`1/1 READY`) sem o proxy Envoy (`istio-proxy`) acoplado, impedindo a interceptação de tráfego e geração de telemetria no Prometheus.
+2. **`Pod has no version label` / `version label is missing`**:
+   * **Causa Raiz:** O Deployment do DBAAS Redis (`ricplt-dbaas`) e das Reference xApps não possuíam o label canônico `version: "1.0.0"`.
+   * **Impacto:** O Kiali emitia alertas de aviso e impedia a correlação temporal de versões de workloads.
+3. **`KIA0601 Port name must follow <protocol>[-suffix] form`**:
+   * **Causa Raiz:** Portas nomeadas como `metrics`, `rmr-data`, `rmr-route` e `redis` violavam a sintaxe de protocolos do Istio.
+   * **Impacto:** Desativação de inspeção L7/HTTP nos endpoints de métricas e saúde.
+
+### 7.2. Rastreabilidade de Modificações e Cadeia de Custódia (Commits `ccd0e3d` e `68de60a`)
+
+| Arquivo Inspecionado / Modificado | Linhas Alteradas | Ação Realizada |
+| :--- | :--- | :--- |
+| [`deploy/kubernetes/namespace.yaml`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/deploy/kubernetes/namespace.yaml) | L4-14 | Adicionado `istio-injection: enabled` nos namespaces `ricplt` e `ricxapp`. |
+| [`deploy/kubernetes/near-rt-ric.yaml`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/deploy/kubernetes/near-rt-ric.yaml) | L5-25 | Adicionadas labels `version: "1.0.0"`, anotação `sidecar.istio.io/inject: "true"` e porta `tcp-redis`. |
+| [`deploy/kubernetes/deployment.yaml`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/deploy/kubernetes/deployment.yaml) | L6-24 | Inseridas labels `version: "2.0.0"`, anotação de injeção Istio e portas `tcp-rmr-data`/`tcp-rmr-route`. |
+| [`deploy/kubernetes/xapp-qos-xslice.yaml`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/deploy/kubernetes/xapp-qos-xslice.yaml) | L5-24, L40-44 | Inseridas labels `version: "1.1.0"`, anotação de injeção Istio e porta `tcp-rmr-data`. |
+| [`deploy/kubernetes/xapp-energy-saving.yaml`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/deploy/kubernetes/xapp-energy-saving.yaml) | L5-24, L40-44 | Inseridas labels `version: "1.1.0"`, anotação de injeção Istio e porta `tcp-rmr-data`. |
+| [`deploy/kubernetes/xapp-traffic-steering.yaml`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/deploy/kubernetes/xapp-traffic-steering.yaml) | L5-24, L40-44 | Inseridas labels `version: "1.1.0"`, anotação de injeção Istio e porta `tcp-rmr-data`. |
+| [`scripts/deploy_reference_xapps.sh`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/deploy_reference_xapps.sh) | L12-20, L65-80, L85-140 | Injeção de labels Istio nos namespaces, servidor Python multi-porta (`http-health`/`http-metrics`), anotações de sidecar e portas prefixadas. |
+| [`scripts/deploy_rdl_phase2.sh`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/deploy_rdl_phase2.sh) | L58-66 | Rotulagem garantida de injeção Istio em `ricplt` e `ricxapp` e reinicialização de Pods via `rollout restart`. |
+| [`scripts/inject_mesh_traffic.sh`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/inject_mesh_traffic.sh) | L1-56 (Novo) | Utilitário de injeção contínua L7/L4 com sondas diretas a todas as xApps. |
+| Permissões Git (`100755`) | `scripts/*.sh` | Definido bit de execução executável nativo em todos os scripts bash via `git update-index --chmod=+x`. |
+
