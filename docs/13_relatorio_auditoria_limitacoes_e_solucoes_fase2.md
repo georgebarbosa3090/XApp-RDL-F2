@@ -282,19 +282,19 @@ stateDiagram-v2
 * **1. Janela de Decisão Adaptativa com *Fast-Flush*:**  
   A duração da janela de agregação $T_{\mathrm{window}}(t)$ é modulada dinamicamente:
 
-$$T_{\mathrm{window}}(t) = \begin{cases} T_{\mathrm{fast}} \le 5\text{ ms}, & \text{se } \exists a_i \in \mathrm{Buffer} : \mathrm{prio}_i \ge 80 \lor \mathrm{Delay}_{\mathrm{URLLC}} > 15.0\text{ ms} \\ T_{\mathrm{dyn}} \in [50\text{ ms}, 200\text{ ms}], & \text{caso contrário} \end{cases}$$
+$$T_{\mathrm{window}}(t) = \begin{cases} T_{\mathrm{fast}} \le 5\text{ ms}, & \text{se } \exists a_i \in \mathrm{Buffer} : \mathrm{prio}_i \ge 80 \lor \mathrm{Delay}_{\mathrm{URLLC}} > 15.0\text{ ms} \\ T_{\mathrm{dyn}} \in [50\text{ ms}, 200\text{ ms}], & \text{caso contrario} \end{cases}$$
 
 * **2. Mecanismo Comportamental Zero-Trust e Quarentena Automática:**  
   O `RefinementAgent` mantém um registro temporal de infrações $\mathcal{H}_{\mathrm{viol}}(x_i) = \{t_1, t_2, \dots\}$. O estado de quarentena é ativado por:
 
-$$\mathrm{Quarantine}(x_i) = \begin{cases} \text{true}, & \text{se } \sum_{t \in [t_{\mathrm{now}} - W, t_{\mathrm{now}}]} \mathbb{I}_{\mathrm{violation}}(x_i, t) \ge M_{\mathrm{thresh}} \implies \text{Bloqueio por } 30.0\text{ s} \\ \text{false}, & \text{caso contrário} \end{cases}$$
+$$\mathrm{Quarantine}(x_i) = \begin{cases} \text{true}, & \text{se } \sum_{t \in [t_{\mathrm{now}} - W, t_{\mathrm{now}}]} \mathbb{I}_{\mathrm{violation}}(x_i, t) \ge M_{\mathrm{thresh}} \implies \text{Bloqueio por } 30.0\text{ s} \\ \text{false}, & \text{caso contrario} \end{cases}$$
 
 onde a janela de monitoramento é $W = 10.0\text{ s}$ e o limiar é $M_{\mathrm{thresh}} = 3$ violações. Ao ser colocada em quarentena, todas as propostas da xApp são descartadas silenciosamente no barramento por $T_{\mathrm{quarantine}} = 30.0\text{ s}$, emitindo a métrica `rdl_zero_trust_quarantined_xapps_total` para o Prometheus.
 
 * **3. Modelagem Matemática das Restrições Invariantes de Segurança (Camada 3):**  
   O operador de projeção determinística do `RefinementAgent` assegura que nenhuma ação executada ($a_{\mathrm{exec}}$) viole as leis físicas de propagação e limites de hardware:
 
-$$a_{\mathrm{exec}} = \mathrm{SafeGuard}(a_t) = \begin{cases} a_t, & \text{se todas as restrições físicas forem atendidas} \\ \mathrm{proj}(a_t), & \text{se houver violação corrigível} \\ \mathrm{veto}, & \text{se a ação for estritamente ilegal} \end{cases}$$
+$$a_{\mathrm{exec}} = \mathrm{SafeGuard}(a_t) = \begin{cases} a_t, & \text{se restricoes fisicas forem atendidas} \\ \mathrm{proj}(a_t), & \text{se houver violacao corrigivel} \\ \mathrm{veto}, & \text{se a acao for estritamente ilegal} \end{cases}$$
 
 ---
 

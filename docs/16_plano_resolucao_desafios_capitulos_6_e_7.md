@@ -438,10 +438,10 @@ Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytes
 | Módulo de Teste | Quantidade | Foco de Validação Técnica | Resultado |
 | :--- | :---: | :--- | :---: |
 | `test_observation_contract.py` | 5 | Vetor $D=60$, presença de propostas (6 bits), normalização linear, excesso $>6$ e hash determinístico | **APROVADO** (100%) |
-| `test_policy_action_binding.py` | 6 | Gradientes Actor-Critic, Action Masking no treino e inferência, No-Op, Safe-RL Cost Gradient comparativo ($\nabla_\theta L^\text{safe}$) e desambiguação No-Op ($N=7$) | **APROVADO** (100%) |
+| `test_policy_action_binding.py` | 6 | Gradientes Actor-Critic, Action Masking no treino e inferência, No-Op, Safe-RL Cost Gradient comparativo ($\nabla_\theta L^{\text{safe}}$) e desambiguação No-Op ($N=7$) | **APROVADO** (100%) |
 | `test_e2_encoding_decoding.py` | 5 | Perfis E2SM-RC, rejeição de parâmetros inválidos, limites numéricos, reversibilidade e PDU Header+Message | **APROVADO** (100%) |
-| `test_latency_components.py` | 4 | Decomposição monotônica ($T_\text{queue} + T_\text{proc} + T_\text{e2\_encode}$), orçamento da Heurística e ciclo completo do Runtime E2E | **APROVADO** (100%) |
-| `test_provenance_check.py` | 7 | Cálculo de SHA-256, modo estrito, empacotamento demo, rejeição de aspas simples/vazios, validação positiva e rejeição de invariantes físicos ($0 \le rx \le tx$) | **APROVADO** (100%) |
+| `test_latency_components.py` | 4 | Decomposição monotônica ($T_{\text{queue}} + T_{\text{proc}} + T_{\text{e2\_encode}}$), orçamento da Heurística e ciclo completo do Runtime E2E | **APROVADO** (100%) |
+| `test_provenance_check.py` | 7 | Cálculo de SHA-256, modo estrito, empacotamento demo, rejeição de aspas simples/vazios, validação positiva e rejeição de invariantes físicos ($0 \le n_{\text{rx}} \le n_{\text{tx}}$) | **APROVADO** (100%) |
 | `test_audit_fixes_comprehensive.py` | 5 | Roteamento hierárquico $C(c,s)$, No-Op, validação por perfil de célula, ponto fixo e TTL de contexto | **APROVADO** (100%) |
 | `test_marl_mappo.py` | 8 | Coordenador MAPPO, cálculo GAE, multi-objetivo, transições com action mask e Safe-RL CMDP com Lagrange | **APROVADO** (100%) |
 | `test_perception_agent.py` | 5 | Conflitos diretos, indiretos intra-célula, inter-célula (interferência co-canal) e nós isolados | **APROVADO** (100%) |
@@ -528,7 +528,7 @@ As simulações abrangeram **30 sementes independentes (1001 a 1030)** para os 3
 #### Verificação Rigorosa das Invariantes Físicas de Fluxo
 O script de empacotamento estrito [scripts/package_and_sync_raw_results.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/package_and_sync_raw_results.py) valida **todos os elementos `<Flow>`** em cada arquivo XML, garantindo conservação física estrita:
 $$\forall \text{ flow}_i \in \text{FlowMonitor}: \quad 0 \le n_{\text{rx}, i} \le n_{\text{tx}, i} \quad \land \quad n_{\text{lost}, i} = n_{\text{tx}, i} - n_{\text{rx}, i}$$
-$$\text{Rejeição sumária se: } n_{\text{rx}} < 0 \quad \lor \quad n_{\text{rx}} > n_{\text{tx}} \quad \lor \quad \text{marcador sintético presente}$$
+$$\text{Rejeicao: } n_{\text{rx}} < 0 \quad \lor \quad n_{\text{rx}} > n_{\text{tx}} \quad \lor \quad \text{synthetic} = \text{true}$$
 
 ### 11.5 Auditoria de Conformidade: Resolução das Problemáticas Persistentes
 
@@ -570,7 +570,7 @@ classDiagram
 
 #### Detalhamento das Resoluções por Eixo Fundamental
 1. **Eixo 1 (Representação de Estado & Escalonamento Hierárquico):**
-   - **Vetor Canônico $D=60$:** 5 atributos globais de contexto $+ 6 \times (8\text{ atributos} + 1\text{ máscara de presença}) = 59 \le 60$ posições preenchidas sem truncamento silencioso.
+   - **Vetor Canônico $D=60$:** 5 atributos globais de contexto $+ 6 \times (8\text{ atributos} + 1\text{ bit presenca}) = 59 \le 60$ posições preenchidas sem truncamento silencioso.
    - **Limiares Calibrados ($\tau_1=1.6, \tau_2=3.0$):** Pares diretos sem KPIs conflitantes geram complexidade $C=1.3 < 1.6$ e são roteados diretamente para Heurística submilissegundo.
    - **Identificadores Determinísticos:** Hashing baseado em MD5 determinístico, imune a variações de `PYTHONHASHSEED`.
 2. **Eixo 2 (Safe-RL & Vínculo Direto Política-Ação):**
