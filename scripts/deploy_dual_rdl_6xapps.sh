@@ -44,12 +44,12 @@ fi
 if command -v k3d &> /dev/null; then
     k3d image import iqos-xapp-rdl:1.1.0 -c ${CLUSTER_NAME} 2>/dev/null || true
     k3d image import iqos-xapp-rdl:2.0.0 -c ${CLUSTER_NAME} 2>/dev/null || true
+else
+    for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
+        docker save iqos-xapp-rdl:1.1.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
+        docker save iqos-xapp-rdl:2.0.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
+    done
 fi
-
-for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
-    docker save iqos-xapp-rdl:1.1.0 | docker exec -i "$node" k3s ctr images import - 2>/dev/null || true
-    docker save iqos-xapp-rdl:2.0.0 | docker exec -i "$node" k3s ctr images import - 2>/dev/null || true
-done
 
 # 3. Implantar Near-RT RIC (ricplt)
 echo -e "\n${YELLOW}[3/6] Implantando Near-RT RIC (DBAAS Redis, E2Term, SubMgr)...${NC}"

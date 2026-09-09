@@ -29,12 +29,13 @@ fi
 for IMG in "iqos-xapp-rdl:1.1.0" "iqos-xapp-rdl:2.0.0"; do
     if docker image inspect "$IMG" >/dev/null 2>&1; then
         if command -v k3d >/dev/null 2>&1; then
+            echo " -> Importando $IMG via k3d image import..."
             k3d image import "$IMG" -c "rancher-lab" 2>/dev/null || true
+        else
+            for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
+                docker save "$IMG" | docker exec -i "$node" ctr images import - 2>/dev/null || true
+            done
         fi
-        for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
-            docker save "$IMG" | docker exec -i "$node" k3s ctr images import - 2>/dev/null || \
-            docker save "$IMG" | docker exec -i "$node" ctr images import - 2>/dev/null || true
-        done
     fi
 done
 

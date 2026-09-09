@@ -46,17 +46,15 @@ echo -e "\n${YELLOW}[2/4] Importando imagens (${IMAGE_NAME}:${IMAGE_TAG} e :1.1.
 if command -v k3d &> /dev/null; then
     k3d image import ${IMAGE_NAME}:${IMAGE_TAG} -c ${CLUSTER_NAME} 2>/dev/null || true
     k3d image import ${IMAGE_NAME}:1.1.0 -c ${CLUSTER_NAME} 2>/dev/null || true
-fi
-
-K3D_NODES=$(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" || true)
-if [ -n "$K3D_NODES" ]; then
-    for node in $K3D_NODES; do
-        echo " -> Importando no containerd do nó: $node"
-        docker save ${IMAGE_NAME}:${IMAGE_TAG} | docker exec -i $node k3s ctr images import - 2>/dev/null || \
-        docker save ${IMAGE_NAME}:${IMAGE_TAG} | docker exec -i $node ctr images import - 2>/dev/null || true
-        docker save ${IMAGE_NAME}:1.1.0 | docker exec -i $node k3s ctr images import - 2>/dev/null || \
-        docker save ${IMAGE_NAME}:1.1.0 | docker exec -i $node ctr images import - 2>/dev/null || true
-    done
+else
+    K3D_NODES=$(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" || true)
+    if [ -n "$K3D_NODES" ]; then
+        for node in $K3D_NODES; do
+            echo " -> Importando no containerd do nó: $node"
+            docker save ${IMAGE_NAME}:${IMAGE_TAG} | docker exec -i $node ctr images import - 2>/dev/null || true
+            docker save ${IMAGE_NAME}:1.1.0 | docker exec -i $node ctr images import - 2>/dev/null || true
+        done
+    fi
 fi
 
 # 3.0. Garantir injecao automatica do Istio Sidecar (Envoy)
