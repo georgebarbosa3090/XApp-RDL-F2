@@ -59,10 +59,18 @@ class RCEncoder:
     def encode_control_request(self, node_id: str, parameter: str, value: float) -> bytes:
         """
         Gera a string de bytes APER pura que o E2 Node espera.
+        Para parâmetros fracionários (ex: RATIO, OFFSET), aplica escala de ponto fixo (x1000)
+        para preservar precisão sem perda por truncamento inteiro.
         """
         try:
             param_id = self.param_map.get(parameter, 99)
             
+            # Tratamento de precisão numérica: parâmetros fracionários são escalados em ponto fixo (1000x)
+            if "RATIO" in parameter or "OFFSET" in parameter or isinstance(value, float) and not value.is_integer():
+                encoded_val = int(round(value * 1000)) if "RATIO" in parameter else int(round(value))
+            else:
+                encoded_val = int(round(value))
+
             # Constrói o Header
             header = E2SM_RC_ControlHeader()
             header.set_val({'ricControlStyleType': 1, 'ricControlActionID': 1})
@@ -74,7 +82,7 @@ class RCEncoder:
                 {
                     'ranParameterID': param_id,
                     'ranParameterName': parameter,
-                    'ranParameterValue': int(value)
+                    'ranParameterValue': encoded_val
                 }
             ]})
             msg_aper = msg.to_aper()

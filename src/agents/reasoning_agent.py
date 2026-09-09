@@ -18,9 +18,11 @@ class ReasoningAgent:
         self.memory = memory
         self.config = config or {}
         
-        # Limiares de complexidade para escalonamento
-        self.tau1 = float(self.config.get("tau1", 1.2))
-        self.tau2 = float(self.config.get("tau2", 2.4))
+        # Limiares de complexidade para escalonamento calibrados:
+        # tau1 = 1.6 garante que conflitos diretos entre 2 xApps (score ~1.3) utilizem Heurística de Nível 1 (< 1ms)
+        # tau2 = 3.0 direciona conflitos moderados para Nível 2A (Utilidade TVS/EEVS) e alta complexidade para Nível 2B (MAPPO)
+        self.tau1 = float(self.config.get("tau1", 1.6))
+        self.tau2 = float(self.config.get("tau2", 3.0))
         
         # Lockout cooling window (5 segundos anti-flapping estilo 6G-SMART MLO)
         self.cooling_window_s = float(self.config.get("cooling_window_s", 5.0))

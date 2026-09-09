@@ -184,16 +184,26 @@ if TORCH_AVAILABLE and nn is not None:
             with torch.no_grad():
                 values = self.critic(global_obs_t).squeeze(-1).numpy()
 
-            # 3. Cálculo formal de GAE e Retornos
-            advantages, returns = self.compute_gae(rewards_list, values, dones_list)
+            # 3. Cálculo formal de GAE e Retornos de Recompensa
+            advantages_r, returns_r = self.compute_gae(rewards_list, values, dones_list)
             
-            # Normalização da vantagem para estabilidade numérica
-            adv_mean = np.mean(advantages)
-            adv_std = np.std(advantages) + 1e-8
-            norm_advantages = (advantages - adv_mean) / adv_std
+            # Normalização da vantagem de recompensa
+            adv_r_mean = np.mean(advantages_r)
+            adv_r_std = np.std(advantages_r) + 1e-8
+            norm_advantages_r = (advantages_r - adv_r_mean) / adv_r_std
             
-            adv_t = torch.FloatTensor(norm_advantages)
-            returns_t = torch.FloatTensor(returns)
+            # 3.1 Cálculo formal de Vantagem de Custo para Safe-RL (PPO-Lagrangian com \nabla_\theta \neq 0)
+            cost_values = [0.0] * len(costs_list) # Linha de base para custos
+            cost_advantages, _ = self.compute_gae(costs_list, cost_values, dones_list)
+            cost_adv_mean = np.mean(cost_advantages)
+            cost_adv_std = np.std(cost_advantages) + 1e-8
+            norm_cost_advantages = (cost_advantages - cost_adv_mean) / cost_adv_std
+
+            # Vantagem Penalizada Conjunta: \hat{A}_t^{safe} = \hat{A}_t^R - \lambda \hat{A}_t^C
+            penalized_advantages = norm_advantages_r - float(self.lagrange_mult) * norm_cost_advantages
+            
+            adv_t = torch.FloatTensor(penalized_advantages)
+            returns_t = torch.FloatTensor(returns_r)
             
             mean_cost = float(np.mean(costs_list)) if costs_list else 0.0
 
@@ -212,22 +222,20 @@ if TORCH_AVAILABLE and nn is not None:
                 # Ratio de probabilidade: r_t(\theta) = \exp(\log \pi_\theta(a_t|o_t) - \log \pi_{old}(a_t|o_t))
                 ratios = torch.exp(new_log_probs - old_log_probs_t)
 
-                # Clipped Surrogate Objective
+                # Clipped Surrogate Objective com Vantagem Penalizada (Safe-RL com gradiente ativo)
                 surr1 = ratios * adv_t
                 surr2 = torch.clamp(ratios, 1.0 - self.clip_eps, 1.0 + self.clip_eps) * adv_t
                 ppo_loss = -torch.min(surr1, surr2).mean()
                 
-                # Safe-RL CMDP Penalty
-                cmdp_penalty = self.lagrange_mult * max(0.0, mean_cost - self.cost_limit)
-                actor_loss = ppo_loss - (self.entropy_coef * entropy) + cmdp_penalty
+                actor_loss = ppo_loss - (self.entropy_coef * entropy)
 
-                # Atualização do Ator
+                # Atualização do Ator (Gradiente agora depende diretamente de r_t(\theta) e \hat{A}_t^C)
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.actor.parameters(), max_norm=0.5)
                 self.actor_optimizer.step()
 
-                # Atualização do Crítico
+                # Atualização do Crítico de Recompensa
                 current_values = self.critic(global_obs_t).squeeze(-1)
                 critic_loss = nn.MSELoss()(current_values, returns_t)
 
@@ -240,8 +248,8 @@ if TORCH_AVAILABLE and nn is not None:
                 total_critic_loss += critic_loss.item()
                 total_entropy += entropy.item()
 
-            # Atualização dual do multiplicador de Lagrange
-            self.lagrange_mult = max(0.0, min(5.0, self.lagrange_mult + self.cost_lr * (mean_cost - self.cost_limit)))
+            # Atualização dual do multiplicador de Lagrange via subgradiente: \lambda \leftarrow \max(0, \lambda + \alpha (E[C] - d))
+            self.lagrange_mult = max(0.0, min(10.0, self.lagrange_mult + self.cost_lr * (mean_cost - self.cost_limit)))
 
             avg_actor_loss = total_actor_loss / max(1, self.ppo_epochs)
             avg_critic_loss = total_critic_loss / max(1, self.ppo_epochs)

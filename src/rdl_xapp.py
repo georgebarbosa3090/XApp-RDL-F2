@@ -58,9 +58,10 @@ class RDLxApp:
         self.health = HealthServer(port=8080)
         self.metrics = MetricsCollector(port=8081)
         
-        # 5. Buffer de Decisao em Lote (Decision Window)
+        # 5. Buffer de Decisao em Lote (Decision Window) com Interrupção Dirigida por Eventos
         self.proposal_buffer: List[XAppAction] = []
         self.buffer_lock = threading.Lock()
+        self.flush_event = threading.Event()
         self.WINDOW_DURATION_MS = self.config.get("decision_window_ms", 200)
         self.window_start = 0.0
         
@@ -142,6 +143,7 @@ class RDLxApp:
                     if action.priority >= 80:
                         logger.info("⚡ Fast-Flush disparado para ação URLLC de emergência", xapp=action.xapp_id, prio=action.priority)
                         self.window_start = 0.0 # Força expiração imediata
+                        self.flush_event.set()
             except Exception as e:
                 logger.error("Erro ao processar RDL_ACTION_PROPOSAL", error=str(e))
         if xapp_instance and sbuf:
@@ -176,6 +178,7 @@ class RDLxApp:
             self.proposal_buffer.append(action)
             if action.priority >= 80:
                 self.window_start = 0.0
+                self.flush_event.set()
 
     def _process_action_group(self, actions: List[XAppAction]):
         """
@@ -241,7 +244,9 @@ class RDLxApp:
 
     def _decision_loop(self):
         while self.running:
-            time.sleep(0.02) # Verifica a cada 20ms para agilidade adaptativa
+            # Espera reativa dirigida por eventos (fast-wake imediato para URLLC <= 0.5ms) ou timeout de 20ms
+            self.flush_event.wait(timeout=0.02)
+            self.flush_event.clear()
             
             with self.buffer_lock:
                 if self.proposal_buffer:
