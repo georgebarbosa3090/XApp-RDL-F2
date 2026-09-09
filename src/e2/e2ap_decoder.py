@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from src.observability.logging import setup_logger
-from pycrate_asn1rt.asnobj_basic import INT, ENUM
-from pycrate_asn1rt.asnobj_str import OCT_STR
-from pycrate_asn1rt.asnobj_construct import SEQ, ASN1Dict
+from src.e2.asn1_shim import INT, ENUM, OCT_STR, SEQ, ASN1Dict
 
 logger = setup_logger("E2APDecoder")
 

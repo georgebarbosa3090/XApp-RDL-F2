@@ -35,8 +35,8 @@ class ConflictEvent:
     conflict_type: ConflictType
     severity: ConflictSeverity
     involved_xapps: List[XAppAction]
-    affected_kpis: List[str]
-    description: str
+    affected_kpis: List[str] = field(default_factory=list)
+    description: str = ""
     conflict_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     detected_at: float = field(default_factory=time.time)
 

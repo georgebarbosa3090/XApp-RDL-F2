@@ -19,29 +19,31 @@ def test_8_2_and_9_7_reasoning_agent_hierarchical_routing():
     memory = SdlRepository(host="localhost", port=6379)
     reasoner = ReasoningAgent(memory=memory, config={"tau1": 1.6, "tau2": 3.0})
     
-    # 1. Caso Nível 1: Par direto com prioridades iguais (90 e 90) e 0 KPIs extras
-    # C = 0.5 (direto) + 2*0.4 (2 apps) + 0*0.3 (0 extra) + (1.0 - 0/50) = 0.5 + 0.8 + 0.0 + 0.0 = 1.3 <= 1.6
+    # 1. Caso Nível 1: Par direto com prioridades distintas (90 e 40, delta=50) e 0 KPIs extras
+    # C = 0.5 (direto) + 2*0.4 (2 apps) + 0*0.3 (0 extra) + max(0, 1.0 - 50/50) = 0.5 + 0.8 + 0.0 + 0.0 = 1.3 <= 1.6
     act1 = XAppAction(xapp_id="xapp_ts", node_id="gnb_01", parameter="PRB_QUOTA", value=50.0, priority=90)
-    act2 = XAppAction(xapp_id="xapp_es", node_id="gnb_01", parameter="PRB_QUOTA", value=30.0, priority=90)
+    act2 = XAppAction(xapp_id="xapp_es", node_id="gnb_01", parameter="PRB_QUOTA", value=30.0, priority=40)
     conflict_level1 = ConflictEvent(
         conflict_type=ConflictType.DIRECT,
         severity=ConflictSeverity.HIGH,
         involved_xapps=[act1, act2],
-        affected_kpis=[]
+        affected_kpis=[],
+        description="Direct conflict level 1"
     )
     score_l1 = reasoner.estimate_complexity(conflict_level1)
     assert score_l1 <= 1.6, f"Score {score_l1} deveria ser <= 1.6 para Heurística Nível 1"
     res_l1 = reasoner.resolve(conflict_level1)
     assert res_l1.strategy_used == ResolutionStrategy.PRIORITY_TABLE, "Deveria usar Heurística Nível 1"
 
-    # 2. Caso Nível 2A: Par direto com prioridades distintas (90 e 60) e 1 KPI extra
-    # C = 0.5 + 2*0.4 + 1*0.3 + (1.0 - 30/50) = 0.5 + 0.8 + 0.3 + 0.4 = 2.0 (1.6 < C <= 3.0)
-    act2_diff = XAppAction(xapp_id="xapp_es", node_id="gnb_01", parameter="PRB_QUOTA", value=30.0, priority=60)
+    # 2. Caso Nível 2A: Par direto com prioridades próximas (90 e 70, delta=20) e 1 KPI extra
+    # C = 0.5 + 2*0.4 + 1*0.3 + (1.0 - 20/50) = 0.5 + 0.8 + 0.3 + 0.6 = 2.2 (1.6 < C <= 3.0)
+    act2_diff = XAppAction(xapp_id="xapp_es", node_id="gnb_01", parameter="PRB_QUOTA", value=30.0, priority=70)
     conflict_level2a = ConflictEvent(
         conflict_type=ConflictType.DIRECT,
         severity=ConflictSeverity.HIGH,
         involved_xapps=[act1, act2_diff],
-        affected_kpis=["DRB.UEThpDl"]
+        affected_kpis=["DRB.UEThpDl"],
+        description="Direct conflict level 2a"
     )
     score_l2a = reasoner.estimate_complexity(conflict_level2a)
     assert 1.6 < score_l2a <= 3.0, f"Score {score_l2a} deveria estar no intervalo (1.6, 3.0] para Nível 2A"
@@ -58,7 +60,8 @@ def test_9_2_noop_preservation_in_reasoning_and_marl():
         conflict_type=ConflictType.DIRECT,
         severity=ConflictSeverity.HIGH,
         involved_xapps=[act1],
-        affected_kpis=[]
+        affected_kpis=[],
+        description="No-op test"
     )
     
     # Mock do retorno No-Op do coordenador
@@ -76,7 +79,13 @@ def test_9_4_refinement_public_validation_with_node_profiles():
     act_macro = XAppAction(xapp_id="xapp_ts", node_id="gnb_01", parameter="TX_POWER", value=40.0, priority=90)
     act_small = XAppAction(xapp_id="xapp_ts", node_id="gnb_03", parameter="TX_POWER", value=40.0, priority=90)
     
-    conflict = ConflictEvent(conflict_type=ConflictType.DIRECT, severity=ConflictSeverity.HIGH, involved_xapps=[], affected_kpis=[])
+    conflict = ConflictEvent(
+        conflict_type=ConflictType.DIRECT, 
+        severity=ConflictSeverity.HIGH, 
+        involved_xapps=[], 
+        affected_kpis=[],
+        description="Public validation test"
+    )
     
     # 1. Macro gNodeB aceita 40 dBm (< 43 dBm)
     res_macro = ResolutionAction("c1", ResolutionStrategy.PRIORITY_TABLE, [act_macro], 40.0, 0.9, 0)

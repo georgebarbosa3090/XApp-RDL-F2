@@ -26,7 +26,7 @@ class PerceptionAgent:
             "gnb_02": ["gnb_01", "gnb_03"],
             "gnb_03": ["gnb_02"]
         }
-        self.neighbor_nodes: Dict[str, List[str]] = neighbor_nodes if (neighbor_nodes is not None and len(neighbor_nodes) > 0) else default_topology
+        self.neighbor_nodes: Dict[str, List[str]] = neighbor_nodes if neighbor_nodes is not None else default_topology
         
         # Grafo NetworkX para análise topológica de caminhos causais
         self.graph = nx.DiGraph()

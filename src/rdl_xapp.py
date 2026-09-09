@@ -12,8 +12,8 @@ from src.infrastructure.memory_module import MemoryModule
 from src.agents.perception_agent import PerceptionAgent
 from src.agents.reasoning_agent import ReasoningAgent
 from src.agents.refinement_agent import RefinementAgent
-from src.e2.asn1_decoder import ASN1Decoder
-from src.e2.asn1_encoder import ASN1Encoder
+from src.e2.kpm_decoder import KpmDecoder
+from src.e2.rc_encoder import RCEncoder
 from src.observability.health import HealthServer, AppState
 from src.observability.metrics import MetricsCollector
 from src.observability.logging import setup_logger
@@ -51,8 +51,8 @@ class RDLxApp:
         self.refinement = RefinementAgent(self.memory)
         
         # 3. Codecs E2 APER
-        self.asn1_decoder = ASN1Decoder()
-        self.rc_encoder = ASN1Encoder()
+        self.asn1_decoder = KpmDecoder()
+        self.rc_encoder = RCEncoder()
         
         # 4. Observabilidade
         self.health = HealthServer(port=8080)

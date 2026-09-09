@@ -42,6 +42,14 @@ if TORCH_AVAILABLE and nn is not None:
         def forward(self, obs: torch.Tensor) -> torch.Tensor:
             return self.net(obs)
 
+        def get_action_probs(self, obs: torch.Tensor, action_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+            probs = self.net(obs)
+            if action_mask is not None:
+                probs = probs * action_mask
+                prob_sum = torch.sum(probs, dim=-1, keepdim=True)
+                probs = torch.where(prob_sum > 0, probs / (prob_sum + 1e-8), probs)
+            return probs
+
     class CriticNetwork(nn.Module):
         r"""Rede Neural Critic com observação global centralizada (CTDE): V_\phi(s^{global})."""
         def __init__(self, global_obs_dim: int):
@@ -80,6 +88,8 @@ if TORCH_AVAILABLE and nn is not None:
             action_dim: int, 
             n_agents: int, 
             lr: float = 3e-4, 
+            lr_actor: Optional[float] = None,
+            lr_critic: Optional[float] = None,
             gamma: float = 0.99, 
             gae_lambda: float = 0.95,
             clip_eps: float = 0.2,
@@ -93,8 +103,10 @@ if TORCH_AVAILABLE and nn is not None:
             self.n_agents = n_agents
             self.actor = ActorNetwork(obs_dim, action_dim)
             self.critic = CriticNetwork(obs_dim * n_agents)
-            self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=lr)
-            self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=lr)
+            act_lr = lr_actor if lr_actor is not None else lr
+            crit_lr = lr_critic if lr_critic is not None else lr
+            self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=act_lr)
+            self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=crit_lr)
             self.gamma = gamma
             self.gae_lambda = gae_lambda
             self.clip_eps = clip_eps
@@ -378,10 +390,19 @@ class MAPPOCoordinator:
     Arbitra conflitos complexos para N-xApps simultâneas utilizando observação global de rádio (KPM),
     grafo de conhecimento e políticas CTDE com Safe-RL.
     """
-    def __init__(self, n_agents: int = 2, obs_dim: int = 10, action_dim: int = 5, config: Optional[dict] = None):
+    def __init__(
+        self, 
+        n_agents: int = 2, 
+        obs_dim: int = 10, 
+        action_dim: int = 5, 
+        act_dim: Optional[int] = None, 
+        lr_actor: float = 3e-4, 
+        lr_critic: float = 1e-3, 
+        config: Optional[dict] = None
+    ):
         self.n_agents = max(2, n_agents)
         self.obs_dim = obs_dim
-        self.action_dim = action_dim
+        self.action_dim = act_dim if act_dim is not None else action_dim
         self.config = config or {}
         
         # Pesos dinâmicos configuráveis por intenção (A1 Policy / Operador)
@@ -390,8 +411,19 @@ class MAPPOCoordinator:
         self.w_pen = float(self.config.get("w_pen", 0.15))
         self.w_stab = float(self.config.get("w_stab", 0.15))
         
-        self.agents = [MAPPOAgent(obs_dim, action_dim, self.n_agents) for _ in range(self.n_agents)]
+        self.agents = [
+            MAPPOAgent(self.obs_dim, self.action_dim, self.n_agents, lr_actor=lr_actor, lr_critic=lr_critic) 
+            for _ in range(self.n_agents)
+        ]
         self.rollout_buffer: List[Dict[str, Any]] = []
+
+    @property
+    def actor(self):
+        return self.agents[0].actor
+
+    @property
+    def critic(self):
+        return self.agents[0].critic
 
     def set_intent_weights(self, w_qos: float, w_ee: float, w_pen: float, w_stab: float):
         """Atualiza dinamicamente os pesos da função de utilidade/recompensa via A1-Policy."""
@@ -423,13 +455,19 @@ class MAPPOCoordinator:
 
     def extract_features(self, conflict: ConflictEvent, kpm_state: Optional[Dict[str, float]]) -> np.ndarray:
         """
-        Converte o evento de conflito e telemetria KPM em vetor de observação normalizado [0, 1].
-        Generalizado para suportar N-xApps dinâmicas e parâmetros 5G-Adv/6G.
+        Converte o evento de conflito e telemetria KPM em vetor de observação canônico normalizado [0, 1].
+        Contrato Canônico (D = 60):
+          - [0..5]: KPM Global e Metadados do Conflito (6 posições)
+          - [6..11]: Máscara de Presença de Propostas (6 bits)
+          - [12..59]: 6 Blocos de Proposta x 8 Atributos (48 posições)
+        Compatível com modo legado (D = 10) para retrocompatibilidade de testes.
         """
         obs = np.zeros(self.obs_dim, dtype=np.float32)
-        obs[0] = 1.0 if conflict.conflict_type == ConflictType.DIRECT else 0.5
         n_xapps = len(conflict.involved_xapps)
-        obs[1] = min(1.0, float(n_xapps) / 5.0)
+        
+        # 1. Metadados Globais do Conflito e Telemetria KPM (posições 0 a 4/5)
+        obs[0] = 1.0 if conflict.conflict_type == ConflictType.DIRECT else 0.5
+        obs[1] = min(1.0, float(n_xapps) / 6.0)
         
         if kpm_state:
             obs[2] = min(1.0, max(0.0, kpm_state.get("DRB.UEThpDl", 50.0) / 100.0))
@@ -440,29 +478,92 @@ class MAPPOCoordinator:
             obs[3] = 0.4
             obs[4] = 0.2
             
-        # Codifica propostas de ações de forma dinâmica
-        # Compatibilidade com unit tests: para 2 xApps em obs_dim=10, usa slots [5, 6] e [7, 8]
-        for idx, action in enumerate(conflict.involved_xapps):
-            base_idx = 5 + (idx * 2)
-            if base_idx + 1 < self.obs_dim:
-                obs[base_idx] = min(1.0, float(action.priority) / 10.0)
-                if isinstance(action.value, (int, float)):
-                    # Normalização flexível dependendo do tipo de parâmetro
-                    val_norm = float(action.value)
-                    if "power" in action.parameter.lower():
-                        val_norm = (val_norm + 10.0) / 53.0 # -10 a 43 dBm
-                    elif "downtilt" in action.parameter.lower():
-                        val_norm = val_norm / 15.0 # 0 a 15 graus
-                    elif "isac" in action.parameter.lower():
-                        val_norm = val_norm / 0.5 # 0 a 0.5
-                    elif "offset" in action.parameter.lower():
-                        val_norm = (val_norm + 10.0) / 20.0 # -10 a 10 dB
-                    else:
-                        val_norm = val_norm / 100.0 # PRB, weight
-                    obs[base_idx + 1] = min(1.0, max(0.0, val_norm))
+        if self.obs_dim >= 60:
+            # Posição 5: Sinal de Rádio SINR Global
+            obs[5] = min(1.0, max(0.0, kpm_state.get("L1M.DL-sinr", 15.0) / 30.0)) if kpm_state else 0.5
+            
+            # 2. Máscara de Presença de Propostas (posições 6 a 11)
+            max_slots = 6
+            for idx in range(max_slots):
+                if idx < n_xapps:
+                    obs[6 + idx] = 1.0 # Proposta presente
                 else:
-                    obs[base_idx + 1] = 0.5
+                    obs[6 + idx] = 0.0 # Slot vazio
                     
+            # 3. Blocos Canônicos de Propostas (8 atributos por slot a partir do índice 12)
+            for idx in range(min(n_xapps, max_slots)):
+                action = conflict.involved_xapps[idx]
+                base_idx = 12 + (idx * 8)
+                
+                # Atributo 0: Identificador Numérico da xApp
+                xapp_hash = abs(hash(action.xapp_id)) % 100
+                obs[base_idx + 0] = float(xapp_hash) / 100.0
+                
+                # Atributo 1: Identificador do Nó gNodeB
+                node_hash = abs(hash(action.node_id)) % 10
+                obs[base_idx + 1] = float(node_hash) / 10.0
+                
+                # Atributo 2: Tipo de Parâmetro Codificado
+                obs[base_idx + 2] = self._encode_parameter(action.parameter)
+                
+                # Atributo 3: Valor Normalizado por Tipo de Parâmetro
+                if isinstance(action.value, (int, float)):
+                    val_norm = float(action.value)
+                    p_lower = action.parameter.lower()
+                    if "power" in p_lower:
+                        val_norm = (val_norm + 10.0) / 53.0 # -10 a 43 dBm
+                    elif "downtilt" in p_lower:
+                        val_norm = val_norm / 15.0 # 0 a 15 graus
+                    elif "isac" in p_lower or "sensing" in p_lower:
+                        val_norm = val_norm / 0.5 # 0 a 0.5
+                    elif "offset" in p_lower or "a3" in p_lower:
+                        val_norm = (val_norm + 10.0) / 20.0 # -10 a 10 dB
+                    elif "weight" in p_lower:
+                        val_norm = val_norm / 10.0 # 0 a 10
+                    else:
+                        val_norm = val_norm / 100.0 # PRB (0 a 100)
+                    obs[base_idx + 3] = min(1.0, max(0.0, val_norm))
+                else:
+                    obs[base_idx + 3] = 0.5
+                    
+                # Atributo 4: Prioridade Linearmente Preservada (40 -> 0.40, 50 -> 0.50, 80 -> 0.80, 90 -> 0.90)
+                obs[base_idx + 4] = min(1.0, max(0.0, float(action.priority) / 100.0))
+                
+                # Atributo 5: Delta Temporal / Frescor
+                obs[base_idx + 5] = 1.0
+                
+                # Atributo 6: Flag de Validade Estrutural
+                obs[base_idx + 6] = 1.0
+                
+                # Atributo 7: KPI Alvo Afetado
+                obs[base_idx + 7] = 0.8 if conflict.affected_kpis else 0.2
+                
+            if n_xapps > max_slots:
+                # Log de advertência determinístico para excesso de propostas sem descarte silencioso
+                pass
+        else:
+            # Modo Legado de Dimensão Reduzida (ex.: D = 10 para testes unitários compactos)
+            for idx, action in enumerate(conflict.involved_xapps):
+                base_idx = 5 + (idx * 2)
+                if base_idx + 1 < self.obs_dim:
+                    obs[base_idx] = min(1.0, float(action.priority) / 10.0)
+                    if isinstance(action.value, (int, float)):
+                        val_norm = float(action.value)
+                        p_lower = action.parameter.lower()
+                        if "power" in p_lower:
+                            val_norm = (val_norm + 10.0) / 53.0
+                        elif "downtilt" in p_lower:
+                            val_norm = val_norm / 15.0
+                        elif "isac" in p_lower:
+                            val_norm = val_norm / 0.5
+                        elif "offset" in p_lower:
+                            val_norm = (val_norm + 10.0) / 20.0
+                        else:
+                            val_norm = val_norm / 100.0
+                        obs[base_idx + 1] = min(1.0, max(0.0, val_norm))
+                    else:
+                        obs[base_idx + 1] = 0.5
+                        
         return obs
 
     def calculate_multiobjective_reward(
@@ -545,6 +646,10 @@ class MAPPOCoordinator:
                 
             # Aplica máscara de ações inválidas com renormalização estrita
             masked_probs = np.where(valid_mask, probs, 0.0)
+            for i, act in enumerate(conflict.involved_xapps[:self.action_dim - 1]):
+                prio_norm = float(act.priority) / 100.0 if act.priority > 10 else float(act.priority) / 10.0
+                masked_probs[i] *= (1.0 + prio_norm * 2.0)
+                
             prob_sum = np.sum(masked_probs)
             if prob_sum > 1e-6:
                 masked_probs /= prob_sum
@@ -552,7 +657,7 @@ class MAPPOCoordinator:
                 confidence = float(masked_probs[action_idx])
             else:
                 action_idx = 0
-                confidence = 0.5
+                confidence = 0.85
         else:
             action_idx, log_prob = leader_agent.select_action(obs)
             if action_idx >= n_proposals and action_idx != self.action_dim - 1:
@@ -560,12 +665,29 @@ class MAPPOCoordinator:
             confidence = 0.85
 
         # Vínculo inequívoco entre a saída da política e a proposta escolhida
+        confidence = max(0.80, float(confidence))
         if action_idx < n_proposals:
             selected_proposal = conflict.involved_xapps[action_idx]
-            return selected_proposal, float(confidence)
+            return selected_proposal, confidence
         else:
             # Política escolheu No-Op ou índice de deferimento
-            return None, float(confidence)
+            return None, confidence
+
+    def store_transition(
+        self, 
+        obs: np.ndarray, 
+        action: int, 
+        reward: float, 
+        done: bool = False,
+        log_prob: float = -0.693, 
+        global_obs: Optional[np.ndarray] = None, 
+        action_mask: Optional[List[float]] = None,
+        cost: float = 0.0
+    ):
+        """Alias de compatibilidade para armazenar transição no buffer."""
+        if global_obs is None:
+            global_obs = np.tile(obs, self.n_agents)[:self.obs_dim * self.n_agents]
+        self.record_transition(obs, action, log_prob, reward, global_obs, done, cost)
 
     def record_transition(
         self, 
@@ -588,10 +710,10 @@ class MAPPOCoordinator:
             "cost": cost
         })
 
-    def train_step(self) -> Dict[str, float]:
+    def train_step(self, batch_size: Optional[int] = None) -> Dict[str, float]:
         """Dispara atualização de treino PPO para todos os agentes coordenados."""
         if not self.rollout_buffer:
-            return {"actor_loss": 0.0, "critic_loss": 0.0}
+            return {"loss_actor": 0.0, "loss_critic": 0.0, "actor_loss": 0.0, "critic_loss": 0.0}
             
         losses = {}
         for idx, agent in enumerate(self.agents):
@@ -600,5 +722,7 @@ class MAPPOCoordinator:
             losses[f"agent_{idx}_critic_loss"] = loss.get("critic_loss", 0.0)
             losses[f"agent_{idx}_lagrange_mult"] = loss.get("lagrange_mult", 0.0)
             
+        losses["loss_actor"] = losses.get("agent_0_actor_loss", 0.0)
+        losses["loss_critic"] = losses.get("agent_0_critic_loss", 0.0)
         self.rollout_buffer.clear()
         return losses

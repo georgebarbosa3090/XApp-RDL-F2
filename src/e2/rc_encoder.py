@@ -1,7 +1,5 @@
 from src.observability.logging import setup_logger
-from pycrate_asn1rt.asnobj_basic import INT
-from pycrate_asn1rt.asnobj_construct import SEQ, SEQ_OF, ASN1Dict
-from pycrate_asn1rt.asnobj_str import STR_UTF8, OCT_STR
+from src.e2.asn1_shim import INT, STR_UTF8, OCT_STR, SEQ, SEQ_OF, ASN1Dict
 
 logger = setup_logger("RCEncoder")
 
@@ -67,14 +65,24 @@ class RCEncoder:
     def encode_control_request(self, node_id: str, parameter: str, value: float) -> bytes:
         """
         Gera o payload binário APER ASN.1 padronizado com escala de ponto fixo.
+        Rejeita parâmetros não suportados ou valores fora dos limites físicos configurados.
         """
         try:
-            profile = self.profiles.get(parameter, {"id": 99, "scale": 1})
+            if parameter not in self.profiles:
+                raise ValueError(f"Parâmetro E2SM-RC não suportado ou desconhecido: '{parameter}'")
+                
+            profile = self.profiles[parameter]
             param_id = profile["id"]
             scale = profile["scale"]
             
             # Conversão precisa com escala de ponto fixo
             encoded_val = int(round(float(value) * scale))
+            
+            # Validação estrita de limites numéricos
+            if encoded_val < profile["min"] or encoded_val > profile["max"]:
+                raise ValueError(
+                    f"Valor fora dos limites para {parameter}: {value} (codificado: {encoded_val}, permitido: [{profile['min']}, {profile['max']}])"
+                )
 
             # Constrói o Header
             header = E2SM_RC_ControlHeader()

@@ -6,12 +6,14 @@ from src.observability.logging import setup_logger
 logger = setup_logger("SdlRepository")
 
 class SdlRepository:
-    def __init__(self, xapp_instance=None):
+    def __init__(self, xapp_instance=None, host: Optional[str] = None, port: Optional[int] = None):
         """
         Wrapper para o SDL (Shared Data Layer) do RIC.
         xapp_instance: instância da RDLxApp contendo a conexão sdl.
         """
         self.xapp = xapp_instance
+        self.host = host
+        self.port = port
         self.namespace = "iqos-xapp-rdl"
         self._local_cache = []
 

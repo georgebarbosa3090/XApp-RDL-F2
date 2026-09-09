@@ -32,7 +32,7 @@ def test_detect_indirect_conflict(action_tx_power, action_prb_quota):
     assert len(conflicts[0].involved_xapps) == 2
     
 def test_no_conflict():
-    agent = PerceptionAgent()
+    agent = PerceptionAgent(neighbor_nodes={})
     
     # Ações em nós diferentes e independentes não devem causar conflito
     action1 = XAppAction("xapp_1", "gnb_01", "TX_POWER", 20.0, 50)

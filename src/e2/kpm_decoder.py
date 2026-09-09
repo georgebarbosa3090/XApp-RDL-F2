@@ -1,9 +1,7 @@
 from typing import List, Dict, Any
 from dataclasses import dataclass
 from src.observability.logging import setup_logger
-from pycrate_asn1rt.asnobj_basic import INT
-from pycrate_asn1rt.asnobj_construct import SEQ, SEQ_OF, ASN1Dict
-from pycrate_asn1rt.asnobj_str import STR_UTF8, OCT_STR
+from src.e2.asn1_shim import INT, STR_UTF8, OCT_STR, SEQ, SEQ_OF, ASN1Dict
 
 logger = setup_logger("KpmDecoder")
 
