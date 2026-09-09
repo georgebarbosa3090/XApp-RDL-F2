@@ -77,3 +77,19 @@ def test_exceeding_proposals_safe_handling():
     assert obs_8.shape == (60,)
     # All 6 slots in mask are filled
     assert list(obs_8[6:12]) == [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+
+def test_deterministic_feature_hashing():
+    """Valida que o hash de identificadores de xApp e Nó é estável e reproduzível."""
+    from src.agents.marl.mappo_agent import _stable_hash
+    
+    # Hashes devem ser constantes independentemente do processo ou semente aleatória
+    hash_xapp1 = _stable_hash("xapp_traffic_steering", 100)
+    hash_xapp2 = _stable_hash("xapp_traffic_steering", 100)
+    assert hash_xapp1 == hash_xapp2
+    assert 0 <= hash_xapp1 < 100
+    
+    hash_node1 = _stable_hash("gnb_01", 10)
+    hash_node2 = _stable_hash("gnb_01", 10)
+    assert hash_node1 == hash_node2
+    assert 0 <= hash_node1 < 10
+

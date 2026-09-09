@@ -36,7 +36,7 @@ def test_8_2_and_9_7_reasoning_agent_hierarchical_routing():
     assert res_l1.strategy_used == ResolutionStrategy.PRIORITY_TABLE, "Deveria usar Heurística Nível 1"
 
     # 2. Caso Nível 2A: Par direto com prioridades próximas (90 e 70, delta=20) e 1 KPI extra
-    # C = 0.5 + 2*0.4 + 1*0.3 + (1.0 - 20/50) = 0.5 + 0.8 + 0.3 + 0.6 = 2.2 (1.6 < C <= 3.0)
+    reasoner.cooling_lockout.clear()
     act2_diff = XAppAction(xapp_id="xapp_es", node_id="gnb_01", parameter="PRB_QUOTA", value=30.0, priority=70)
     conflict_level2a = ConflictEvent(
         conflict_type=ConflictType.DIRECT,

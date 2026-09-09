@@ -37,5 +37,4 @@ jobs:
     
     - name: Build Docker image
       run: |
-        cd docker
-        docker build -t muriloavlis/iqos-xapp:latest -f Dockerfile .
+        docker build -t muriloavlis/iqos-xapp:latest -f docker/Dockerfile .

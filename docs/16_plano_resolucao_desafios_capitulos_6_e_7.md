@@ -247,35 +247,103 @@ Em resposta à auditoria formal consolidada (Seções 9.1 a 9.8 do relatório de
 
 ---
 
-## 7. Matriz de Cobertura e Resultados da Suíte de Testes (53/53 Aprovados)
+## 7. Superação Formal dos Desafios dos Capítulos 10 e 11 (Revisões 5a19149 e d436f5f)
+
+Com base nas rodadas de auditoria científica detalhadas nos Capítulos 10 e 11 do *Relatório de Superação de Desafios da CA-RDL*, todas as problemáticas remanescentes foram matematicamente modeladas, implementadas nos caminhos públicos e validadas por testes de regressão:
+
+```mermaid
+flowchart TD
+    subgraph S1["Eixo A: Representação & Ação (10.4 / 11.3 / 11.4)"]
+        A1["MD5 Determinístico para xApp/Node IDs"] --> A2["Desambiguação No-Op (action_dim-1)"]
+        A2 --> A3["Tratamento Explícito de Excesso (N > 6)"]
+        A3 --> A4["Inferência Pura pi_theta(a|s) sem Reponderação Ad-Hoc"]
+    end
+
+    subgraph S2["Eixo B: E2 & Telemetria (10.5 / 11.5)"]
+        B1["Agregação KPM por (node_id, ue_id)"] --> B2["Eliminação de Sobrescrita com Zero"]
+        B2 --> B3["PDU Completo E2SM-RC (Header + Message APER)"]
+        B3 --> B4["Decodificação Reversível Estruturada"]
+    end
+
+    subgraph S3["Eixo C: Proveniência & Entrega (11.2 / 11.6 / 11.7)"]
+        C1["Fix Dockerfile Context no CI (-f docker/Dockerfile .)"] --> C2["Isolamento de Diretórios (results/demo vs results/experiment)"]
+        C2 --> C3["Teste Negativo de Rejeição de Traces Sintéticos"]
+        C3 --> C4["Instrumentação Monotônica de Espera em Fila T_queue"]
+    end
+```
+
+### 7.1 Identificadores Determinísticos e Desambiguação de No-Op (10.4 & 11.3)
+- **Problemática:** `hash()` nativo varia com `PYTHONHASHSEED`, gerando representações inconsistentes entre processos. Em lotes com $N \ge 7$ propostas, o índice 6 era interpretado como a 7ª proposta e não como a ação reservada de No-Op.
+- **Solução Implementada:**
+  - Função `_stable_hash(s, mod)` com digest MD5 determinístico independente de semente do runtime.
+  - Verificação de No-Op (`action_idx == self.action_dim - 1` ou `action_idx >= n_proposals`) executada **antes** de qualquer indexação de propostas no coordenador MAPPO, retornando estritamente `(None, confidence)`.
+  - Log de advertência explícito para excesso de propostas ($N > 6$), alocando os 6 primeiros slots no vetor $D=60$ de forma reprodutível e documentada.
+- **Validação:** `test_deterministic_feature_hashing` em [test_observation_contract.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_observation_contract.py) e `test_action_cardinality_and_noop_disambiguation_with_many_proposals` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+
+### 7.2 Vínculo Rigoroso Política-Ação e Gradiente Safe-RL Ativo (11.4)
+- **Problemática:** Multiplicação ad-hoc das probabilidades por fatores de prioridade durante a inferência distorcia a política aprendida $\pi_\theta(a|s)$. O teste de gradiente não continha transições com custo não-nulo ($c_t > 0$).
+- **Solução Implementada:**
+  - Contrato formal entre treinamento e inferência: a distribuição mascarada gerada pelo ator governa diretamente a seleção de ação sem perturbações ad-hoc.
+  - Teste de gradiente com transições de custo positivo ($c_t = 1.0 > d = 0.1$), validando a ativação da Vantagem Penalizada Conjunta $\hat{A}^{\text{safe}} = \hat{A}^R - \lambda \hat{A}^C$, perdas finitas e atualização positiva do multiplicador de Lagrange $\lambda > 0$.
+- **Validação:** `test_safe_rl_cost_gradient_flow_and_lagrange_multiplier_update` e `test_pure_policy_inference_without_ad_hoc_reweighting` em [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+
+### 7.3 Agregação Multimétrica na Telemetria KPM (11.5)
+- **Problemática:** `KpmDecoder.decode_indication()` produzia 1 relatório individual por métrica preenchendo as demais com zero, causando sobrescrita indesejada do estado de KPM por nó.
+- **Solução Implementada:** Agregação de todas as medições pertencentes ao mesmo par `(node_id, ue_id)` em uma única estrutura unificada contendo `drb_thp_dl`, `drb_thp_ul`, `drb_delay_dl` e `prb_used_dl` antes do retorno.
+- **Validação:** `test_kpm_decoder_fallback` em [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
+
+### 7.4 Codificação Completa de PDU E2SM-RC e Decodificação Reversível (11.5)
+- **Problemática:** `RCEncoder` construía o cabeçalho mas retornava apenas o corpo da mensagem binária.
+- **Solução Implementada:** Implementação de `encode_control_pdu(node_id, param, value) -> Tuple[bytes, bytes]` retornando `(header_aper, msg_aper)`, além de métodos dedicados `decode_control_header()` e `decode_control_message()`.
+- **Validação:** `test_rc_encoder_encode_pdu_and_header_decode` em [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py).
+
+### 7.5 Separação Rígida de Modos e Teste Negativo de Proveniência (11.6)
+- **Problemática:** Exportação de dados sintéticos e experimentais para os mesmos destinos e ausência de teste negativo que force a rejeição de dados sintéticos no modo estrito.
+- **Solução Implementada:**
+  - Isolamento estrito de diretórios de exportação: `experiments/results/demo/` (dados sintéticos estocásticos calibrados) e `experiments/results/experiment/` (traces brutos experimentais ns-3).
+  - Marcador de proveniência `synthetic="true"` nos dados sintéticos e validação estrita em `verify_raw_traces_exist()` que rejeita traces falsos em modo de experimento.
+  - Cálculo de conclusões dinâmicas no relatório estatístico com base no número exato de métricas significantes via ANOVA ($p < 0.05$).
+- **Validação:** `test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+
+### 7.6 Instrumentação Monotônica de Fila e Correção da Integração Contínua (11.2 & 11.7)
+- **Problemática:** Medição de tempo no runtime não contabilizava espera na fila; falha no build Docker na esteira CI por troca de diretório de contexto.
+- **Solução Implementada:**
+  - Registro de `arrival_monotonic = time.perf_counter()` em cada ação ao entrar no buffer, calculando $T_{\text{queue}} = t_{\text{dequeue}} - t_{\text{enqueue}}$ e incorporando no log de decisão.
+  - Correção do workflow `.github/workflows/ci.yml` para executar `docker build -t muriloavlis/iqos-xapp:latest -f docker/Dockerfile .` a partir da raiz do repositório.
+- **Validação:** `test_decomposed_latency_pipeline_monotonic` em [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+
+---
+
+## 8. Matriz de Cobertura e Resultados da Suíte de Testes (59/59 Aprovados)
 
 Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytest tests/ -v`):
 
 | Módulo de Teste | Quantidade | Foco de Validação Técnica | Resultado |
 | :--- | :---: | :--- | :---: |
-| `test_observation_contract.py` | 4 | Vetor $D=60$, presença de propostas (6 bits), normalização linear (40, 50, 80, 90) e robustez para $>6$ propostas | **APROVADO** (100%) |
-| `test_policy_action_binding.py` | 3 | Gradientes do Actor-Critic $\nabla_\theta L \neq 0$, Action Masking estrito e preservação de No-Op | **APROVADO** (100%) |
-| `test_e2_encoding_decoding.py` | 4 | Perfis E2SM-RC, rejeição de parâmetros inválidos, limites numéricos e decodificação reversível | **APROVADO** (100%) |
-| `test_latency_components.py` | 2 | Decomposição monotônica do pipeline de controle e latência sub-milissegundo da Heurística | **APROVADO** (100%) |
-| `test_provenance_check.py` | 3 | Cálculo de SHA-256, modo estrito de rastreabilidade e integridade dos pacotes de traces | **APROVADO** (100%) |
+| `test_observation_contract.py` | 5 | Vetor $D=60$, presença de propostas (6 bits), normalização linear, excesso $>6$ e hash determinístico | **APROVADO** (100%) |
+| `test_policy_action_binding.py` | 6 | Gradientes Actor-Critic, Action Masking, No-Op, Safe-RL Cost Gradient ($\nabla_\theta L^\text{safe} \neq 0$), inferência pura e desambiguação No-Op ($N=7$) | **APROVADO** (100%) |
+| `test_e2_encoding_decoding.py` | 5 | Perfis E2SM-RC, rejeição de parâmetros inválidos, limites numéricos, reversibilidade e PDU Header+Message | **APROVADO** (100%) |
+| `test_latency_components.py` | 2 | Decomposição monotônica ($T_\text{queue} + T_\text{perc} + T_\text{reas} + T_\text{ref} + T_\text{e2}$) e orçamento da Heurística | **APROVADO** (100%) |
+| `test_provenance_check.py` | 4 | Cálculo de SHA-256, modo estrito, empacotamento demo e teste negativo de rejeição de dados sintéticos | **APROVADO** (100%) |
 | `test_audit_fixes_comprehensive.py` | 5 | Roteamento hierárquico $C(c,s)$, No-Op, validação por perfil de célula, ponto fixo e TTL de contexto | **APROVADO** (100%) |
 | `test_marl_mappo.py` | 8 | Coordenador MAPPO, cálculo GAE, multi-objetivo, transições e Safe-RL CMDP com Lagrange | **APROVADO** (100%) |
 | `test_perception_agent.py` | 5 | Conflitos diretos, indiretos intra-célula, inter-célula (interferência co-canal) e nós isolados | **APROVADO** (100%) |
 | `test_reasoning_agent.py` | 3 | Resolução Heurística Nível 1, Utilidade Nível 2A e escalonamento para Nível 2B (MAPPO) | **APROVADO** (100%) |
 | `test_refinement_agent.py` | 6 | Limites físicos, barreira temporal, Pass-Through limpo, quarentena Zero-Trust e feixes MIMO | **APROVADO** (100%) |
 | `test_reference_xapps.py` | 7 | Propostas de 6 xApps de referência (xSlice, Energy, TS, Beamformer, ISAC, Rogue) e tríade de conflito | **APROVADO** (100%) |
-| `test_aper_codecs.py` | 3 | Decodificação E2AP Indication, decodificação KPM com fallback resiliente e geração APER RC | **APROVADO** (100%) |
-| **TOTAL GERAL** | **53** | **Cobertura Integral de Todos os Módulos do Sistema** | **53/53 PASS (100%)** |
+| `test_aper_codecs.py` | 3 | Decodificação E2AP Indication, decodificação KPM agregada com fallback e geração APER RC | **APROVADO** (100%) |
+| **TOTAL GERAL** | **59** | **Cobertura Integral de Todos os Módulos do Sistema** | **59/59 PASS (100%)** |
 
 ---
 
-## 8. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
+## 9. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
 
-Com a resolução formal de todas as pendências arquiteturais, funcionais e metodológicas:
+Com a resolução formal e certificada de todas as pendências arquiteturais, funcionais e metodológicas dos Capítulos 6, 7, 8, 9, 10 e 11 do relatório de auditoria:
 1. **Infraestrutura de Hardware:** Servidores Dell PowerEdge R750 com aceleradores NVIDIA A100/A30 e SDRs USRPs NI X310 e N310 operando em Banda n78 (3.5 GHz) e FR2 mmWave (28 GHz).
 2. **Pilha O-RAN Integrada:** Near-RT RIC O-RAN SC, E2 Nodes srsRAN Enterprise e Núcleo Open5GS 5G Standalone.
 3. **Publicação Científica:** Base rigorosa para submissão aos periódicos de alto impacto **IEEE Transactions on Mobile Computing (TMC)** e **IEEE JSAC**, consolidando a arquitetura hierárquica escalonada (Heurística $\to$ Utilidade NDT $\to$ MAPPO Safe-RL) como estado da arte em governança autônoma multi-xApp.
 
 ---
-*Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2` (Commit: `f065af3`).*
+*Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2`.*
+
 

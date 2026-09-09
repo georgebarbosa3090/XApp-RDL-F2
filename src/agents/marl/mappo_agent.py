@@ -1,7 +1,19 @@
 import os
+import time
+import hashlib
+import logging
 import numpy as np
 from typing import Tuple, Dict, List, Optional, Any
 from src.conflict_types import ConflictEvent, XAppAction, ConflictType, ConflictSeverity
+
+logger = logging.getLogger("MAPPOCoordinator")
+
+def _stable_hash(s: str, mod: int = 100) -> int:
+    """Calcula um hash inteiro determinístico estável entre execuções e independente de PYTHONHASHSEED."""
+    if not s:
+        return 0
+    h = hashlib.md5(s.encode("utf-8")).hexdigest()
+    return int(h[:8], 16) % mod
 
 TORCH_AVAILABLE = False
 PYTORCH_AVAILABLE = False
@@ -495,13 +507,11 @@ class MAPPOCoordinator:
                 action = conflict.involved_xapps[idx]
                 base_idx = 12 + (idx * 8)
                 
-                # Atributo 0: Identificador Numérico da xApp
-                xapp_hash = abs(hash(action.xapp_id)) % 100
-                obs[base_idx + 0] = float(xapp_hash) / 100.0
+                # Atributo 0: Identificador Numérico da xApp (Determinístico)
+                obs[base_idx + 0] = float(_stable_hash(action.xapp_id, 100)) / 100.0
                 
-                # Atributo 1: Identificador do Nó gNodeB
-                node_hash = abs(hash(action.node_id)) % 10
-                obs[base_idx + 1] = float(node_hash) / 10.0
+                # Atributo 1: Identificador do Nó gNodeB (Determinístico)
+                obs[base_idx + 1] = float(_stable_hash(action.node_id, 10)) / 10.0
                 
                 # Atributo 2: Tipo de Parâmetro Codificado
                 obs[base_idx + 2] = self._encode_parameter(action.parameter)
@@ -526,23 +536,25 @@ class MAPPOCoordinator:
                 else:
                     obs[base_idx + 3] = 0.5
                     
-                # Atributo 4: Prioridade Linearmente Preservada (40 -> 0.40, 50 -> 0.50, 80 -> 0.80, 90 -> 0.90)
+                # Atributo 4: Prioridade Linearmente Preservada
                 obs[base_idx + 4] = min(1.0, max(0.0, float(action.priority) / 100.0))
                 
-                # Atributo 5: Delta Temporal / Frescor
-                obs[base_idx + 5] = 1.0
+                # Atributo 5: Delta Temporal / Frescor Dinâmico
+                curr_time = time.time()
+                ts = getattr(action, 'timestamp', curr_time)
+                delta_t = max(0.0, curr_time - ts)
+                obs[base_idx + 5] = float(min(1.0, 1.0 / (1.0 + delta_t)))
                 
                 # Atributo 6: Flag de Validade Estrutural
-                obs[base_idx + 6] = 1.0
+                obs[base_idx + 6] = 1.0 if (action.xapp_id and action.parameter and action.value is not None) else 0.0
                 
                 # Atributo 7: KPI Alvo Afetado
-                obs[base_idx + 7] = 0.8 if conflict.affected_kpis else 0.2
+                obs[base_idx + 7] = min(1.0, len(conflict.affected_kpis) * 0.25) if conflict.affected_kpis else 0.2
                 
             if n_xapps > max_slots:
-                # Log de advertência determinístico para excesso de propostas sem descarte silencioso
-                pass
+                logger.warning(f"[MAPPOState] Excesso de propostas ({n_xapps} > {max_slots}).")
         else:
-            # Modo Legado de Dimensão Reduzida (ex.: D = 10 para testes unitários compactos)
+            # Modo Legado de Dimensão Reduzida
             for idx, action in enumerate(conflict.involved_xapps):
                 base_idx = 5 + (idx * 2)
                 if base_idx + 1 < self.obs_dim:
@@ -619,9 +631,8 @@ class MAPPOCoordinator:
     def decide(self, conflict: ConflictEvent, kpm_state: Optional[Dict[str, float]] = None) -> Tuple[Optional[XAppAction], float]:
         """
         Executa inferência da política neural aprendida com Action Masking:
-        A ação amostrada pela política pi_theta(a|s) seleciona diretamente a proposta vencedora.
         Ação a in {0, ..., N-1} mapeia para conflict.involved_xapps[a].
-        Ação a == N mapeia para No-Op (não atuar / deferir).
+        Ação a == action_dim-1 (ou No-Op) mapeia para não atuar / deferir.
         """
         if not conflict.involved_xapps:
             return None, 0.0
@@ -630,13 +641,11 @@ class MAPPOCoordinator:
         obs = self.extract_features(conflict, kpm_state)
         
         # Action Masking: Máscara booleana das ações válidas
-        # Índices 0 a n_proposals-1 são propostas ativas; índice action_dim-1 é No-Op
         valid_mask = np.zeros(self.action_dim, dtype=bool)
         for i in range(min(n_proposals, self.action_dim - 1)):
             valid_mask[i] = True
         valid_mask[self.action_dim - 1] = True # No-Op sempre admissível
         
-        # Consulta o agente de coordenação líder (Agente 0)
         leader_agent = self.agents[0]
         
         if PYTORCH_AVAILABLE and isinstance(leader_agent, MAPPOAgent):
@@ -644,34 +653,33 @@ class MAPPOCoordinator:
             with torch.no_grad():
                 probs = leader_agent.actor(obs_t).squeeze(0).numpy()
                 
-            # Aplica máscara de ações inválidas com renormalização estrita
+            # Aplica máscara de ações inválidas com ponderação determinística por prioridade
             masked_probs = np.where(valid_mask, probs, 0.0)
             for i, act in enumerate(conflict.involved_xapps[:self.action_dim - 1]):
                 prio_norm = float(act.priority) / 100.0 if act.priority > 10 else float(act.priority) / 10.0
                 masked_probs[i] *= (1.0 + prio_norm * 2.0)
-                
             prob_sum = np.sum(masked_probs)
             if prob_sum > 1e-6:
                 masked_probs /= prob_sum
                 action_idx = int(np.argmax(masked_probs))
                 confidence = float(masked_probs[action_idx])
             else:
-                action_idx = 0
+                action_idx = self.action_dim - 1
                 confidence = 0.85
         else:
             action_idx, log_prob = leader_agent.select_action(obs)
             if action_idx >= n_proposals and action_idx != self.action_dim - 1:
-                action_idx = 0
+                action_idx = self.action_dim - 1
             confidence = 0.85
 
-        # Vínculo inequívoco entre a saída da política e a proposta escolhida
         confidence = max(0.80, float(confidence))
-        if action_idx < n_proposals:
+        
+        # Desambiguação de No-Op: índice reservado action_dim - 1 é estritamente verificado PRIMEIRO
+        if action_idx == self.action_dim - 1 or action_idx >= n_proposals:
+            return None, confidence
+        else:
             selected_proposal = conflict.involved_xapps[action_idx]
             return selected_proposal, confidence
-        else:
-            # Política escolheu No-Op ou índice de deferimento
-            return None, confidence
 
     def store_transition(
         self, 
@@ -724,5 +732,6 @@ class MAPPOCoordinator:
             
         losses["loss_actor"] = losses.get("agent_0_actor_loss", 0.0)
         losses["loss_critic"] = losses.get("agent_0_critic_loss", 0.0)
+        losses["lagrange_mult"] = losses.get("agent_0_lagrange_mult", 0.0)
         self.rollout_buffer.clear()
         return losses

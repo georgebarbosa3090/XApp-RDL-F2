@@ -44,11 +44,12 @@ class ReasoningAgent:
         num_apps_factor = float(len(conflict.involved_xapps)) * 0.4
         kpis_factor = float(len(conflict.affected_kpis)) * 0.3
         
-        prio_diff = 0.0
         if len(conflict.involved_xapps) >= 2:
             prio_diff = abs(conflict.involved_xapps[0].priority - conflict.involved_xapps[1].priority)
-        prio_factor = max(0.0, 1.0 - (prio_diff / 50.0)) # Prioridades parecidas aumentam complexidade
-        
+            prio_factor = max(0.0, 1.0 - (prio_diff / 50.0)) # Prioridades parecidas aumentam complexidade
+        else:
+            prio_factor = 0.0
+            
         state_degradation = 0.0
         if kpm_state and kpm_state.get("QoS.FlowDelay", 0.0) > 20.0:
             state_degradation = 0.5

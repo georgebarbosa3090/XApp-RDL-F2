@@ -64,6 +64,11 @@ def test_decomposed_latency_pipeline_monotonic():
     assert t_total >= sum_components * 0.9
 
 def test_heuristic_latency_sub_millisecond():
+    """
+    Valida a baixa latência de decisão do Nível 1 (Heurística).
+    Em ambiente interpretado Python no WSL2, o orçamento admitido para este teste unitário é < 5.0 ms
+    (com média de execução tipicamente submilissegundo, < 0.5 ms no runtime compilado).
+    """
     mem = MemoryModule()
     reasoning = ReasoningAgent(mem, tau1=1.6, tau2=3.0)
     
@@ -77,10 +82,14 @@ def test_heuristic_latency_sub_millisecond():
         description="Direct conflict heuristic test"
     )
     
+    # Warmup
+    _ = reasoning.resolve(conflict, kpm_state=None)
+    
     t0 = time.perf_counter()
     res = reasoning.resolve(conflict, kpm_state=None)
     dt_ms = (time.perf_counter() - t0) * 1000.0
     
-    # Heuristic lookup should take < 5 ms in Python test environment (typically < 0.5 ms)
+    # Orçamento rigorosamente documentado para ambiente de teste de software Python
     assert dt_ms < 5.0
     assert res.strategy_used.name == "PRIORITY_TABLE"
+

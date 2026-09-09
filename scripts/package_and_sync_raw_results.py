@@ -17,7 +17,7 @@ import json
 import zipfile
 import hashlib
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RAW_DIR = os.path.join(BASE_DIR, "experiments", "results", "raw")
@@ -41,16 +41,18 @@ def create_dummy_raw_traces_if_missing(scenarios, seeds_range):
             seed_file = os.path.join(sc_dir, f"flowmonitor_seed_{seed}.xml")
             if not os.path.exists(seed_file):
                 with open(seed_file, "w", encoding="utf-8") as f:
-                    f.write(f'<?xml version="1.0" ?>\n<FlowMonitor scenario="{sc}" seed="{seed}" timestamp="{datetime.utcnow().isoformat()}Z">\n')
+                    iso_now = datetime.now(timezone.utc).isoformat()
+                    f.write(f'<?xml version="1.0" ?>\n<FlowMonitor scenario="{sc}" seed="{seed}" mode="demo" synthetic="true" timestamp="{iso_now}">\n')
                     f.write('  <FlowStats>\n')
                     for flow_id in range(1, 31):
                         slice_type = "URLLC" if flow_id % 3 == 1 else ("eMBB" if flow_id % 3 == 2 else "mMTC")
-                        f.write(f'    <Flow flowId="{flow_id}" slice="{slice_type}" txPackets="1000" />\n')
+                        f.write(f'    <Flow flowId="{flow_id}" slice="{slice_type}" txPackets="1000" rxPackets="998" delaySum="1.92" />\n')
                     f.write('  </FlowStats>\n</FlowMonitor>\n')
 
 def verify_raw_traces_exist(scenarios, seeds_range):
-    """Verifica se todos os arquivos brutos experimentais existem sem criar dados sintéticos."""
+    """Verifica se todos os arquivos brutos experimentais existem e rejeita arquivos sintéticos ou demonstrativos."""
     missing = []
+    synthetic_found = []
     for sc in scenarios:
         sc_dir = os.path.join(RAW_DIR, sc)
         if not os.path.isdir(sc_dir):
@@ -60,11 +62,26 @@ def verify_raw_traces_exist(scenarios, seeds_range):
             seed_file = os.path.join(sc_dir, f"flowmonitor_seed_{seed}.xml")
             if not os.path.exists(seed_file):
                 missing.append(seed_file)
+            else:
+                try:
+                    with open(seed_file, "r", encoding="utf-8") as f:
+                        header = f.read(512)
+                        if 'synthetic="true"' in header or 'mode="demo"' in header:
+                            synthetic_found.append(seed_file)
+                except Exception:
+                    pass
     if missing:
         raise FileNotFoundError(
             f"Modo estrito ativado: {len(missing)} arquivos de trace brutos ausentes na cadeia de custódia:\n"
             + "\n".join(missing[:10])
             + ("\n..." if len(missing) > 10 else "")
+        )
+    if synthetic_found:
+        raise ValueError(
+            f"Modo estrito ativado: Rejeição de integridade experimental! "
+            f"Foram detectados {len(synthetic_found)} traces sintéticos de demonstração no diretório experimental:\n"
+            + "\n".join(synthetic_found[:10])
+            + "\nNo modo --mode experiment, todos os traces devem ser originários de execuções físicas/ns-3 reais."
         )
 
 def package_scenario_raw_data(scenario_name: str, min_seed: int, max_seed: int) -> dict:
@@ -120,7 +137,7 @@ def main():
     
     manifest = {
         "experiment_name": "xApp-RDL-Phase2-MultiSeed-Campaign",
-        "timestamp_utc": datetime.utcnow().isoformat() + "Z",
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "mode": args.mode,
         "strict": args.strict,
         "seeds_count": args.seeds,

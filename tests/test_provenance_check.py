@@ -55,3 +55,18 @@ def test_demo_mode_trace_generation_and_packaging(tmp_path, monkeypatch):
     assert pkg["file_count"] == 3
     assert len(pkg["sha256"]) == 64
     assert os.path.exists(pkg["filepath"])
+
+def test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode(tmp_path, monkeypatch):
+    """Valida o teste negativo de proveniência: traces sintéticos do modo demo DEVEM ser rejeitados no modo estrito."""
+    import scripts.package_and_sync_raw_results as pkg_module
+    
+    fake_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    
+    # 1. Gera traces em modo demo
+    create_dummy_raw_traces_if_missing(["baseline"], range(1001, 1003))
+    
+    # 2. Execução em modo estrito/experimento deve detectar e rejeitar traces sintéticos
+    with pytest.raises(ValueError, match="Rejeição de integridade experimental"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1003))
+

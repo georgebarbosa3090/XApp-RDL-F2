@@ -1,3 +1,4 @@
+from typing import Tuple, Dict, Any, Optional
 from src.observability.logging import setup_logger
 from src.e2.asn1_shim import INT, STR_UTF8, OCT_STR, SEQ, SEQ_OF, ASN1Dict
 
@@ -37,11 +38,6 @@ class E2SM_RC_ControlMessage(SEQ):
     _root = ['ricControlActionParameters']
     _ext = None
 
-class RCEncoder:
-    """
-    Construtor de payloads APER para a subcamada E2SM-RC (RAN Control).
-    Requisito RF-17.
-    """
 # Dicionário Sistemático de Perfis de Parâmetros E2SM-RC (O-RAN.WG3.TS.E2SM-RC v01.00)
 # Define ID padronizado, fator de escala em ponto fixo, unidade e faixa admissível
 PARAM_PROFILES = {
@@ -62,49 +58,73 @@ class RCEncoder:
     def __init__(self):
         self.profiles = PARAM_PROFILES
 
+    def encode_control_pdu(self, node_id: str, parameter: str, value: float, style_type: int = 1, action_id: int = 1) -> Tuple[bytes, bytes]:
+        """
+        Gera tanto o Header APER quanto o Message APER completos para controle de rádio.
+        Retorna a tupla (header_aper, msg_aper).
+        """
+        if parameter not in self.profiles:
+            raise ValueError(f"Parâmetro E2SM-RC não suportado ou desconhecido: '{parameter}'")
+            
+        profile = self.profiles[parameter]
+        param_id = profile["id"]
+        scale = profile["scale"]
+        
+        # Conversão precisa com escala de ponto fixo
+        encoded_val = int(round(float(value) * scale))
+        
+        # Validação estrita de limites numéricos
+        if encoded_val < profile["min"] or encoded_val > profile["max"]:
+            raise ValueError(
+                f"Valor fora dos limites para {parameter}: {value} (codificado: {encoded_val}, permitido: [{profile['min']}, {profile['max']}])"
+            )
+
+        # Constrói o Header
+        header = E2SM_RC_ControlHeader()
+        header.set_val({'ricControlStyleType': style_type, 'ricControlActionID': action_id})
+        header_aper = header.to_aper()
+
+        # Constrói a Message
+        msg = E2SM_RC_ControlMessage()
+        msg.set_val({'ricControlActionParameters': [
+            {
+                'ranParameterID': param_id,
+                'ranParameterName': parameter,
+                'ranParameterValue': encoded_val
+            }
+        ]})
+        msg_aper = msg.to_aper()
+        
+        logger.debug(f"RC Control Encoded APER size: header={len(header_aper)}B, msg={len(msg_aper)}B for param {parameter} (val={value} -> {encoded_val})")
+        return header_aper, msg_aper
+
     def encode_control_request(self, node_id: str, parameter: str, value: float) -> bytes:
         """
         Gera o payload binário APER ASN.1 padronizado com escala de ponto fixo.
         Rejeita parâmetros não suportados ou valores fora dos limites físicos configurados.
+        Retorna o Message APER (compatibilidade direta).
         """
+        _, msg_aper = self.encode_control_pdu(node_id, parameter, value)
+        return msg_aper
+
+    def decode_control_header(self, header_aper: bytes) -> Dict[str, Any]:
+        """Decodifica o cabeçalho de controle E2SM-RC APER."""
         try:
-            if parameter not in self.profiles:
-                raise ValueError(f"Parâmetro E2SM-RC não suportado ou desconhecido: '{parameter}'")
-                
-            profile = self.profiles[parameter]
-            param_id = profile["id"]
-            scale = profile["scale"]
-            
-            # Conversão precisa com escala de ponto fixo
-            encoded_val = int(round(float(value) * scale))
-            
-            # Validação estrita de limites numéricos
-            if encoded_val < profile["min"] or encoded_val > profile["max"]:
-                raise ValueError(
-                    f"Valor fora dos limites para {parameter}: {value} (codificado: {encoded_val}, permitido: [{profile['min']}, {profile['max']}])"
-                )
-
-            # Constrói o Header
             header = E2SM_RC_ControlHeader()
-            header.set_val({'ricControlStyleType': 1, 'ricControlActionID': 1})
-            header_aper = header.to_aper()
-
-            # Constrói a Message
-            msg = E2SM_RC_ControlMessage()
-            msg.set_val({'ricControlActionParameters': [
-                {
-                    'ranParameterID': param_id,
-                    'ranParameterName': parameter,
-                    'ranParameterValue': encoded_val
-                }
-            ]})
-            msg_aper = msg.to_aper()
-            
-            logger.debug(f"RC Control Encoded APER size: {len(msg_aper)} bytes for param {parameter} (val={value} -> {encoded_val})")
-            return msg_aper
-
+            header.from_aper(header_aper)
+            return header.get_val()
         except Exception as e:
-            logger.error(f"Erro Crítico ao encodar E2SM-RC via APER: {e}")
+            logger.error(f"Erro ao decodificar Header E2SM-RC APER: {e}")
+            raise
+
+    def decode_control_message(self, msg_aper: bytes) -> Dict[str, Any]:
+        """Decodifica a mensagem de controle E2SM-RC APER."""
+        try:
+            msg = E2SM_RC_ControlMessage()
+            msg.from_aper(msg_aper)
+            return msg.get_val()
+        except Exception as e:
+            logger.error(f"Erro ao decodificar Mensagem E2SM-RC APER: {e}")
             raise
 
     def decode_control_request(self, msg_aper: bytes, parameter: str) -> float:
@@ -112,9 +132,7 @@ class RCEncoder:
         Decodifica o payload APER ASN.1 e restaura o valor em ponto flutuante original.
         """
         try:
-            msg = E2SM_RC_ControlMessage()
-            msg.from_aper(msg_aper)
-            val_dict = msg.get_val()
+            val_dict = self.decode_control_message(msg_aper)
             raw_int = val_dict['ricControlActionParameters'][0]['ranParameterValue']
             
             profile = self.profiles.get(parameter, {"scale": 1})

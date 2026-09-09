@@ -51,3 +51,25 @@ def test_rc_encoder_decoder_reversible():
         payload = encoder.encode_control_request(node_id="gnb_01", parameter=param, value=val)
         decoded_val = encoder.decode_control_request(payload, param)
         assert pytest.approx(decoded_val, abs=0.01) == val
+
+def test_rc_encoder_encode_pdu_and_header_decode():
+    """Valida a codificação completa de PDU (Header + Message) e decodificação estruturada."""
+    encoder = RCEncoder()
+    header_aper, msg_aper = encoder.encode_control_pdu("gnb_01", "TX_POWER", 23.5, style_type=1, action_id=1)
+    
+    assert isinstance(header_aper, bytes)
+    assert isinstance(msg_aper, bytes)
+    assert len(header_aper) > 0
+    assert len(msg_aper) > 0
+    
+    # Decodifica Header
+    hdr_dict = encoder.decode_control_header(header_aper)
+    assert hdr_dict["ricControlStyleType"] == 1
+    assert hdr_dict["ricControlActionID"] == 1
+    
+    # Decodifica Message
+    msg_dict = encoder.decode_control_message(msg_aper)
+    assert "ricControlActionParameters" in msg_dict
+    assert msg_dict["ricControlActionParameters"][0]["ranParameterName"] == "TX_POWER"
+    assert msg_dict["ricControlActionParameters"][0]["ranParameterValue"] == 235
+

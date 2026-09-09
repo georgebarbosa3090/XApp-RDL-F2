@@ -133,6 +133,7 @@ class RDLxApp:
                     value=data['value'],
                     priority=data.get('priority', 50)
                 )
+                action.arrival_monotonic = time.perf_counter()
                 with self.buffer_lock:
                     if not self.proposal_buffer:
                         self.window_start = now_ts()
@@ -172,6 +173,8 @@ class RDLxApp:
 
     def inject_xapp_action(self, action: XAppAction):
         """API pública para injeção de ações simuladas (usada em testes)"""
+        if not hasattr(action, 'arrival_monotonic') or action.arrival_monotonic is None:
+            action.arrival_monotonic = time.perf_counter()
         with self.buffer_lock:
             if not self.proposal_buffer:
                 self.window_start = now_ts()
@@ -189,6 +192,9 @@ class RDLxApp:
         4. Instrumenta T_total = T_queue + T_perception + T_reasoning + T_refinement + T_e2_encode.
         """
         t0_perf = time.perf_counter()
+        earliest_arrival = min((getattr(a, 'arrival_monotonic', t0_perf) for a in actions), default=t0_perf)
+        t_queue_ms = (t0_perf - earliest_arrival) * 1000.0
+        
         for act in actions:
             self.memory.add_action(act)
             
@@ -243,7 +249,7 @@ class RDLxApp:
             
             logger.info(
                 f"⏱️ Decisão RDL Concluída em {latency_ms:.2f}ms "
-                f"(Percepção: {t_perc_ms:.2f}ms, Raciocínio: {t_reas_ms:.2f}ms, Refinamento: {t_ref_ms:.2f}ms)"
+                f"(Espera Fila: {t_queue_ms:.2f}ms, Percepção: {t_perc_ms:.2f}ms, Raciocínio: {t_reas_ms:.2f}ms, Refinamento: {t_ref_ms:.2f}ms)"
             )
             
             self.memory.add_resolution(resolution)
