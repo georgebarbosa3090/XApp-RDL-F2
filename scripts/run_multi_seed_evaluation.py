@@ -284,11 +284,23 @@ def main():
     print("========================================================================")
     print(f" Executando Avaliação Estatística Rigorosa Multi-Semente (Modo: {args.mode.upper()}, N = {args.n_seeds})")
     print("========================================================================")
-    df = generate_multi_seed_data(n_seeds=args.n_seeds)
+    
+    if args.mode == "experiment":
+        traces_path = os.path.join(RESULTS_DIR, "data", "dataset_multi_seed_metrics.csv")
+        if not os.path.exists(traces_path):
+            print(f"[ERRO CRÍTICO EXPERIMENTAL] Arquivo de traces brutos ausente: {traces_path}", file=sys.stderr)
+            print("No modo --mode experiment, é obrigatório executar simulações ns-3 reais (ex: make run-all-scenarios) antes da consolidação.", file=sys.stderr)
+            sys.exit(1)
+        print(f"[*] Carregando traces empíricos brutos de: {traces_path}")
+        df = pd.read_csv(traces_path)
+    else:
+        print("[*] Modo DEMO ativado: Gerando observações sintéticas estocasticamente calibradas para validação de pipeline.")
+        df = generate_multi_seed_data(n_seeds=args.n_seeds)
+        
     stats_results = compute_statistics_and_hypothesis(df)
     export_manifest_and_report(df, stats_results, mode=args.mode)
     print("========================================================================")
-    print(" [SUCESSO] Avaliação Multi-Semente concluída com rigor estatístico!")
+    print(f" [SUCESSO] Avaliação Multi-Semente ({args.mode.upper()}) concluída com rigor estatístico!")
     print("========================================================================")
 
 if __name__ == "__main__":

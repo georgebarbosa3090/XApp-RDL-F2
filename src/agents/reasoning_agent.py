@@ -28,8 +28,11 @@ class ReasoningAgent:
         self.cooling_window_s = float(self.config.get("cooling_window_s", 5.0))
         self.cooling_lockout: Dict[str, float] = {}
         
-        # Coordenador MAPPO para resolução de Nível 2B
-        self.mappo = MAPPOCoordinator(n_agents=2, obs_dim=10, action_dim=5, config=self.config)
+        # Coordenador MAPPO para resolução de Nível 2B (Suporta até 6 xApps simultâneas com vetor D=60 e Action Masking)
+        n_agents = int(self.config.get("n_agents", 6))
+        obs_dim = int(self.config.get("obs_dim", 60))
+        action_dim = int(self.config.get("action_dim", 7))
+        self.mappo = MAPPOCoordinator(n_agents=n_agents, obs_dim=obs_dim, action_dim=action_dim, config=self.config)
 
     def estimate_complexity(self, conflict: ConflictEvent, kpm_state: Optional[Dict[str, float]] = None) -> float:
         """

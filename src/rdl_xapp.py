@@ -182,16 +182,19 @@ class RDLxApp:
 
     def _process_action_group(self, actions: List[XAppAction]):
         """
-        Processa todas as ações acumuladas na Decision Window (Feature 2):
-        1. Identifica conflitos diretos e indiretos;
+        Processa todas as ações acumuladas na Decision Window (Feature 2) com instrumentação monotônica:
+        1. Identifica conflitos diretos e indiretos (Perception);
         2. Arbitra conflitos via ReasoningAgent e valida via RefinementAgent;
-        3. Executa Pass-Through de ações sem conflito validadas individualmente.
+        3. Executa Pass-Through de ações sem conflito validadas individualmente;
+        4. Instrumenta T_total = T_queue + T_perception + T_reasoning + T_refinement + T_e2_encode.
         """
-        t0 = now_ts()
+        t0_perf = time.perf_counter()
         for act in actions:
             self.memory.add_action(act)
             
+        t_perc_0 = time.perf_counter()
         conflicts = self.perception.register_action_group(actions)
+        t_perc_ms = (time.perf_counter() - t_perc_0) * 1000.0
         self.metrics.update_active_xapps(len(self.perception.get_active_xapps()))
         
         # Mapeia ações em conflito para isolar as ações limpas
@@ -206,20 +209,39 @@ class RDLxApp:
             self.memory.add_conflict(conflict)
             self.metrics.record_conflict(conflict)
             
+            # Telemetria com validação de TTL por nó
             kpm_state = None
-            if self.perception.latest_kpm:
-                kpm_state = {
-                    "DRB.UEThpDl": self.perception.latest_kpm.drb_thp_dl,
-                    "DRB.UEThpUl": self.perception.latest_kpm.drb_thp_ul,
-                    "QoS.FlowDelay": self.perception.latest_kpm.drb_delay_dl,
-                    "RRU.PrbTotDl": float(self.perception.latest_kpm.prb_used_dl)
-                }
+            if conflict.involved_xapps:
+                target_node = conflict.involved_xapps[0].node_id
+                kpm_rep, is_valid = self.perception.get_kpm_report(target_node)
+                if kpm_rep and is_valid:
+                    kpm_state = {
+                        "DRB.UEThpDl": kpm_rep.drb_thp_dl,
+                        "DRB.UEThpUl": kpm_rep.drb_thp_ul,
+                        "QoS.FlowDelay": kpm_rep.drb_delay_dl,
+                        "RRU.PrbTotDl": float(kpm_rep.prb_used_dl)
+                    }
+                elif not is_valid:
+                    logger.warning("Contexto KPM expirado (TTL > 1s). Revertendo para Heurística Segura.", node=target_node)
+            
+            t_reas_0 = time.perf_counter()
             resolution = self.reasoning.resolve(conflict, kpm_state=kpm_state)
+            t_reas_ms = (time.perf_counter() - t_reas_0) * 1000.0
+            
+            t_ref_0 = time.perf_counter()
             is_valid, level, reason = self.refinement.validate(resolution, conflict)
-            latency = now_ts() - t0
+            t_ref_ms = (time.perf_counter() - t_ref_0) * 1000.0
+            
+            latency_total_s = time.perf_counter() - t0_perf
+            latency_ms = latency_total_s * 1000.0
+            
+            logger.info(
+                f"⏱️ Decisão RDL Concluída em {latency_ms:.2f}ms "
+                f"(Percepção: {t_perc_ms:.2f}ms, Raciocínio: {t_reas_ms:.2f}ms, Refinamento: {t_ref_ms:.2f}ms)"
+            )
             
             self.memory.add_resolution(resolution)
-            self.metrics.record_resolution(resolution, latency)
+            self.metrics.record_resolution(resolution, latency_total_s)
             
             if is_valid and resolution.winning_actions:
                 for act in resolution.winning_actions:

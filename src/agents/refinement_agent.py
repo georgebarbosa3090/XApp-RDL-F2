@@ -5,70 +5,123 @@ from src.observability.logging import setup_logger
 
 logger = setup_logger("RefinementAgent")
 
+from enum import Enum
+
+class XAppLifecycleState(Enum):
+    ACTIVE = "ACTIVE"
+    SUSPECT = "SUSPECT"
+    QUARANTINE = "QUARANTINE"
+    PROBATION = "PROBATION"
+
 class RefinementAgent:
     """
     Agente de Refinamento, Blindagem Invariante e Segurança Zero-Trust (Safety Guards).
-    Executa verificação determinística pós-inferência, validação de limites físicos de hardware,
-    barreira de frequência temporal e quarentena comportamental contra Rogue xApps.
+    Executa verificação determinística pós-inferência, validação de limites físicos de hardware
+    diferenciados por perfil de célula (Macro vs Small Cell), barreira temporal e FSM de quarentena.
     """
-    def __init__(self, memory=None):
+    def __init__(self, memory=None, node_profiles: Optional[Dict[str, str]] = None):
         self.memory = memory
         self.config = {
             "enabled": True,
             "minimum_control_interval_ms": 1000,
             "max_violations_before_quarantine": 3,
             "violation_window_ms": 10000,
-            "quarantine_duration_ms": 30000
+            "quarantine_duration_ms": 30000,
+            "probation_duration_ms": 10000
+        }
+        # Perfis de potência por tipo de célula (Macro: 43 dBm, Small Cell: 23 dBm)
+        self.node_profiles = node_profiles or {
+            "gnb_01": "macro",
+            "gnb_02": "macro",
+            "gnb_03": "small_cell"
         }
         self.last_control_time: Dict[str, float] = {}
-        # Zero-Trust Tracking: xapp_id -> [violation_timestamp_ms, ...]
-        self.violations: Dict[str, List[float]] = {}
-        # Quarentena ativa: xapp_id -> quarantine_expiration_ms
-        self.quarantine: Dict[str, float] = {}
+        # Zero-Trust FSM Tracking: xapp_id -> {state, violations: [], state_change_ts}
+        self.app_states: Dict[str, Dict[str, Any]] = {}
+
+    def _get_app_state(self, xapp_id: str, now_ms: float) -> XAppLifecycleState:
+        if xapp_id not in self.app_states:
+            self.app_states[xapp_id] = {
+                "state": XAppLifecycleState.ACTIVE,
+                "violations": [],
+                "state_change_ts": now_ms
+            }
+            return XAppLifecycleState.ACTIVE
+            
+        data = self.app_states[xapp_id]
+        curr_state = data["state"]
+        elapsed = now_ms - data["state_change_ts"]
+        
+        # Transições automáticas de tempo na FSM
+        if curr_state == XAppLifecycleState.QUARANTINE:
+            if elapsed >= self.config["quarantine_duration_ms"]:
+                data["state"] = XAppLifecycleState.PROBATION
+                data["state_change_ts"] = now_ms
+                logger.info(f"🔄 xApp '{xapp_id}' passou de QUARANTINE para PROBATION.")
+                return XAppLifecycleState.PROBATION
+        elif curr_state == XAppLifecycleState.PROBATION:
+            if elapsed >= self.config["probation_duration_ms"]:
+                data["state"] = XAppLifecycleState.ACTIVE
+                data["violations"].clear()
+                data["state_change_ts"] = now_ms
+                logger.info(f"✅ xApp '{xapp_id}' reabilitada: PROBATION -> ACTIVE.")
+                return XAppLifecycleState.ACTIVE
+                
+        return curr_state
 
     def _check_quarantine(self, xapp_id: str, now_ms: float) -> Tuple[bool, str]:
         """Verifica se a xApp está sob quarentena Zero-Trust."""
-        if xapp_id in self.quarantine:
-            if now_ms < self.quarantine[xapp_id]:
-                remaining_s = (self.quarantine[xapp_id] - now_ms) / 1000.0
-                return True, f"xApp '{xapp_id}' is in Zero-Trust QUARANTINE (remaining: {remaining_s:.1f}s)"
-            else:
-                del self.quarantine[xapp_id]
+        state = self._get_app_state(xapp_id, now_ms)
+        if state == XAppLifecycleState.QUARANTINE:
+            elapsed = now_ms - self.app_states[xapp_id]["state_change_ts"]
+            remaining_s = (self.config["quarantine_duration_ms"] - elapsed) / 1000.0
+            return True, f"xApp '{xapp_id}' is in Zero-Trust QUARANTINE (remaining: {remaining_s:.1f}s)"
         return False, ""
 
     def _record_violation(self, xapp_id: str, now_ms: float, reason: str):
-        """Registra infração comportamental e aciona quarentena se ultrapassar o limiar."""
+        """Registra infração comportamental e atualiza a FSM de segurança."""
         if not xapp_id:
             return
-        if xapp_id not in self.violations:
-            self.violations[xapp_id] = []
+        state = self._get_app_state(xapp_id, now_ms)
+        data = self.app_states[xapp_id]
         
-        # Manter apenas violações dentro da janela
+        # Em estado de PROBATION, 1 violação retorna imediatamente para QUARANTINE
+        if state == XAppLifecycleState.PROBATION:
+            data["state"] = XAppLifecycleState.QUARANTINE
+            data["state_change_ts"] = now_ms
+            logger.warning(f"🚨 PROBATION FAILURE: xApp '{xapp_id}' retornou para QUARANTINE. Motivo: {reason}")
+            return
+            
+        # Manter violações dentro da janela
         window = self.config.get("violation_window_ms", 10000)
-        self.violations[xapp_id] = [t for t in self.violations[xapp_id] if (now_ms - t) <= window]
-        self.violations[xapp_id].append(now_ms)
+        data["violations"] = [t for t in data["violations"] if (now_ms - t) <= window]
+        data["violations"].append(now_ms)
         
         limit = self.config.get("max_violations_before_quarantine", 3)
-        if len(self.violations[xapp_id]) >= limit:
-            quarantine_dur = self.config.get("quarantine_duration_ms", 30000)
-            self.quarantine[xapp_id] = now_ms + quarantine_dur
-            logger.warning(
-                f"🚨 ZERO-TRUST ISOLATION: xApp '{xapp_id}' placed in QUARANTINE for {quarantine_dur/1000:.0f}s. Reason: {reason}"
-            )
+        if len(data["violations"]) >= limit:
+            data["state"] = XAppLifecycleState.QUARANTINE
+            data["state_change_ts"] = now_ms
+            logger.warning(f"🚨 ZERO-TRUST ISOLATION: xApp '{xapp_id}' colocada em QUARANTINE por 30s. Motivo: {reason}")
+        elif len(data["violations"]) == 1:
+            data["state"] = XAppLifecycleState.SUSPECT
+            logger.warning(f"⚠️ xApp '{xapp_id}' em estado SUSPECT (1 violação). Motivo: {reason}")
 
-    def _validate_parameter_bounds(self, parameter: str, value: Any) -> Tuple[bool, str]:
-        """Validação estrita de limites físicos de rádio (3GPP / O-RAN WG3)."""
+    def _validate_parameter_bounds(self, parameter: str, value: Any, node_id: str = "gnb_01") -> Tuple[bool, str]:
+        """Validação estrita de limites físicos de rádio com perfil de célula (Macro vs Small Cell)."""
         param_upper = parameter.upper()
         if not isinstance(value, (int, float)):
             return False, f"Invalid non-numeric value for parameter {parameter}"
             
         val = float(value)
+        cell_profile = self.node_profiles.get(node_id, "macro")
+        max_power_dbm = 43.0 if cell_profile == "macro" else 23.0 # Teto Macro (20W) vs Small Cell (200mW)
+        
         if param_upper == "PRB_QUOTA":
             if val < 0.0 or val > 100.0:
                 return False, f"PRB value {val} out of bounds (0-100%)"
         elif param_upper == "TX_POWER":
-            if val < -10.0 or val > 43.0:
-                return False, f"TX Power {val} dBm out of bounds (-10 to 43 dBm)"
+            if val < -10.0 or val > max_power_dbm:
+                return False, f"TX Power {val} dBm out of bounds (-10 to {max_power_dbm} dBm for profile {cell_profile})"
         elif "DOWNTILT" in param_upper:
             if val < 0.0 or val > 15.0:
                 return False, f"Beam Downtilt {val}° out of bounds (0-15°)"

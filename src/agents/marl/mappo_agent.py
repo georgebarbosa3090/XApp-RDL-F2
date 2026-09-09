@@ -4,6 +4,7 @@ from typing import Tuple, Dict, List, Optional, Any
 from src.conflict_types import ConflictEvent, XAppAction, ConflictType, ConflictSeverity
 
 TORCH_AVAILABLE = False
+PYTORCH_AVAILABLE = False
 torch = None
 nn = None
 
@@ -12,10 +13,12 @@ if os.getenv("ENABLE_TORCH", "true").lower() in ("true", "1", "yes") and os.name
         import torch
         import torch.nn as nn
         TORCH_AVAILABLE = True
+        PYTORCH_AVAILABLE = True
     except (ImportError, OSError):
         torch = None
         nn = None
         TORCH_AVAILABLE = False
+        PYTORCH_AVAILABLE = False
 
 
 if TORCH_AVAILABLE and nn is not None:
@@ -514,38 +517,55 @@ class MAPPOCoordinator:
 
     def decide(self, conflict: ConflictEvent, kpm_state: Optional[Dict[str, float]] = None) -> Tuple[Optional[XAppAction], float]:
         """
-        Executa inferência cooperativa CTDE considerando todos os agentes envolvidos.
+        Executa inferência da política neural aprendida com Action Masking:
+        A ação amostrada pela política pi_theta(a|s) seleciona diretamente a proposta vencedora.
+        Ação a in {0, ..., N-1} mapeia para conflict.involved_xapps[a].
+        Ação a == N mapeia para No-Op (não atuar / deferir).
         """
         if not conflict.involved_xapps:
             return None, 0.0
 
+        n_proposals = len(conflict.involved_xapps)
         obs = self.extract_features(conflict, kpm_state)
-        best_action = None
-        best_score = -float("inf")
         
-        # Construir observação global concatenada para o Crítico Centralizado
-        global_obs = np.tile(obs, self.n_agents)
+        # Action Masking: Máscara booleana das ações válidas
+        # Índices 0 a n_proposals-1 são propostas ativas; índice action_dim-1 é No-Op
+        valid_mask = np.zeros(self.action_dim, dtype=bool)
+        for i in range(min(n_proposals, self.action_dim - 1)):
+            valid_mask[i] = True
+        valid_mask[self.action_dim - 1] = True # No-Op sempre admissível
         
-        for idx, action in enumerate(conflict.involved_xapps):
-            # Consulta o agente correspondente ou o primeiro
-            agent_idx = min(idx, len(self.agents) - 1)
-            action_idx, log_prob = self.agents[agent_idx].select_action(obs)
-            
-            # Avaliação de valor do Crítico Centralizado
-            state_value = self.agents[agent_idx].evaluate_value(global_obs)
-            
-            reward_estimate = self.calculate_multiobjective_reward(action, kpm_state, conflict_resolved=True)
-            constraint_cost = self.calculate_action_constraint_cost(action)
-            
-            # Score de arbitragem combinando política do ator, valor do crítico, prioridade e penalidade Safe-RL
-            score = (reward_estimate * 0.5) + (state_value * 0.3) + (action.priority * 0.02) - (constraint_cost * 0.5)
-            
-            if score > best_score:
-                best_score = score
-                best_action = action
+        # Consulta o agente de coordenação líder (Agente 0)
+        leader_agent = self.agents[0]
+        
+        if PYTORCH_AVAILABLE and isinstance(leader_agent, MAPPOAgent):
+            obs_t = torch.FloatTensor(obs).unsqueeze(0)
+            with torch.no_grad():
+                probs = leader_agent.actor(obs_t).squeeze(0).numpy()
+                
+            # Aplica máscara de ações inválidas com renormalização estrita
+            masked_probs = np.where(valid_mask, probs, 0.0)
+            prob_sum = np.sum(masked_probs)
+            if prob_sum > 1e-6:
+                masked_probs /= prob_sum
+                action_idx = int(np.argmax(masked_probs))
+                confidence = float(masked_probs[action_idx])
+            else:
+                action_idx = 0
+                confidence = 0.5
+        else:
+            action_idx, log_prob = leader_agent.select_action(obs)
+            if action_idx >= n_proposals and action_idx != self.action_dim - 1:
+                action_idx = 0
+            confidence = 0.85
 
-        confidence = max(0.75, min(0.99, 0.82 + (best_score * 0.08)))
-        return best_action or conflict.involved_xapps[0], float(confidence)
+        # Vínculo inequívoco entre a saída da política e a proposta escolhida
+        if action_idx < n_proposals:
+            selected_proposal = conflict.involved_xapps[action_idx]
+            return selected_proposal, float(confidence)
+        else:
+            # Política escolheu No-Op ou índice de deferimento
+            return None, float(confidence)
 
     def record_transition(
         self, 

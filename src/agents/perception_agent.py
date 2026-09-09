@@ -19,7 +19,13 @@ class PerceptionAgent:
         }
         
         # Mapeamento de nós vizinhos com sobreposição de cobertura de rádio (Inter-Cell Topology)
-        self.neighbor_nodes: Dict[str, List[str]] = neighbor_nodes or {}
+        # Inicialização automática padrão para ambiente multi-célula 5G-Adv/6G
+        default_topology = {
+            "gnb_01": ["gnb_02"],
+            "gnb_02": ["gnb_01", "gnb_03"],
+            "gnb_03": ["gnb_02"]
+        }
+        self.neighbor_nodes: Dict[str, List[str]] = neighbor_nodes if (neighbor_nodes is not None and len(neighbor_nodes) > 0) else default_topology
         
         # Grafo NetworkX para análise topológica de caminhos causais
         self.graph = nx.DiGraph()
@@ -27,7 +33,11 @@ class PerceptionAgent:
         
         # Registro das últimas ações: node_id -> parameter -> XAppAction
         self._action_registry: Dict[str, Dict[str, XAppAction]] = {}
+        
+        # Registro de telemetria indexada por nó: node_id -> (KPMReport, timestamp_s)
+        self.kpm_by_node: Dict[str, Tuple[KPMReport, float]] = {}
         self.latest_kpm: Optional[KPMReport] = None
+        self.kpm_ttl_s: float = 1.0 # Janela de validade máxima de 1000ms
 
     def add_neighbor_relation(self, node_a: str, node_b: str):
         """Registra adjacência e potencial interferência co-canal entre duas gNodeBs vizinhas."""
@@ -50,8 +60,25 @@ class PerceptionAgent:
                 elif "Power" in kpi:
                     self.graph.add_edge(kpi, "EnergyEfficiency")
 
-    def update_kpm_report(self, report: KPMReport):
+    def update_kpm_report(self, report: KPMReport, now_ts: Optional[float] = None):
+        """Armazena a telemetria com timestamp individual por nó para controle de validade (TTL)."""
+        import time
+        ts = now_ts or time.time()
+        self.kpm_by_node[report.node_id] = (report, ts)
         self.latest_kpm = report
+
+    def get_kpm_report(self, node_id: str, now_ts: Optional[float] = None) -> Tuple[Optional[KPMReport], bool]:
+        """
+        Recupera telemetria do nó específico e valida expiração temporal (TTL).
+        Retorna (report, is_valid). Se expirada, is_valid é False (indisponibilidade contextual).
+        """
+        import time
+        ts = now_ts or time.time()
+        if node_id in self.kpm_by_node:
+            report, report_ts = self.kpm_by_node[node_id]
+            is_valid = (ts - report_ts) <= self.kpm_ttl_s
+            return report, is_valid
+        return self.latest_kpm, (self.latest_kpm is not None)
 
     def get_active_xapps(self) -> Dict[str, List[XAppAction]]:
         active = {}

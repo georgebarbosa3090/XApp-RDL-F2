@@ -44,32 +44,37 @@ class RCEncoder:
     Construtor de payloads APER para a subcamada E2SM-RC (RAN Control).
     Requisito RF-17.
     """
+# Dicionário Sistemático de Perfis de Parâmetros E2SM-RC (O-RAN.WG3.TS.E2SM-RC v01.00)
+# Define ID padronizado, fator de escala em ponto fixo, unidade e faixa admissível
+PARAM_PROFILES = {
+    "PRB_QUOTA":          {"id": 1,  "scale": 1,    "unit": "PRB",         "min": 0,    "max": 100},
+    "TX_POWER":           {"id": 2,  "scale": 10,   "unit": "dBm_x10",     "min": -100, "max": 430},
+    "SCHEDULER_WEIGHT":   {"id": 3,  "scale": 1000, "unit": "milli_ratio", "min": 10,   "max": 10000},
+    "A3_OFFSET":          {"id": 4,  "scale": 100,  "unit": "centi_dB",    "min": -1000,"max": 1000},
+    "BEAM_DOWNTILT":      {"id": 10, "scale": 10,   "unit": "deg_x10",     "min": 0,    "max": 150},
+    "ISAC_SENSING_RATIO": {"id": 11, "scale": 1000, "unit": "milli_ratio", "min": 0,    "max": 500},
+    "CARRIER_AGG_RATIO":  {"id": 12, "scale": 1000, "unit": "milli_ratio", "min": 0,    "max": 1000}
+}
+
+class RCEncoder:
+    """
+    Construtor de payloads APER para a subcamada E2SM-RC (RAN Control).
+    Garante fidelidade numérica com ponto fixo padronizado e decodificação reversível.
+    """
     def __init__(self):
-        # Mapeia nomes lógicos para IDs padronizados da RAN (O-RAN.WG3.TS.E2SM-RC)
-        self.param_map = {
-            "PRB_QUOTA": 1,
-            "TX_POWER": 2,
-            "SCHEDULER_WEIGHT": 3,
-            "A3_OFFSET": 4,
-            "BEAM_DOWNTILT": 10,
-            "ISAC_SENSING_RATIO": 11,
-            "CARRIER_AGG_RATIO": 12
-        }
+        self.profiles = PARAM_PROFILES
 
     def encode_control_request(self, node_id: str, parameter: str, value: float) -> bytes:
         """
-        Gera a string de bytes APER pura que o E2 Node espera.
-        Para parâmetros fracionários (ex: RATIO, OFFSET), aplica escala de ponto fixo (x1000)
-        para preservar precisão sem perda por truncamento inteiro.
+        Gera o payload binário APER ASN.1 padronizado com escala de ponto fixo.
         """
         try:
-            param_id = self.param_map.get(parameter, 99)
+            profile = self.profiles.get(parameter, {"id": 99, "scale": 1})
+            param_id = profile["id"]
+            scale = profile["scale"]
             
-            # Tratamento de precisão numérica: parâmetros fracionários são escalados em ponto fixo (1000x)
-            if "RATIO" in parameter or "OFFSET" in parameter or isinstance(value, float) and not value.is_integer():
-                encoded_val = int(round(value * 1000)) if "RATIO" in parameter else int(round(value))
-            else:
-                encoded_val = int(round(value))
+            # Conversão precisa com escala de ponto fixo
+            encoded_val = int(round(float(value) * scale))
 
             # Constrói o Header
             header = E2SM_RC_ControlHeader()
@@ -87,13 +92,26 @@ class RCEncoder:
             ]})
             msg_aper = msg.to_aper()
             
-            # Retornamos as partes concatenadas ou como estrutura.
-            # RMR mtype 12010 espera JSON empacotado para o E2 Term, 
-            # ou o byte puro se a xApp fala APER nativo. 
-            # A RDLxApp no nosso framework envia JSON, mas com o header/msg encodados.
-            logger.debug(f"RC Control Encoded APER size: {len(msg_aper)} bytes")
+            logger.debug(f"RC Control Encoded APER size: {len(msg_aper)} bytes for param {parameter} (val={value} -> {encoded_val})")
             return msg_aper
 
         except Exception as e:
             logger.error(f"Erro Crítico ao encodar E2SM-RC via APER: {e}")
+            raise
+
+    def decode_control_request(self, msg_aper: bytes, parameter: str) -> float:
+        """
+        Decodifica o payload APER ASN.1 e restaura o valor em ponto flutuante original.
+        """
+        try:
+            msg = E2SM_RC_ControlMessage()
+            msg.from_aper(msg_aper)
+            val_dict = msg.get_val()
+            raw_int = val_dict['ricControlActionParameters'][0]['ranParameterValue']
+            
+            profile = self.profiles.get(parameter, {"scale": 1})
+            scale = profile["scale"]
+            return float(raw_int) / float(scale)
+        except Exception as e:
+            logger.error(f"Erro ao decodificar E2SM-RC APER: {e}")
             raise
