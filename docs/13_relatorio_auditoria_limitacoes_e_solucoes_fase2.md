@@ -77,8 +77,8 @@ flowchart LR
         S6["S6: Matriz de 7 Dimensões de Validade<br/>(30 Seeds, IC 95%, ANOVA p < 0.001, SHA-256)"]
     end
 
-    L5 ==>|Resiliência Near-RT & SLA| S5
-    L6 ==>|Rigor Científico & Reprodutibilidade| S6
+    L5 ==>|"Resiliência Near-RT & SLA"| S5
+    L6 ==>|"Rigor Científico & Reprodutibilidade"| S6
 ```
 
 ### Tabela Comparativa de Superação Arquitetural:

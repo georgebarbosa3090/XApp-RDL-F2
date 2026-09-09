@@ -35,8 +35,8 @@ def test_kpm_decoder_valid_aper_multimetric_aggregation():
         'nodeID': 'gnb_01',
         'ueID': 'ue_01',
         'measData': [
-            {'metricName': 'DRB.UEThpDl', 'metricValue': 85.5},
-            {'metricName': 'RRU.PrbUsedDl', 'metricValue': 60.0}
+            {'metricName': 'DRB.UEThpDl', 'metricValue': 85},
+            {'metricName': 'RRU.PrbUsedDl', 'metricValue': 60}
         ]
     })
     valid_aper = msg.to_aper()
@@ -45,7 +45,7 @@ def test_kpm_decoder_valid_aper_multimetric_aggregation():
     assert len(aggregated) == 1
     assert aggregated[0]["node_id"] == "gnb_01"
     assert aggregated[0]["ue_id"] == "ue_01"
-    assert aggregated[0]["drb_thp_dl"] == pytest.approx(85.5)
+    assert aggregated[0]["drb_thp_dl"] == pytest.approx(85.0)
     assert aggregated[0]["prb_used_dl"] == 60
 
 def test_rc_encoder_generates_bytes():

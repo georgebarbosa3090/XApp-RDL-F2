@@ -30,6 +30,10 @@ spec:
           env:
             - name: USE_FAKE_SDL
               value: {{ if and .Values.env .Values.env.useFakeSdl }}{{ .Values.env.useFakeSdl | quote }}{{ else }}"false"{{ end }}
+            - name: DBAAS_SERVICE_HOST
+              value: {{ if and .Values.env .Values.env.dbaasHost }}{{ .Values.env.dbaasHost | quote }}{{ else }}"service-ricplt-dbaas-tcp.ricplt"{{ end }}
+            - name: DBAAS_SERVICE_PORT
+              value: {{ if and .Values.env .Values.env.dbaasPort }}{{ .Values.env.dbaasPort | quote }}{{ else }}"6379"{{ end }}
             - name: RMR_SEED_RT
               value: {{ if and .Values.env .Values.env.rmrSeedRt }}{{ .Values.env.rmrSeedRt | quote }}{{ else }}"/app/configs/routes.rt"{{ end }}
             - name: CONFIG_FILE

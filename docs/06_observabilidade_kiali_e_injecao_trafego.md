@@ -12,7 +12,7 @@
 A infraestrutura O-RAN 5G-Advanced da CA-RDL opera sobre uma malha de serviços (**Istio Service Mesh**) no Kubernetes, permitindo rastreabilidade, monitoramento de latência e governança em tempo real entre todas as xApps e os componentes do Near-RT RIC.
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Mesh["Namespace ricxapp (Istio Service Mesh)"]
         RDL["ricxapp-iqos-xapp-rdl-f2<br/>(Pod 2/2: App + Envoy)"]
         XS["ricxapp-qos-xslice<br/>(Pod 2/2: App + Envoy)"]
@@ -30,21 +30,31 @@ graph TD
         SUB["service-ricplt-submgr-rmr"]
     end
 
-    GEN -->|HTTP Health/Metrics| RDL
-    GEN -->|HTTP Health/Metrics| XS
-    GEN -->|HTTP Health/Metrics| ES
-    GEN -->|HTTP Health/Metrics| TS
-    GEN -->|HTTP Health/Metrics| BF
-    GEN -->|HTTP Health/Metrics| IS
-    GEN -->|HTTP Health/Metrics| RS
+    GEN -->|"HTTP Health/Metrics"| RDL
+    GEN -->|"HTTP Health/Metrics"| XS
+    GEN -->|"HTTP Health/Metrics"| ES
+    GEN -->|"HTTP Health/Metrics"| TS
+    GEN -->|"HTTP Health/Metrics"| BF
+    GEN -->|"HTTP Health/Metrics"| IS
+    GEN -->|"HTTP Health/Metrics"| RS
 
-    RDL <-->|TCP RMR 4560/4561| RIC
-    XS <-->|TCP RMR 4562| RIC
-    ES <-->|TCP RMR 4563| RIC
-    TS <-->|TCP RMR 4564| RIC
+    RDL ---|"TCP RMR 4560/4561"| E2T
+    RDL ---|"Contexto SDL (6379)"| DBAAS
+    XS -->|"Propostas RMR"| RDL
+    ES -->|"Propostas RMR"| RDL
+    TS -->|"Propostas RMR"| RDL
+    BF -->|"Propostas RMR"| RDL
+    IS -->|"Propostas RMR"| RDL
+    RS -->|"Propostas RMR"| RDL
 
-    Mesh -.->|Telemetria Envoy / Envoy Proxies| PROM["Prometheus Scraper"]
-    RIC -.->|Telemetria Envoy| PROM
+    RDL -.->|"Envoy Telemetria"| PROM["Prometheus Scraper"]
+    XS -.->|"Envoy Telemetria"| PROM
+    ES -.->|"Envoy Telemetria"| PROM
+    TS -.->|"Envoy Telemetria"| PROM
+    BF -.->|"Envoy Telemetria"| PROM
+    IS -.->|"Envoy Telemetria"| PROM
+    RS -.->|"Envoy Telemetria"| PROM
+    DBAAS -.->|"Envoy Telemetria"| PROM
     PROM --> KIALI["Kiali Service Mesh Dashboard<br/>(Visualização de Topologia e Tráfego)"]
 ```
 

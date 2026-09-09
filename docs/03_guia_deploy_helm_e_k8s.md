@@ -154,7 +154,7 @@ make helm-upgrade-f2
 Este cenário é ideal para **avaliações científicas comparativas**, benchmarking simultâneo de algoritmos e testes de governança hierárquica. Ele implanta a pilha completa do Near-RT RIC, as 6 Reference xApps e **ambas as versões do motor RDL operando concorrentemente**:
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph RIC["Namespace ricplt (Near-RT RIC)"]
         DBAAS["ricplt-dbaas (Redis SDL)"]
         E2TERM["service-ricplt-e2term-rmr"]
@@ -179,11 +179,31 @@ graph TD
         GEN["traffic-generator<br/>(Injeção Contínua Multi-xApp)"]
     end
 
-    REFS -->|Propostas de Ação (RMR)| RDL_F1
-    REFS -->|Propostas de Ação (RMR)| RDL_F2
-    RDL_F1 <-->|Contexto SDL| DBAAS
-    RDL_F2 <-->|Contexto SDL| DBAAS
-    GEN -->|Sondas HTTP / Métricas| XAPP
+    X1 -->|"Propostas de Ação (RMR)"| RDL_F1
+    X2 -->|"Propostas de Ação (RMR)"| RDL_F1
+    X3 -->|"Propostas de Ação (RMR)"| RDL_F1
+    X4 -->|"Propostas de Ação (RMR)"| RDL_F1
+    X5 -->|"Propostas de Ação (RMR)"| RDL_F1
+    X6 -->|"Propostas de Ação (RMR)"| RDL_F1
+
+    X1 -->|"Propostas de Ação (RMR)"| RDL_F2
+    X2 -->|"Propostas de Ação (RMR)"| RDL_F2
+    X3 -->|"Propostas de Ação (RMR)"| RDL_F2
+    X4 -->|"Propostas de Ação (RMR)"| RDL_F2
+    X5 -->|"Propostas de Ação (RMR)"| RDL_F2
+    X6 -->|"Propostas de Ação (RMR)"| RDL_F2
+
+    RDL_F1 ---|"Contexto SDL (Redis 6379)"| DBAAS
+    RDL_F2 ---|"Contexto SDL (Redis 6379)"| DBAAS
+
+    GEN -->|"Sondas HTTP / Métricas"| X1
+    GEN -->|"Sondas HTTP / Métricas"| X2
+    GEN -->|"Sondas HTTP / Métricas"| X3
+    GEN -->|"Sondas HTTP / Métricas"| X4
+    GEN -->|"Sondas HTTP / Métricas"| X5
+    GEN -->|"Sondas HTTP / Métricas"| X6
+    GEN -->|"Sondas HTTP / Métricas"| RDL_F1
+    GEN -->|"Sondas HTTP / Métricas"| RDL_F2
 ```
 
 ### 4.1. Mapeamento de Workloads e Releases no Cenário C:

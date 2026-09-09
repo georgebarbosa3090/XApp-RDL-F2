@@ -1,6 +1,6 @@
-import json
 import os
-from typing import List, Dict, Any
+import json
+from typing import List, Dict, Any, Optional
 
 try:
     from pydantic import BaseModel
@@ -49,37 +49,52 @@ class ControlConfig(BaseModel):
     service_model: str = "E2SM-RC"
 
 class AppConfig(BaseModel):
-    xapp: XAppConfig = None
-    rmr: RMRConfig = None
-    http: HttpConfig = None
-    metrics: MetricsConfig = None
-    sdl: SDLConfig = None
-    e2: E2Config = None
-    kpm: KpmConfig = None
-    control: ControlConfig = None
+    xapp: Optional[XAppConfig] = None
+    rmr: Optional[RMRConfig] = None
+    http: Optional[HttpConfig] = None
+    metrics: Optional[MetricsConfig] = None
+    sdl: Optional[SDLConfig] = None
+    e2: Optional[E2Config] = None
+    kpm: Optional[KpmConfig] = None
+    control: Optional[ControlConfig] = None
     
-    def __init__(self, **kwargs):
-        self._raw = dict(kwargs)
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-            
+    class Config:
+        extra = "allow"
+        arbitrary_types_allowed = True
+
     def get(self, key: str, default: Any = None) -> Any:
-        return self._raw.get(key, getattr(self, key, default))
+        val = getattr(self, key, None)
+        if val is not None:
+            return val
+        if hasattr(self, "__pydantic_extra__") and self.__pydantic_extra__:
+            return self.__pydantic_extra__.get(key, default)
+        return default
         
     def __getitem__(self, item):
-        return self._raw[item]
+        val = getattr(self, item, None)
+        if val is not None:
+            return val
+        if hasattr(self, "__pydantic_extra__") and self.__pydantic_extra__:
+            return self.__pydantic_extra__[item]
+        raise KeyError(item)
 
 class ConfigManager:
     def __init__(self, filepath: str = "configs/config-file.json"):
         self.filepath = filepath
+        self.config = self.load_config(filepath)
 
     def load_config(self, filepath: str = None) -> AppConfig:
         target = filepath or self.filepath or "configs/config-file.json"
         if not os.path.exists(target):
             # Fallback to default
-            return AppConfig()
+            self.config = AppConfig()
+            return self.config
         
-        with open(target, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+        try:
+            with open(target, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            self.config = AppConfig(**data)
+        except Exception:
+            self.config = AppConfig()
             
-        return AppConfig(**data)
+        return self.config

@@ -1,4 +1,6 @@
-.PHONY: build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps cluster-create cluster-delete cluster-recreate sync-ns3-scratch setup-ns3 run-scenario1 run-scenario1-baseline run-scenario2 run-scenario2-baseline run-scenario3 run-scenario4 run-scenario5 run-all-scenarios run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: help build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps deploy-full-coexistence deploy-dual-rdl-6xapps cluster-create cluster-create-1node cluster-create-2nodes cluster-create-3nodes cluster-delete cluster-recreate clean-all sync-ns3-scratch setup-ns3 run-scenario1 run-scenario1-baseline run-scenario2 run-scenario2-baseline run-scenario3 run-scenario4 run-scenario5 run-all-scenarios run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+
+.DEFAULT_GOAL := help
 
 NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
@@ -9,6 +11,50 @@ NAMESPACE_RIC ?= ricplt
 NAMESPACE ?= ricxapp
 RELEASE_NAME_F2 ?= ricxapp-iqos-xapp-rdl-f2
 CLUSTER_NAME ?= rancher-lab
+
+# -------------------------------------------------------------
+# Ajuda e Documentação de Comandos
+# -------------------------------------------------------------
+help:
+	@echo "=================================================================================="
+	@echo "                   xApp RDL (Fase 2: CA-RDL / Safe-MARL) - Makefile               "
+	@echo "=================================================================================="
+	@echo ""
+	@echo "  [Deploy & Coexistência O-RAN]"
+	@echo "    make deploy-full-coexistence   Deploy completo: H-RDL F1 + CA-RDL F2 + 6 xApps + RIC"
+	@echo "    make deploy-dual-rdl-6xapps    Alias para deploy-full-coexistence"
+	@echo "    make helm-deploy-f2            Deploy isolado da xApp RDL Fase 2 (CA-RDL)"
+	@echo "    make helm-upgrade-f2           Atualização declarativa Helm Upgrade da CA-RDL"
+	@echo "    make helm-uninstall-f2         Remoção da release Helm da CA-RDL"
+	@echo "    make status-f2                 Exibe status dos pods no namespace ricxapp"
+	@echo "    make logs-f2                   Acompanha logs em tempo real da CA-RDL"
+	@echo "    make test-f2                   Testa endpoints /health e /metrics da CA-RDL"
+	@echo "    make test-3xapps               Verifica conectividade e métricas das Reference xApps"
+	@echo ""
+	@echo "  [Build e Testes Locais]"
+	@echo "    make build                     Compila a imagem Docker iqos-xapp-rdl:2.0.0"
+	@echo "    make build-no-cache            Compila a imagem Docker sem cache"
+	@echo "    make test                      Executa a suíte de testes unitários com pytest"
+	@echo ""
+	@echo "  [Gestão de Cluster k3d / Rancher]"
+	@echo "    make cluster-create            Cria cluster k3d de 1 nó (Control-Plane + Worker)"
+	@echo "    make cluster-create-2nodes     Cria cluster k3d de 2 nós"
+	@echo "    make cluster-create-3nodes     Cria cluster k3d de 3 nós"
+	@echo "    make cluster-delete            Remove o cluster k3d rancher-lab"
+	@echo "    make cluster-recreate          Recria o cluster do zero"
+	@echo "    make clean-all                 Limpa containers, recursos Helm e artefatos temporários"
+	@echo ""
+	@echo "  [Simulações ns-3 & Benchmarks]"
+	@echo "    make run-scenario1             Executa Cenário 1 (Energy vs QoS / EEVS com E2)"
+	@echo "    make run-scenario2             Executa Cenário 2 (Traffic Steering vs Slicing com E2)"
+	@echo "    make run-scenario3             Executa Cenário 3 (5G-Advanced Multi-Carrier & MIMO)"
+	@echo "    make run-scenario4             Executa Cenário 4 (6G ISAC Radar vs Comunicação)"
+	@echo "    make run-scenario5             Executa Cenário 5 (6G Governança Anti-Rogue)"
+	@echo "    make run-all-scenarios         Executa toda a suíte de cenários ns-3"
+	@echo "    make analyze-benchmarks        Executa análise estatística dos benchmarks"
+	@echo "    make view-results              Exibe relatório comparativo consolidado"
+	@echo "=================================================================================="
+	@echo ""
 
 # -------------------------------------------------------------
 # Build e Testes Locais da xApp RDL Fase 2

@@ -30,7 +30,7 @@ Evoluindo a abordagem determinística da Fase 1, a Fase 2 introduz **Aprendizado
 4. **Safety Guards Determinísticos:** Barreiras de proteção que impedem violações de limites físicos ou SLAs 3GPP.
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph NearRTRIC["Near-RT RIC (Namespace: ricxapp)"]
         subgraph RDL_F2["xApp RDL Fase 2 (ricxapp-iqos-xapp-rdl-f2)"]
             PA["1. Perception Agent<br/>(Telemetria KPM & Feature Engineering)"]
@@ -42,12 +42,13 @@ graph TD
         XAPPS["Reference xApps Concorrentes (Já em Execução)<br/>(ricxapp-qos-xslice | ricxapp-energy-saving | ricxapp-traffic-steering)"]
     end
 
-    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)<br/>Banda n78 (3.5 GHz)"] <-->|"Interface E2 (SCTP 36422)<br/>E2SM-KPM / E2SM-RC"| NearRTRIC
+    gNB["gNodeB 5G NR (ns-3 / 5G-LENA)<br/>Banda n78 (3.5 GHz)"]
+    gNB -->|"Telemetria E2SM-KPM (SCTP 36422)"| PA
     XAPPS -->|"Ações Propostas (RMR)"| PA
     PA -->|"Vetor de Estado s_t"| RA
     IC -->|"Pesos de Recompensa (w_qos, w_ee, w_pen)"| RA
     RA -->|"Ações Otimizadas a_t"| RE
-    RE -->|"Ações Harmonizadas e Seguras"| gNB
+    RE -->|"E2SM-RC Ações Harmonizadas e Seguras"| gNB
 ```
 
 ---

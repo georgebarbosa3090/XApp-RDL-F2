@@ -15,7 +15,7 @@ A Fase 2 do projeto evoluiu a camada de decisão do xApp RDL de uma abordagem pu
 ![Pipeline Global e Arquitetura do xApp RDL Fase 2](figures/diagram_01_global_pipeline_architecture.png)
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Near_RT_RIC ["Near-RT RIC (Namespace: ricxapp)"]
         subgraph XAPPS ["Reference xApps Concorrentes"]
             X1["ricxapp-qos-xslice (:8082)"]
@@ -38,16 +38,18 @@ graph TD
         GNB["gNodeB 5G NR (3.5 GHz n78, 100 MHz)<br/>10 URLLC + 10 eMBB + 10 mMTC"]
     end
 
-    X1 -->|RDL_ACTION_PROPOSAL :30000| P
-    X2 -->|RDL_ACTION_PROPOSAL :30000| P
-    X3 -->|RDL_ACTION_PROPOSAL :30000| P
-    GNB -->|E2SM-KPM Indication :12050| P
-    P -->|Vetor de Estado s_t| R
-    IC -->|Pesos Modulados w| R
-    R -->|Ação Proposta a_t| REF
-    REF -->|E2SM-RC Control :12010| GNB
-    R <--> SDL
-    RDL --> PROM
+    X1 -->|"RDL_ACTION_PROPOSAL (:30000)"| P
+    X2 -->|"RDL_ACTION_PROPOSAL (:30000)"| P
+    X3 -->|"RDL_ACTION_PROPOSAL (:30000)"| P
+    GNB -->|"E2SM-KPM Indication (:12050)"| P
+    P -->|"Vetor de Estado s_t"| R
+    IC -->|"Pesos Modulados w"| R
+    R -->|"Ação Proposta a_t"| REF
+    R ---|"Contexto SDL"| SDL
+    P -->|"Exportação Métricas"| PROM
+    R -->|"Exportação Métricas"| PROM
+    REF -->|"Exportação Métricas"| PROM
+    IC -->|"Exportação Métricas"| PROM
 ```
 
 ---

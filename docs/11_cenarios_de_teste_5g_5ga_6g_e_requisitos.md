@@ -9,7 +9,7 @@
 Este documento formaliza a suíte de cenários de teste para validação da **xApp-RDL** em ambientes de co-simulação e bancada física, cobrindo o espectro evolutivo de **5G NR**, **5G-Advanced (3GPP Rel. 18/19)** e **6G AI-Native (IMT-2030)**.
 
 ```mermaid
-graph LR
+flowchart LR
     subgraph S5G["1. 5G NR Baseline"]
         C1["EEVS: Energy vs QoS<br/>(Potência & SLA URLLC)"]
         C2["TVS: Traffic Steering vs Slicing<br/>(Handover & Quotas PRB)"]
@@ -24,8 +24,10 @@ graph LR
         C5["Cross-Tier & Anti-Rogue Shield<br/>(Multi-Loop rApp-xApp-dApp, Lockout 5s)"]
     end
 
-    S5G --> S5GA
-    S5GA --> S6G
+    C1 --> C3
+    C2 --> C3
+    C3 --> C4
+    C3 --> C5
 ```
 
 ---

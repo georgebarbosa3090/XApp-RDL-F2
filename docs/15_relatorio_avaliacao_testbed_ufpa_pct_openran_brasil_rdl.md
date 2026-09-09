@@ -18,7 +18,7 @@ A análise baseia-se nos relatórios e propostas oficiais do ecossistema RNP/UFP
 2. **Proposta GreenRAN (Etapa 2 OpenRAN@Brasil):** Coordenada pelo Prof. Dr. Eduardo Cerqueira e Prof. Dr. Aldebaro Klautau (UFPA/POP-PA), envolvendo consórcio com UNICAMP, UNIFESSPA, UEPA, UFRA, UFRGS, Embrapa e IT Aveiro, com foco em Open RAN sustentável, economia de energia em eMBB/mMTC, *Agentic AI* e modificações na stack RAN (*RAN-CodeUpdates*).
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Testbed_UFPA["Testbed OpenRAN@Brasil — UFPA / PCT Guamá"]
         Cloud["Servidores O-RAN Cloud 2 e 5<br/>(Kernel RT + Kubernetes)"]
         SwitchPTP["Switch PTP Grandmaster<br/>Falcon-RX/812/G (IEEE 1588v2)"]
@@ -42,9 +42,12 @@ graph TD
     Cloud --> SwitchPTP --> ORU
     Cloud --> Core5G
     Cloud --> NearRT
-    NearRT <--> RefXApps
-    NearRT <--> RDL_Orchestration
-    ORU <--> UseCases
+    NearRT --- RefXApps
+    NearRT --- HRDL
+    NearRT --- CARDL
+    ORU --- UC1
+    ORU --- UC2
+    ORU --- UC3
 ```
 
 ---

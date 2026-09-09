@@ -566,25 +566,36 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph S1["1. Escuta & Sondagem E2/KPM"]
-        K1["E2 Node ns-3 5G"] -->|ASN.1 APER Indication| K2["KpmDecoder (Agregação Multimétrica)"]
-        K2 -->|TTL 1000ms & Por Nó| K3["PerceptionAgent (Contexto & Topologia)"]
+        K1["E2 Node ns-3 5G"] -->|"ASN.1 APER Indication"| K2["KpmDecoder (Agregação Multimétrica)"]
+        K2 -->|"TTL 1000ms & Por Nó"| K3["PerceptionAgent (Contexto & Topologia)"]
     end
 
     subgraph S2["2. Injeção Multi-xApp Concorrente"]
-        X1["xSlice (PRB)"] & X2["EnergySaving (Power)"] & X3["TrafficSteering (A3)"] & X4["ISACRadar (ISAC)"] & X5["Beamformer (Tilt)"] & X6["RogueXApp (Ataque)"] -->|Buffer de Chegada Monotônico| R1["RDLxApp Runtime"]
+        X1["xSlice (PRB)"]
+        X2["EnergySaving (Power)"]
+        X3["TrafficSteering (A3)"]
+        X4["ISACRadar (ISAC)"]
+        X5["Beamformer (Tilt)"]
+        X6["RogueXApp (Ataque)"]
+        X1 -->|"Buffer de Chegada"| R1["RDLxApp Runtime"]
+        X2 -->|"Buffer de Chegada"| R1
+        X3 -->|"Buffer de Chegada"| R1
+        X4 -->|"Buffer de Chegada"| R1
+        X5 -->|"Buffer de Chegada"| R1
+        X6 -->|"Buffer de Chegada"| R1
     end
 
     subgraph S3["3. Mediação Cognitiva & Safe-RL"]
-        R1 -->|Fast-Flush Event| REAS["ReasoningAgent (Hierárquico tau1=1.6, tau2=3.0)"]
-        REAS -->|Nível 2B| MARL["MAPPOCoordinator (CMDP Lagrange A_safe)"]
-        MARL -->|Action Masking & No-Op| REF["RefinementAgent (FSM 4 Estados & Perfis Macro/Small)"]
+        R1 -->|"Fast-Flush Event"| REAS["ReasoningAgent (Hierárquico tau1=1.6, tau2=3.0)"]
+        REAS -->|"Nível 2B"| MARL["MAPPOCoordinator (CMDP Lagrange A_safe)"]
+        MARL -->|"Action Masking & No-Op"| REF["RefinementAgent (FSM 4 Estados & Perfis Macro/Small)"]
     end
 
     subgraph S4["4. Despacho & Evidência Experimental"]
-        REF -->|E2SM-RC Control PDU| CODEC["RCEncoder (Escalas Fixas Reversíveis)"]
-        CODEC -->|Payload E2 Completo| E2T["E2 Termination / ns-3"]
-        E2T -->|FlowMonitor XML| TRACES["Traces Reais (Invariantes 0 <= n_rx <= n_tx)"]
-        TRACES -->|--mode experiment| ANOVA["ANOVA 3 Grupos & Manifesto SHA-256"]
+        REF -->|"E2SM-RC Control PDU"| CODEC["RCEncoder (Escalas Fixas Reversíveis)"]
+        CODEC -->|"Payload E2 Completo"| E2T["E2 Termination / ns-3"]
+        E2T -->|"FlowMonitor XML"| TRACES["Traces Reais (Invariantes 0 <= n_rx <= n_tx)"]
+        TRACES -->|"--mode experiment"| ANOVA["ANOVA 3 Grupos & Manifesto SHA-256"]
     end
 ```
 

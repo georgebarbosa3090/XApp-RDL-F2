@@ -40,7 +40,12 @@ flowchart TD
 
     gNB["gNodeB 5G-LENA / ns-3<br/>(Banda n78 / FR1 + FR3 mmWave)"]
 
-    XAPPS -->|"Propostas de Ação (RMR / REST)"| RDL
+    X1 -->|"Propostas de Ação (RMR / REST)"| RDL
+    X2 -->|"Propostas de Ação (RMR / REST)"| RDL
+    X3 -->|"Propostas de Ação (RMR / REST)"| RDL
+    X4 -->|"Propostas de Ação (RMR / REST)"| RDL
+    X5 -->|"Propostas de Ação (RMR / REST)"| RDL
+    X6 -->|"Propostas de Ação (RMR / REST)"| RDL
     RDL -->|"E2SM-RC Control Message (mtype: 12010)"| gNB
     gNB -->|"E2SM-KPM Telemetria (mtype: 12050)"| RDL
 ```
@@ -57,8 +62,12 @@ flowchart LR
         RA3["Nível 2B: Safe-RL MAPPO (CMDP + Lagrange)"]
     end
 
-    PA --> Engine
-    Engine --> RE["3. Refinement Agent & Safety Guard<br/>• Fast-Flush ≤ 5 ms<br/>• Envelopes Físicos [-10, 23] dBm & PRB ≤ 100%<br/>• Quarentena Zero-Trust (30s)"]
+    PA --> RA1
+    PA --> RA2
+    PA --> RA3
+    RA1 --> RE["3. Refinement Agent & Safety Guard<br/>• Fast-Flush ≤ 5 ms<br/>• Envelopes Físicos [-10, 23] dBm & PRB ≤ 100%<br/>• Quarentena Zero-Trust (30s)"]
+    RA2 --> RE
+    RA3 --> RE
     RE --> RC["4. RC Encoder (Styles 1, 2, 3, 10, 11)"]
     RC --> OUT["Despacho E2SM-RC para gNodeB"]
 ```

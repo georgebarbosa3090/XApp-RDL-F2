@@ -34,6 +34,8 @@ resources:
 
 env:
   useFakeSdl: "false"
+  dbaasHost: "service-ricplt-dbaas-tcp.ricplt"
+  dbaasPort: "6379"
   rmrSeedRt: "/app/configs/routes.rt"
   configFile: "/app/configs/config-file.json"
   rmrWaitForReady: "false"

@@ -303,6 +303,8 @@ else:
             action_dim: int, 
             n_agents: int, 
             lr: float = 3e-4, 
+            lr_actor: Optional[float] = None,
+            lr_critic: Optional[float] = None,
             gamma: float = 0.99, 
             gae_lambda: float = 0.95,
             clip_eps: float = 0.2,
@@ -320,7 +322,8 @@ else:
             self.entropy_coef = entropy_coef
             self.weights = np.ones((obs_dim, action_dim), dtype=np.float32) / float(action_dim)
             self.value_weights = np.ones(obs_dim * n_agents, dtype=np.float32) * 0.1
-            self.lr = lr
+            self.lr = lr_actor if lr_actor is not None else lr
+            self.lr_critic = lr_critic if lr_critic is not None else lr
             self.cost_limit = cost_limit
             self.cost_lr = cost_lr
             self.lagrange_mult = 0.05
