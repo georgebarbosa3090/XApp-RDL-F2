@@ -475,10 +475,13 @@ def generate_evaluation_visualizations(df_flows, df_ml, scenario_eval, ml_result
     axes[1, 1].bar_label(rects4, padding=3, fmt='%.1f')
     
     plt.tight_layout()
-    fig1_path = os.path.join(output_dir, "comparativo_completo_cenarios_rdl.png")
-    plt.savefig(fig1_path, dpi=300)
+    target_dirs = [output_dir, os.path.join(output_dir, "plots"), "docs/figures", "paper_sbrc/figures"]
+    for td in target_dirs:
+        os.makedirs(td, exist_ok=True)
+        fig1_path = os.path.join(td, "comparativo_completo_cenarios_rdl.png")
+        fig.savefig(fig1_path, dpi=300)
     plt.close()
-    print(f"[OK] Grafico 1 salvo: {fig1_path}")
+    print(f"[OK] Grafico 1 salvo em todos os destinos: comparativo_completo_cenarios_rdl.png")
     
     # ---------------------------------------------------------
     # Figura 2: Desempenho e Curvas dos Algoritmos de Machine Learning
@@ -525,10 +528,11 @@ def generate_evaluation_visualizations(df_flows, df_ml, scenario_eval, ml_result
     axes2[1, 1].set_xlabel('Redução Média de Acurácia ao Embaralhar Atributo', fontsize=11)
     
     plt.tight_layout()
-    fig2_path = os.path.join(output_dir, "avaliacao_modelos_ml_rdl.png")
-    plt.savefig(fig2_path, dpi=300)
+    for td in target_dirs:
+        fig2_path = os.path.join(td, "avaliacao_modelos_ml_rdl.png")
+        fig2.savefig(fig2_path, dpi=300)
     plt.close()
-    print(f"[OK] Grafico 2 salvo: {fig2_path}")
+    print(f"[OK] Grafico 2 salvo em todos os destinos: avaliacao_modelos_ml_rdl.png")
 
 # -------------------------------------------------------------
 # 5. CONSTRUÇÃO DO RELATÓRIO CIENTÍFICO E EXPORTAÇÃO

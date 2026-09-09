@@ -31,13 +31,15 @@ REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOCS_FIG_DIR = os.path.join(REPO_DIR, "docs", "figures")
 DOCS_ASSETS_DIR = os.path.join(REPO_DIR, "docs", "assets")
 EXP_RES_DIR = os.path.join(REPO_DIR, "experiments", "results")
+PLOTS_DIR = os.path.join(EXP_RES_DIR, "plots")
+PAPER_FIG_DIR = os.path.join(REPO_DIR, "paper_sbrc", "figures")
 
 def ensure_output_dirs():
-    for d in [DOCS_FIG_DIR, DOCS_ASSETS_DIR, EXP_RES_DIR]:
+    for d in [DOCS_FIG_DIR, DOCS_ASSETS_DIR, EXP_RES_DIR, PLOTS_DIR, PAPER_FIG_DIR]:
         os.makedirs(d, exist_ok=True)
 
 def save_to_all_destinations(fig, filename, also_save_as_root_arch=False):
-    for target_dir in [DOCS_FIG_DIR, DOCS_ASSETS_DIR, EXP_RES_DIR]:
+    for target_dir in [DOCS_FIG_DIR, DOCS_ASSETS_DIR, EXP_RES_DIR, PLOTS_DIR, PAPER_FIG_DIR]:
         out_path = os.path.join(target_dir, filename)
         fig.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
     if also_save_as_root_arch:

@@ -19,6 +19,7 @@ import pandas as pd
 from scipy import stats
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+ROOT_DIR = BASE_DIR
 RESULTS_DIR = os.path.join(BASE_DIR, "experiments", "results")
 
 def generate_multi_seed_data(n_seeds=30):

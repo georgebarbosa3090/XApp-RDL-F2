@@ -479,14 +479,18 @@ def run_analysis(output_dir="experiments/results", mirror_dirs=None, timestamp_s
         print("[AVISO] matplotlib nao disponivel no ambiente local para plotagem direta.")
 
     # 9. Espelhamento (mirroring)
-    if mirror_dirs:
-        for m_dir in mirror_dirs:
-            if m_dir and os.path.abspath(m_dir) != os.path.abspath(output_dir):
-                os.makedirs(m_dir, exist_ok=True)
-                for fname, fpath in generated_files:
-                    target_path = os.path.join(m_dir, fname)
-                    shutil.copy2(fpath, target_path)
-                print(f"[OK] Artefatos espelhados para: {m_dir}")
+    all_mirrors = list(mirror_dirs or [])
+    plots_dir = os.path.join(output_dir, "plots")
+    if os.path.abspath(plots_dir) != os.path.abspath(output_dir):
+        all_mirrors.append(plots_dir)
+        
+    for m_dir in all_mirrors:
+        if m_dir and os.path.abspath(m_dir) != os.path.abspath(output_dir):
+            os.makedirs(m_dir, exist_ok=True)
+            for fname, fpath in generated_files:
+                target_path = os.path.join(m_dir, fname)
+                shutil.copy2(fpath, target_path)
+            print(f"[OK] Artefatos espelhados para: {m_dir}")
 
     print("\nExecucao e analise concluidas com sucesso!")
     return generated_files
