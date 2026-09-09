@@ -215,9 +215,34 @@ def test_rdl_xapp_runtime_full_cycle_and_payload_dispatch(monkeypatch):
     assert len(payload["header_aper_bytes"]) > 0
     assert len(payload["msg_aper_bytes"]) > 0
     
-    # 6. Teste direto do método _send_control retornando Tuple[bool, float]
-    success, t_enc = app._send_control("gnb_01", "PRB_QUOTA", 80.0)
+    # 6. Teste direto do método _send_control retornando Tuple[bool, float, float]
+    assert app.transport_mode in ("MOCK_TRANSPORT_SHIM", "RMR_E2_OPERATIONAL")
+    success, t_enc, t_disp = app._send_control("gnb_01", "PRB_QUOTA", 80.0)
     assert success is True
     assert t_enc >= 0.0
+    assert t_disp >= 0.0
+
+def test_rdl_xapp_control_ack_monotonic_rtt(monkeypatch):
+    """Valida o cálculo monotônico do RTT de confirmação no recebimento de RIC_CONTROL_ACK."""
+    import json
+    from src.rdl_xapp import RDLxApp
+    
+    app = RDLxApp(config_path="configs/config-file.json")
+    
+    # Registra uma transação simulada com timestamp monotônico
+    tx_id = "test-trans-monotonic-01"
+    app.pending_transactions[tx_id] = time.perf_counter()
+    time.sleep(0.003) # Simula 3ms de processamento no E2 Node
+    
+    ack_payload = json.dumps({
+        "transaction_id": tx_id,
+        "status": "SUCCESS",
+        "node_id": "gnb_01"
+    }).encode('utf-8')
+    
+    app._control_ack_handler(app.xapp, {"payload": ack_payload}, None)
+    
+    # Transação deve ter sido consumida do dicionário pendente
+    assert tx_id not in app.pending_transactions
 
 

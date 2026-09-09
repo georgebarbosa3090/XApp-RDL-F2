@@ -2,25 +2,25 @@
 
 **Projeto:** xApp RDL (Resource and Decision Layer) — Governança Hierárquica Multi-Fase  
 **Modo de Execução:** `EXPERIMENT` (Traces Empíricos Brutos ns-3)  
-**Checksum do Dataset (SHA-256):** `078463752da044db7af5c9975ec37d40ec34f732ac239397cad6f05c01bdd65f`  
+**Checksum do Dataset (SHA-256):** `c755ec622299f72ea241a1ce2aeaf973e7f84843d651844fc2c0d7c4a1f88655`  
 **Ambiente:** ns-3 5G-LENA 3.5 GHz (n78) + Near-RT RIC  
 
 ## Tabela Comparativa de 3 Grupos com Intervalos de Confiança (IC 95%) e ANOVA
 
 | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL | Fase 2: CA-RDL | Ganho Incr. (F2 vs F1) | ANOVA F-stat | ANOVA p-val | $\eta^2$ (Efeito) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Latência Média URLLC (ms)** | 11.68 ± 0.75 | 2.84 ± 0.07 | **1.92 ± 0.04** | **-32.5%** | `644.8` | `< 0.001` | `0.937` |
-| **Latência P99 URLLC (ms)** | 141.54 ± 4.70 | 3.08 ± 0.11 | **2.22 ± 0.07** | **-27.8%** | `3644.6` | `< 0.001` | `0.988` |
-| **Violação de SLA URLLC (%)** | 29.01 ± 1.46 | 0.00 ± 0.00 | **0.00 ± 0.00** | **+0.0%** | `1657.5` | `< 0.001` | `0.974` |
-| **Taxa de Conflitos (%)** | 33.66 ± 1.23 | 0.67 ± 0.11 | **0.00 ± 0.00** | **-100.0%** | `3037.2` | `< 0.001` | `0.986` |
-| **Vazão Total Agregada (Mbps)** | 153.25 ± 5.22 | 1110.69 ± 18.45 | **1471.54 ± 13.36** | **+32.5%** | `10665.3` | `< 0.001` | `0.996` |
-| **Packet Delivery Ratio (%)** | 40.37 ± 2.73 | 99.48 ± 0.10 | **99.77 ± 0.04** | **+0.3%** | `1968.7` | `< 0.001` | `0.978` |
-| **Índice de Equidade de Jain** | 0.15 ± 0.01 | 0.92 ± 0.01 | **0.90 ± 0.01** | **-1.6%** | `8973.1` | `< 0.001` | `0.995` |
-| **Instabilidade Ping-Pong (ev/min)** | 21.84 ± 1.91 | 0.00 ± 0.00 | **0.00 ± 0.00** | **+0.0%** | `548.6` | `< 0.001` | `0.927` |
-| **Potência Média de Transmissão (dBm)** | 39.40 ± 0.56 | 33.64 ± 0.33 | **31.02 ± 0.23** | **-7.8%** | `483.1` | `< 0.001` | `0.917` |
-| **Tempo de Decisão RDL (ms)** | 0.00 ± 0.00 | 14.39 ± 0.61 | **12.52 ± 0.36** | **-1.87 ms** | `1536.0` | `< 0.001` | `0.972` |
+| **Latência Média URLLC (ms)** | 11.74 ± 0.20 | 2.84 ± 0.03 | **2.12 ± 0.02** | **-25.6%** | `8911.1` | `< 0.001` | `0.995` |
+| **Latência P99 URLLC (ms)** | 14.74 ± 0.49 | 3.20 ± 0.06 | **2.36 ± 0.04** | **-26.3%** | `2435.4` | `< 0.001` | `0.982` |
+| **Violação de SLA URLLC (%)** | 100.00 ± 0.00 | 0.00 ± 0.00 | **0.00 ± 0.00** | **+0.0%** | `inf` | `< 0.001` | `1.000` |
+| **Taxa de Conflitos (%)** | 34.67 ± 0.00 | 0.67 ± 0.00 | **0.00 ± 0.00** | **-100.0%** | `inf` | `< 0.001` | `1.000` |
+| **Vazão Total Agregada (Mbps)** | 490.51 ± 5.62 | 1253.01 ± 0.28 | **1257.80 ± 0.08** | **+0.4%** | `77268.2` | `< 0.001` | `0.999` |
+| **Packet Delivery Ratio (%)** | 38.93 ± 0.45 | 99.45 ± 0.02 | **99.83 ± 0.01** | **+0.4%** | `77268.2` | `< 0.001` | `0.999` |
+| **Índice de Equidade de Jain** | 0.97 ± 0.00 | 1.00 ± 0.00 | **1.00 ± 0.00** | **+0.0%** | `545.9` | `< 0.001` | `0.926` |
+| **Instabilidade Ping-Pong (ev/min)** | 22.00 ± 0.00 | 0.00 ± 0.00 | **0.00 ± 0.00** | **+0.0%** | `inf` | `< 0.001` | `1.000` |
+| **Potência Média de Transmissão (dBm)** | 39.01 ± 0.00 | 33.89 ± 0.00 | **31.04 ± 0.00** | **-8.4%** | `inf` | `< 0.001` | `1.000` |
+| **Tempo de Decisão RDL (ms)** | 0.00 ± 0.00 | 14.20 ± 0.00 | **12.50 ± 0.00** | **-1.70 ms** | `inf` | `< 0.001` | `1.000` |
 
 ## Conclusões da Validação Estatística (Computadas Dinamicamente)
 1. **Rejeição da Hipótese Nula ($H_0$):** A ANOVA One-Way de 3 grupos confirma diferenciação estatisticamente significante ($p < 0.05$) em 10 de 10 métricas analisadas.
-2. **Separação entre Ganho Global e Incremental:** A H-RDL fornece a base de contenção de conflitos e segurança de rádio, enquanto a CA-RDL adiciona coordenação contextual multiagente com compromisso (trade-off) de -1.6% no índice de Jain em favor da maximização de vazão (+32.5%) e redução de latência URLLC (-32.5%).
-3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `078463752da044db7af5c9975ec37d40ec34f732ac239397cad6f05c01bdd65f` registrado em manifesto versionado em `experiments/results/experiment`.
+2. **Separação entre Ganho Global e Incremental:** A H-RDL fornece a base de contenção de conflitos e segurança de rádio, enquanto a CA-RDL adiciona coordenação contextual multiagente com ganho incremental de +0.0% no índice de Jain.
+3. **Rastreabilidade e Integridade de Custódia:** O dataset possui hash SHA-256 `c755ec622299f72ea241a1ce2aeaf973e7f84843d651844fc2c0d7c4a1f88655` registrado em manifesto versionado em `experiments/results/experiment`.

@@ -150,5 +150,41 @@ def test_verify_raw_traces_rejects_physical_invariant_violations(tmp_path, monke
     with pytest.raises(ValueError, match="violação física de conservação de pacotes rx > tx"):
         verify_raw_traces_exist(["baseline"], range(1001, 1002))
 
+def test_verify_raw_traces_rejects_lost_packets_and_metadata_mismatch(tmp_path, monkeypatch):
+    """Valida rejeição quando n_lost != n_tx - n_rx ou quando metadados de cenário/semente divergem."""
+    import scripts.package_and_sync_raw_results as pkg_module
+    
+    fake_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    
+    sc_dir = fake_raw_dir / "baseline"
+    sc_dir.mkdir(parents=True)
+    
+    # 1. Violação de n_lost == n_tx - n_rx (tx=1000, rx=990, mas lost=5 em vez de 10)
+    xml_lost_mismatch = sc_dir / "flowmonitor_seed_1001.xml"
+    xml_lost_mismatch.write_text(
+        '<FlowMonitor scenario="baseline" seed="1001" execution_id="run_ns3_001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" txPackets="1000" rxPackets="990" lostPackets="5" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="violação de conservação n_lost == n_tx - n_rx"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+        
+    # 2. Cenário divergente no cabeçalho XML
+    xml_sc_mismatch = sc_dir / "flowmonitor_seed_1001.xml"
+    xml_sc_mismatch.write_text(
+        '<FlowMonitor scenario="rdl_phase1" seed="1001" execution_id="run_ns3_001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" txPackets="1000" rxPackets="990" lostPackets="10" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="cenário nos metadados"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+
 
 

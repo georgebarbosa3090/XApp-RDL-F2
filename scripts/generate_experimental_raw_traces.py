@@ -1,25 +1,32 @@
 #!/usr/bin/env python3
 """
-Gerador e Extrator de Traces Experimentais Brutos do ns-3 FlowMonitor (XML)
+Gerador Demonstrativo de Traces Calibrados do ns-3 FlowMonitor (XML)
 Projeto: xApp RDL (Resource and Decision Layer) - Fase 2 (CA-RDL)
 
-Produz traces XML autênticos e estruturados com contadores físicos estritos
-(0 <= rxPackets <= txPackets) para os 3 cenários e 30 sementes RNG independentes (1001-1030).
+Classificação Formal de Auditoria:
+Este script é uma ferramenta demonstrativa e de teste de integração que gera
+observações estocasticamente calibradas para validação de pipeline e testes unitários.
+Todos os traces gerados contêm explicitamente o atributo synthetic="true" e mode="demo"
+para garantir rastreabilidade estrita e impedir sua aceitação espúria como medição de rede.
 """
 
 import os
+import argparse
 import numpy as np
 from datetime import datetime, timezone
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-RAW_DIR = os.path.join(BASE_DIR, "experiments", "results", "raw")
+RESULTS_DIR = os.path.join(BASE_DIR, "experiments", "results")
 
-def generate_experimental_flowmonitor_traces(n_seeds=30):
+def generate_calibrated_flowmonitor_traces(output_dir=None, n_seeds=30, mode="demo"):
+    if output_dir is None:
+        output_dir = os.path.join(RESULTS_DIR, mode, "raw")
+        
     scenarios = ["baseline", "rdl_phase1", "rdl_phase2"]
     seeds = [1000 + i for i in range(1, n_seeds + 1)]
     
     for sc in scenarios:
-        sc_dir = os.path.join(RAW_DIR, sc)
+        sc_dir = os.path.join(output_dir, sc)
         os.makedirs(sc_dir, exist_ok=True)
         
         for s in seeds:
@@ -29,7 +36,11 @@ def generate_experimental_flowmonitor_traces(n_seeds=30):
             
             with open(seed_file, "w", encoding="utf-8") as f:
                 f.write('<?xml version="1.0" ?>\n')
-                f.write(f'<FlowMonitor scenario="{sc}" seed="{s}" execution_id="run_ns3_{sc}_{s}" timestamp="{iso_now}">\n')
+                f.write(
+                    f'<FlowMonitor scenario="{sc}" seed="{s}" '
+                    f'execution_id="demo_calibrated_{sc}_{s}" mode="demo" synthetic="true" '
+                    f'generator="stochastic_calibrated_demo" timestamp="{iso_now}">\n'
+                )
                 f.write('  <FlowStats>\n')
                 
                 for flow_id in range(1, 31):
@@ -49,7 +60,7 @@ def generate_experimental_flowmonitor_traces(n_seeds=30):
                         rx_pkts = int(tx_pkts * pdr)
                         delay_mean = rng.normal(2.12, 0.15)
                     
-                    # Invariante estrito físico: 0 <= rx_pkts <= tx_pkts
+                    # Invariante estrito físico: 0 <= rx_pkts <= tx_pkts e n_lost = n_tx - n_rx
                     rx_pkts = max(0, min(tx_pkts, rx_pkts))
                     lost_pkts = tx_pkts - rx_pkts
                     delay_sum = round(delay_mean * rx_pkts / 1000.0, 4)
@@ -64,7 +75,13 @@ def generate_experimental_flowmonitor_traces(n_seeds=30):
                 f.write('  </FlowStats>\n')
                 f.write('</FlowMonitor>\n')
                 
-    print(f"[OK] Traces experimentais brutos gerados em: {RAW_DIR} ({len(scenarios) * len(seeds)} arquivos XML)")
+    print(f"[OK] Traces demonstrativos calibrados gerados em: {output_dir} ({len(scenarios) * len(seeds)} arquivos XML com synthetic='true')")
 
 if __name__ == "__main__":
-    generate_experimental_flowmonitor_traces(30)
+    parser = argparse.ArgumentParser(description="Gerador Demonstrativo de Traces Calibrados")
+    parser.add_argument("--n-seeds", type=int, default=30)
+    parser.add_argument("--output-dir", type=str, default=None)
+    parser.add_argument("--mode", type=str, default="demo")
+    args = parser.parse_args()
+    
+    generate_calibrated_flowmonitor_traces(output_dir=args.output_dir, n_seeds=args.n_seeds, mode=args.mode)
