@@ -85,17 +85,35 @@ def verify_raw_traces_exist(scenarios, seeds_range):
                         invalid_format.append(f"{seed_file} (estrutura FlowMonitor sem nós <Flow> de telemetria física)")
                         continue
                         
-                    # Validação de integridade numérica dos contadores de pacotes
-                    valid_flow_data = False
-                    for f_elem in flows[:5]:
-                        tx = f_elem.attrib.get("txPackets")
-                        rx = f_elem.attrib.get("rxPackets")
-                        if tx is not None and rx is not None and int(tx) > 0:
-                            valid_flow_data = True
+                    # Validação estrita de invariantes físicos em TODOS os fluxos: 0 <= n_rx <= n_tx
+                    has_positive_tx = False
+                    flow_invariant_error = None
+                    for f_elem in flows:
+                        tx_val = f_elem.attrib.get("txPackets")
+                        rx_val = f_elem.attrib.get("rxPackets")
+                        if tx_val is None or rx_val is None:
+                            flow_invariant_error = "contadores txPackets ou rxPackets ausentes"
                             break
-                            
-                    if not valid_flow_data:
-                        invalid_format.append(f"{seed_file} (contadores de pacotes tx/rx nulos ou ausentes)")
+                        try:
+                            tx = int(tx_val)
+                            rx = int(rx_val)
+                        except ValueError:
+                            flow_invariant_error = f"contadores não numéricos: tx={tx_val}, rx={rx_val}"
+                            break
+                        
+                        if tx < 0 or rx < 0:
+                            flow_invariant_error = f"contadores negativos: tx={tx}, rx={rx}"
+                            break
+                        if rx > tx:
+                            flow_invariant_error = f"violação física de conservação de pacotes rx > tx: tx={tx}, rx={rx}"
+                            break
+                        if tx > 0:
+                            has_positive_tx = True
+
+                    if flow_invariant_error:
+                        invalid_format.append(f"{seed_file} ({flow_invariant_error})")
+                    elif not has_positive_tx:
+                        invalid_format.append(f"{seed_file} (todos os fluxos possuem txPackets == 0)")
                         
                 except Exception as e:
                     invalid_format.append(f"{seed_file} (falha de leitura/parse XML: {e})")

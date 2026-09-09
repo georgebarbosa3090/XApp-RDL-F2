@@ -1,10 +1,31 @@
+from __future__ import annotations
 import os
 import json
 import time
 import threading
 import uuid
-from typing import Dict, Any, List, Optional
-from ricxappframe.xapp_frame import Xapp
+from typing import Dict, Any, List, Optional, Tuple
+try:
+    from ricxappframe.xapp_frame import Xapp
+except ImportError:
+    class Xapp:
+        """Shim de compatibilidade do framework Xapp para ambientes de teste e CI."""
+        def __init__(self, entrypoint=None, rmr_port: int = 4560, use_fake_sdl: bool = True):
+            self.entrypoint = entrypoint
+            self.rmr_port = rmr_port
+            self.use_fake_sdl = use_fake_sdl
+            self._callbacks: Dict[int, Any] = {}
+        def register_callback(self, handler: Any, mtype: int):
+            self._callbacks[mtype] = handler
+        def run(self):
+            if self.entrypoint:
+                self.entrypoint(self)
+        def stop(self):
+            pass
+        def rmr_send(self, payload: bytes, mtype: int) -> bool:
+            return True
+        def rmr_free(self, sbuf: Any):
+            pass
 
 from src.infrastructure.config_manager import ConfigManager
 from src.infrastructure.sdl_repository import SdlRepository

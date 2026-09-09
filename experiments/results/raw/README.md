@@ -8,9 +8,9 @@ Devido ao volume de dados gerado pelo `FlowMonitor` do ns-3 e pelos traces PCAP/
 
 | Cenario | Arquivo Compactado | Arquivos | Tamanho | Checksum SHA-256 |
 | :--- | :--- | :---: | :---: | :--- |
-| **baseline** | `raw_traces_baseline_seeds_1001_1030.zip` | `30` | `0.01 MB` | `498b82bc452ae2f23f229045c9d1c38399a7e6c633e0d5ea41abaae5a77e5397` |
-| **rdl_phase1** | `raw_traces_rdl_phase1_seeds_1001_1030.zip` | `30` | `0.01 MB` | `a6e1d4fbc83fa9cbcd5e78b0bcbf7a87f63da673e87deb286a80a3e49adde6f9` |
-| **rdl_phase2** | `raw_traces_rdl_phase2_seeds_1001_1030.zip` | `30` | `0.01 MB` | `0111df2de459696cfb139d16b34122b372faf9d9bf88ea2e21e7d0e3a7f394fa` |
+| **baseline** | `raw_traces_baseline_seeds_1001_1030.zip` | `30` | `0.03 MB` | `b2b6551cc47bca5d740272086363600d2ce7de0cb594ffd5ea0b9e05965e0426` |
+| **rdl_phase1** | `raw_traces_rdl_phase1_seeds_1001_1030.zip` | `30` | `0.02 MB` | `8eb8c5e771a39fe78000a9d7c03a9d067fa105d03ab0726569f7618c104c85fa` |
+| **rdl_phase2** | `raw_traces_rdl_phase2_seeds_1001_1030.zip` | `30` | `0.02 MB` | `9955ce2f577a86ab40b1cf467352bfef50f4fccde0bf4961375f42260f09ddf1` |
 
 ---
 ### Como empacotar traces de novos ensaios:

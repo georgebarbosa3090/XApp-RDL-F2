@@ -1,7 +1,21 @@
-from prometheus_client import Counter, Histogram, Gauge, start_http_server
+from typing import Any
+
+try:
+    from prometheus_client import Counter, Histogram, Gauge, start_http_server
+    HAS_PROMETHEUS = True
+except ImportError:
+    HAS_PROMETHEUS = False
+    class _DummyMetric:
+        def __init__(self, *args, **kwargs): pass
+        def inc(self, *args, **kwargs): pass
+        def set(self, *args, **kwargs): pass
+        def observe(self, *args, **kwargs): pass
+        def labels(self, *args, **kwargs): return self
+    Counter = Histogram = Gauge = _DummyMetric
+    def start_http_server(port): pass
 
 class MetricsServer:
-    def __init__(self, port=8081):
+    def __init__(self, port: int = 8081):
         self.port = port
         self._init_metrics()
 
@@ -37,8 +51,32 @@ class MetricsServer:
         
         # Gauges
         self.active_e2_nodes = Gauge('rdl_active_e2_nodes', 'Active E2 nodes')
+        self.active_xapps = Gauge('rdl_active_xapps', 'Active xApps')
         self.active_subs = Gauge('rdl_active_subscriptions', 'Active subscriptions')
         self.ready_state = Gauge('rdl_ready', 'Is RDL ready (1 or 0)')
 
+    def record_kpm(self):
+        self.kpm_ind.inc()
+
+    def update_active_xapps(self, count: int):
+        self.active_xapps.set(count)
+
+    def record_conflict(self, conflict: Any):
+        ctype = getattr(conflict, "conflict_type", None)
+        cname = getattr(ctype, "name", str(ctype)) if ctype else "UNKNOWN"
+        self.conflicts.labels(type=cname).inc()
+
+    def record_resolution(self, resolution: Any, latency_s: float):
+        strat = getattr(resolution, "strategy_used", None)
+        sname = getattr(strat, "name", str(strat)) if strat else "UNKNOWN"
+        self.decisions.labels(strategy=sname).inc()
+        self.decision_latency.observe(latency_s)
+
     def start(self):
-        start_http_server(self.port)
+        if HAS_PROMETHEUS:
+            try:
+                start_http_server(self.port)
+            except Exception:
+                pass
+
+MetricsCollector = MetricsServer

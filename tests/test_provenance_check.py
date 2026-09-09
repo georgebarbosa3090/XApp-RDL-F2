@@ -115,4 +115,40 @@ def test_verify_raw_traces_accepts_valid_experimental_xml(tmp_path, monkeypatch)
     # Não deve lançar exceção
     verify_raw_traces_exist(["baseline"], range(1001, 1002))
 
+def test_verify_raw_traces_rejects_physical_invariant_violations(tmp_path, monkeypatch):
+    """Valida que contadores físicos impossíveis (rx < 0 ou rx > tx) são rejeitados estritamente."""
+    import scripts.package_and_sync_raw_results as pkg_module
+    
+    fake_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    
+    sc_dir = fake_raw_dir / "baseline"
+    sc_dir.mkdir(parents=True)
+    
+    # 1. Caso rxPackets negativo: rxPackets="-5"
+    bad_xml_1 = sc_dir / "flowmonitor_seed_1001.xml"
+    bad_xml_1.write_text(
+        '<FlowMonitor execution_id="run_ns3_001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" txPackets="10" rxPackets="-5" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="contadores negativos"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+        
+    # 2. Caso rxPackets > txPackets: tx="10" rx="999"
+    bad_xml_1.write_text(
+        '<FlowMonitor execution_id="run_ns3_001">'
+        '  <FlowStats>'
+        '    <Flow flowId="1" txPackets="10" rxPackets="999" />'
+        '  </FlowStats>'
+        '</FlowMonitor>',
+        encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="violação física de conservação de pacotes rx > tx"):
+        verify_raw_traces_exist(["baseline"], range(1001, 1002))
+
+
 

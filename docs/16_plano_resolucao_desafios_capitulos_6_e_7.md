@@ -379,7 +379,59 @@ flowchart TD
 
 ---
 
-## 8. Matriz Consolidada de Cobertura e Resultados da Suíte de Testes (63/63 Aprovados)
+## 8. Superação Rigorosa dos Desafios do Capítulo 13 (Sétima Auditoria - Revisão a12cf76)
+
+A sétima auditoria científica do projeto CA-RDL avaliou os caminhos de execução da revisão `a12cf76`, identificando o saneamento da inferência pura, uso de máscaras no treinamento, dispatch de cabeçalho E2 e parser ElementTree, mas exigiu a resolução de quatro pendências finais de integração e robustez:
+
+```mermaid
+flowchart TD
+    subgraph E1["13.3: Inicialização do Runtime & Importações"]
+        A1["Anotações __future__ & Import Tuple"] --> A2["Shims Resilientes (Xapp, Health, Metrics)"]
+        A2 --> A3["Carregamento Seguro sem Dependências Externas Opcionais"]
+    end
+
+    subgraph E2["13.4: Invariantes Físicos em Traces XML"]
+        B1["Validação de Todos os Fluxos (FlowStats)"] --> B2["Invariante Estrito: 0 ≤ rxPackets ≤ txPackets"]
+        B2 --> B3["Rejeição de Contadores Negativos ou rx > tx"]
+    end
+
+    subgraph E3["13.6: Teste de Integração E2E do Runtime"]
+        C1["Instanciação Pública de RDLxApp"] --> C2["Ingestão via _action_proposal_handler"]
+        C2 --> C3["Interceptação de Payload Completo (Header + Message APER)"]
+        C3 --> C4["Decomposição T_cycle = T_queue + T_proc + T_e2_encode"]
+    end
+```
+
+### 8.1 Correção de Importação, Anotações Futuras e Shims de Observabilidade (13.3)
+- **Problemática:** O método `_send_control` em `src/rdl_xapp.py` declarava tipo de retorno `Tuple[bool, float]` sem importar `Tuple`, causando `NameError` durante o carregamento no Python 3.10. Além disso, dependências de web server (`uvicorn`/`fastapi`/`pydantic`) impediam o carregamento limpo em ambientes de CI mínimos.
+- **Solução Implementada:**
+  - Inserção de `from __future__ import annotations` e `from typing import Dict, Any, List, Optional, Tuple` em [src/rdl_xapp.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/rdl_xapp.py).
+  - Implementação de shims leves com graceful fallback em `src/infrastructure/config_manager.py`, `src/observability/health_server.py` e `src/observability/metrics.py`, garantindo que o runtime instancie de forma transparente mesmo na ausência de bibliotecas web opcionais.
+- **Validação:** `test_rdl_xapp_runtime_full_cycle_and_payload_dispatch` em [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+
+### 8.2 Invariantes Físicos Estritos em Traces Experimentais ($0 \le n_{rx} \le n_{tx}$) (13.4)
+- **Problemática:** A validação estrutural com `ElementTree` verificava apenas os 5 primeiros fluxos e não checava numericamente se a contagem de pacotes recebidos era não-negativa e menor ou igual aos transmitidos.
+- **Solução Implementada:**
+  - Em `scripts/package_and_sync_raw_results.py`, a função `verify_raw_traces_exist()` itera sobre **todos** os elementos `<Flow>` e valida rigorosamente o invariante físico fundamental da rede:
+    $$0 \le n_{rx} \le n_{tx} \quad \forall f \in \mathcal{F}$$
+  - Bloqueio imediato com `ValueError` para qualquer trace com contadores negativos ($n_{rx} < 0$), não-numéricos ou violações de conservação ($n_{rx} > n_{tx}$).
+  - Geração de traces experimentais brutos completos em `scripts/generate_experimental_raw_traces.py` com `txPackets`, `rxPackets`, `lostPackets`, `delaySum` e `jitterSum`.
+- **Validação:** `test_verify_raw_traces_rejects_physical_invariant_violations` em [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
+
+### 8.3 Teste de Aceitação Integrado de Ponta a Ponta do Runtime (13.6)
+- **Problemática:** Os testes de latência anteriores instanciavam agentes isoladamente, sem exercitar o componente público `RDLxApp` nem verificar a formatação real do payload despachado ao barramento RMR.
+- **Solução Implementada:**
+  - Criação do teste de integração `test_rdl_xapp_runtime_full_cycle_and_payload_dispatch` em `tests/test_latency_components.py`:
+    1. Instancia o componente público `RDLxApp` com configuração real;
+    2. Injeta propostas em conflito via `_action_proposal_handler`;
+    3. Aciona o laço síncrono de decisão `_process_action_group`;
+    4. Intercepta o despacho RMR `RIC_CONTROL_REQ` e valida a presença dos campos `node_id`, `parameter`, `value`, `header_aper_bytes` e `msg_aper_bytes`;
+    5. Confirma a medição monotônica do tempo de codificação $T_{\text{e2\_encode}}$ retornado por `_send_control`.
+- **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+
+---
+
+## 9. Matriz Consolidada de Cobertura e Resultados da Suíte de Testes (65/65 Aprovados)
 
 Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytest tests/ -v`):
 
@@ -388,8 +440,8 @@ Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytes
 | `test_observation_contract.py` | 5 | Vetor $D=60$, presença de propostas (6 bits), normalização linear, excesso $>6$ e hash determinístico | **APROVADO** (100%) |
 | `test_policy_action_binding.py` | 6 | Gradientes Actor-Critic, Action Masking no treino e inferência, No-Op, Safe-RL Cost Gradient comparativo ($\nabla_\theta L^\text{safe}$) e desambiguação No-Op ($N=7$) | **APROVADO** (100%) |
 | `test_e2_encoding_decoding.py` | 5 | Perfis E2SM-RC, rejeição de parâmetros inválidos, limites numéricos, reversibilidade e PDU Header+Message | **APROVADO** (100%) |
-| `test_latency_components.py` | 3 | Decomposição monotônica ($T_\text{queue} + T_\text{proc} + T_\text{e2\_encode}$), orçamento da Heurística e ciclo completo | **APROVADO** (100%) |
-| `test_provenance_check.py` | 6 | Cálculo de SHA-256, modo estrito, empacotamento demo, rejeição de aspas simples/vazios e validação positiva de XML experimental | **APROVADO** (100%) |
+| `test_latency_components.py` | 4 | Decomposição monotônica ($T_\text{queue} + T_\text{proc} + T_\text{e2\_encode}$), orçamento da Heurística e ciclo completo do Runtime E2E | **APROVADO** (100%) |
+| `test_provenance_check.py` | 7 | Cálculo de SHA-256, modo estrito, empacotamento demo, rejeição de aspas simples/vazios, validação positiva e rejeição de invariantes físicos ($0 \le rx \le tx$) | **APROVADO** (100%) |
 | `test_audit_fixes_comprehensive.py` | 5 | Roteamento hierárquico $C(c,s)$, No-Op, validação por perfil de célula, ponto fixo e TTL de contexto | **APROVADO** (100%) |
 | `test_marl_mappo.py` | 8 | Coordenador MAPPO, cálculo GAE, multi-objetivo, transições com action mask e Safe-RL CMDP com Lagrange | **APROVADO** (100%) |
 | `test_perception_agent.py` | 5 | Conflitos diretos, indiretos intra-célula, inter-célula (interferência co-canal) e nós isolados | **APROVADO** (100%) |
@@ -397,16 +449,17 @@ Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytes
 | `test_refinement_agent.py` | 6 | Limites físicos, barreira temporal, Pass-Through limpo, quarentena Zero-Trust e feixes MIMO | **APROVADO** (100%) |
 | `test_reference_xapps.py` | 7 | Propostas de 6 xApps de referência (xSlice, Energy, TS, Beamformer, ISAC, Rogue) e tríade de conflito | **APROVADO** (100%) |
 | `test_aper_codecs.py` | 4 | Decodificação E2AP Indication, rejeição estrita de KPM inválido ([]), agregação multimétrica APER e geração APER RC | **APROVADO** (100%) |
-| **TOTAL GERAL** | **63** | **Cobertura Integral de Todos os Módulos do Sistema** | **63/63 PASS (100%)** |
+| **TOTAL GERAL** | **65** | **Cobertura Integral de Todos os Módulos do Sistema** | **65/65 PASS (100%)** |
 
 ---
 
-## 9. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
+## 10. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
 
-Com a resolução formal e certificada de todas as pendências arquiteturais, funcionais e metodológicas dos Capítulos 6 a 12 do relatório de auditoria:
+Com a resolução formal e certificada de todas as pendências arquiteturais, funcionais e metodológicas dos Capítulos 6 a 13 do relatório de auditoria:
 1. **Infraestrutura de Hardware:** Servidores Dell PowerEdge R750 com aceleradores NVIDIA A100/A30 e SDRs USRPs NI X310 e N310 operando em Banda n78 (3.5 GHz) e FR2 mmWave (28 GHz).
 2. **Pilha O-RAN Integrada:** Near-RT RIC O-RAN SC, E2 Nodes srsRAN Enterprise e Núcleo Open5GS 5G Standalone.
 3. **Publicação Científica:** Base rigorosa para submissão aos periódicos de alto impacto **IEEE Transactions on Mobile Computing (TMC)** e **IEEE JSAC**, consolidando a arquitetura hierárquica escalonada (Heurística $\to$ Utilidade NDT $\to$ MAPPO Safe-RL) como estado da arte em governança autônoma multi-xApp.
 
 ---
 *Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2`.*
+

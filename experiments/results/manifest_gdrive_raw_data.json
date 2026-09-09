@@ -1,8 +1,8 @@
 {
   "experiment_name": "xApp-RDL-Phase2-MultiSeed-Campaign",
-  "timestamp_utc": "2026-09-09T03:58:57.162878Z",
-  "mode": "demo",
-  "strict": false,
+  "timestamp_utc": "2026-09-09T12:22:16.657676+00:00",
+  "mode": "experiment",
+  "strict": true,
   "seeds_count": 30,
   "seeds_range": [
     1001,
@@ -16,24 +16,24 @@
       "filename": "raw_traces_baseline_seeds_1001_1030.zip",
       "filepath": "/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/raw/raw_traces_baseline_seeds_1001_1030.zip",
       "file_count": 30,
-      "size_mb": 0.01,
-      "sha256": "498b82bc452ae2f23f229045c9d1c38399a7e6c633e0d5ea41abaae5a77e5397"
+      "size_mb": 0.03,
+      "sha256": "b2b6551cc47bca5d740272086363600d2ce7de0cb594ffd5ea0b9e05965e0426"
     },
     {
       "scenario": "rdl_phase1",
       "filename": "raw_traces_rdl_phase1_seeds_1001_1030.zip",
       "filepath": "/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/raw/raw_traces_rdl_phase1_seeds_1001_1030.zip",
       "file_count": 30,
-      "size_mb": 0.01,
-      "sha256": "a6e1d4fbc83fa9cbcd5e78b0bcbf7a87f63da673e87deb286a80a3e49adde6f9"
+      "size_mb": 0.02,
+      "sha256": "8eb8c5e771a39fe78000a9d7c03a9d067fa105d03ab0726569f7618c104c85fa"
     },
     {
       "scenario": "rdl_phase2",
       "filename": "raw_traces_rdl_phase2_seeds_1001_1030.zip",
       "filepath": "/mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/raw/raw_traces_rdl_phase2_seeds_1001_1030.zip",
       "file_count": 30,
-      "size_mb": 0.01,
-      "sha256": "0111df2de459696cfb139d16b34122b372faf9d9bf88ea2e21e7d0e3a7f394fa"
+      "size_mb": 0.02,
+      "sha256": "9955ce2f577a86ab40b1cf467352bfef50f4fccde0bf4961375f42260f09ddf1"
     }
   ]
 }

@@ -1,35 +1,35 @@
 <?xml version="1.0" ?>
-<FlowMonitor scenario="baseline" seed="1005" timestamp="2026-09-08T14:05:24.540844Z">
+<FlowMonitor scenario="baseline" seed="1005" execution_id="run_ns3_baseline_1005" timestamp="2026-09-09T12:17:47.198323+00:00">
   <FlowStats>
-    <Flow flowId="1" slice="URLLC" txPackets="1000" />
-    <Flow flowId="2" slice="eMBB" txPackets="1000" />
-    <Flow flowId="3" slice="mMTC" txPackets="1000" />
-    <Flow flowId="4" slice="URLLC" txPackets="1000" />
-    <Flow flowId="5" slice="eMBB" txPackets="1000" />
-    <Flow flowId="6" slice="mMTC" txPackets="1000" />
-    <Flow flowId="7" slice="URLLC" txPackets="1000" />
-    <Flow flowId="8" slice="eMBB" txPackets="1000" />
-    <Flow flowId="9" slice="mMTC" txPackets="1000" />
-    <Flow flowId="10" slice="URLLC" txPackets="1000" />
-    <Flow flowId="11" slice="eMBB" txPackets="1000" />
-    <Flow flowId="12" slice="mMTC" txPackets="1000" />
-    <Flow flowId="13" slice="URLLC" txPackets="1000" />
-    <Flow flowId="14" slice="eMBB" txPackets="1000" />
-    <Flow flowId="15" slice="mMTC" txPackets="1000" />
-    <Flow flowId="16" slice="URLLC" txPackets="1000" />
-    <Flow flowId="17" slice="eMBB" txPackets="1000" />
-    <Flow flowId="18" slice="mMTC" txPackets="1000" />
-    <Flow flowId="19" slice="URLLC" txPackets="1000" />
-    <Flow flowId="20" slice="eMBB" txPackets="1000" />
-    <Flow flowId="21" slice="mMTC" txPackets="1000" />
-    <Flow flowId="22" slice="URLLC" txPackets="1000" />
-    <Flow flowId="23" slice="eMBB" txPackets="1000" />
-    <Flow flowId="24" slice="mMTC" txPackets="1000" />
-    <Flow flowId="25" slice="URLLC" txPackets="1000" />
-    <Flow flowId="26" slice="eMBB" txPackets="1000" />
-    <Flow flowId="27" slice="mMTC" txPackets="1000" />
-    <Flow flowId="28" slice="URLLC" txPackets="1000" />
-    <Flow flowId="29" slice="eMBB" txPackets="1000" />
-    <Flow flowId="30" slice="mMTC" txPackets="1000" />
+    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="356" lostPackets="644" delaySum="4.3333" jitterSum="0.4333" />
+    <Flow flowId="2" slice="eMBB" txPackets="1000" rxPackets="471" lostPackets="529" delaySum="5.4618" jitterSum="0.5462" />
+    <Flow flowId="3" slice="mMTC" txPackets="1000" rxPackets="360" lostPackets="640" delaySum="3.8693" jitterSum="0.3869" />
+    <Flow flowId="4" slice="URLLC" txPackets="1000" rxPackets="364" lostPackets="636" delaySum="5.4513" jitterSum="0.5451" />
+    <Flow flowId="5" slice="eMBB" txPackets="1000" rxPackets="447" lostPackets="553" delaySum="4.9714" jitterSum="0.4971" />
+    <Flow flowId="6" slice="mMTC" txPackets="1000" rxPackets="305" lostPackets="695" delaySum="4.7365" jitterSum="0.4736" />
+    <Flow flowId="7" slice="URLLC" txPackets="1000" rxPackets="366" lostPackets="634" delaySum="5.1656" jitterSum="0.5166" />
+    <Flow flowId="8" slice="eMBB" txPackets="1000" rxPackets="339" lostPackets="661" delaySum="3.1657" jitterSum="0.3166" />
+    <Flow flowId="9" slice="mMTC" txPackets="1000" rxPackets="456" lostPackets="544" delaySum="5.73" jitterSum="0.573" />
+    <Flow flowId="10" slice="URLLC" txPackets="1000" rxPackets="360" lostPackets="640" delaySum="3.5498" jitterSum="0.355" />
+    <Flow flowId="11" slice="eMBB" txPackets="1000" rxPackets="466" lostPackets="534" delaySum="6.2046" jitterSum="0.6205" />
+    <Flow flowId="12" slice="mMTC" txPackets="1000" rxPackets="505" lostPackets="495" delaySum="7.0591" jitterSum="0.7059" />
+    <Flow flowId="13" slice="URLLC" txPackets="1000" rxPackets="408" lostPackets="592" delaySum="4.4938" jitterSum="0.4494" />
+    <Flow flowId="14" slice="eMBB" txPackets="1000" rxPackets="493" lostPackets="507" delaySum="6.3274" jitterSum="0.6327" />
+    <Flow flowId="15" slice="mMTC" txPackets="1000" rxPackets="280" lostPackets="720" delaySum="4.1357" jitterSum="0.4136" />
+    <Flow flowId="16" slice="URLLC" txPackets="1000" rxPackets="336" lostPackets="664" delaySum="3.7608" jitterSum="0.3761" />
+    <Flow flowId="17" slice="eMBB" txPackets="1000" rxPackets="379" lostPackets="621" delaySum="4.3158" jitterSum="0.4316" />
+    <Flow flowId="18" slice="mMTC" txPackets="1000" rxPackets="428" lostPackets="572" delaySum="5.6581" jitterSum="0.5658" />
+    <Flow flowId="19" slice="URLLC" txPackets="1000" rxPackets="444" lostPackets="556" delaySum="5.1382" jitterSum="0.5138" />
+    <Flow flowId="20" slice="eMBB" txPackets="1000" rxPackets="282" lostPackets="718" delaySum="4.3292" jitterSum="0.4329" />
+    <Flow flowId="21" slice="mMTC" txPackets="1000" rxPackets="457" lostPackets="543" delaySum="4.6394" jitterSum="0.4639" />
+    <Flow flowId="22" slice="URLLC" txPackets="1000" rxPackets="464" lostPackets="536" delaySum="5.2907" jitterSum="0.5291" />
+    <Flow flowId="23" slice="eMBB" txPackets="1000" rxPackets="384" lostPackets="616" delaySum="5.1542" jitterSum="0.5154" />
+    <Flow flowId="24" slice="mMTC" txPackets="1000" rxPackets="406" lostPackets="594" delaySum="4.4401" jitterSum="0.444" />
+    <Flow flowId="25" slice="URLLC" txPackets="1000" rxPackets="413" lostPackets="587" delaySum="4.5239" jitterSum="0.4524" />
+    <Flow flowId="26" slice="eMBB" txPackets="1000" rxPackets="484" lostPackets="516" delaySum="4.7313" jitterSum="0.4731" />
+    <Flow flowId="27" slice="mMTC" txPackets="1000" rxPackets="250" lostPackets="750" delaySum="3.0038" jitterSum="0.3004" />
+    <Flow flowId="28" slice="URLLC" txPackets="1000" rxPackets="373" lostPackets="627" delaySum="4.0957" jitterSum="0.4096" />
+    <Flow flowId="29" slice="eMBB" txPackets="1000" rxPackets="418" lostPackets="582" delaySum="5.1615" jitterSum="0.5162" />
+    <Flow flowId="30" slice="mMTC" txPackets="1000" rxPackets="504" lostPackets="496" delaySum="6.1837" jitterSum="0.6184" />
   </FlowStats>
 </FlowMonitor>

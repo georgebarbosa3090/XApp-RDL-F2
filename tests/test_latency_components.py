@@ -147,3 +147,77 @@ def test_full_runtime_queue_and_decision_latency_breakdown():
     assert t_e2_encode_ms >= 0.0
     assert t_cycle_total_ms >= t_queue_ms + t_proc_ms + t_e2_encode_ms * 0.95
 
+def test_rdl_xapp_runtime_full_cycle_and_payload_dispatch(monkeypatch):
+    """
+    Valida a inicialização completa do componente público RDLxApp, ingestão via
+    _action_proposal_handler, processamento através da tríade de agentes e despacho
+    final de PDU E2SM-RC completo (Header + Message APER) via adaptador RMR.
+    """
+    import json
+    from src.rdl_xapp import RDLxApp, RDL_ACTION_PROPOSAL
+    
+    # 1. Instanciação do componente público RDLxApp
+    app = RDLxApp(config_path="configs/config-file.json")
+    assert app is not None
+    assert app.asn1_decoder is not None
+    assert app.rc_encoder is not None
+    
+    # 2. Mock de transporte RMR para interceptar payloads enviados
+    sent_messages = []
+    def mock_rmr_send(payload, mtype):
+        sent_messages.append({"payload": json.loads(payload.decode('utf-8')), "mtype": mtype})
+        return True
+    monkeypatch.setattr(app.xapp, "rmr_send", mock_rmr_send)
+    
+    # 3. Ingestão de duas propostas com conflito via RMR proposal handler
+    prop1 = json.dumps({
+        "xapp_id": "ricxapp-traffic-steering",
+        "node_id": "gnb_01",
+        "parameter": "TX_POWER",
+        "value": 23.0,
+        "priority": 90
+    }).encode('utf-8')
+    
+    prop2 = json.dumps({
+        "xapp_id": "ricxapp-energy-saving",
+        "node_id": "gnb_01",
+        "parameter": "TX_POWER",
+        "value": 20.0,
+        "priority": 40
+    }).encode('utf-8')
+    
+    app._action_proposal_handler(app.xapp, {"payload": prop1}, None)
+    app._action_proposal_handler(app.xapp, {"payload": prop2}, None)
+    
+    # Verifica que o buffer enfileirou as propostas com arrival_monotonic registrado
+    with app.buffer_lock:
+        assert len(app.proposal_buffer) == 2
+        batch = list(app.proposal_buffer)
+        app.proposal_buffer.clear()
+        
+    for act in batch:
+        assert act.arrival_monotonic > 0.0
+        
+    # 4. Processamento síncrono do grupo de ações
+    app._process_action_group(batch)
+    
+    # 5. Validação do despacho de controle E2SM-RC
+    assert len(sent_messages) >= 1
+    dispatched = sent_messages[0]
+    assert dispatched["mtype"] == 12010 # RIC_CONTROL_REQ
+    payload = dispatched["payload"]
+    
+    assert payload["node_id"] == "gnb_01"
+    assert payload["parameter"] == "TX_POWER"
+    assert payload["value"] == 23.0 # Vencedora de maior prioridade (90 vs 40)
+    assert "header_aper_bytes" in payload
+    assert "msg_aper_bytes" in payload
+    assert len(payload["header_aper_bytes"]) > 0
+    assert len(payload["msg_aper_bytes"]) > 0
+    
+    # 6. Teste direto do método _send_control retornando Tuple[bool, float]
+    success, t_enc = app._send_control("gnb_01", "PRB_QUOTA", 80.0)
+    assert success is True
+    assert t_enc >= 0.0
+
+
