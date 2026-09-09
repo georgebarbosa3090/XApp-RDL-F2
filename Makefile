@@ -81,6 +81,9 @@ cluster-create:
 cluster-delete:
 	k3d cluster delete $(CLUSTER_NAME)
 
+clean-all:
+	@bash scripts/cleanup_all.sh
+
 PYTHON ?= python3
 
 # -------------------------------------------------------------
