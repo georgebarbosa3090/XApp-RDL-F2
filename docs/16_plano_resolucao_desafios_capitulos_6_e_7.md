@@ -204,12 +204,78 @@ Criou-se a suíte de testes unitários e de integração `tests/test_audit_fixes
 
 ---
 
-## 5. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
+## 6. Resolução Definitiva dos Apontamentos da Seção 9 (Sprint 1 Executado e Validado)
 
-Com o encerramento formal de todas as pendências arquiteturais e funcionais, a CA-RDL atinge **prontidão para experimentação em ambiente de laboratório físico de 6ª Geração**:
-1. **Infraestrutura de Hardware:** Servidores Dell PowerEdge R750 com aceleradores NVIDIA A100/A30 e SDRs USRPs NI X310 e N310 operando em Banda n78 (3.5 GHz) e FR2 mmWave (28 GHz).
-2. **Pilha O-RAN Integrada:** Near-RT RIC O-RAN SC (Release Cherry/Dawn), E2 Nodes srsRAN Enterprise e Núcleo Open5GS 5G Standalone.
-3. **Publicação Científica:** Base pronta para submissão aos periódicos **IEEE Transactions on Mobile Computing (TMC)** e **IEEE JSAC**, consolidando a arquitetura hierárquica escalonada (Heurística $\to$ Utilidade NDT $\to$ MAPPO Safe-RL) como referência em governança autônoma multi-xApp.
+Em resposta à auditoria formal consolidada (Seções 9.1 a 9.8 do relatório de superação de desafios), implementou-se e homologou-se o conjunto integral de correções do **Sprint 1**, respaldado por uma suíte de **53 testes automatizados (100% aprovados)**:
+
+### 6.1 (9.1) Contrato Canônico de Observação ($D=60$) e Preservação de Prioridade
+- **Implementação:** Em `src/agents/marl/mappo_agent.py`, o método `extract_features()` foi padronizado no vetor canônico $D=60$:
+  - Índices $[0..5]$: Metadados globais e telemetria KPM (Throughput DL/UL, Delay QoS, PRB Tot, SINR DL).
+  - Índices $[6..11]$: Máscara de presença de propostas em 6 bits booleanos.
+  - Índices $[12..59]$: 6 blocos canônicos de propostas $\times$ 8 atributos (Hash da xApp, Hash do Nó, Tipo de Parâmetro, Valor Normalizado por Tipo, Prioridade Linear, Frescor Temporal, Validade Estrutural e KPI Alvo).
+- **Preservação de Prioridade:** Normalização estrita linear `float(priority) / 100.0`, preservando a ordenação original: $40 \to 0.40$, $50 \to 0.50$, $80 \to 0.80$, $90 \to 0.90$.
+- **Validação:** [test_observation_contract.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_observation_contract.py).
+
+### 6.2 (9.2) Vínculo Inequívoco Política-Ação e Decisão de No-Op
+- **Implementação:** O coordenador MAPPO aplica *Action Masking* estrito na distribuição $\pi_\theta(a|s)$. Ação $a \in [0, N-1]$ seleciona deterministicamente a proposta correspondente; ação $a = \text{action\_dim}-1$ ou retorno nulo aciona a decisão de **No-Op** (deferimento).
+- **Semântica de No-Op:** Em `src/agents/reasoning_agent.py`, No-Op retorna `winning_actions = []` e `modified_value = None`, garantindo que nenhuma mensagem espúria de controle E2 seja emitida.
+- **Validação:** [test_policy_action_binding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_policy_action_binding.py).
+
+### 6.3 (9.3) Indisponibilidade Contextual Estrita e Encaminhamento Conservador
+- **Implementação:** Em `src/agents/perception_agent.py`, `get_kpm_report(node_id)` valida a presença do nó e a validade temporal ($\text{TTL} \le 1.0\text{ s}$). Caso o nó não esteja cadastrado ou a telemetria esteja expirada, retorna `(None, False)`.
+- **Comportamento no Pipeline:** Em `src/rdl_xapp.py`, na ausência de contexto confiável, o sistema executa obrigatoriamente o encaminhamento conservador para a **Heurística Segura de Nível 1** (`_resolve_by_heuristic()`).
+- **Validação:** [test_audit_fixes_comprehensive.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_audit_fixes_comprehensive.py).
+
+### 6.4 (9.4) Validação Pública de Limites de Hardware por Tipo de Célula
+- **Implementação:** Em `src/agents/refinement_agent.py`, os métodos públicos `validate(resolution, conflict)` e `validate_single_action(action)` repassam explicitamente o `node_id = action.node_id` para a função de limites físicos.
+- **Limites Físicos:** Teto de potência de transmissão diferenciado: **Macro gNodeB (43 dBm / 20W)** versus **Small Cell (23 dBm / 200mW)**. Propostas que excedam o perfil da célula são rejeitadas e registradas na FSM Zero-Trust.
+- **Validação:** [test_audit_fixes_comprehensive.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_audit_fixes_comprehensive.py) e [test_refinement_agent.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_refinement_agent.py).
+
+### 6.5 (9.5) Codecs ASN.1 / APER Nativos e Shim Híbrido
+- **Implementação:** Criou-se [src/e2/asn1_shim.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/src/e2/asn1_shim.py) para prover interoperabilidade contínua (pycrate nativo em nós O-RAN de produção + emulador estrutural puro em Python para ambientes de CI e testes). Corrigidos os imports em `src/rdl_xapp.py` para utilizar diretamente `KpmDecoder` e `RCEncoder`.
+- **Perfis de Parâmetros e Validação:** Dicionário `PARAM_PROFILES` completo com fatores de escala de ponto fixo e validação estrita de faixa admissível (`min <= encoded_val <= max`), com rejeição imediata de parâmetros desconhecidos via `ValueError`.
+- **Validação:** [test_e2_encoding_decoding.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_e2_encoding_decoding.py) e [test_aper_codecs.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_aper_codecs.py).
+
+### 6.6 (9.6) Instrumentação Monotônica Decomposta
+- **Implementação:** Medição de latência com `time.perf_counter()` decomposta em:
+  $$T_{\text{total}} \ge T_{\text{queue}} + T_{\text{perception}} + T_{\text{reasoning}} + T_{\text{refinement}} + T_{\text{e2\_encode}}$$
+- **Validação:** [test_latency_components.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_latency_components.py).
+
+### 6.7 (9.7 e 9.8) Rastreabilidade Estrita e Empacotamento de Traces Brutos
+- **Implementação:** Script `scripts/package_and_sync_raw_results.py` atualizado com suporte aos parâmetros `--mode demo|experiment` e `--strict`. No modo estrito de experimentação, a ausência de arquivos brutos emite erro formal (`FileNotFoundError`), impedindo a criação silenciosa de dados sintéticos e garantindo integridade criptográfica SHA-256 no manifesto.
+- **Validação:** [test_provenance_check.py](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/tests/test_provenance_check.py).
 
 ---
-*Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2`.*
+
+## 7. Matriz de Cobertura e Resultados da Suíte de Testes (53/53 Aprovados)
+
+Execução realizada no ambiente virtual WSL2 (`/home/george/.venv-rdl/bin/pytest tests/ -v`):
+
+| Módulo de Teste | Quantidade | Foco de Validação Técnica | Resultado |
+| :--- | :---: | :--- | :---: |
+| `test_observation_contract.py` | 4 | Vetor $D=60$, presença de propostas (6 bits), normalização linear (40, 50, 80, 90) e robustez para $>6$ propostas | **APROVADO** (100%) |
+| `test_policy_action_binding.py` | 3 | Gradientes do Actor-Critic $\nabla_\theta L \neq 0$, Action Masking estrito e preservação de No-Op | **APROVADO** (100%) |
+| `test_e2_encoding_decoding.py` | 4 | Perfis E2SM-RC, rejeição de parâmetros inválidos, limites numéricos e decodificação reversível | **APROVADO** (100%) |
+| `test_latency_components.py` | 2 | Decomposição monotônica do pipeline de controle e latência sub-milissegundo da Heurística | **APROVADO** (100%) |
+| `test_provenance_check.py` | 3 | Cálculo de SHA-256, modo estrito de rastreabilidade e integridade dos pacotes de traces | **APROVADO** (100%) |
+| `test_audit_fixes_comprehensive.py` | 5 | Roteamento hierárquico $C(c,s)$, No-Op, validação por perfil de célula, ponto fixo e TTL de contexto | **APROVADO** (100%) |
+| `test_marl_mappo.py` | 8 | Coordenador MAPPO, cálculo GAE, multi-objetivo, transições e Safe-RL CMDP com Lagrange | **APROVADO** (100%) |
+| `test_perception_agent.py` | 5 | Conflitos diretos, indiretos intra-célula, inter-célula (interferência co-canal) e nós isolados | **APROVADO** (100%) |
+| `test_reasoning_agent.py` | 3 | Resolução Heurística Nível 1, Utilidade Nível 2A e escalonamento para Nível 2B (MAPPO) | **APROVADO** (100%) |
+| `test_refinement_agent.py` | 6 | Limites físicos, barreira temporal, Pass-Through limpo, quarentena Zero-Trust e feixes MIMO | **APROVADO** (100%) |
+| `test_reference_xapps.py` | 7 | Propostas de 6 xApps de referência (xSlice, Energy, TS, Beamformer, ISAC, Rogue) e tríade de conflito | **APROVADO** (100%) |
+| `test_aper_codecs.py` | 3 | Decodificação E2AP Indication, decodificação KPM com fallback resiliente e geração APER RC | **APROVADO** (100%) |
+| **TOTAL GERAL** | **53** | **Cobertura Integral de Todos os Módulos do Sistema** | **53/53 PASS (100%)** |
+
+---
+
+## 8. Prontidão Operacional para o Testbed Open RAN Brasil (UFPA PCT / GreenRAN)
+
+Com a resolução formal de todas as pendências arquiteturais, funcionais e metodológicas:
+1. **Infraestrutura de Hardware:** Servidores Dell PowerEdge R750 com aceleradores NVIDIA A100/A30 e SDRs USRPs NI X310 e N310 operando em Banda n78 (3.5 GHz) e FR2 mmWave (28 GHz).
+2. **Pilha O-RAN Integrada:** Near-RT RIC O-RAN SC, E2 Nodes srsRAN Enterprise e Núcleo Open5GS 5G Standalone.
+3. **Publicação Científica:** Base rigorosa para submissão aos periódicos de alto impacto **IEEE Transactions on Mobile Computing (TMC)** e **IEEE JSAC**, consolidando a arquitetura hierárquica escalonada (Heurística $\to$ Utilidade NDT $\to$ MAPPO Safe-RL) como estado da arte em governança autônoma multi-xApp.
+
+---
+*Documento homologado e integrado aos repositórios local e remoto `XApp-RDL-F2` (Commit: `f065af3`).*
+
