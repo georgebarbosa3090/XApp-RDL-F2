@@ -122,10 +122,16 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 | **[Volume 01](docs/01_arquitetura_e_modelagem_matematica.md)** | Arquitetura de Software e Modelagem Matemática | Tríade de agentes, formulação MAPPO/Actor-Critic e modelagem de utilidade. |
 | **[Volume 02](docs/02_infraestrutura_cluster_k3d_e_rancher.md)** | Infraestrutura de Cluster k3d e Rancher | Provisionamento de cluster Kubernetes com portas O-RAN expostas. |
 | **[Volume 03](docs/03_guia_deploy_helm_e_k8s.md)** | Guia de Implantação e Automação de Deploy (Helm & K8s) | Procedimentos de implantação do zero (Greenfield) e deploy isolado (Brownfield). |
-| **[Volume 04](docs/04_operacao_troubleshooting_e_backup.md)** | Operação, Troubleshooting e Diagnósticos | Procedimentos operacionais, streaming de logs e auditoria de memória. |
 | **[Volume 05](docs/05_testes_simulacao_ns3_e_benchmarks.md)** | Simulação ns-3, Testes e Benchmarks | Co-simulação 5G-LENA + NORI, `NrPointToPointEpcHelper` e datasets. |
 | **[Volume 06](docs/06_observabilidade_kiali_e_injecao_trafego.md)** | Observabilidade Service Mesh e Telemetria | Métricas Prometheus, Kiali Dashboard e injeção de tráfego. |
 | **[Volume 07](docs/07_relatorios_conformidade_e_governanca.md)** | Relatórios de Conformidade Técnica O-RAN | Matriz de rastreabilidade de requisitos e conformidade O-RAN Alliance. |
+| **[Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md)** | Proposta Arquitetural RDL Fase 3 | Governança autônoma Zero-Touch e intent-driven para 6G. |
+| **[Volume 09](docs/09_relatorio_tecnico_detalhado_fase2.md)** | Relatório Técnico Detalhado da Fase 2 | Engenharia de software, integração E2 e pipeline cognitivo. |
+| **[Volume 11](docs/11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md)** | Cenários de Teste 5G, 5GA, 6G e Requisitos | Especificação dos 5 cenários avançados de simulação ns-3. |
+| **[Volume 13](docs/13_relatorio_auditoria_limitacoes_e_solucoes_fase2.md)** | Relatório Técnico de Auditoria e Limitações | Diagnóstico preliminar de limitações arquiteturais da Fase 2. |
+| **[Volume 14](docs/14_relatorio_resultados_e_desempenho_comparativo_fase2.md)** | Resultados Experimentais e Tabela Comparativa | Comparação empírica multi-métrica Baseline vs H-RDL vs CA-RDL. |
+| **[Volume 15](docs/15_relatorio_avaliacao_testbed_ufpa_pct_openran_brasil_rdl.md)** | Avaliação e Integração no Testbed UFPA PCT / GreenRAN | Requisitos, parâmetros e plano de ensaios físicos no Open RAN Brasil. |
+| **[Volume 16](docs/16_plano_resolucao_desafios_capitulos_6_e_7.md)** | Relatório Consolidado de Resolução de Auditoria (Rodadas 1 e 2) | Resolução matemática, PPO-Lagrangian $\hat{A}^{\text{safe}}$, Action Masking, perfis E2 e ANOVA. |
 
 ---
 
