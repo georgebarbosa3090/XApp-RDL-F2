@@ -471,7 +471,9 @@ def run_analysis(output_dir="experiments/results", mirror_dirs=None, timestamp_s
         axes[1, 1].grid(True)
 
         plt.tight_layout()
-        plot_path = os.path.join(output_dir, "graficos_benchmarks_rdl.png")
+        plots_dir = os.path.join(output_dir, "plots")
+        os.makedirs(plots_dir, exist_ok=True)
+        plot_path = os.path.join(plots_dir, "graficos_benchmarks_rdl.png")
         plt.savefig(plot_path, dpi=300)
         print(f"[OK] Graficos salvos em: {plot_path}")
         generated_files.append(("graficos_benchmarks_rdl.png", plot_path))
@@ -480,10 +482,6 @@ def run_analysis(output_dir="experiments/results", mirror_dirs=None, timestamp_s
 
     # 9. Espelhamento (mirroring)
     all_mirrors = list(mirror_dirs or [])
-    plots_dir = os.path.join(output_dir, "plots")
-    if os.path.abspath(plots_dir) != os.path.abspath(output_dir):
-        all_mirrors.append(plots_dir)
-        
     for m_dir in all_mirrors:
         if m_dir and os.path.abspath(m_dir) != os.path.abspath(output_dir):
             os.makedirs(m_dir, exist_ok=True)

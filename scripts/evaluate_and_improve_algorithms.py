@@ -474,14 +474,13 @@ def generate_evaluation_visualizations(df_flows, df_ml, scenario_eval, ml_result
     axes[1, 1].bar_label(rects3, padding=3, fmt='%.2f%%')
     axes[1, 1].bar_label(rects4, padding=3, fmt='%.1f')
     
-    plt.tight_layout()
-    target_dirs = [output_dir, os.path.join(output_dir, "plots"), "docs/figures", "paper_sbrc/figures"]
+    target_dirs = [os.path.join(output_dir, "plots"), "docs/figures", "paper_sbrc/figures"]
     for td in target_dirs:
         os.makedirs(td, exist_ok=True)
         fig1_path = os.path.join(td, "comparativo_completo_cenarios_rdl.png")
         fig.savefig(fig1_path, dpi=300)
     plt.close()
-    print(f"[OK] Grafico 1 salvo em todos os destinos: comparativo_completo_cenarios_rdl.png")
+    print(f"[OK] Grafico 1 salvo em: comparativo_completo_cenarios_rdl.png")
     
     # ---------------------------------------------------------
     # Figura 2: Desempenho e Curvas dos Algoritmos de Machine Learning

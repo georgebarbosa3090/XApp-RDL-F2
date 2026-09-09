@@ -29,23 +29,18 @@ plt.rcParams['legend.edgecolor'] = '#bdc3c7'
 
 REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOCS_FIG_DIR = os.path.join(REPO_DIR, "docs", "figures")
-DOCS_ASSETS_DIR = os.path.join(REPO_DIR, "docs", "assets")
-EXP_RES_DIR = os.path.join(REPO_DIR, "experiments", "results")
-PLOTS_DIR = os.path.join(EXP_RES_DIR, "plots")
+PLOTS_DIR = os.path.join(REPO_DIR, "experiments", "results", "plots")
 PAPER_FIG_DIR = os.path.join(REPO_DIR, "paper_sbrc", "figures")
 
 def ensure_output_dirs():
-    for d in [DOCS_FIG_DIR, DOCS_ASSETS_DIR, EXP_RES_DIR, PLOTS_DIR, PAPER_FIG_DIR]:
+    for d in [DOCS_FIG_DIR, PLOTS_DIR, PAPER_FIG_DIR]:
         os.makedirs(d, exist_ok=True)
 
 def save_to_all_destinations(fig, filename, also_save_as_root_arch=False):
-    for target_dir in [DOCS_FIG_DIR, DOCS_ASSETS_DIR, EXP_RES_DIR, PLOTS_DIR, PAPER_FIG_DIR]:
+    for target_dir in [DOCS_FIG_DIR, PLOTS_DIR, PAPER_FIG_DIR]:
         out_path = os.path.join(target_dir, filename)
         fig.savefig(out_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    if also_save_as_root_arch:
-        root_path = os.path.join(REPO_DIR, "arquitetura.png")
-        fig.savefig(root_path, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-    print(f"[OK] Imagem salva com sucesso (sem sobreposição): {filename}")
+    print(f"[OK] Imagem salva com sucesso: {filename}")
 
 def load_metrics_data():
     csv_path = os.path.join(EXP_RES_DIR, "dataset_flow_metrics.csv")
@@ -1128,9 +1123,8 @@ def main():
     print("Sucesso! Todas as 15 Figuras Foram Geradas Sem Sobreposição (300 DPI)!")
     print(f"Diretórios atualizados:")
     print(f" - {DOCS_FIG_DIR}")
-    print(f" - {DOCS_ASSETS_DIR}")
-    print(f" - {EXP_RES_DIR}")
-    print(f" - {REPO_DIR}/arquitetura.png")
+    print(f" - {PAPER_FIG_DIR}")
+    print(f" - {PLOTS_DIR}")
     print("===================================================================")
 
 if __name__ == "__main__":

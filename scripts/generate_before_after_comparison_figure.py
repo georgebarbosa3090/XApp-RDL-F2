@@ -18,8 +18,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIRS = [
     os.path.join(BASE_DIR, "docs", "figures"),
     os.path.join(BASE_DIR, "paper_sbrc", "figures"),
-    os.path.join(BASE_DIR, "experiments", "results", "plots"),
-    os.path.join(BASE_DIR, "experiments", "results")
+    os.path.join(BASE_DIR, "experiments", "results", "plots")
 ]
 
 for d in OUTPUT_DIRS:
