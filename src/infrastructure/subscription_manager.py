@@ -16,56 +16,31 @@ class SubscriptionContext:
     status: str
     created_at: datetime
 
+from src.e2.e2ap.subscription import build_ric_subscription_request_payload
+
 class SubscriptionManager:
     def __init__(self, submgr_url: str = "http://service-ricplt-submgr-http.ricplt:8088"):
         self.submgr_url = submgr_url
 
-    def request_kpm_subscription(self, meid: str, ran_function_id: int, period_ms: int = 1000) -> Optional[SubscriptionContext]:
+    def request_kpm_subscription(self, meid: str, ran_function_id: int, period_ms: int = 200) -> Optional[SubscriptionContext]:
         """
-        Solicita uma subscrição E2SM-KPM para um nó E2 específico (via MEID).
+        Solicita uma subscrição E2SM-KPM com payloads APER normativos ao Subscription Manager.
         """
-        payload = {
-            "SubscriptionId": "",
-            "ClientEndpoint": ["service-ricxapp-iqos-xapp-rdl-http.ricxapp:8080"],
-            "Meid": meid,
-            "RANFunctionID": ran_function_id,
-            "SubscriptionDetails": [
-                {
-                    "XappEventInstanceId": 1,
-                    "EventTriggers": [
-                        # Formato real E2SM-KPM Event Trigger Definition (octets em hexa)
-                        # Este é um mockup do payload de Event Trigger (Reporting Period)
-                        "00000000"
-                    ],
-                    "ActionToBeSetupList": [
-                        {
-                            "ActionID": 1,
-                            "ActionType": "report",
-                            "ActionDefinition": [
-                                # Formato real E2SM-KPM Action Definition
-                                "00000000"
-                            ],
-                            "SubsequentAction": {
-                                "SubsequentActionType": "continue",
-                                "TimeToWait": "zero"
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
+        payload = build_ric_subscription_request_payload(
+            target_node=meid,
+            ran_function_id=ran_function_id,
+            report_period_ms=period_ms
+        )
+
         
         try:
             url = f"{self.submgr_url}/ric/v1/subscriptions"
             logger.info(f"Enviando REST SubReq para {url} - MEID: {meid}")
             
-            # Na integração real, descomentar a chamada:
-            # response = requests.post(url, json=payload, timeout=5)
-            # response.raise_for_status()
-            # data = response.json()
-            # sub_id = data.get("SubscriptionId", "sim_sub_01")
-            
-            sub_id = "sim_sub_01"  # Mock para teste sem RIC real
+            response = requests.post(url, json=payload, timeout=5)
+            response.raise_for_status()
+            data = response.json() if response.content else {}
+            sub_id = data.get("SubscriptionId") or data.get("subscription_id") or f"sub-{meid}-{ran_function_id}"
             
             ctx = SubscriptionContext(
                 subscription_id=sub_id,
@@ -78,5 +53,6 @@ class SubscriptionManager:
             )
             return ctx
         except Exception as e:
-            logger.error(f"Falha na subscrição do MEID {meid}: {e}")
+            logger.error(f"Falha na subscricao do MEID {meid} junto ao SubMgr: {e}")
             return None
+

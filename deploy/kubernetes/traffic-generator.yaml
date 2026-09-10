@@ -23,8 +23,8 @@ spec:
         - |
           echo "Iniciando gerador de carga continuo multi-xApp para a malha Istio/Kiali..."
           ENDPOINTS="
-          http://ricxapp-iqos-xapp-rdl-http:8080/health
-          http://ricxapp-iqos-xapp-rdl-http:8081/metrics
+          http://ricxapp-iqos-xapp-rdl-f1-http:8080/health
+          http://ricxapp-iqos-xapp-rdl-f1-http:8081/metrics
           http://ricxapp-iqos-xapp-rdl-f2-http:8080/health
           http://ricxapp-iqos-xapp-rdl-f2-http:8081/metrics
           http://ricxapp-qos-xslice-http:8082/health

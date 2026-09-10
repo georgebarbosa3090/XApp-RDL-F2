@@ -1,6 +1,10 @@
+import os
 from dataclasses import dataclass
+from typing import Optional
 from src.observability.logging import setup_logger
-from src.e2.asn1_shim import INT, ENUM, OCT_STR, SEQ, ASN1Dict
+from pycrate_asn1rt.asnobj_basic import INT, ENUM
+from pycrate_asn1rt.asnobj_str import OCT_STR
+from pycrate_asn1rt.asnobj_construct import SEQ, ASN1Dict
 
 logger = setup_logger("E2APDecoder")
 
@@ -44,37 +48,29 @@ class RICindication(SEQ):
 
 def decode_e2ap_ric_indication(payload: bytes) -> RicIndication:
     """
-    Decodifica o envelope E2AP (RIC Indication) via APER.
+    Decodifica estritamente o envelope E2AP (RIC Indication) via APER.
+    Lanca excecao em caso de buffer invalido ou corrompido.
     """
+    if not payload:
+        raise ValueError("Payload E2AP vazio. Esperado buffer binario APER.")
+         
     try:
-        # Se estivermos em modo teste local com payloads mockados sem APER real,
-        # fazemos o fallback gracefully para não quebrar a simulação, 
-        # mas o decodificador já usa a árvore pycrate ASN.1.
-        if not payload or payload == b"MOCK_PAYLOAD":
-             return RicIndication(1, 1, 2, 1, 100, 0, b'\x00', b'\x00')
-             
         indication = RICindication()
+        indication.from_aper(payload)
+        val = indication()
         
-        # Em um cenário real de C-bindings, 'payload' é o buffer APER
-        try:
-            indication.from_aper(payload)
-            val = indication()
-            
-            return RicIndication(
-                request_id=val['ricRequestID']['ricRequestorID'],
-                instance_id=val['ricRequestID']['ricInstanceID'],
-                ran_function_id=val['ranFunctionID'],
-                action_id=val['ricActionID'],
-                sn=val['ricIndicationSN'],
-                indication_type=val['ricIndicationType'],
-                indication_header=val['ricIndicationHeader'],
-                indication_message=val['ricIndicationMessage']
-            )
-        except Exception as pycrate_err:
-            # Fallback forçado apenas para testes se os bytes APER não forem os corretos
-            logger.debug(f"Falha ao decodificar via APER: {pycrate_err}. Usando fallback para simulação.")
-            return RicIndication(1, 1, 2, 1, 100, 0, payload, payload)
-            
-    except Exception as e:
-        logger.error(f"Erro Crítico ao decodificar E2AP RIC Indication: {e}")
-        raise
+        return RicIndication(
+            request_id=val['ricRequestID']['ricRequestorID'],
+            instance_id=val['ricRequestID']['ricInstanceID'],
+            ran_function_id=val['ranFunctionID'],
+            action_id=val['ricActionID'],
+            sn=val['ricIndicationSN'],
+            indication_type=val['ricIndicationType'],
+            indication_header=val['ricIndicationHeader'],
+            indication_message=val['ricIndicationMessage']
+        )
+    except Exception as pycrate_err:
+        logger.error(f"Falha estrita ao decodificar E2AP RIC Indication via APER: {pycrate_err}")
+        raise pycrate_err
+
+

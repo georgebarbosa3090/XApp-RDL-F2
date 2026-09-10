@@ -42,8 +42,7 @@ elif docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1 && ! docker image 
 fi
 
 if command -v k3d &> /dev/null; then
-    k3d image import iqos-xapp-rdl:1.1.0 -c ${CLUSTER_NAME} 2>/dev/null || true
-    k3d image import iqos-xapp-rdl:2.0.0 -c ${CLUSTER_NAME} 2>/dev/null || true
+    k3d image import iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0 -c ${CLUSTER_NAME} 2>/dev/null || true
 else
     for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
         docker save iqos-xapp-rdl:1.1.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
@@ -58,7 +57,7 @@ kubectl rollout status deployment/deployment-ricplt-dbaas-redis -n "$NAMESPACE_R
 
 # 4. Implantar as 6 Reference xApps
 echo -e "\n${YELLOW}[4/6] Implantando as 6 Reference xApps (xSlice, Energy, TS, Beamformer, ISAC, Rogue)...${NC}"
-bash scripts/deploy_reference_xapps.sh
+SKIP_IMAGE_IMPORT=true bash scripts/deploy_reference_xapps.sh
 
 # 5. Implantar H-RDL Fase 1 e CA-RDL Fase 2 Concorrentes via Helm
 echo -e "\n${YELLOW}[5/6] Implantando H-RDL (Fase 1) e CA-RDL (Fase 2) concorrentes...${NC}"

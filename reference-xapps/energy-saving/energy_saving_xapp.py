@@ -16,10 +16,11 @@ try:
     from fastapi import FastAPI
     from uvicorn import Config, Server
     import prometheus_client
-    from prometheus_client import Counter, Gauge, generate_latest
+    from prometheus_client import Counter, Gauge, generate_latest, start_http_server
 except ImportError:
     FastAPI = None
     Server = None
+    def start_http_server(*args, **kwargs): pass
     class _DummyMetric:
         def __init__(self, *args, **kwargs): pass
         def labels(self, *args, **kwargs): return self
@@ -122,10 +123,17 @@ class EnergySavingXApp:
         t_http = threading.Thread(target=self._run_http, daemon=True)
         t_http.start()
 
+        # Iniciar Metrics endpoint dedicado se configurado em porta separada
+        if self.metrics_port and self.metrics_port != self.http_port:
+            try:
+                start_http_server(self.metrics_port)
+            except Exception as e:
+                logger.debug(f"Metrics server start warning: {e}")
+
         # Iniciar Loop de decisões
         self.worker_thread = threading.Thread(target=self._loop, daemon=True)
         self.worker_thread.start()
-        logger.info(f"Energy Saving xApp iniciada com sucesso. HTTP: {self.http_port}, Metrics: {self.http_port}/metrics")
+        logger.info(f"Energy Saving xApp iniciada com sucesso. HTTP: {self.http_port}, Metrics: {self.metrics_port}")
 
     def stop(self):
         self.running = False

@@ -16,10 +16,10 @@ class ConflictSeverity(Enum):
 
 class ResolutionStrategy(Enum):
     PRIORITY_TABLE = "PRIORITY_TABLE"
-    MARL_AGENT = "MARL_AGENT"
     ROLLBACK = "ROLLBACK"
     TVS = "TVS"
     EEVS = "EEVS"
+    MARL_AGENT = "MARL_AGENT"
 
 @dataclass
 class XAppAction:
@@ -35,7 +35,7 @@ class XAppAction:
     t_dispatch_start: float = 0.0
     t_dispatch_end: float = 0.0
     t_ack: float = 0.0
-    arrival_monotonic: float = 0.0 # Retrocompatibilidade
+    arrival_monotonic: float = 0.0
 
     def __post_init__(self):
         if self.t_arrival == 0.0:
@@ -61,6 +61,7 @@ class XAppAction:
             return max(0.0, (self.t_ack - self.t_dispatch_start) * 1000.0)
         return None
 
+
 @dataclass
 class ConflictEvent:
     conflict_type: ConflictType
@@ -70,6 +71,7 @@ class ConflictEvent:
     description: str = ""
     conflict_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     detected_at: float = field(default_factory=time.time)
+
 
 @dataclass
 class ResolutionAction:
@@ -90,3 +92,20 @@ class KPMReport:
     drb_delay_dl: float
     prb_used_dl: int
     timestamp: float = field(default_factory=time.time)
+
+@dataclass
+class RDLDecision:
+    """
+    Contrato formal de saída da Camada de Decisão (H-RDL).
+    Separa estritamente a inteligência determinística/analítica da camada de transporte E2.
+    """
+    decision_id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
+    state: dict = field(default_factory=dict)
+    proposals: List[XAppAction] = field(default_factory=list)
+    conflicts: List[ConflictEvent] = field(default_factory=list)
+    safety_result: dict = field(default_factory=dict)
+    selected_actions: List[XAppAction] = field(default_factory=list)
+    reason: str = "PASS_THROUGH_CLEAN"
+    strategy_used: str = "DETERMINISTIC_H_RDL"
+    timestamp: float = field(default_factory=time.time)
+

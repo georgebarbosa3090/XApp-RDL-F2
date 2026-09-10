@@ -1,7 +1,10 @@
-from typing import List, Dict, Any, Tuple
+import os
+from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from src.observability.logging import setup_logger
-from src.e2.asn1_shim import INT, STR_UTF8, OCT_STR, SEQ, SEQ_OF, ASN1Dict
+from pycrate_asn1rt.asnobj_basic import INT
+from pycrate_asn1rt.asnobj_construct import SEQ, SEQ_OF, ASN1Dict
+from pycrate_asn1rt.asnobj_str import STR_UTF8, OCT_STR
 
 logger = setup_logger("KpmDecoder")
 
@@ -63,6 +66,10 @@ class E2SM_KPM_IndicationMessage(SEQ):
 
 
 class KpmDecoder:
+    """
+    Decodificador de telemetria E2SM-KPM v3 (Indication Header & Message).
+    Executa decodificacao ASN.1 APER estrita conforme especificacao 3GPP/O-RAN WG3.
+    """
     def __init__(self):
         self.metric_map = {
             "DRB.UEThpDl": "drb_thp_dl",
@@ -71,14 +78,18 @@ class KpmDecoder:
             "RRU.PrbUsedDl": "prb_dl",
             "RRU.PrbUsedUl": "prb_ul"
         }
+        self.decode_errors = 0
+        self.successful_decodes = 0
 
     def decode_indication(self, payload: bytes) -> List[Dict]:
         """
-        Wrapper exigido pelo rdl_xapp.py para extrair os reports KPM simulados/reais.
-        Agrega todas as métricas pertencentes ao mesmo (node_id, ue_id) em um único dicionário,
-        evitando que medições subsequentes (ex: PRBs após vazão) sobrescrevam valores anteriores com zero.
+        Wrapper exigido pelo rdl_xapp.py para extrair os reports KPM reais do payload.
+        Em caso de payload corrompido, retorna lista vazia sem sintetizar dados artificiais.
         """
-        measurements = self.decode(payload, payload)
+        try:
+            measurements = self.decode(payload, payload)
+        except Exception:
+            return []
         
         aggregated: Dict[Tuple[str, str], Dict[str, Any]] = {}
         for m in measurements:
@@ -90,28 +101,28 @@ class KpmDecoder:
                     "drb_thp_dl": 0.0,
                     "drb_thp_ul": 0.0,
                     "drb_delay_dl": 0.0,
-                    "prb_used_dl": 0,
-                    "prb_used_ul": 0
+                    "prb_used_dl": 0
                 }
             if m.metric_name == "DRB.UEThpDl":
-                aggregated[key]["drb_thp_dl"] = float(m.value)
+                aggregated[key]["drb_thp_dl"] = m.value
             elif m.metric_name == "DRB.UEThpUl":
-                aggregated[key]["drb_thp_ul"] = float(m.value)
+                aggregated[key]["drb_thp_ul"] = m.value
             elif m.metric_name == "DRB.RlcSduDelayDl":
-                aggregated[key]["drb_delay_dl"] = float(m.value)
+                aggregated[key]["drb_delay_dl"] = m.value
             elif m.metric_name == "RRU.PrbUsedDl":
                 aggregated[key]["prb_used_dl"] = int(m.value)
-            elif m.metric_name == "RRU.PrbUsedUl":
-                aggregated[key]["prb_used_ul"] = int(m.value)
-
+                
         return list(aggregated.values())
+
 
     def decode(self, indication_header: bytes, indication_message: bytes, default_node_id: str = "gnb_01") -> List[KpmMeasurement]:
         """
-        Decodifica o payload E2SM-KPM via APER.
-        Retorna lista de KpmMeasurement ou lista vazia [] em caso de payload inválido ou corrompido.
+        Decodifica estritamente o payload E2SM-KPM via APER sem injecao de dados sinteticos.
         """
-        results = []
+        results: List[KpmMeasurement] = []
+        if not indication_message:
+            return results
+
         try:
             msg = E2SM_KPM_IndicationMessage()
             msg.from_aper(indication_message)
@@ -127,7 +138,11 @@ class KpmDecoder:
                     value=float(item['metricValue']),
                     timestamp=0
                 ))
+            self.successful_decodes += 1
             return results
-        except Exception as e:
-            logger.warning(f"Rejeição de telemetria inválida ou corrompida no decoder E2SM-KPM: {e}")
-            return []
+        except Exception as aper_err:
+            self.decode_errors += 1
+            logger.error(f"Falha estrita ao decodificar E2SM-KPM via APER: {aper_err}")
+            raise aper_err
+
+

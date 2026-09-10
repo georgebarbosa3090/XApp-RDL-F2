@@ -60,6 +60,7 @@ WORKDIR /app
 # Copy source code and configs
 COPY --chown=xapp:xapp src/ /app/src/
 COPY --chown=xapp:xapp configs/ /app/configs/
+COPY --chown=xapp:xapp reference-xapps/ /app/reference-xapps/
 
 # Ports for HTTP and Metrics
 EXPOSE 8080 8081

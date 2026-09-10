@@ -19,25 +19,26 @@ kubectl label namespace "$NAMESPACE" istio-injection=enabled --overwrite 2>/dev/
 kubectl label namespace "ricplt" istio-injection=enabled --overwrite 2>/dev/null || true
 
 # 2. Garantir que as imagens necessárias (1.1.0 e 2.0.0) estejam presentes nos nós containerd do k3d
-echo "[+] Sincronizando imagens Docker nos nós do cluster k3d..."
-if docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1; then
-    docker tag iqos-xapp-rdl:2.0.0 iqos-xapp-rdl:1.1.0
-elif docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1; then
-    docker tag iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0
-fi
-
-for IMG in "iqos-xapp-rdl:1.1.0" "iqos-xapp-rdl:2.0.0"; do
-    if docker image inspect "$IMG" >/dev/null 2>&1; then
-        if command -v k3d >/dev/null 2>&1; then
-            echo " -> Importando $IMG via k3d image import..."
-            k3d image import "$IMG" -c "rancher-lab" 2>/dev/null || true
-        else
-            for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
-                docker save "$IMG" | docker exec -i "$node" ctr images import - 2>/dev/null || true
-            done
-        fi
+if [ "${SKIP_IMAGE_IMPORT:-false}" != "true" ]; then
+    echo "[+] Sincronizando imagens Docker nos nós do cluster k3d..."
+    if docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1; then
+        docker tag iqos-xapp-rdl:2.0.0 iqos-xapp-rdl:1.1.0
+    elif docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1; then
+        docker tag iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0
     fi
-done
+
+    if command -v k3d >/dev/null 2>&1; then
+        echo " -> Importando iqos-xapp-rdl:1.1.0 e 2.0.0 via k3d image import..."
+        k3d image import iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0 -c "rancher-lab" 2>/dev/null || true
+    else
+        for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
+            docker save iqos-xapp-rdl:1.1.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
+            docker save iqos-xapp-rdl:2.0.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
+        done
+    fi
+else
+    echo "[+] Pulando importação de imagens (já sincronizadas nesta execução)..."
+fi
 
 # 3. Se existirem os manifestos em deploy/kubernetes, aplica-os prioritariamente:
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
