@@ -1,4 +1,4 @@
-# Volume 14: Relatório de Resultados Experimentais e Tabela de Desempenho Comparativo (Antes e Depois da Superação das Limitações)
+﻿# Volume 14: Relatório de Resultados Experimentais e Tabela de Desempenho Comparativo (Antes e Depois da Superação das Limitações)
 
 **Documento:** Volume Temático 14  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
@@ -122,7 +122,7 @@ Todos os gráficos foram gerados em **300 DPI**, fundo branco puro e tipografia 
 ### 4.1. Gráfico Comparativo Antes vs Depois da Superação das Limitações
 A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (Concorrência, Segurança Safe-RL, Desempenho de Rede e Rigor Estatístico):
 
-![Comparativo Antes vs Depois das Limitações](figures/cenario_9_comparativo_antes_depois_limitacoes.png)
+![Comparativo Antes vs Depois das Limitações](figures/03_resultados_e_benchmarks_marl/cenario_9_comparativo_antes_depois_limitacoes.png)
 
 * **Painel A (Concorrência & Protocolo):** Elevação de $N_{\max} = 2 \to 6$ xApps e expansão de Control Styles ($2 \to 5$) e Parâmetros E2SM-RC ($3 \to 11$).
 * **Painel B (Segurança & Latência):** Redução drástica das ações inseguras no treino ($18.4\% \to 0.8\%$), eliminação de violações de SLA ($29.2\% \to 0\%$) e aceleração do *Fast-Flush* ($200\text{ ms} \to 4.2\text{ ms}$).
@@ -132,21 +132,21 @@ A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (C
 ---
 
 ### 4.2. Gráfico de Validação Estatística Multi-Semente ($N = 30$ Runs com IC 95%)
-![Estatística Multi-Semente com IC 95%](figures/fig_estatistica_multi_semente_ic95.png)
+![Estatística Multi-Semente com IC 95%](figures/03_resultados_e_benchmarks_marl/fig_estatistica_multi_semente_ic95.png)
 
 * Demonstra a distribuição de latência, vazão e perdas entre as 30 sementes com erro padrão reduzido e ausência de *outliers* destrutivos no CA-RDL.
 
 ---
 
 ### 4.3. Convergência MARL MAPPO e Dinâmica de Perdas com Safe-RL CMDP
-![Convergência MARL MAPPO](figures/cenario_7_marl_treinamento_convergencia_perdas.png)
+![Convergência MARL MAPPO](figures/03_resultados_e_benchmarks_marl/cenario_7_marl_treinamento_convergencia_perdas.png)
 
 * Ilustra a evolução suave da perda do Ator $L(\theta)$ e do Crítico $L(\psi)$ sob multiplicadores de Lagrange $\lambda_k$, garantindo estabilidade e impedindo ultrapassagens dos limites físicos.
 
 ---
 
 ### 4.4. Trade-off Multidimensional e Radar de Conformidade Holística
-![Radar Comparativo Holístico](figures/cenario_8_radar_comparativo_holistico_3fases.png)
+![Radar Comparativo Holístico](figures/03_resultados_e_benchmarks_marl/cenario_8_radar_comparativo_holistico_3fases.png)
 
 * Apresenta a cobertura 360° comparativa entre Baseline, Fase 1 (H-RDL) e Fase 2 (CA-RDL) em 8 eixos de conformidade: Vazão, Latência, Equidade, Eficiência Energética, Estabilidade de Handover, Segurança Zero-Trust, Escalabilidade e Latência de Decisão.
 

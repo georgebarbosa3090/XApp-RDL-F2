@@ -1,4 +1,4 @@
-# Volume 05: Guia de Simulação 5G NR no ns-3, Testes e Benchmarks Científicos
+﻿# Volume 05: Guia de Simulação 5G NR no ns-3, Testes e Benchmarks Científicos
 
 **Documento:** Volume Temático 05  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
@@ -14,7 +14,7 @@ A validação experimental é realizada com o simulador de eventos discretos **n
 * **ns-O-RAN / NORI:** Implementação do agente E2 na gNodeB com protocolo SCTP para o Near-RT RIC.
 * **NrPointToPointEpcHelper (User Plane Core):** Roteamento IP fim a fim com tunelamento GTP-U e mapeamento de portadores de QoS (5QI).
 
-![Arquitetura Fim-a-Fim](figures/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
+![Arquitetura Fim-a-Fim](figures/01_arquitetura_e_governanca/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
 
 ---
 
@@ -200,7 +200,7 @@ make run-all-scenarios
 | **Total de Usuários (UEs)** | `30 UEs` (15 por gNodeB) | 10 UEs URLLC (5QI 82), 10 UEs eMBB (5QI 9), 10 UEs mMTC (5QI 79). |
 | **Interface E2 O-RAN** | Porta SCTP `36422` | Conexão de controle Near-RT com o E2Term do Near-RT RIC. |
 
-![Topologia Espacial 2D](figures/cenario_1_topologia_tvs_conflict.png)
+![Topologia Espacial 2D](figures/02_cenarios_e_topologias/cenario_1_topologia_tvs_conflict.png)
 
 ---
 
@@ -230,28 +230,28 @@ Os artefatos gerados são salvos em `experiments/results/YYYY-MM-DD/run_HHMMSS/`
 ## 6. Galeria de Resultados Científicos e Cenários Simulados (Fase 2)
 
 ### 6.1. Cenário 1: Topologia Espacial e Conflito de Fatias de Rádio
-![Cenário 1: Topologia](figures/cenario_1_topologia_tvs_conflict.png)
+![Cenário 1: Topologia](figures/02_cenarios_e_topologias/cenario_1_topologia_tvs_conflict.png)
 
 ### 6.2. Cenário 2: Superfície de Trade-off Energy Saving vs QoS / Slicing
-![Cenário 2: Trade-off](figures/cenario_2_tradeoff_energy_vs_qos.png)
+![Cenário 2: Trade-off](figures/02_cenarios_e_topologias/cenario_2_tradeoff_energy_vs_qos.png)
 
 ### 6.3. Cenário 3: Arquitetura de Co-Simulação Fim-a-Fim ns-3 + Near-RT RIC
-![Cenário 3: Arquitetura](figures/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
+![Cenário 3: Arquitetura](figures/01_arquitetura_e_governanca/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
 
 ### 6.4. Cenário 4: Comparativo Multidimensional de Métricas Reais (CDF, Boxplot, PDR e Governança)
-![Cenário 4: Métricas Reais](figures/cenario_4_comparativo_multidimensional_metricas.png)
+![Cenário 4: Métricas Reais](figures/03_resultados_e_benchmarks_marl/cenario_4_comparativo_multidimensional_metricas.png)
 
 ### 6.5. Cenário 5: Throughput Agregado, Alocação por Fatia e Equidade de Jain
-![Cenário 5: Throughput e Jain Fairness](figures/cenario_5_vazao_throughput_e_jain_fairness.png)
+![Cenário 5: Throughput e Jain Fairness](figures/03_resultados_e_benchmarks_marl/cenario_5_vazao_throughput_e_jain_fairness.png)
 
 ### 6.6. Cenário 6: Agilidade de Decisão Near-RT, Perda de Pacotes e Estabilidade de Handover
-![Cenário 6: Latência de Decisão e Handover](figures/cenario_6_latencia_decisao_e_estabilidade_handover.png)
+![Cenário 6: Latência de Decisão e Handover](figures/03_resultados_e_benchmarks_marl/cenario_6_latencia_decisao_e_estabilidade_handover.png)
 
 ### 6.7. Cenário 7: Dinâmica de Treinamento MARL, Convergência de Perdas e Safety Guards
-![Cenário 7: Treinamento MARL](figures/cenario_7_marl_treinamento_convergencia_perdas.png)
+![Cenário 7: Treinamento MARL](figures/03_resultados_e_benchmarks_marl/cenario_7_marl_treinamento_convergencia_perdas.png)
 
 ### 6.8. Cenário 8: Radar Holístico Multidimensional de Governança O-RAN (Baseline vs Fase 1 vs Fase 2)
-![Cenário 8: Radar Holístico](figures/cenario_8_radar_comparativo_holistico_3fases.png)
+![Cenário 8: Radar Holístico](figures/03_resultados_e_benchmarks_marl/cenario_8_radar_comparativo_holistico_3fases.png)
 
 ---
 

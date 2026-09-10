@@ -1,4 +1,4 @@
-# xApp RDL — Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL)
+﻿# xApp RDL — Fase 2: Context-Aware Resource and Decision Layer (CA-RDL / MARL)
 
 [![Open RAN](https://img.shields.io/badge/O--RAN-Near--RT--RIC-orange.svg)](https://o-ran.org)
 [![Version](https://img.shields.io/badge/Version-2.0.0-blue.svg)](https://github.com/georgebarbosa3090/XApp-RDL-F2)
@@ -56,10 +56,10 @@ flowchart TD
 ## 2. Arquitetura e Cenários Simulados
 
 ### 2.1. Arquitetura de Co-Simulação Fim-a-Fim (ns-3 + Near-RT RIC)
-![Arquitetura de Co-Simulação](docs/figures/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
+![Arquitetura de Co-Simulação](docs/figures/01_arquitetura_e_governanca/cenario_3_arquitetura_cosimulacao_ns3_oran.png)
 
 ### 2.2. Topologia Espacial e Conflito de Fatias de Rádio
-![Topologia Espacial](docs/figures/cenario_1_topologia_tvs_conflict.png)
+![Topologia Espacial](docs/figures/02_cenarios_e_topologias/cenario_1_topologia_tvs_conflict.png)
 
 ---
 
@@ -193,7 +193,7 @@ make run-suite
 
 Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comparando a operação desregulada (**Baseline**) com a governança da **Fase 1 (H-RDL)**:
 
-![Métricas Experimentais Reais](docs/figures/cenario_4_comparativo_multidimensional_metricas.png)
+![Métricas Experimentais Reais](docs/figures/03_resultados_e_benchmarks_marl/cenario_4_comparativo_multidimensional_metricas.png)
 
 | Domínio de Avaliação | Métrica Científica | Baseline (Sem RDL) | Fase 1: H-RDL (Heurística) | Impacto / Ganho |
 | :--- | :--- | :---: | :---: | :---: |

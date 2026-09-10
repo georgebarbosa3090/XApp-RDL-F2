@@ -1,4 +1,4 @@
-# Volume 09: Relatório Técnico Detalhado — Operações, Infraestrutura e Formulação da Fase 2 (CA-RDL / MARL)
+﻿# Volume 09: Relatório Técnico Detalhado — Operações, Infraestrutura e Formulação da Fase 2 (CA-RDL / MARL)
 
 **Projeto:** xApp RDL (Resource and Decision Layer) — Governança Near-RT O-RAN  
 **Versão:** Fase 2 — *Context-Aware RDL (CA-RDL)* com Paradigma Multi-Agent Reinforcement Learning (MAPPO)  
@@ -12,7 +12,7 @@
 
 A Fase 2 do projeto evoluiu a camada de decisão do xApp RDL de uma abordagem puramente heurística (H-RDL da Fase 1) para uma arquitetura **Cognitiva e Ciente de Contexto (Context-Aware RDL - CA-RDL)**. O sistema atua no plano Near-RT RIC (loop de controle de 10 ms a 1 s segundo as especificações O-RAN WG3), arbitrando ações conflitantes emitidas simultaneamente por múltiplas xApps de rádio (`ricxapp-qos-xslice`, `ricxapp-energy-saving` e `ricxapp-traffic-steering`) sobre nós gNodeB 5G NR.
 
-![Pipeline Global e Arquitetura do xApp RDL Fase 2](figures/diagram_01_global_pipeline_architecture.png)
+![Pipeline Global e Arquitetura do xApp RDL Fase 2](figures/01_arquitetura_e_governanca/diagram_01_global_pipeline_architecture.png)
 
 ```mermaid
 flowchart TD
@@ -56,7 +56,7 @@ flowchart TD
 
 ## 2. Infraestrutura e Componentes de Plataforma
 
-![Infraestrutura de Cluster k3d e Rancher](figures/diagram_03_infraestrutura_k3d_rancher.png)
+![Infraestrutura de Cluster k3d e Rancher](figures/01_arquitetura_e_governanca/diagram_03_infraestrutura_k3d_rancher.png)
 
 ### 2.1. Kubernetes e k3d (`rancher-lab`)
 * **Topologia de Cluster:** Executado sobre o nó `rancher-lab-server-0` no k3d (versão K3s leve) com driver de rede bridge integrado ao host WSL2.
@@ -116,7 +116,7 @@ graph LR
 
 ## 4. Módulos Internos da Arquitetura Cognitiva
 
-![Arquitetura Cognitiva e Formulação MAPPO CTDE](figures/diagram_02_arquitetura_cognitiva_mappo.png)
+![Arquitetura Cognitiva e Formulação MAPPO CTDE](figures/01_arquitetura_e_governanca/diagram_02_arquitetura_cognitiva_mappo.png)
 
 ### 4.1. Módulo de Percepção (`PerceptionAgent`)
 * **Ingestão E2SM-KPM:** O [`KpmDecoder`](src/e2/kpm_decoder.py) decodifica payloads ASN.1 das mensagens `RIC_INDICATION` (mtype `12050`).
@@ -179,7 +179,7 @@ O [`RefinementAgent`](src/agents/refinement_agent.py) implementa filtros determi
 
 ## 5. Formulação MARL: MAPPO, Redes Neurais e Decisões Distribuídas
 
-![Dinâmica de Treinamento MARL e Safety Guards](figures/cenario_7_marl_treinamento_convergencia_perdas.png)
+![Dinâmica de Treinamento MARL e Safety Guards](figures/03_resultados_e_benchmarks_marl/cenario_7_marl_treinamento_convergencia_perdas.png)
 
 ### 5.1. Paradigma CTDE (*Centralized Training with Decentralized Execution*)
 No módulo [`mappo_agent.py`](src/agents/marl/mappo_agent.py), a coordenação multi-agente adota a arquitetura CTDE:
@@ -257,7 +257,7 @@ Uma vez aprovada pelo Refinement Agent, a ação vencedora $a_t^*$ é convertida
 
 ## 8. Síntese de Desempenho e Resultados da Fase 2
 
-![Radar Holístico Multidimensional de Governança O-RAN](figures/cenario_8_radar_comparativo_holistico_3fases.png)
+![Radar Holístico Multidimensional de Governança O-RAN](figures/03_resultados_e_benchmarks_marl/cenario_8_radar_comparativo_holistico_3fases.png)
 
 A execução dos cenários de validação e simulação em larga escala no ns-3.40 consolidou os seguintes resultados empíricos:
 

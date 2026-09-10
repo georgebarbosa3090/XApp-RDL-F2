@@ -1,4 +1,4 @@
-# Volume 11: Especificação de Cenários de Teste 5G, 5G-Advanced e 6G, Características e Requisitos Técnicos
+﻿# Volume 11: Especificação de Cenários de Teste 5G, 5G-Advanced e 6G, Características e Requisitos Técnicos
 
 ## Projeto xApp RDL — Roadmap de Avaliação Experimental e Benchmarks
 
@@ -42,7 +42,7 @@ flowchart LR
 * **Conflito:** `xApp-Energy` tenta reduzir potência de transmissão para $15\text{ dBm}$ enquanto `xApp-QoS` exige potência $> 23\text{ dBm}$ para manter atraso URLLC $< 5\text{ ms}$.
 * **Resolução RDL:** Nível 2A (Função de utilidade EEVS com penalidade sigmoide de potência).
 
-![Cenário 1: Energy Saving vs QoS (EEVS)](figures/scenario_1_eevs_energy_vs_qos.png)
+![Cenário 1: Energy Saving vs QoS (EEVS)](figures/02_cenarios_e_topologias/scenario_1_eevs_energy_vs_qos.png)
 
 #### Cenário 2: TVS (Traffic Steering vs. Slicing e Handover)
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_tvs_conflict.cc`](simulations/ns3/scenario_rdl_tvs_conflict.cc)
@@ -50,7 +50,7 @@ flowchart LR
 * **Conflito:** `xApp-TrafficSteering` força handover de UEs de borda por carga, enquanto `xApp-Slicing` altera quotas de PRB, gerando instabilidade na fronteira.
 * **Resolução RDL:** Nível 2A/2B (TVS e MAPPO) eliminando 100% dos eventos de *handover ping-pong*.
 
-![Cenário 2: Traffic Steering vs Slicing (TVS)](figures/scenario_2_tvs_traffic_steering_slicing.png)
+![Cenário 2: Traffic Steering vs Slicing (TVS)](figures/02_cenarios_e_topologias/scenario_2_tvs_traffic_steering_slicing.png)
 
 ---
 
@@ -70,7 +70,7 @@ flowchart LR
   make run-scenario3
   ```
 
-![Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO](figures/scenario_3_5ga_multicarrier_mimo.png)
+![Cenário 3: 5G-Advanced Multi-Carrier FR1/FR3 & Massive MIMO](figures/02_cenarios_e_topologias/scenario_3_5ga_multicarrier_mimo.png)
 
 ---
 
@@ -86,7 +86,7 @@ flowchart LR
   make run-scenario4
   ```
 
-![Cenário 4: 6G ISAC Sensing vs Communication](figures/scenario_4_6g_isac_sensing_coexistence.png)
+![Cenário 4: 6G ISAC Sensing vs Communication](figures/02_cenarios_e_topologias/scenario_4_6g_isac_sensing_coexistence.png)
 
 #### Cenário 5: Governança Cross-Tier e Escudo Anti-Rogue xApp
 * **Arquivo C++:** [`simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc`](simulations/ns3/scenario_rdl_6g_cross_tier_governance.cc)
@@ -97,7 +97,7 @@ flowchart LR
   make run-scenario5
   ```
 
-![Cenário 5: 6G Cross-Tier Multi-Loop Governance & Anti-Rogue Shield](figures/scenario_5_6g_cross_tier_governance.png)
+![Cenário 5: 6G Cross-Tier Multi-Loop Governance & Anti-Rogue Shield](figures/02_cenarios_e_topologias/scenario_5_6g_cross_tier_governance.png)
 
 ---
 
