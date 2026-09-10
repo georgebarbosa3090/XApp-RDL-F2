@@ -185,46 +185,37 @@ run-scenario1: sync-ns3-scratch
 	@echo "Executando Cenário 1: Energy Saving vs QoS (EEVS) com E2 ativo..."
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 run-scenario1-baseline: sync-ns3-scratch
 	@echo "Executando Cenário 1: Energy Saving vs QoS (Baseline / Standalone)..."
 	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 run-scenario2: sync-ns3-scratch
 	@echo "Executando Cenário 2: Traffic Steering vs Slicing (TVS) com E2 ativo..."
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 run-scenario2-baseline: sync-ns3-scratch
 	@echo "Executando Cenário 2: Traffic Steering vs Slicing (Baseline / Standalone)..."
 	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 run-scenario3: sync-ns3-scratch
 	@echo "Executando Cenário 3: 5G-Advanced Multi-Carrier (FR1/FR3) & Massive MIMO UPA..."
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl5gaMulticarrierMimo=level_all" && ./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=40"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 run-scenario4: sync-ns3-scratch
 	@echo "Executando Cenário 4: 6G ISAC (Sensoriamento Radar vs Comunicação 28 GHz)..."
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl6gIsacSensingCoexistence=level_all" && ./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --sensingRatio=0.35 --simTime=30"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 run-scenario5: sync-ns3-scratch
 	@echo "Executando Cenário 5: 6G Governança Cross-Tier & Escudo Anti-Rogue xApp..."
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl6gCrossTierGovernance=level_all" && ./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --lockout=true --simTime=35"
 	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-	@$(PYTHON) scripts/run_experiment_suite.py
 
-run-all-scenarios: sync-ns3-scratch
-	bash scripts/run_all_scenarios_suite.sh
 
 run-baseline: sync-ns3-scratch
 	bash scripts/run_baseline_experiment.sh
@@ -232,27 +223,13 @@ run-baseline: sync-ns3-scratch
 run-rdl: sync-ns3-scratch
 	bash scripts/run_rdl_experiment.sh
 
-run-experiments: sync-ns3-scratch
-	bash scripts/run_full_experiment.sh
 
-run-suite:
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 analyze-benchmarks:
-	@$(PYTHON) scripts/run_experiment_suite.py
 
 view-results:
 	@cat experiments/results/relatorio_comparativo.md
 
-push-results:
-	@echo "Sincronizando resultados com o GitHub..."
-	git add experiments/results/ docs/ scripts/
-	git commit -m "chore(experiments): upload latest ns-3 MARL benchmark results [skip ci]" || echo "Nenhum dado novo."
-	git push origin main || echo "Aviso no push."
 
-sync:
-	@bash scripts/git_sync.sh "$(MSG)"
 
-auto-sync:
-	@bash scripts/git_auto_sync.sh $(INTERVAL)
 
