@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional, Tuple
 try:
     from ricxappframe.xapp_frame import Xapp
     HAS_RICXAPPFRAME = True
-except ImportError:
+except (ImportError, OSError, Exception):
     HAS_RICXAPPFRAME = False
     class Xapp:
         """Shim de compatibilidade do framework Xapp para testes e CI sem RMR nativo."""

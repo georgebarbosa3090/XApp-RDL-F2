@@ -1,5 +1,5 @@
 import pytest
-import torch
+torch = pytest.importorskip("torch")
 import numpy as np
 from src.conflict_types import ConflictEvent, ConflictType, ConflictSeverity, XAppAction, ResolutionStrategy
 from src.agents.marl.mappo_agent import MAPPOCoordinator

@@ -30,7 +30,7 @@ def test_mappo_feature_extraction():
     assert isinstance(obs, np.ndarray)
     assert len(obs) == 10
     assert obs[0] == 1.0  # DIRECT conflict
-    assert obs[2] == 0.85 # Throughput normalized
+    assert obs[2] == pytest.approx(0.85) # Throughput normalized
 
 def test_mappo_multiobjective_reward():
     coordinator = MAPPOCoordinator(n_agents=2, obs_dim=10, action_dim=5, config={"w_qos": 0.6, "w_ee": 0.3, "w_pen": 0.1})
