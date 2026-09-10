@@ -55,7 +55,7 @@ graph TD
 
 ### Arquitetura Core e Modelagem
 * **[Volume 01: Arquitetura e Modelagem Matemática](01_arquitetura_e_modelagem_matematica.md)**: Clean Architecture, formulação de observação canônica ($\mathbb{R}^{60}$), ator-crítico descentralizado (CTDE) e modelos de recompensa multiobjetivo.
-* **[Volume 09: Relatório Técnico Detalhado](09_relatorio_tecnico_detalhado_fase2.md)**: Detalhamento exaustivo dos algoritmos cognitivos, agentes de refinamento com quarentena comportamental (*Anti-Rogue Shield*) e mapeamento E2AP.
+* **[Volume 09: Relatório Técnico Detalhado](09_relatorio_tecnico_detalhado_fase2.md)**: Detalhamento dos algoritmos cognitivos, agentes de refinamento com quarentena comportamental (*Anti-Rogue Shield*) e mapeamento E2AP.
 
 ### Infraestrutura, Deploy e Observabilidade
 * **[Volume 02: Infraestrutura de Cluster k3d e Rancher](02_infraestrutura_cluster_k3d_e_rancher.md)**: Topologias Single-Node (~450MB), Dual-Node (~900MB) e Multi-Node (~1.5GB) com mapeamento de portas O-RAN.
