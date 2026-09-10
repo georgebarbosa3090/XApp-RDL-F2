@@ -63,15 +63,85 @@ flowchart TD
 
 ---
 
-## 3. Início Rápido (Quickstart)
+## 3. Infraestrutura Leve com k3d, Rancher e Kiali
 
-### 3.1. Executar Testes Unitários:
+Para desenvolvimento ágil e validação com baixo consumo de recursos de computação, a Fase 2 suporta provisionamento de clusters Kubernetes leves via **k3d (K3s em Docker)** com mapeamento nativo das portas padronizadas da arquitetura O-RAN:
+
+### 3.1. Topologias de Cluster k3d Disponíveis
+
 ```bash
-make test
-# Executa os 18 testes unitários (PyTorch MARL, MAPPO, Perception, Refinement) com 100% de sucesso
+# -------------------------------------------------------------------------
+# Opção 1: Single-Node (1 Servidor/Worker Unificado, ~450 MB RAM)
+# Ideal para desenvolvimento local rápido, CI/CD e máquinas com recursos limitados
+# -------------------------------------------------------------------------
+k3d cluster create rdl-cluster \
+  --servers 1 \
+  -p "36422:36422/sctp@server:0" \
+  -p "8080-8087:8080-8087@server:0" \
+  -p "4560-4561:4560-4561@server:0"
+
+# -------------------------------------------------------------------------
+# Opção 2: Dual-Node (1 Control-Plane + 1 Worker Node, ~900 MB RAM)
+# Separação entre plano de controle do cluster e execução dos Pods de rede
+# -------------------------------------------------------------------------
+k3d cluster create rdl-cluster \
+  --servers 1 \
+  --agents 1 \
+  -p "36422:36422/sctp@server:0" \
+  -p "8080-8087:8080-8087@server:0" \
+  -p "4560-4561:4560-4561@server:0"
+
+# -------------------------------------------------------------------------
+# Opção 3: 3-Nodes / Multi-Node (1 Control-Plane + 2 Worker Nodes, ~1.5 GB RAM)
+# Topologia de produção: Isolamento estrito de namespaces (ricplt no worker-1 e ricxapp no worker-2)
+# -------------------------------------------------------------------------
+k3d cluster create rdl-cluster \
+  --servers 1 \
+  --agents 2 \
+  -p "36422:36422/sctp@server:0" \
+  -p "8080-8087:8080-8087@server:0" \
+  -p "4560-4561:4560-4561@server:0"
 ```
 
-### 3.2. Implantar a xApp RDL Fase 2 via Helm:
+### 3.2. Mapeamento de Portas e Serviços O-RAN
+
+| Porta / Protocolo | Componente / Serviço | Namespace | Descrição Funcional |
+| :---: | :---: | :---: | :--- |
+| `36422/SCTP` | `service-ricplt-e2term-sctp` | `ricplt` | Terminação E2 (E2AP / E2SM-KPM / E2SM-RC) conectando gNBs/ns-3 |
+| `38000/TCP` | `service-ricplt-e2term-rmr` | `ricplt` | Barramento RMR interno do E2 Termination |
+| `6379/TCP` | `service-ricplt-dbaas-tcp` | `ricplt` | Banco de dados Redis SDL (Shared Data Layer) |
+| `4560/TCP` | `service-ricxapp-iqos-xapp-rdl-rmr` | `ricxapp` | Canal de dados e despacho de ações RMR da xApp-RDL |
+| `4561/TCP` | `service-ricxapp-iqos-xapp-rdl-rmr` | `ricxapp` | Canal de controle e distribuição de tabelas de rota RMR |
+| `8080/TCP` | `service-ricxapp-iqos-xapp-rdl-http` | `ricxapp` | Healthcheck REST (`/health/alive`, `/health/ready`) |
+| `8081/TCP` | `service-ricxapp-iqos-xapp-rdl-http` | `ricxapp` | Métricas Prometheus de Governança e Decisões MARL |
+| `8443/TCP` | `rancher-server` | `cattle-system` | Dashboard Web e gestão centralizada de nós e workloads |
+| `20001/TCP` | `kiali-dashboard` | `istio-system` | Visualização gráfica de topologia e tráfego Service Mesh |
+
+---
+
+## 4. Guia Rápido de Execução e Deploy
+
+### Opção A: Implantação Rápida via Perfil OpenRAN@Brasil Blueprint v3 (`deploy/openran-br-v3/`)
+Manifestos K8s puros e otimizados para o namespace `ricxapp` seguindo a especificação normativa da Release J / OpenRAN@Brasil:
+```bash
+# 1. Criar os namespaces oficiais se ainda não existirem
+kubectl create namespace ricplt --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace ricxapp --dry-run=client -o yaml | kubectl apply -f -
+
+# 2. Aplicar ConfigMap e tabela de rotas RMR
+kubectl apply -f deploy/openran-br-v3/config-map.yaml
+
+# 3. Aplicar Serviços de Rede (RMR 4560/4561 + HTTP 8080/8081)
+kubectl apply -f deploy/openran-br-v3/service.yaml
+
+# 4. Aplicar o Deployment da xApp RDL Fase 2
+kubectl apply -f deploy/openran-br-v3/deployment.yaml
+
+# 5. Validar o status da implantação
+kubectl get pods,svc -n ricxapp -l app=iqos-xapp-rdl
+```
+
+### Opção B: Implantar a xApp RDL Fase 2 via Helm
 *Premissa: O Near-RT RIC e as 3 Reference xApps já estão rodando no cluster k3d.*
 ```bash
 # Instala/Atualiza exclusivamente a release 'ricxapp-iqos-xapp-rdl-f2' (v2.0.0)
@@ -87,15 +157,39 @@ make logs-f2
 make test-f2
 ```
 
-### 3.3. Executar Simulação ns-3 e Suíte de Experimentos:
+### Opção C: Executar Suíte de Testes Unitários e Modulares (76/76 PASS)
 ```bash
-# Executa a suíte experimental completa e gera relatórios comparativos
+make test
+```
+
+### Opção D: Executar Simulação ns-3 e Suíte de Experimentos
+```bash
 make run-suite
 ```
 
 ---
 
-## 4. Desempenho e Validação Experimental
+## 5. Observabilidade e Monitoramento
+
+* **Rancher Dashboard:** Interface visual de gestão do cluster, nós e namespaces (`ricplt`, `ricxapp`):
+  ```bash
+  make rancher-stop       # (Opcional) Para e remove container anterior
+  make rancher-start      # 1. Inicia o container do Rancher Server (:8443)
+  make rancher-logs       # 2. Acompanha os logs (ou: docker logs -f rancher-server)
+  make rancher-password   # 3. Obtém a Bootstrap Password inicial
+  # 4. Acesse no navegador: URL: https://localhost:8443 (ou https://<IP_DO_HOST>:8443)
+  make rancher-connect URL="https://localhost:8443/v3/import/c-m-xxxx_c-m-xxxx.yaml" # 5. Vincula o cluster
+  ```
+* **Kiali Service Mesh:** Para visualização em grafo animado do fluxo de dados entre xApps e o Near-RT RIC:
+  ```bash
+  make kiali-install      # Instala Istio e Kiali no cluster
+  make kiali-dashboard    # Abre o proxy do dashboard (http://localhost:20001/kiali)
+  ```
+* **Injetor de Tráfego O-RAN:** Execute `make inject-traffic` para alimentar a malha com fluxos contínuos.
+
+---
+
+## 6. Desempenho e Validação Experimental
 
 Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comparando a operação desregulada (**Baseline**) com a governança da **Fase 1 (H-RDL)**:
 
@@ -116,7 +210,7 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 
 ---
 
-## 5. Estrutura Documental da Fase 2
+## 7. Estrutura Documental da Fase 2
 
 | Volume Documental | Título do Documento | Descrição e Escopo |
 | :--- | :--- | :--- |
@@ -136,7 +230,7 @@ Resultados empíricos obtidos na co-simulação 5G NR (5G-LENA 3.5 GHz n78) comp
 
 ---
 
-## 6. Repositórios Oficiais
+## 8. Repositórios Oficiais
 
 * **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
 * **Fase 2 (CA-RDL / MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)

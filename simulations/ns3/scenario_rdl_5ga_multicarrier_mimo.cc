@@ -168,6 +168,18 @@ int main (int argc, char *argv[])
 
     nrHelper->AttachToClosestGnb (ueDevs, gNbDevs);
 
+#if HAS_ORAN_MODULE
+    if (enableE2Agent)
+    {
+        NS_LOG_INFO ("Instalando NORI E2 Agent para 5G-Advanced Massive MIMO / Carrier Aggregation (" << ricIp << ":" << ricPort << ")");
+        Ptr<E2AgentHelper> e2AgentHelper = CreateObject<E2AgentHelper> ();
+        e2AgentHelper->SetAttribute ("RicIpAddress", Ipv4AddressValue (ricIp.c_str ()));
+        e2AgentHelper->SetAttribute ("RicPort", UintegerValue (ricPort));
+        e2AgentHelper->SetAttribute ("KpmReportIntervalMs", UintegerValue (200));
+        e2AgentHelper->Install (gNbNodes);
+    }
+#endif
+
     // 6. Aplicacoes e Fatiamento de Trafego (URLLC, eMBB, mMTC)
     uint16_t port = 1234;
     ApplicationContainer clientApps, serverApps;

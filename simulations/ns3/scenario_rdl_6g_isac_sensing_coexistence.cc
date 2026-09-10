@@ -25,6 +25,16 @@
 #define HAS_NR_MODULE 0
 #endif
 
+#if __has_include("ns3/oran-interface.h")
+#include "ns3/oran-interface.h"
+#define HAS_ORAN_MODULE 1
+#elif __has_include("ns3/e2-agent-helper.h")
+#include "ns3/e2-agent-helper.h"
+#define HAS_ORAN_MODULE 1
+#else
+#define HAS_ORAN_MODULE 0
+#endif
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("ScenarioRdl6gIsacSensingCoexistence");
@@ -39,6 +49,7 @@ int main (int argc, char *argv[])
     double sensingPowerRatio = 0.3;  // Quota inicial de potencia/recurso para sensoriamento radar
     std::string ricIp = "127.0.0.1";
     uint16_t ricPort = 36422;
+    bool enableE2Agent = true;
     uint32_t randomSeed = 101;
 
     CommandLine cmd (__FILE__);
@@ -48,13 +59,11 @@ int main (int argc, char *argv[])
     cmd.AddValue ("sensingRatio", "Fracao de potencia/tempo para sensoriamento", sensingPowerRatio);
     cmd.AddValue ("ricIp", "Endereco IP do Near-RT RIC", ricIp);
     cmd.AddValue ("ricPort", "Porta SCTP do E2Term", ricPort);
+    cmd.AddValue ("enableE2", "Ativar interface O-RAN E2", enableE2Agent);
     cmd.AddValue ("seed", "Semente aleatoria", randomSeed);
     cmd.Parse (argc, argv);
 
-    (void)ricIp;
-    (void)ricPort;
-
-    SeedManager::SetSeed (randomSeed);
+        SeedManager::SetSeed (randomSeed);
     SeedManager::SetRun (1);
 
     NS_LOG_INFO ("Iniciando Cenario 6G ISAC: Coexistencia Radar-Comunicacao em 28 GHz...");
@@ -117,6 +126,18 @@ int main (int argc, char *argv[])
     Ipv4InterfaceContainer ueIpIface = nrEpcHelper->AssignUeIpv4Address (NetDeviceContainer (ueDevs));
 
     nrHelper->AttachToClosestGnb (ueDevs, gNbDevs);
+
+#if HAS_ORAN_MODULE
+    if (enableE2Agent)
+    {
+        NS_LOG_INFO ("Instalando NORI E2 Agent para 6G ISAC Sensing Coexistence (" << ricIp << ":" << ricPort << ")");
+        Ptr<E2AgentHelper> e2AgentHelper = CreateObject<E2AgentHelper> ();
+        e2AgentHelper->SetAttribute ("RicIpAddress", Ipv4AddressValue (ricIp.c_str ()));
+        e2AgentHelper->SetAttribute ("RicPort", UintegerValue (ricPort));
+        e2AgentHelper->SetAttribute ("KpmReportIntervalMs", UintegerValue (200));
+        e2AgentHelper->Install (gNbNodes);
+    }
+#endif
 
     // Trafego de Dados Ultrarrapido
     uint16_t port = 2345;
