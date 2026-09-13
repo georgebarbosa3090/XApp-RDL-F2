@@ -1,100 +1,73 @@
-import os
 import json
-from typing import List, Dict, Any, Optional
-
-try:
-    from pydantic import BaseModel
-except ImportError:
-    class BaseModel:
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-        def get(self, key: str, default: Any = None) -> Any:
-            return getattr(self, key, default)
-        def dict(self) -> Dict[str, Any]:
-            return self.__dict__
+import os
+from pydantic import BaseModel
+from typing import List
 
 class XAppConfig(BaseModel):
-    name: str = "iqos-xapp-rdl"
-    version: str = "2.0.0"
+    name: str
+    version: str
 
 class RMRConfig(BaseModel):
-    port: int = 4560
-    max_message_size: int = 65536
-    wait_for_ready: bool = True
+    port: int
+    max_message_size: int
+    wait_for_ready: bool
 
 class HttpConfig(BaseModel):
-    host: str = "0.0.0.0"
-    port: int = 8080
+    host: str
+    port: int
 
 class MetricsConfig(BaseModel):
-    port: int = 8081
+    port: int
 
 class SDLConfig(BaseModel):
-    use_fake: bool = True
-    namespace: str = "iqos-xapp-rdl"
+    use_fake: bool
+    namespace: str
 
 class E2Config(BaseModel):
-    subscription_period_ms: int = 1000
-    retry_interval_seconds: int = 5
-    maximum_retries: int = 10
+    subscription_period_ms: int
+    retry_interval_seconds: int
+    maximum_retries: int
 
 class KpmConfig(BaseModel):
-    service_model_versions: List[str] = ["v2", "v3"]
-    measurements: List[str] = ["DRB.UEThpDl", "DRB.UEThpUl", "DRB.RlcSduDelayDl", "RRU.PrbUsedDl"]
+    service_model_versions: List[str]
+    measurements: List[str]
 
 class ControlConfig(BaseModel):
-    enabled: bool = True
-    dry_run: bool = False
-    service_model: str = "E2SM-RC"
+    enabled: bool
+    dry_run: bool
+    service_model: str
 
 class AppConfig(BaseModel):
-    xapp: Optional[XAppConfig] = None
-    rmr: Optional[RMRConfig] = None
-    http: Optional[HttpConfig] = None
-    metrics: Optional[MetricsConfig] = None
-    sdl: Optional[SDLConfig] = None
-    e2: Optional[E2Config] = None
-    kpm: Optional[KpmConfig] = None
-    control: Optional[ControlConfig] = None
-    
-    class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
+    xapp: XAppConfig
+    rmr: RMRConfig
+    http: HttpConfig
+    metrics: MetricsConfig
+    sdl: SDLConfig
+    e2: E2Config
+    kpm: KpmConfig
+    control: ControlConfig
 
     def get(self, key: str, default: Any = None) -> Any:
-        val = getattr(self, key, None)
-        if val is not None:
-            return val
-        if hasattr(self, "__pydantic_extra__") and self.__pydantic_extra__:
-            return self.__pydantic_extra__.get(key, default)
+        if hasattr(self, key):
+            val = getattr(self, key)
+            return val.model_dump() if hasattr(val, 'model_dump') else val
         return default
-        
-    def __getitem__(self, item):
-        val = getattr(self, item, None)
-        if val is not None:
-            return val
-        if hasattr(self, "__pydantic_extra__") and self.__pydantic_extra__:
-            return self.__pydantic_extra__[item]
-        raise KeyError(item)
+
 
 class ConfigManager:
     def __init__(self, filepath: str = "configs/config-file.json"):
         self.filepath = filepath
-        self.config = self.load_config(filepath)
 
-    def load_config(self, filepath: str = None) -> AppConfig:
-        target = filepath or self.filepath or "configs/config-file.json"
-        if not os.path.exists(target):
-            # Fallback to default
-            self.config = AppConfig()
-            return self.config
+    @staticmethod
+    def load_config(filepath: str = "configs/config-file.json") -> AppConfig:
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Configuration file not found: {filepath}")
         
-        try:
-            with open(target, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            self.config = AppConfig(**data)
-        except Exception:
-            self.config = AppConfig()
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
             
-        return self.config
+        return AppConfig(**data)
+
+    def get_config(self) -> AppConfig:
+        return self.load_config(self.filepath)
+

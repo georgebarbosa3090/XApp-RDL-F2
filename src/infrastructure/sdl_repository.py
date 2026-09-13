@@ -6,7 +6,7 @@ from src.observability.logging import setup_logger
 logger = setup_logger("SdlRepository")
 
 class SdlRepository:
-    def __init__(self, xapp_instance=None, host: Optional[str] = None, port: Optional[int] = None):
+    def __init__(self, xapp_instance=None, host: str = "localhost", port: int = 6379):
         """
         Wrapper para o SDL (Shared Data Layer) do RIC.
         xapp_instance: instância da RDLxApp contendo a conexão sdl.
@@ -16,6 +16,7 @@ class SdlRepository:
         self.port = port
         self.namespace = "iqos-xapp-rdl"
         self._local_cache = []
+
 
     def _set(self, key: str, value: Any):
         try:
@@ -69,6 +70,10 @@ class SdlRepository:
         if data and isinstance(data, dict):
             data["result"] = result
             self._set(f"control_results:{control_id}", data)
+
+    def record_rollback(self, control_id: str):
+        self._set(f"control_rollbacks:{control_id}", {"timestamp": time.time(), "status": "ROLLED_BACK"})
+
 
     # Alias para compatibilidade com o MemoryModule legado
     def add_action(self, action):
