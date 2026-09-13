@@ -84,6 +84,7 @@ scripts/test_batching.py
 *backup*
 *rollback*
 *sync*
+!docs/compliance/*.md
 
 
 
