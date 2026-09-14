@@ -12,15 +12,19 @@
 
 Para usuários que desejam **clonar/atualizar o repositório, resetar o cluster k3d antigo e implantar a infraestrutura Near-RT RIC**, execute o bloco abaixo diretamente no terminal:
 
+1. Navegar até o diretório do repositório F2:
 ```bash
-# 1. Navegar até o diretório do repositório F2:
 cd ~/XApp-RDL-F2
+```
 
-# 2. Deletar qualquer cluster k3d antigo e criar um novo cluster limpo (1 Nó):
+2. Deletar qualquer cluster k3d antigo e criar um novo cluster limpo (1 Nó):
+```bash
 make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
 make cluster-create-1node
+```
 
-# 3. Executar o pipeline automatizado de deploy via HELM (Near-RT RIC + Reference xApps + CA-RDL):
+3. Executar o pipeline automatizado de deploy via HELM (Near-RT RIC + Reference xApps + CA-RDL):
+```bash
 bash scripts/deploy_helm.sh --with-rdl
 ```
 
@@ -147,11 +151,13 @@ bash scripts/deploy_helm.sh --with-rdl
 
 Utilize este cenário quando a infraestrutura Near-RT RIC e as Reference xApps **já estiverem rodando** no cluster e você deseja atualizar apenas a xApp RDL Fase 2:
 
+Implanta/Atualiza apenas a release Helm da Fase 2 sem tocar no Near-RT RIC:
 ```bash
-# Implanta/Atualiza apenas a release Helm da Fase 2 sem tocar no Near-RT RIC:
 make helm-deploy-f2
+```
 
-# Ou atualização declarativa via Helm Upgrade:
+Ou atualização declarativa via Helm Upgrade:
+```bash
 make helm-upgrade-f2
 ```
 
@@ -256,16 +262,26 @@ make cluster-recreate
 
 | Comando Makefile | Ação Executada | Escopo |
 | :--- | :--- | :--- |
-| **`make cluster-create-1node`** | Cria cluster k3d com 1 Nó (Single-Node) | Infraestrutura K8s |
-| **`make cluster-create-2nodes`** | Cria cluster k3d com 2 Nós (Dual-Node) | Infraestrutura K8s |
-| **`make cluster-create-3nodes`** | Cria cluster k3d com 3 Nós (Triple-Node) | Infraestrutura K8s |
-| **`make cluster-delete`** | Remove o cluster k3d `rancher-lab` | Infraestrutura K8s |
-| **`make build`** | Compila a imagem Docker `iqos-xapp-rdl:2.0.0` | Docker Local |
-| **`make helm-deploy-f2`** | Deploy exclusivo da release CA-RDL Fase 2 | Namespace `ricxapp` |
-| **`make deploy-full-coexistence`** | Deploy completo (H-RDL F1 + CA-RDL F2 + 6 xApps) | Todo o Cluster |
-| **`make status-f2`** | Exibe status dos pods no namespace `ricxapp` | Diagnóstico |
-| **`make logs-f2`** | Exibe logs da CA-RDL em tempo real | Diagnóstico |
-| **`make test-f2`** | Testa endpoints `/health` e `/metrics` da CA-RDL | Diagnóstico |
-| **`make clean-all`** | Limpa todos os recursos e namespaces O-RAN | Todo o Cluster |
-| **`make sync`** | Sincroniza e envia alterações com o GitHub (1x) | Git / GitHub |
-| **`make auto-sync`** | Ativa monitoramento contínuo de auto-sync com o GitHub | Git / GitHub |
+| **`make cluster-create-1node`** | Cria cluster k3d com 1 Nó (Control-Plane + Worker) | Infraestrutura K8s |
+| **`make cluster-create-2nodes`** | Cria cluster k3d com 2 Nós (1 Server + 1 Agent) | Infraestrutura K8s |
+| **`make cluster-create-3nodes`** | Cria cluster k3d com 3 Nós (1 Server + 2 Agents) | Infraestrutura K8s |
+| **`make cluster-delete`** | Destrói cluster k3d `rancher-lab` | Infraestrutura K8s |
+| **`make cluster-recreate`** | Deleta e recria o cluster k3d do zero | Infraestrutura K8s |
+| **`make clean-all`** | Limpeza automatizada de todos os pods, xApps e namespaces | Namespaces `ricxapp`/`ricplt` |
+| **`make deploy-full-coexistence`** | Deploy completo de H-RDL F1 + CA-RDL F2 + 6 Reference xApps | Todo o Cluster |
+| **`make build`** | Compila a imagem Docker `iqos-xapp-rdl:2.0.0` | Imagem Local |
+| **`make test`** | Executa os testes unitários (pytest) | Local |
+| **`make helm-deploy-f2`** | Deploy exclusivo da release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` |
+| **`make helm-upgrade-f2`** | Upgrade da release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` |
+| **`make helm-uninstall-f2`** | Remove a release `ricxapp-iqos-xapp-rdl-f2` | Namespace `ricxapp` |
+| **`make status-f2`** | Exibe status detalhado dos pods no namespace `ricxapp` | Diagnóstico |
+| **`make logs-f2`** | Streaming de logs da xApp RDL Fase 2 | Diagnóstico |
+| **`make test-f2`** | Testa endpoints `/health` e `/metrics` da Fase 2 | Diagnóstico |
+| **`make test-3xapps`** | Verifica saúde das Reference xApps | Diagnóstico |
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 02: Infraestrutura Cluster k3d e Rancher](02_infraestrutura_cluster_k3d_e_rancher.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 04: Observabilidade Kiali e Injeção de Tráfego](04_observabilidade_kiali_e_injecao_trafego.md) |
+| :---: | :---: | :---: |

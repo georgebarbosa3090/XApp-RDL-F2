@@ -253,3 +253,10 @@ bash scripts/run_all_scenarios_suite.sh
 | **Cenário 4: 6G ISAC** | `scenario_rdl_6g_isac_sensing_coexistence.cc` | `qos-xslice` + `isac-radar` | Contenção de feixe/símbolos entre radar $\Delta R \le 0.5\text{ m}$ e dados $> 1\text{ Gbps}$ |
 | **Cenário 5: 6G Cross-Tier** | `scenario_rdl_6g_cross_tier_governance.cc` | `qos-xslice` + `energy-saving` + `rogue-stress` | Validação de Lockout de 5s contra *Parameter Flipping* a 5 Hz |
 
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 05: Testes de Simulação ns-3 e Benchmarks](05_testes_simulacao_ns3_e_benchmarks.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 07: Relatórios de Conformidade e Governança O-RAN](07_relatorios_conformidade_e_governanca.md) |
+| :---: | :---: | :---: |
+

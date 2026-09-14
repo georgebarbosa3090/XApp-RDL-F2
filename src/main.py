@@ -52,7 +52,12 @@ if __name__ == '__main__':
             app.stop()
 
     else:
-        logger.info("Iniciando xApp RDL (Resource and Decision Layer - Fase 1: H-RDL)...")
+        logger.info("Iniciando xApp RDL (Resource and Decision Layer - Fase 1: H-RDL / Fase 2: CA-RDL)...")
         app = RDLxApp()
         app.start()
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            app.stop()
 

@@ -20,8 +20,8 @@ class MetricsConfig(BaseModel):
     port: int
 
 class SDLConfig(BaseModel):
-    use_fake: bool
-    namespace: str
+    use_fake: bool = False
+    namespace: str = "iqos-xapp-rdl"
 
 class E2Config(BaseModel):
     subscription_period_ms: int

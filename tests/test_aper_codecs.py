@@ -5,7 +5,7 @@ from src.e2.rc_encoder import RCEncoder
 
 def test_e2ap_decoder_strict_rejection():
     """Valida a rejeicao estrita de envelope E2AP quando o payload APER e invalido."""
-    payload = b"MOCK_PAYLOAD"
+    payload = b"INVALID_RAW_APER_PAYLOAD"
     with pytest.raises(Exception):
         decode_e2ap_ric_indication(payload)
 

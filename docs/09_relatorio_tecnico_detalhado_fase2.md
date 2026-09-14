@@ -78,7 +78,7 @@ A camada de persistência compartilhada é operada pelo repositório [`SdlReposi
   * `latest_kpm_state:{node_id}`: Último vetor de telemetria ingerido (`DRB.UEThpDl`, `DRB.RlcSduDelayDl`, `RRU.PrbUsedDl`, `L1M.DL-sinr`).
   * `action_proposals:{proposal_id}`: Histórico e buffer de ações submetidas pelas xApps concorrentes.
   * `decisions:{decision_id}`: Trilha auditável das decisões tomadas pelo RDL, registrando o conflito original, estratégia escolhida, confiança e validação dos Safety Guards.
-* **Mecanismo de Resiliência (`USE_FAKE_SDL`):** O componente [`MemoryModule`](src/infrastructure/memory_module.py) atua como *in-memory cache fallback* para ambientes de teste unitário e simulação rápida em pipeline CI/CD sem dependência de daemon Redis externo.
+* **Mecanismo de Armazenamento em Memória:** O componente [`MemoryModule`](src/infrastructure/memory_module.py) atua como camada de cache local de alta performance com persistência transparente no DBAAS Redis operacional.
 
 ---
 
@@ -288,3 +288,10 @@ A execução dos cenários de validação e simulação em larga escala no ns-3.
 * **Encodificador ASN.1 APER E2SM-RC:** [`src/e2/rc_encoder.py`](src/e2/rc_encoder.py)
 * **Decodificador ASN.1 E2SM-KPM:** [`src/e2/kpm_decoder.py`](src/e2/kpm_decoder.py)
 * **Estrutura de Tipos e Eventos:** [`src/conflict_types.py`](src/conflict_types.py)
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 08: Proposta Arquitetural RDL Fase 3 (6G)](08_proposta_arquitetural_rdl_fase3.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 10: Matriz de Validade e Pontos de Atenção Fase 3](10_matriz_validade_e_pontos_de_atencao_fase3.md) |
+| :---: | :---: | :---: |

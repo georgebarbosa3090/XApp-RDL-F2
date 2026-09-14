@@ -3,8 +3,8 @@ from src.agents.reasoning_agent import ReasoningAgent
 from src.conflict_types import ResolutionStrategy, ConflictEvent, ConflictType, ConflictSeverity, XAppAction
 import uuid
 
-def test_resolve_by_heuristic_priority(mock_memory, direct_conflict):
-    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 3.0})
+def test_resolve_by_heuristic_priority(test_memory, direct_conflict):
+    agent = ReasoningAgent(memory=test_memory, config={"tau1": 3.0})
     
     # Resolve the direct conflict using H-RDL priority heuristic
     resolution = agent.resolve(direct_conflict)
@@ -15,8 +15,8 @@ def test_resolve_by_heuristic_priority(mock_memory, direct_conflict):
     assert len(resolution.winning_actions) >= 1
     assert resolution.modified_value in [15.0, 20.0, 40.0]
 
-def test_resolve_by_sla_utility(mock_memory, action_tx_power, action_prb_quota):
-    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 1.0, "tau2": 3.0})
+def test_resolve_by_sla_utility(test_memory, action_tx_power, action_prb_quota):
+    agent = ReasoningAgent(memory=test_memory, config={"tau1": 1.0, "tau2": 3.0})
     
     conflict = ConflictEvent(
         conflict_id=str(uuid.uuid4()),
@@ -32,9 +32,9 @@ def test_resolve_by_sla_utility(mock_memory, action_tx_power, action_prb_quota):
     assert resolution is not None
     assert resolution.strategy_used in [ResolutionStrategy.TVS, ResolutionStrategy.EEVS, ResolutionStrategy.PRIORITY_TABLE]
 
-def test_marl_escalation(mock_memory, action_tx_power, action_prb_quota):
+def test_marl_escalation(test_memory, action_tx_power, action_prb_quota):
     # Se conflito for complexo ou indireto, escalona para MARL
-    agent = ReasoningAgent(memory=mock_memory, config={"tau1": 0.5, "tau2": 1.0})
+    agent = ReasoningAgent(memory=test_memory, config={"tau1": 0.5, "tau2": 1.0})
     
     indirect_conflict = ConflictEvent(
         conflict_id=str(uuid.uuid4()),

@@ -274,3 +274,10 @@ make uninstall-all-rdl
 ```bash
 kubectl get pods -n ricxapp -o wide
 ```
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 04: Observabilidade Kiali e Injeção de Tráfego](04_observabilidade_kiali_e_injecao_trafego.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 06: Cenários de Teste 5G, 5G-Advanced e 6G](06_cenarios_de_teste_5g_5ga_6g_e_requisitos.md) |
+| :---: | :---: | :---: |

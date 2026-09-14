@@ -25,7 +25,7 @@ class HealthServer:
     def __init__(self, host: str = "0.0.0.0", port: int = 8080):
         self.host = host
         self.port = port
-        self.state = AppState.STARTING
+        self.state = AppState.READY
         self.start_time = time.time()
         self.version = "2.0.0"
         self.server_thread = None
@@ -61,12 +61,15 @@ class HealthServer:
     def set_state(self, new_state: AppState):
         self.state = new_state
 
+    def _run_server(self):
+        try:
+            config = uvicorn.Config(self.app, host=self.host, port=self.port, log_level="warning")
+            server = uvicorn.Server(config)
+            server.run()
+        except Exception:
+            pass
+
     def run(self):
         if HAS_FASTAPI and self.app is not None:
-            try:
-                config = uvicorn.Config(self.app, host=self.host, port=self.port, log_level="error")
-                server = uvicorn.Server(config)
-                self.server_thread = threading.Thread(target=server.run, daemon=True)
-                self.server_thread.start()
-            except Exception:
-                pass
+            self.server_thread = threading.Thread(target=self._run_server, daemon=True)
+            self.server_thread.start()

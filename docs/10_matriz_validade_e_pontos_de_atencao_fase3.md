@@ -93,3 +93,10 @@ Em vez disso, a xApp-RDL opera sob um **Motor de Decisão Hierárquico Escalonad
 3. **Padrão Zero-Trust e Isolamento de Rogue xApps:**
    Implementar métricas de anomalia comportamental no módulo de percepção para detectar xApps que violem sistematicamente as restrições ou gerem flooding de propostas conflitantes.
 
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 09: Relatório Técnico Detalhado Fase 2](09_relatorio_tecnico_detalhado_fase2.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 11: RDL Autônoma e Federada 6G](11_rdl_autonoma_e_federada_6g.md) |
+| :---: | :---: | :---: |
+

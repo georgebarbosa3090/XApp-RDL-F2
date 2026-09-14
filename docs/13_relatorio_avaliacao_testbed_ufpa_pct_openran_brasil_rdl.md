@@ -196,3 +196,10 @@ make view-results
 1. **Aderência Plena aos Requisitos do Testbed:** A arquitetura da **CA-RDL (Fase 2)** desenvolvida neste repositório atende perfeitamente aos requisitos de infraestrutura do **Testbed OpenRAN@Brasil da UFPA**, superando a barreira teórica ao operar com latência de decisão média de **`11.8 ms`**, perfeitamente alinhada com os **`59.21 ms`** de latência total medidos no relatório de Glauber Castro e André Riker.
 2. **Sinergia com a Proposta GreenRAN:** O motor de arbitragem da CA-RDL é o componente exato necessário para coordenar a concorrência entre as aplicações propostas no GreenRAN (`xApp1-RANSlicer` e `xApp2-EnergySaver`), garantindo o cumprimento de SLA para a aplicação de vigilância 4K (eMBB) sem degradar os sensores de monitoramento ambiental e solo (mMTC/Agro).
 3. **Prontidão de Software:** Com a correção dos cenários C++ e a automação de consolidação e sincronização contínua com o GitHub (`origin main`), a suíte de experimentos está 100% pronta tanto para simulação de alta fidelidade no ns-3 quanto para deploy real no cluster Kubernetes do PCT Guamá.
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 12: Relatório de Desempenho Comparativo Fase 2](12_relatorio_resultados_e_desempenho_comparativo_fase2.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 14: Validação Científica Completa do H-RDL (Fase 1)](14_relatorio_validacao_cientifica_completa_hrdl_fase1.md) |
+| :---: | :---: | :---: |

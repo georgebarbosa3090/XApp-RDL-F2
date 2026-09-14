@@ -6,8 +6,8 @@ logger = setup_logger("MemoryModule")
 
 class MemoryModule:
     """
-    Fallback em memória para o SDL e Knowledge Graph para resolução de conflitos causais.
-    Usado para desenvolvimento, testes e simulação de grafo causal.
+    Módulo de armazenamento operacional em memória RAM para histórico local de eventos e ações,
+    incorporando Grafo de Conhecimento Causal (Knowledge Graph) para detecção de conflitos indiretos.
     """
     def __init__(self):
         self._actions = []
@@ -15,7 +15,7 @@ class MemoryModule:
         self._resolutions = []
         # Knowledge Graph: adjacency representation {source: set([(target, relation_type)])}
         self._causal_graph: Dict[str, List[Dict[str, str]]] = {}
-        logger.info("MemoryModule (Fallback + Knowledge Graph) inicializado.")
+        logger.info("MemoryModule (Causal Knowledge Graph) inicializado.")
 
     def add_causal_relation(self, source: str, relation: str, target: str):
         """

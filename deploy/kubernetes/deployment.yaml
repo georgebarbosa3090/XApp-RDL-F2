@@ -31,7 +31,7 @@ spec:
         imagePullPolicy: Never
         env:
         - name: USE_FAKE_SDL
-          value: "true"
+          value: "false"
         - name: RMR_SEED_RT
           value: "/app/configs/routes.rt"
         - name: CONFIG_FILE

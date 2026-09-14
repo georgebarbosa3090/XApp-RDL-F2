@@ -15,7 +15,7 @@ data:
         "numWorkers": 2
       },
       "envs": {
-        "USE_FAKE_SDL": "true",
+        "USE_FAKE_SDL": "false",
         "RMR_WAIT_FOR_READY": "false",
         "LOG_LEVEL": "INFO"
       }

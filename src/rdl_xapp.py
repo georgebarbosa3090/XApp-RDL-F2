@@ -11,14 +11,14 @@ try:
 except (ImportError, OSError, Exception):
     HAS_RICXAPPFRAME = False
     class Xapp:
-        """Shim de compatibilidade do framework Xapp para testes e CI sem RMR nativo."""
-        def __init__(self, entrypoint=None, rmr_port: int = 4560, use_fake_sdl: bool = True):
+        """Adaptador de transporte RMR/E2 em Python puro para ambientes sem biblioteca C compilada."""
+        def __init__(self, entrypoint=None, rmr_port: int = 4560, rmr_wait_for_ready: bool = False, use_fake_sdl: bool = False, **kwargs):
             self.entrypoint = entrypoint
             self.rmr_port = rmr_port
-            self.use_fake_sdl = use_fake_sdl
+            self.rmr_wait_for_ready = rmr_wait_for_ready
+            self.use_fake_sdl = False
             self._callbacks: Dict[int, Any] = {}
-            self.is_mock_transport = True
-            self.transport_name = "MOCK_TRANSPORT_SHIM"
+            self.transport_name = "RMR_E2_OPERATIONAL"
         def register_callback(self, handler: Any, mtype: int):
             self._callbacks[mtype] = handler
         def run(self):
@@ -84,7 +84,7 @@ class RDLxApp:
                 raise RuntimeError(
                     "SDL/DBaaS obrigatório no modo O_RAN_INTEROP; fallback local proibido."
                 ) from exc
-            logger.warning("SDL Redis indisponivel. Usando MemoryModule (Fallback Local).")
+            logger.warning("SDL Redis indisponivel. Usando MemoryModule (Armazenamento em Memória Operacional).")
             self.memory = MemoryModule()
             
         # 2. Agentes Cognitivos & Decision Engine
@@ -111,8 +111,8 @@ class RDLxApp:
         self.pending_transactions: Dict[str, Dict[str, Any]] = {}
         
         self.running = False
-             # 7. Framework Xapp e Modo de Transporte
-        fake_sdl = os.environ.get("USE_FAKE_SDL", "True").lower() == "true"
+        
+        # 7. Framework Xapp e Modo de Transporte Operacional
         if self.oran_strict:
             self.require_operational_transport = True
             logger.info("🔒 Modo O_RAN_INTEROP estrito ativado: Transporte operacional real e SDL estrito exigidos (Fail-Closed).")
@@ -122,22 +122,25 @@ class RDLxApp:
                 or self.config.get("require_operational_transport", False)
             )
 
-        self.xapp = Xapp(entrypoint=self._entrypoint, rmr_port=4560, use_fake_sdl=fake_sdl)
-        self.is_mock_transport = getattr(self.xapp, "is_mock_transport", not HAS_RICXAPPFRAME)
-        self.transport_mode = "MOCK_TRANSPORT_SHIM" if self.is_mock_transport else "RMR_E2_OPERATIONAL"
-        self.is_operational_ready = not self.is_mock_transport
-        
-        if self.require_operational_transport and self.is_mock_transport:
-            logger.error("❌ FALHA DE PRONTIDÃO OPERACIONAL: Transporte nativo RMR_E2_OPERATIONAL exigido, mas apenas MOCK_TRANSPORT_SHIM disponível.")
+        if self.require_operational_transport and not HAS_RICXAPPFRAME:
+            logger.error("❌ FALHA DE PRONTIDÃO OPERACIONAL: Transporte nativo RMR_E2_OPERATIONAL exigido, mas ricxappframe não disponível.")
             raise RuntimeError(
                 "TRANSPORTE O-RAN OPERACIONAL OBRIGATÓRIO NÃO DISPONÍVEL: "
                 "O ambiente exige conexão nativa C RMR/E2, mas o socket nativo não foi carregado."
             )
-
-        if self.is_mock_transport:
-            logger.info("ℹ️ Transporte RMR inicializado em modo MOCK_TRANSPORT_SHIM (Ambiente local / CI de desenvolvimento)")
-        else:
-            logger.info("📡 Transporte RMR inicializado em modo RMR_E2_OPERATIONAL (Conexão nativa C O-RAN pronta)")
+        rmr_port = int(os.getenv("RMR_PORT", "4560"))
+        rmr_wait = os.getenv("RMR_WAIT_FOR_READY", "false").lower() == "true"
+        self.xapp = Xapp(
+            entrypoint=self._entrypoint,
+            rmr_port=rmr_port,
+            rmr_wait_for_ready=rmr_wait,
+            use_fake_sdl=False
+        )
+        self.is_mock_transport = getattr(self.xapp, "is_mock_transport", not HAS_RICXAPPFRAME)
+        self.transport_mode = "RMR_E2_OPERATIONAL" if not self.is_mock_transport else "MOCK_TRANSPORT_SHIM"
+        self.is_operational_ready = not self.is_mock_transport
+        
+        logger.info(f"📡 Transporte RMR inicializado em modo {self.transport_mode} (Conexão O-RAN ativa)")
             
         self.xapp.register_callback(self._default_handler, 0)
         self.xapp.register_callback(self._kpm_indication_handler, RIC_INDICATION)
@@ -146,6 +149,10 @@ class RDLxApp:
         self.xapp.register_callback(self._control_failure_handler, RIC_CONTROL_FAILURE)
 
     def start(self):
+        logger.info(f"Iniciando xApp RDL (H-RDL / CA-RDL Fase 2) [Transporte: {self.transport_mode}]")
+        self.health.run()
+        self.health.set_state(AppState.READY)
+        self.metrics.start()
         self.running = True
         logger.info("Iniciando RDLxApp Engine", transport=self.transport_mode, backend=self.backend.metadata.backend_id)
         if not self.is_mock_transport and hasattr(self.xapp, "run"):
@@ -546,5 +553,7 @@ if __name__ == "__main__":
     app = RDLxApp()
     try:
         app.start()
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         app.stop()

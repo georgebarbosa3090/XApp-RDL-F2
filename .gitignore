@@ -11,11 +11,8 @@ skills/
 .system_generated/
 
 # 2. Auditoria Técnica e Relatórios Extensos
-*auditoria*
-*Auditoria*
-*relatorio_extenso*
 *.audit.md
-docs/relatorio_extenso*
+!docs/*.md
 
 # 3. Resultados de Experimentos e Datasets (Fase 1 e Fase 2)
 experiments/results/*

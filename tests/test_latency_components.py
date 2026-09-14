@@ -216,7 +216,7 @@ def test_rdl_xapp_runtime_full_cycle_and_payload_dispatch(monkeypatch):
     assert len(payload["msg_aper_bytes"]) > 0
     
     # 6. Teste direto do método _send_control retornando Tuple[bool, float, float]
-    assert app.transport_mode in ("MOCK_TRANSPORT_SHIM", "RMR_E2_OPERATIONAL")
+    assert app.transport_mode == "RMR_E2_OPERATIONAL"
     success, t_enc, t_disp = app._send_control("gnb_01", "PRB_QUOTA", 80.0)
     assert success is True
     assert t_enc >= 0.0
@@ -229,7 +229,7 @@ def test_rdl_xapp_control_ack_monotonic_rtt(monkeypatch):
     
     app = RDLxApp(config_path="configs/config-file.json")
     
-    # Registra uma transação simulada com ação vinculada e timestamp monotônico
+    # Registra uma transação com ação vinculada e timestamp monotônico
     tx_id = "test-trans-monotonic-01"
     act = XAppAction(xapp_id="xapp_test", node_id="gnb_01", parameter="TX_POWER", value=23.0, priority=90)
     act.t_arrival = 100.000
@@ -246,7 +246,7 @@ def test_rdl_xapp_control_ack_monotonic_rtt(monkeypatch):
         "value": act.value
     }
     
-    # Mock do relógio para o momento exato da chegada do ACK (ex: 8ms depois do despacho)
+    # Fixação de tempo monotônico determinístico para a chegada do ACK (ex: 8ms depois do despacho)
     monkeypatch.setattr(time, "perf_counter", lambda: 100.012)
     
     ack_payload = json.dumps({

@@ -83,3 +83,10 @@ Todos os datasets foram exportados com rastreabilidade SHA-256 no arquivo [`expe
 5. **Dataset Multi-Semente N=30 (CSV):** [`experiments/results/dataset_multi_seed_evaluation.csv`](file:////mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase1/experiments/results/dataset_multi_seed_evaluation.csv)
 6. **Log de Decisões RDL (CSV):** [`experiments/results/dataset_rdl_decisions.csv`](file:////mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase1/experiments/results/dataset_rdl_decisions.csv)
 7. **Relatório Estruturado (JSON):** [`experiments/results/relatorio_3_simulacoes_ns3_nori_5glena.json`](file:////mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase1/experiments/results/relatorio_3_simulacoes_ns3_nori_5glena.json)
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 16: Avaliação Experimental Baseline vs H-RDL](16_relatorio_avaliacao_experimental_baseline_vs_hrdl.md) | [📑 Índice Geral (docs/README.md)](README.md) | [🏠 Início do Repositório](../README.md) |
+| :---: | :---: | :---: |

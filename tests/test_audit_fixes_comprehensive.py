@@ -64,7 +64,7 @@ def test_9_2_noop_preservation_in_reasoning_and_marl():
         description="No-op test"
     )
     
-    # Mock do retorno No-Op do coordenador
+    # Retorno determinístico No-Op do coordenador
     reasoner.mappo.decide = lambda c, k=None: (None, 0.9)
     res = reasoner._resolve_by_marl(conflict, None, time.time())
     

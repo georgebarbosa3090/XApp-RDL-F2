@@ -86,8 +86,8 @@ helm upgrade --install ricxapp-iqos-xapp-rdl-f2 ${CHART_DIR} \
 
 # 6. Validar Rollout e Subir Gerador de Carga
 echo -e "\n${YELLOW}[6/6] Validando prontidão de todos os Pods e ativando injeção de tráfego...${NC}"
-kubectl rollout status deployment/ricxapp-iqos-xapp-rdl-f1 -n ${NAMESPACE_XAPP} --timeout=60s
-kubectl rollout status deployment/ricxapp-iqos-xapp-rdl-f2 -n ${NAMESPACE_XAPP} --timeout=60s
+kubectl rollout status deployment/ricxapp-iqos-xapp-rdl-f1 -n ${NAMESPACE_XAPP} --timeout=120s
+kubectl rollout status deployment/ricxapp-iqos-xapp-rdl-f2 -n ${NAMESPACE_XAPP} --timeout=120s
 kubectl apply -f deploy/kubernetes/traffic-generator.yaml -n ${NAMESPACE_XAPP}
 
 echo -e "\n${GREEN}======================================================================${NC}"

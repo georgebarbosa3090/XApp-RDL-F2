@@ -4,7 +4,6 @@ import shutil
 import tempfile
 from scripts.package_and_sync_raw_results import (
     calculate_sha256,
-    create_dummy_raw_traces_if_missing,
     verify_raw_traces_exist,
     package_scenario_raw_data
 )
@@ -24,28 +23,35 @@ def test_calculate_sha256(tmp_path):
 def test_verify_raw_traces_exist_raises_on_missing(tmp_path, monkeypatch):
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
     # Directories do not exist -> should raise FileNotFoundError
     with pytest.raises(FileNotFoundError, match="Modo estrito ativado"):
         verify_raw_traces_exist(["baseline"], range(1001, 1005))
 
-def test_demo_mode_trace_generation_and_packaging(tmp_path, monkeypatch):
+def test_packaging_and_sha256_of_experimental_traces(tmp_path, monkeypatch):
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
     scenarios = ["baseline", "rdl_phase1"]
     seeds = range(1001, 1004)
     
-    create_dummy_raw_traces_if_missing(scenarios, seeds)
-    
-    # Check that XML files were created
+    # Cria traces experimentais válidos
     for sc in scenarios:
+        sc_dir = test_raw_dir / sc
+        sc_dir.mkdir(parents=True, exist_ok=True)
         for seed in seeds:
-            xml_file = fake_raw_dir / sc / f"flowmonitor_seed_{seed}.xml"
+            xml_file = sc_dir / f"flowmonitor_seed_{seed}.xml"
+            xml_file.write_text(
+                f'<FlowMonitor scenario="{sc}" seed="{seed}" execution_id="ns3_run_{seed}">\n'
+                '  <FlowStats>\n'
+                '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="998" lostPackets="2" delaySum="1.92" />\n'
+                '  </FlowStats>\n</FlowMonitor>\n',
+                encoding="utf-8"
+            )
             assert xml_file.exists()
             assert "FlowMonitor" in xml_file.read_text(encoding="utf-8")
             
@@ -57,16 +63,25 @@ def test_demo_mode_trace_generation_and_packaging(tmp_path, monkeypatch):
     assert os.path.exists(pkg["filepath"])
 
 def test_verify_raw_traces_rejects_synthetic_traces_in_experiment_mode(tmp_path, monkeypatch):
-    """Valida o teste negativo de proveniência: traces sintéticos do modo demo DEVEM ser rejeitados no modo estrito."""
+    """Valida o teste negativo de proveniência: traces sintéticos DEVEM ser rejeitados no modo estrito."""
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
-    # 1. Gera traces em modo demo
-    create_dummy_raw_traces_if_missing(["baseline"], range(1001, 1003))
+    sc_dir = test_raw_dir / "baseline"
+    sc_dir.mkdir(parents=True, exist_ok=True)
+    for seed in range(1001, 1003):
+        xml_file = sc_dir / f"flowmonitor_seed_{seed}.xml"
+        xml_file.write_text(
+            f'<FlowMonitor scenario="baseline" seed="{seed}" mode="demo" synthetic="true">\n'
+            '  <FlowStats>\n'
+            '    <Flow flowId="1" slice="URLLC" txPackets="1000" rxPackets="998" lostPackets="2" delaySum="1.92" />\n'
+            '  </FlowStats>\n</FlowMonitor>\n',
+            encoding="utf-8"
+        )
     
-    # 2. Execução em modo estrito/experimento deve detectar e rejeitar traces sintéticos
+    # Execução em modo estrito deve detectar e rejeitar traces sintéticos
     with pytest.raises(ValueError, match="Rejeição de integridade experimental"):
         verify_raw_traces_exist(["baseline"], range(1001, 1003))
 
@@ -74,10 +89,10 @@ def test_verify_raw_traces_rejects_single_quotes_synthetic_and_empty_flows(tmp_p
     """Valida que atributos com aspas simples e XML sem fluxos são rejeitados via ElementTree."""
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
-    sc_dir = fake_raw_dir / "baseline"
+    sc_dir = test_raw_dir / "baseline"
     sc_dir.mkdir(parents=True)
     
     # 1. Teste com aspas simples: synthetic='true'
@@ -96,10 +111,10 @@ def test_verify_raw_traces_accepts_valid_experimental_xml(tmp_path, monkeypatch)
     """Valida que arquivos XML com estrutura válida de FlowMonitor e contadores de pacotes são aceitos."""
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
-    sc_dir = fake_raw_dir / "baseline"
+    sc_dir = test_raw_dir / "baseline"
     sc_dir.mkdir(parents=True)
     
     valid_xml = sc_dir / "flowmonitor_seed_1001.xml"
@@ -119,10 +134,10 @@ def test_verify_raw_traces_rejects_physical_invariant_violations(tmp_path, monke
     """Valida que contadores físicos impossíveis (rx < 0 ou rx > tx) são rejeitados estritamente."""
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
-    sc_dir = fake_raw_dir / "baseline"
+    sc_dir = test_raw_dir / "baseline"
     sc_dir.mkdir(parents=True)
     
     # 1. Caso rxPackets negativo: rxPackets="-5"
@@ -154,10 +169,10 @@ def test_verify_raw_traces_rejects_lost_packets_and_metadata_mismatch(tmp_path, 
     """Valida rejeição quando n_lost != n_tx - n_rx ou quando metadados de cenário/semente divergem."""
     import scripts.package_and_sync_raw_results as pkg_module
     
-    fake_raw_dir = tmp_path / "raw"
-    monkeypatch.setattr(pkg_module, "RAW_DIR", str(fake_raw_dir))
+    test_raw_dir = tmp_path / "raw"
+    monkeypatch.setattr(pkg_module, "RAW_DIR", str(test_raw_dir))
     
-    sc_dir = fake_raw_dir / "baseline"
+    sc_dir = test_raw_dir / "baseline"
     sc_dir.mkdir(parents=True)
     
     # 1. Violação de n_lost == n_tx - n_rx (tx=1000, rx=990, mas lost=5 em vez de 10)

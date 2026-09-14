@@ -171,4 +171,11 @@ A figura abaixo sintetiza visualmente os 4 quadrantes de evolução da Fase 2 (C
 A superação das 6 limitações da Fase 2 consolidou a xApp RDL como um componente pronto para ambientes O-RAN de produção em escala industrial:
 1. **Determinismo & Segurança Garantidos:** A combinação do motor escalonado com Safe-RL CMDP e Refinement Agent assegura zero violação física de rádio;
 2. **Escalabilidade Comprovada:** Suporte a até 6 xApps concorrentes com latência média de decisão de $3.85\text{ ms}$, perfeitamente compatível com a janela Near-RT ($10\text{ ms} - 1000\text{ ms}$);
-3. **Evolução Natural para Fase 3:** O pipeline atual estabelece a base para os grafos espaço-temporais (Spatio-Temporal GNN), Federated MARL e orquestração semântica via Large Language Models (LLM-to-Policy) formalizados no [Volume 08](docs/08_proposta_arquitetural_rdl_fase3.md).
+3. **Evolução Natural para Fase 3:** O pipeline atual estabelece a base para os grafos espaço-temporais (Spatio-Temporal GNN), Federated MARL e orquestração semântica via Large Language Models (LLM-to-Policy) formalizados no [Volume 08](08_proposta_arquitetural_rdl_fase3.md).
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 11: RDL Autônoma e Federada 6G](11_rdl_autonoma_e_federada_6g.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 13: Avaliação no Testbed UFPA PCT OpenRAN@Brasil](13_relatorio_avaliacao_testbed_ufpa_pct_openran_brasil_rdl.md) |
+| :---: | :---: | :---: |

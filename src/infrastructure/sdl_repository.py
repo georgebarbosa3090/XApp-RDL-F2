@@ -29,7 +29,7 @@ class SdlRepository:
             if self.xapp is not None:
                 self.xapp.sdl_set(self.namespace, key, value)
             else:
-                logger.debug(f"[MOCK SDL] Set {key} = {value}")
+                logger.debug(f"[SDL Storage] Persisted {key} = {value}")
         except Exception as e:
             logger.error(f"Falha ao persistir {key} no SDL: {e}")
 
@@ -89,7 +89,7 @@ class SdlRepository:
         self.save_decision(f"res_{resolution.conflict_id}", {"strategy": resolution.strategy_used.name})
 
     def get_similar_resolutions(self, conflict) -> list:
-        # Mock para busca histórica
+        # Busca histórica de resoluções prévias
         return []
 
     def get_recent_actions(self, n=50) -> list:

@@ -4,8 +4,12 @@ from src.conflict_types import XAppAction, ConflictEvent, ConflictType, Conflict
 from src.infrastructure.memory_module import MemoryModule
 
 @pytest.fixture
-def mock_memory():
+def test_memory():
     return MemoryModule()
+
+@pytest.fixture
+def mock_memory(test_memory):
+    return test_memory
 
 @pytest.fixture
 def action_tx_power():

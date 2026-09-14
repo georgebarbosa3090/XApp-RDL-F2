@@ -61,9 +61,19 @@ help:
 # -------------------------------------------------------------
 build:
 	docker build --file docker/Dockerfile --tag $(IMAGE_NAME):$(IMAGE_TAG) .
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 2>/dev/null || true
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):latest 2>/dev/null || true
 
 build-no-cache:
 	docker build --no-cache --file docker/Dockerfile --tag $(IMAGE_NAME):$(IMAGE_TAG) .
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 2>/dev/null || true
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):latest 2>/dev/null || true
+
+import:
+	@echo "Importando imagens $(IMAGE_NAME):$(IMAGE_TAG) e :1.1.0 para o cluster k3d $(CLUSTER_NAME)..."
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 2>/dev/null || true
+	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):latest 2>/dev/null || true
+	k3d image import $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 $(IMAGE_NAME):latest -c $(CLUSTER_NAME) 2>/dev/null || true
 
 test:
 	PYTHONPATH=. pytest tests/ -v
@@ -99,15 +109,26 @@ helm-uninstall-f2:
 	@echo "Removendo exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
 	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) || echo "Release $(RELEASE_NAME_F2) nao encontrada."
 
+status: status-f2
+
 status-f2:
 	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="
 	@kubectl get pods -n $(NAMESPACE) -o wide
 	@echo ""
 	@echo "=== Pod da xApp RDL Fase 2 ==="
-	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide
+	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide 2>/dev/null || true
+	@kubectl get pods -n $(NAMESPACE) -l app=ricxapp-iqos-xapp-rdl -o wide 2>/dev/null || true
+
+logs: logs-f2
 
 logs-f2:
-	kubectl logs -l app=$(RELEASE_NAME_F2) -n $(NAMESPACE) -f
+	@if kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) 2>&1 | grep -q "ricxapp-iqos-xapp-rdl-f2"; then \
+	  kubectl logs -l app=$(RELEASE_NAME_F2) -n $(NAMESPACE) -f; \
+	elif kubectl get pods -n $(NAMESPACE) -l app=ricxapp-iqos-xapp-rdl 2>&1 | grep -q "ricxapp-iqos-xapp-rdl"; then \
+	  kubectl logs -l app=ricxapp-iqos-xapp-rdl -n $(NAMESPACE) -f; \
+	else \
+	  kubectl logs deployment/$(RELEASE_NAME_F2) -n $(NAMESPACE) -f 2>/dev/null || kubectl logs deployment/ricxapp-iqos-xapp-rdl -n $(NAMESPACE) -f; \
+	fi
 
 test-f2:
 	@echo "Testando endpoints da xApp RDL Fase 2 (CA-RDL / MARL)..."

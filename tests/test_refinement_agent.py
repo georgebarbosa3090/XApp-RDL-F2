@@ -3,8 +3,8 @@ from src.agents.refinement_agent import RefinementAgent
 from src.conflict_types import ResolutionAction, ResolutionStrategy, ConflictEvent, XAppAction
 import uuid
 
-def test_safety_guard_out_of_bounds(mock_memory, action_tx_power, direct_conflict):
-    agent = RefinementAgent(memory=mock_memory)
+def test_safety_guard_out_of_bounds(test_memory, action_tx_power, direct_conflict):
+    agent = RefinementAgent(memory=test_memory)
     
     # Injetando um valor absurdo para forcar o Safety Guard
     action_tx_power.value = 50.0  # Limite e 23 dBm
@@ -22,8 +22,8 @@ def test_safety_guard_out_of_bounds(mock_memory, action_tx_power, direct_conflic
     assert is_valid is False
     assert "out of bounds" in reason.lower()
 
-def test_safety_guard_frequency_limit(mock_memory, action_prb_quota, direct_conflict):
-    agent = RefinementAgent(memory=mock_memory)
+def test_safety_guard_frequency_limit(test_memory, action_prb_quota, direct_conflict):
+    agent = RefinementAgent(memory=test_memory)
     
     resolution = ResolutionAction(
         conflict_id=direct_conflict.conflict_id,
@@ -43,8 +43,8 @@ def test_safety_guard_frequency_limit(mock_memory, action_prb_quota, direct_conf
     assert is_valid_2 is False
     assert "frequency exceeded" in reason_2.lower()
 
-def test_safety_guard_single_action_pass_through(mock_memory):
-    agent = RefinementAgent(memory=mock_memory)
+def test_safety_guard_single_action_pass_through(test_memory):
+    agent = RefinementAgent(memory=test_memory)
     action = XAppAction(
         xapp_id="xslice",
         node_id="gnb_01",
@@ -56,8 +56,8 @@ def test_safety_guard_single_action_pass_through(mock_memory):
     assert is_safe is True
     assert "passed" in reason.lower()
 
-def test_safety_guard_single_action_invalid_bounds(mock_memory):
-    agent = RefinementAgent(memory=mock_memory)
+def test_safety_guard_single_action_invalid_bounds(test_memory):
+    agent = RefinementAgent(memory=test_memory)
     action = XAppAction(
         xapp_id="energy_saving",
         node_id="gnb_01",
@@ -69,9 +69,9 @@ def test_safety_guard_single_action_invalid_bounds(mock_memory):
     assert is_safe is False
     assert "out of bounds" in reason.lower()
 
-def test_zero_trust_quarantine_behavioral(mock_memory):
+def test_zero_trust_quarantine_behavioral(test_memory):
     """Valida que xApp infratora reincidente (>3 violações) é colocada em Quarentena Zero-Trust."""
-    agent = RefinementAgent(memory=mock_memory)
+    agent = RefinementAgent(memory=test_memory)
     agent.config["max_violations_before_quarantine"] = 3
     
     rogue_act = XAppAction(
@@ -99,9 +99,9 @@ def test_zero_trust_quarantine_behavioral(mock_memory):
     assert is_safe_q is False
     assert "quarantine" in reason_q.lower()
 
-def test_safety_guard_beam_and_isac_bounds(mock_memory):
+def test_safety_guard_beam_and_isac_bounds(test_memory):
     """Valida os limites determinísticos para parâmetros de Beam Downtilt e ISAC Sensing Ratio."""
-    agent = RefinementAgent(memory=mock_memory)
+    agent = RefinementAgent(memory=test_memory)
     
     # Beam Downtilt válido (0 a 15 graus)
     beam_valid = XAppAction("beamformer", "gnb_01", "BEAM_DOWNTILT", 8.0, 70)

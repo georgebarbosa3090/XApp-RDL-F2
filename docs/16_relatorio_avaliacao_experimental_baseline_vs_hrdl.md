@@ -387,3 +387,10 @@ Com base estrita nas evidências empíricas e na inferência estatística de $N 
 O custo computacional introduzido pelo H-RDL ($14.39\text{ ms}$, consumindo apenas $28.8\%$ do budget Near-RT de $50\text{ ms}$) e seu overhead de sinalização ($0.0024\%$ da capacidade de enlace) são **ordens de magnitude inferiores aos ganhos sistêmicos alcançados**: eliminação total de violações de SLA ($100\%$ de conformidade), redução de $97.8\%$ na latência de cauda, aumento de $624.8\%$ no throughput agregado, supressão completa de oscilações ping-pong e ganho de $26\times$ em eficiência energética.
 
 A introdução do H-RDL demonstra ser um componente arquitetural mandatório e indispensável para viabilizar a coexistência segura e escalável de múltiplas xApps em redes 5G-Advanced e 6G.
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 15: Validação Extensa & Auditoria CA-RDL (Fase 2)](15_relatorio_extenso_validacao_fase2_auditoria_e_resolucao_desafios.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 17: Protocolo de Simulações Contínuas ns-3/NORI](17_relatorio_simulacoes_continuas_ns3_5glena_nori.md) |
+| :---: | :---: | :---: |

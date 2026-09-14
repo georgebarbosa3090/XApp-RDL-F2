@@ -320,3 +320,10 @@ Tabela 6: Matriz Final de Validação de Requisitos do H-RDL Fase 1
 
 ### Síntese Final e Recomendação para Publicação:
 O projeto **H-RDL Fase 1** atende a todos os critérios de rigor metodológico, normativo e empírico, estando plenamente apto e maduro para fundamentar a **dissertação de mestrado e publicações científicas de alto impacto** (SBRC, IEEE WCNC, IEEE TNSM, IEEE Globecom).
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 13: Avaliação no Testbed UFPA PCT OpenRAN@Brasil](13_relatorio_avaliacao_testbed_ufpa_pct_openran_brasil_rdl.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 15: Validação Extensa & Auditoria CA-RDL (Fase 2)](15_relatorio_extenso_validacao_fase2_auditoria_e_resolucao_desafios.md) |
+| :---: | :---: | :---: |

@@ -55,9 +55,9 @@ def test_mappo_decision_making():
     
     if TORCH_AVAILABLE:
         import torch
-        mock_probs = torch.tensor([[0.70, 0.20, 0.0, 0.0, 0.10]], dtype=torch.float32)
-        coordinator.agents[0].actor.get_action_probs = lambda obs, mask=None: mock_probs
-        coordinator.agents[0].actor.forward = lambda obs: mock_probs
+        fixed_test_probs = torch.tensor([[0.70, 0.20, 0.0, 0.0, 0.10]], dtype=torch.float32)
+        coordinator.agents[0].actor.get_action_probs = lambda obs, mask=None: fixed_test_probs
+        coordinator.agents[0].actor.forward = lambda obs: fixed_test_probs
     
     best_action, confidence = coordinator.decide(conflict)
     assert best_action is not None
@@ -132,11 +132,14 @@ def test_mappo_dynamic_n_xapps_support():
     assert len(obs) == 16
     assert obs[0] == 0.5  # INDIRECT
     
-    if TORCH_AVAILABLE:
+    if TORCH_AVAILABLE and torch is not None:
         import torch
-        mock_probs = torch.tensor([[0.50, 0.20, 0.15, 0.10, 0.05]], dtype=torch.float32)
-        coordinator.agents[0].actor.get_action_probs = lambda obs, mask=None: mock_probs
-        coordinator.agents[0].actor.forward = lambda obs: mock_probs
+        fixed_test_probs = torch.tensor([[0.50, 0.20, 0.15, 0.10, 0.05]], dtype=torch.float32)
+        coordinator.agents[0].actor.get_action_probs = lambda obs, mask=None: fixed_test_probs
+        coordinator.agents[0].actor.forward = lambda obs: fixed_test_probs
+    elif hasattr(coordinator.agents[0], "actor"):
+        fixed_test_probs = np.array([[0.50, 0.20, 0.15, 0.10, 0.05]], dtype=np.float32)
+        coordinator.agents[0].actor.get_action_probs = lambda obs, mask=None: fixed_test_probs
         
     best_action, confidence = coordinator.decide(conflict, kpm_state)
     assert best_action is not None

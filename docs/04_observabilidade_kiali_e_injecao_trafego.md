@@ -200,3 +200,10 @@ Durante a validação operacional da malha no Kiali, foram identificadas e audit
 | [`scripts/inject_mesh_traffic.sh`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/scripts/inject_mesh_traffic.sh) | L1-56 (Novo) | Utilitário de injeção contínua L7/L4 com sondas diretas a todas as xApps. |
 | Permissões Git (`100755`) | `scripts/*.sh` | Definido bit de execução executável nativo em todos os scripts bash via `git update-index --chmod=+x`. |
 
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 03: Guia de Deploy Helm e K8s](03_guia_deploy_helm_e_k8s.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 05: Testes de Simulação ns-3 e Benchmarks](05_testes_simulacao_ns3_e_benchmarks.md) |
+| :---: | :---: | :---: |
+

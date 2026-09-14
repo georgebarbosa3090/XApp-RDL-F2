@@ -285,3 +285,10 @@ python src/benchmarks/benchmark_conflict_engine.py
    * Polese, M., Bonati, L., D’Oro, S., Basagni, S., & Melodia, T. (2023). *Understanding O-RAN: Architecture, Interfaces, Algorithms, Security, and Research Challenges*. **IEEE Communications Surveys & Tutorials**, 25(2), 1376-1411. DOI: [10.1109/COMST.2023.3239220](https://doi.org/10.1109/COMST.2023.3239220).
    * Barbosa, G., et al. (2026). *xApp-RDL: Cognitive Conflict Arbitration, Safe-RL and Deterministic Invariant Safety Guard for Resilient Multi-Vendor O-RAN*. **IEEE Transactions on Network and Service Management**.
    * Yu, P., et al. (2022). *xSlice: Near-Real-Time Resource Slicing for QoS Optimization in 5G O-RAN*. **ACM MobiSys / OpenRANSys 2022**.
+
+---
+
+## 🧭 Navegação da Documentação
+
+| [⬅️ Volume 10: Matriz de Validade e Pontos de Atenção Fase 3](10_matriz_validade_e_pontos_de_atencao_fase3.md) | [📑 Índice Geral (docs/README.md)](README.md) | [➡️ Volume 12: Relatório de Desempenho Comparativo Fase 2](12_relatorio_resultados_e_desempenho_comparativo_fase2.md) |
+| :---: | :---: | :---: |
