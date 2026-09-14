@@ -38,18 +38,81 @@ int main (int argc, char *argv[])
     double centralFreq = 3.5e9;
     double bandwidth = 100e6;
     bool enableE2Agent = true;
+    bool realtime = false;
+    std::string syncMode = "BestEffort";
+    std::string demoMode = "experiment";
+    double conflictStart = 15.0;
+    double conflictEnd = 30.0;
+    double recoveryWindow = 10.0;
+    double kpmPeriod = 0.2;
 
     CommandLine cmd (__FILE__);
     cmd.AddValue ("gNbNum", "Quantidade total de gNBs", gNbNum);
     cmd.AddValue ("ueNum", "Quantidade total de UEs", ueNum);
     cmd.AddValue ("simTime", "Tempo total de simulacao em segundos", simTime);
     cmd.AddValue ("enableE2", "Ativar comunicacao E2 / NORI", enableE2Agent);
+    cmd.AddValue ("realtime", "Ativar execucao em tempo real via ns3::RealtimeSimulatorImpl", realtime);
+    cmd.AddValue ("syncMode", "Modo de sincronizacao (BestEffort | HardLimit)", syncMode);
+    cmd.AddValue ("demoMode", "Modo de apresentacao (fast | realtime | experiment)", demoMode);
+    cmd.AddValue ("conflictStart", "Tempo de inicio do conflito (s)", conflictStart);
+    cmd.AddValue ("conflictEnd", "Tempo de fim do conflito (s)", conflictEnd);
+    cmd.AddValue ("recoveryWindow", "Janela de observacao de recuperacao (s)", recoveryWindow);
+    cmd.AddValue ("kpmPeriod", "Periodo de relatorio E2SM-KPM (s)", kpmPeriod);
     cmd.Parse (argc, argv);
+
+    /**
+     * =========================================================================================
+     * NOTA DIDÁTICA SOBRE DEMONSTRAÇÕES AO VIVO E SINCRONIZAÇÃO EM TEMPO REAL:
+     * -----------------------------------------------------------------------------------------
+     * 1. Tempo Virtual vs. Tempo Real:
+     *    Por padrão, o ns-3 utiliza TEMPO VIRTUAL. Alterar apenas 'simTime' (ex.: 60s) NÃO
+     *    transforma o ns-3 em uma demonstração ao vivo, pois 60s simulados podem rodar em
+     *    8s ou 90s reais dependendo da CPU.
+     *
+     * 2. ns3::RealtimeSimulatorImpl:
+     *    Sincroniza o relógio da simulação com o relógio real da máquina (wall-clock): 1s simulado ≈ 1s real.
+     *    É o modo oficial do ns-3 para integração com testbeds, containers Near-RT RIC e defesas.
+     *
+     * 3. Modos de Sincronização:
+     *    - BestEffort (Recomendado para Defesas): Recupera atrasos temporários de CPU suavemente.
+     *    - HardLimit: Aborta a simulação se o atraso exceder a tolerância (padrão ns-3: 0.1s).
+     * =========================================================================================
+     */
+    if (demoMode == "realtime")
+    {
+        realtime = true;
+        if (simTime == 40.0) simTime = 60.0;
+    }
+    else if (demoMode == "fast")
+    {
+        realtime = false;
+        simTime = 30.0;
+    }
+    else if (demoMode == "experiment")
+    {
+        realtime = false;
+    }
+
+    if (realtime)
+    {
+        // Vincula a implementação do simulador ao modo em tempo real (wall-clock)
+        GlobalValue::Bind ("SimulatorImplementationType", StringValue ("ns3::RealtimeSimulatorImpl"));
+        if (syncMode == "HardLimit")
+        {
+            // HardLimit: aborta a simulação se o atraso exceder a tolerância (padrão: 0.1s)
+            Config::SetDefault ("ns3::RealtimeSimulatorImpl::SynchronizationMode", StringValue ("HardLimit"));
+        }
+        else
+        {
+            // BestEffort: recupera suavemente atrasos temporários de CPU sem abortar
+            Config::SetDefault ("ns3::RealtimeSimulatorImpl::SynchronizationMode", StringValue ("BestEffort"));
+        }
+    }
 
     Time::SetResolution (Time::NS);
     LogComponentEnable ("ScenarioRdlTsVsEnergy", LOG_LEVEL_INFO);
 
-    NS_LOG_INFO ("Iniciando Cenario S4: Traffic Steering x Energy Saving (Carga vs Sono)");
+    NS_LOG_INFO ("Iniciando Cenario S4: Traffic Steering x Energy Saving (Carga vs Sono) | Modo Demo: " << demoMode << " | Realtime: " << (realtime ? "Sim (" + syncMode + ")" : "Nao"));
     NS_LOG_INFO ("Topologia: gNB1 (Congestionada 90%) vs gNB2 (Ociosa 20%)");
 
     NodeContainer gNbNodes;
@@ -86,9 +149,10 @@ int main (int argc, char *argv[])
     nrHelper->SetEpcHelper (epcHelper);
 
     CcBwpCreator ccBwpCreator;
-    CcBwpCreator::SimpleOperationBandConf bandConf (centralFreq, bandwidth, 1, BandwidthPartInfo::UMi_StreetCanyon);
+    CcBwpCreator::SimpleOperationBandConf bandConf (centralFreq, bandwidth, 1);
     OperationBandInfo band = ccBwpCreator.CreateOperationBandContiguousCc (bandConf);
-    nrHelper->InitializeOperationBand (&band);
+    Ptr<NrChannelHelper> channelHelper = CreateObject<NrChannelHelper> ();
+    channelHelper->AssignChannelsToBands ({band});
     BandwidthPartInfoPtrVector allBwps = CcBwpCreator::GetAllBwps ({band});
 
     NetDeviceContainer gNbDevs = nrHelper->InstallGnbDevice (gNbNodes, allBwps);
@@ -144,10 +208,11 @@ int main (int argc, char *argv[])
     double avgDelay = rxPkts > 0 ? totalDelayMs / rxPkts : 0.0;
     double totalThpMbps = (totalRxBytes * 8.0) / (simTime * 1e6);
 
-    NS_LOG_INFO ("=== Relatorio Final Cenario S4 (Traffic Steering x Energy Saving) ===");
-    NS_LOG_INFO ("Vazao Agregada: " << totalThpMbps << " Mbps");
-    NS_LOG_INFO ("Latencia Media: " << avgDelay << " ms");
-    NS_LOG_INFO ("Balanceamento de Carga: gNB1 -> gNB2 executado com preservacao de sono inteligente");
+    NS_LOG_INFO ("=== Relatorio Final Cenario S4 (Traffic Steering vs Energy Saving) ===");
+    NS_LOG_INFO ("Vazao Agregada Raw: " << totalThpMbps << " Mbps");
+    NS_LOG_INFO ("Latencia Media Raw: " << avgDelay << " ms");
+
+    monitor->SerializeToXmlFile ("flowmonitor_scenario_rdl_ts_vs_energy.xml", true, true);
 
     Simulator::Destroy ();
     return 0;
