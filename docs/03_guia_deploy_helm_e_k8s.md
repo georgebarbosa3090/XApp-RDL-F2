@@ -13,10 +13,8 @@
 Para usuários que desejam **clonar/atualizar o repositório, resetar o cluster k3d antigo e implantar a infraestrutura Near-RT RIC**, execute o bloco abaixo diretamente no terminal:
 
 ```bash
-# 1. Clonar ou atualizar o repositório F2 no terminal:
-cd ~
-git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git 2>/dev/null || (cd XApp-RDL-F2 && git pull)
-cd XApp-RDL-F2
+# 1. Navegar até o diretório do repositório F2:
+cd ~/XApp-RDL-F2
 
 # 2. Deletar qualquer cluster k3d antigo e criar um novo cluster limpo (1 Nó):
 make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
@@ -98,9 +96,8 @@ Recomendado para máquinas limpas ou após recriar o ambiente. **Execução pass
 
 #### Passo 1: Preparar Repositório e Cluster
 ```bash
-cd ~
-git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git 2>/dev/null || (cd XApp-RDL-F2 && git pull)
-cd XApp-RDL-F2
+# 1. Navegar até o diretório do repositório F2:
+cd ~/XApp-RDL-F2
 make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
 make cluster-create-1node
 ```
