@@ -20,7 +20,7 @@ PYTORCH_AVAILABLE = False
 torch = None
 nn = None
 
-if os.getenv("ENABLE_TORCH", "true").lower() in ("true", "1", "yes") and os.name != "nt":
+if os.getenv("ENABLE_TORCH", "true").lower() in ("true", "1", "yes"):
     try:
         import torch
         import torch.nn as nn
@@ -743,3 +743,4 @@ class MAPPOCoordinator:
         losses["lagrange_mult"] = losses.get("agent_0_lagrange_mult", 0.0)
         self.rollout_buffer.clear()
         return losses
+
