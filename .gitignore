@@ -139,3 +139,6 @@ scripts/generate_slice_temporal_figures.py
 scripts/run_all_scenarios_suite.sh
 scripts/sanitize_local_paths.py
 scripts/verify_generated_plots.py
+
+# uv lockfile
+uv.lock
