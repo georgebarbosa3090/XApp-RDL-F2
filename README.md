@@ -158,3 +158,22 @@ Resultados consolidados em $N = 30$ sementes físicas independentes (seeds 1001 
 
 * **Fase 1 (H-RDL Determinística):** [https://github.com/georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1)
 * **Fase 2 (CA-RDL / Safe-MARL):** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)
+
+
+---
+
+## Como Sincronizar e Subir os Resultados para o GitHub
+
+Após rodar os testes ou simulações, você pode subir todos os resultados usando qualquer uma das opções abaixo:
+
+### Opção A: Via Atalho Make (Recomendado)
+```bash
+make push-results
+```
+
+### Opção B: Manual via Git
+```bash
+git add experiments/results/ docs/
+git commit -m "chore(sim): update ns-3 FlowMonitor experimental traces and reports"
+git push origin main
+```
