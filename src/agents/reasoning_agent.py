@@ -38,11 +38,26 @@ class ReasoningAgent:
     def estimate_complexity(self, conflict: ConflictEvent, kpm_state: Optional[Dict[str, float]] = None) -> float:
         """
         Calcula a métrica de complexidade C(c, s) para roteamento hierárquico escalonado.
-        Fatores: tipo de conflito, número de xApps envolvidas, KPIs afetados e delta de prioridade.
+        Fatores: tipo de conflito, número de xApps envolvidas, KPIs afetados, delta de prioridade
+        e presença de caminhos causais indiretos no Knowledge Graph.
         """
         type_factor = 0.5 if conflict.conflict_type == ConflictType.DIRECT else 1.2
         num_apps_factor = float(len(conflict.involved_xapps)) * 0.4
         kpis_factor = float(len(conflict.affected_kpis)) * 0.3
+        
+        # Conexão Causal no Knowledge Graph: Eleva complexidade se houver caminhos downstream compartilhados
+        graph_factor = 0.0
+        if self.memory and hasattr(self.memory, "find_indirect_conflict_path") and len(conflict.involved_xapps) >= 2:
+            xapp_a = conflict.involved_xapps[0].xapp_id
+            xapp_b = conflict.involved_xapps[1].xapp_id
+            causal_paths = self.memory.find_indirect_conflict_path(xapp_a, xapp_b)
+            if causal_paths:
+                graph_factor = 1.5
+                # Registra o KPI de interferência indireta encontrado no grafo
+                for path in causal_paths:
+                    for node in path:
+                        if node not in conflict.affected_kpis and node not in (xapp_a, xapp_b):
+                            conflict.affected_kpis.append(node)
         
         if len(conflict.involved_xapps) >= 2:
             prio_diff = abs(conflict.involved_xapps[0].priority - conflict.involved_xapps[1].priority)
@@ -54,7 +69,7 @@ class ReasoningAgent:
         if kpm_state and kpm_state.get("QoS.FlowDelay", 0.0) > 20.0:
             state_degradation = 0.5
             
-        c_score = type_factor + num_apps_factor + kpis_factor + prio_factor + state_degradation
+        c_score = type_factor + num_apps_factor + kpis_factor + prio_factor + state_degradation + graph_factor
         return float(c_score)
 
     def is_in_lockout(self, action: XAppAction, now_ts: float) -> bool:

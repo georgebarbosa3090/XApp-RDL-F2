@@ -29,6 +29,7 @@ def audit_python_files_ast(directory: str) -> List[Tuple[str, str]]:
 
 
 def run_pyright_if_available() -> bool:
+    is_ci = os.getenv("CI", "false").lower() == "true" or os.getenv("STRICT_PYRIGHT", "false").lower() == "true"
     try:
         res = subprocess.run(["pyright", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if res.returncode == 0:
@@ -37,7 +38,11 @@ def run_pyright_if_available() -> bool:
             print(p_res.stdout)
             return p_res.returncode == 0
     except FileNotFoundError:
-        print("[PYRIGHT] Executável pyright não encontrado no PATH local. Utilizando validação de AST rigorosa.")
+        if is_ci:
+            print("[ERRO-CI] Executável pyright não encontrado no ambiente CI. Falha estrita (F2-G8).")
+            return False
+        else:
+            print("[PYRIGHT] Executável pyright não encontrado localmente. Utilizando validação de AST rigorosa.")
     return True
 
 

@@ -66,7 +66,66 @@ def test_memory_module_knowledge_graph():
     # Busca sem conexões em comum
     assert len(mem.find_indirect_conflict_path("xApp_Inexistente", "xApp_QoS")) == 0
 
-    # Testa ações, conflitos e resoluções no MemoryModule
+
+def test_causal_graph_decision_impact():
+    from src.agents.reasoning_agent import ReasoningAgent
+
+    # 1. Sem Grafo Causal no MemoryModule
+    mem_plain = MemoryModule()
+    reasoning_plain = ReasoningAgent(memory=mem_plain, tau1=1.6, tau2=3.0)
+
+    action_a = XAppAction(xapp_id="xApp_QoS", node_id="gnb_01", parameter="PRB_QUOTA", value=75.0, priority=10)
+    action_b = XAppAction(xapp_id="xApp_Energy", node_id="gnb_01", parameter="TX_POWER", value=20.0, priority=8)
+    conflict = ConflictEvent(
+        conflict_type=ConflictType.DIRECT,
+        severity=ConflictSeverity.MEDIUM,
+        involved_xapps=[action_a, action_b],
+        affected_kpis=[]
+    )
+
+    c_plain = reasoning_plain.estimate_complexity(conflict)
+
+    # 2. Com Grafo Causal Registrado no MemoryModule
+    mem_graph = MemoryModule()
+    mem_graph.add_causal_relation("xApp_QoS", "MUTATES", "PRB_QUOTA")
+    mem_graph.add_causal_relation("PRB_QUOTA", "IMPACTS", "LATENCY_KPI")
+    mem_graph.add_causal_relation("xApp_Energy", "MUTATES", "TX_POWER")
+    mem_graph.add_causal_relation("TX_POWER", "IMPACTS", "LATENCY_KPI")
+
+    reasoning_graph = ReasoningAgent(memory=mem_graph, tau1=1.6, tau2=3.0)
+    conflict_graph = ConflictEvent(
+        conflict_type=ConflictType.DIRECT,
+        severity=ConflictSeverity.MEDIUM,
+        involved_xapps=[action_a, action_b],
+        affected_kpis=[]
+    )
+
+    c_graph = reasoning_graph.estimate_complexity(conflict_graph)
+
+    # Valida elevação de complexidade e alteração de rota de decisão (Decision_with_graph != Decision_without_graph)
+    assert c_graph > c_plain
+    assert "LATENCY_KPI" in conflict_graph.affected_kpis
+
+
+def test_memory_module_knowledge_graph():
+    mem = MemoryModule()
+    
+    # Testa adição de relações causais
+    mem.add_causal_relation("xApp_QoS", "MUTATES", "PRB_QUOTA")
+    mem.add_causal_relation("PRB_QUOTA", "IMPACTS", "LATENCY_KPI")
+    mem.add_causal_relation("LATENCY_KPI", "AFFECTS", "Slice_1")
+
+    mem.add_causal_relation("xApp_Energy", "MUTATES", "TX_POWER")
+    mem.add_causal_relation("TX_POWER", "IMPACTS", "LATENCY_KPI")
+
+    # Busca caminho de conflito indireto entre xApp_QoS e xApp_Energy
+    paths = mem.find_indirect_conflict_path("xApp_QoS", "xApp_Energy")
+    assert len(paths) > 0, "Deveria ter encontrado um caminho de conflito indireto no grafo"
+    assert "LATENCY_KPI" in paths[0], "O KPI de conflito indireto em comum deve ser LATENCY_KPI"
+
+    # Busca sem conexões em comum
+    assert len(mem.find_indirect_conflict_path("xApp_Inexistente", "xApp_QoS")) == 0
+
     action = XAppAction(
         xapp_id="xApp_QoS",
         node_id="gnb_01",

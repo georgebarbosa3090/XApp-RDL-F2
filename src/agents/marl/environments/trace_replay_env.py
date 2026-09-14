@@ -1,6 +1,8 @@
 """
-TraceReplayEnvironment: Ambiente de Simulação Baseado em Replay de Telemetria Real.
-Provedor determinístico de estados a partir de rastros reais (ns-3 / ORAN testbed) sem gerações sintéticas.
+TraceReplayEnvironment: Ambiente de Avaliação Baseado em Replay de Telemetria Real.
+Provedor determinístico de estados a partir de rastros reais (ns-3 / ORAN testbed) para diagnósticos offline (OFFLINE_REPLAY_ONLY).
+NOTA METODOLÓGICA: Este ambiente é para avaliação e regressão offline (NOT_CAUSAL_TRAINING_ENV),
+pois a transição de estado s_{t+1} é ditada pelo rastro empírico e d s_{t+1} / d a_t = 0.
 """
 
 import json
@@ -14,9 +16,10 @@ logger = setup_logger("TraceReplayEnv")
 
 class TraceReplayEnvironment:
     """
-    Ambiente MARL que reproduz sequências de estados de telemetria coletados de
-    experimentos reais no testbed O-RAN ou simulador ns-3 (FlowMonitor / Causal Events).
-    Garante aderência estrita à política C_SCI sem o uso de np.random sintético.
+    Ambiente MARL de Replay Offline (TraceReplayEvaluationEnvironment).
+    Reproduz sequências de estados de telemetria coletados de experimentos reais no testbed O-RAN
+    ou simulador ns-3 (FlowMonitor / Causal Events) para diagnósticos e extração de características.
+    Modo: OFFLINE_REPLAY_ONLY (Aderência estrita à política C_SCI sem uso de np.random sintético).
     """
     def __init__(self, trace_path: Optional[str] = None, num_agents: int = 2, obs_dim: int = 4):
         self.num_agents = num_agents
