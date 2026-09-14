@@ -29,9 +29,8 @@ graph TD
         V01["[Vol 01] Arquitetura Cognitiva & Formulação MAPPO"]
     end
 
-    subgraph S2["2. Infraestrutura & Plataforma"]
-        V02["[Vol 02] Cluster k3d (3 Topologias), Redis DBAAS & Rancher"]
-        V03["[Vol 03] Deploy Helm & Kubernetes Puro (OpenRAN@Brasil v3)"]
+    subgraph S2["2. Infraestrutura, Deploy & Plataforma"]
+        V03["[Vol 03] Infraestrutura k3d, Rancher & Deploy Helm/Kubernetes"]
     end
 
     subgraph S3["3. Simulações & Observabilidade"]
@@ -46,7 +45,7 @@ graph TD
         V12["[Vol 12] RDL Autônoma & Federada 6G"]
     end
 
-    V01 --> V02 --> V03 --> V05 --> V06 --> V07 --> V08
+    V01 --> V03 --> V05 --> V06 --> V07 --> V08
 ```
 
 ---
@@ -58,8 +57,7 @@ graph TD
 * **[Volume 09: Relatório Técnico Detalhado](09_relatorio_tecnico_detalhado_fase2.md)**: Detalhamento dos algoritmos cognitivos, agentes de refinamento com quarentena comportamental (*Anti-Rogue Shield*) e mapeamento E2AP.
 
 ### Infraestrutura, Deploy e Observabilidade
-* **[Volume 02: Infraestrutura de Cluster k3d e Rancher](02_infraestrutura_cluster_k3d_e_rancher.md)**: Topologias Single-Node (~450MB), Dual-Node (~900MB) e Multi-Node (~1.5GB) com mapeamento de portas O-RAN.
-* **[Volume 03: Guia de Deploy Helm e Kubernetes](03_guia_deploy_helm_e_k8s.md)**: Implantação rápida via perfil OpenRAN@Brasil Blueprint v3 (`deploy/openran-br-v3/`) e Helm Chart oficial `v2.0.0`.
+* **[Volume 03: Guia de Infraestrutura, Deploy Helm e Kubernetes](03_guia_deploy_helm_e_k8s.md)**: Topologias k3d (Single, Dual e Triple-Node), Rancher Dashboard, perfil OpenRAN@Brasil Blueprint v3 (`deploy/openran-br-v3/`) e Helm Chart oficial `v2.0.0`.
 * **[Volume 06: Observabilidade Kiali e Injeção de Tráfego](06_observabilidade_kiali_e_injecao_trafego.md)**: Service Mesh Istio, métricas Prometheus em tempo real e visualização de topologia inter-xApps no Kiali.
 
 ### Simulações ns-3 e Validação Experimental
@@ -86,7 +84,7 @@ graph TD
 | Perfil de Engenharia / Pesquisa | Sequência Sugerida |
 | :--- | :--- |
 | **Pesquisador de IA / MARL 6G** | [Volume 01](01_arquitetura_e_modelagem_matematica.md) $\rightarrow$ [Volume 11](11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md) $\rightarrow$ [Volume 14](14_relatorio_resultados_e_desempenho_comparativo_fase2.md) $\rightarrow$ [Volume 12](12_rdl_autonoma_e_federada_6g.md) |
-| **Engenheiro de Deploy e Infraestrutura** | [Volume 02](02_infraestrutura_cluster_k3d_e_rancher.md) $\rightarrow$ [Volume 03](03_guia_deploy_helm_e_k8s.md) $\rightarrow$ [Volume 06](06_observabilidade_kiali_e_injecao_trafego.md) |
+| **Engenheiro de Deploy e Infraestrutura** | [Volume 03](03_guia_deploy_helm_e_k8s.md) $\rightarrow$ [Volume 06](06_observabilidade_kiali_e_injecao_trafego.md) |
 | **Especialista em Simulação ns-3 / NORI** | [Volume 05](05_testes_simulacao_ns3_e_benchmarks.md) $\rightarrow$ [Volume 11](11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md) $\rightarrow$ [Matriz E2](e2/version-matrix.md) |
 | **Arquiteto de Redes e Governança O-RAN** | [Volume 01](01_arquitetura_e_modelagem_matematica.md) $\rightarrow$ [Volume 07](07_relatorios_conformidade_e_governanca.md) $\rightarrow$ [Volume 08](08_proposta_arquitetural_rdl_fase3.md) |
 

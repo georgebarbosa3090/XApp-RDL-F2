@@ -1,14 +1,117 @@
-# Volume 03: Guia de Implantação e Automação de Deploy (Helm & K8s Nativo)
+# Volume 03: Guia de Infraestrutura, Implantação e Automação de Deploy (Helm & K8s Nativo)
 
-**Documento:** Volume Temático 03  
+**Documento:** Volume Temático 03 (Integrado com o antigo Volume 02)  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  
-**Escopo:** Procedimentos de Implantação do Zero (Greenfield) e Deploy Isolado (Brownfield) no Cluster Kubernetes  
+**Escopo:** Topologias de Cluster k3d (1, 2 e 3 Nós), Integração Rancher, Implantação Greenfield/Brownfield e Coexistência  
 **Repositório Oficial:** [https://github.com/georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2)  
 **Versão da Release:** `ricxapp-iqos-xapp-rdl-f2` | **Imagem:** `iqos-xapp-rdl:2.0.0`  
 
 ---
 
-## 1. Visão Geral e Matriz de Cenários de Deploy
+## 1. Topologias de Cluster k3d e Gestão de Infraestrutura
+
+A implantação do ecossistema O-RAN no Kubernetes local via `k3d` suporta **três topologias operacionais distintas**, adequando-se ao perfil de hardware e aos requisitos de segregação de plano de controle e dados:
+
+### 1.1. Matriz Comparativa das Topologias de Cluster k3d
+
+| Parâmetro | Opção 1: Nó Único (Single-Node) | Opção 2: Dois Nós (Dual-Node) | Opção 3: Três Nós (Triple-Node) |
+| :--- | :---: | :---: | :---: |
+| **Composição de Nós** | `1 Server` (Control-Plane + Worker) | `1 Server` + `1 Agent` (Worker) | `1 Server` + `2 Agents` (Workers) |
+| **Segregação de Workloads** | Todos os Pods no mesmo nó | `ricplt` no Server / `ricxapp` no Agent | `ricplt` no Server / `CA-RDL` no Agent 1 / `Reference xApps` no Agent 2 |
+| **Consumo de Memória RAM** | Baixo (~4 GB a 6 GB) | Médio (~8 GB a 10 GB) | Completo (~12 GB a 16 GB) |
+| **Uso Recomendado** | Desenvolvimento local rápido, CI/CD e máquinas com RAM limitada | Testes de integração O-RAN com isolamento de plano de controle | Benchmarks científicos, testes de alta carga MARL e co-simulação ns-3 |
+| **Comando Makefile** | `make cluster-create-1node` | `make cluster-create-2nodes` | `make cluster-create-3nodes` |
+
+---
+
+### 1.2. Detalhamento Arquitetural das Topologias
+
+```mermaid
+graph TD
+    subgraph Topologia_1Node["Opção 1: Nó Único (Single-Node)"]
+        N1["k3d-server-0<br/>(Control-Plane + ricplt + ricxapp + CA-RDL)"]
+    end
+
+    subgraph Topologia_2Nodes["Opção 2: Dois Nós (Dual-Node)"]
+        N2_S["k3d-server-0<br/>(Control-Plane + ricplt DBAAS)"]
+        N2_A1["k3d-agent-0<br/>(ricxapp: CA-RDL + Reference xApps)"]
+        N2_S <--> N2_A1
+    end
+
+    subgraph Topologia_3Nodes["Opção 3: Três Nós (Triple-Node Escala)"]
+        N3_S["k3d-server-0<br/>(Control-Plane + ricplt DBAAS/E2Term)"]
+        N3_A1["k3d-agent-0<br/>(ricxapp: CA-RDL Fase 2 MARL)"]
+        N3_A2["k3d-agent-1<br/>(ricxapp: 6 Reference xApps)"]
+        N3_S <--> N3_A1
+        N3_S <--> N3_A2
+    end
+```
+
+---
+
+### 1.3. Comandos de Criação por Topologia
+
+#### Opção 1: Nó Único (Single-Node / Minimalista)
+* **Via Makefile:** `make cluster-create-1node` (ou `make cluster-create`)
+* **Comando Direto k3d:**
+  ```bash
+  k3d cluster create rancher-lab \
+    --servers 1 --agents 0 \
+    --port "36422:36422/SCTP@server:0" \
+    --port "8080:8080@server:0" \
+    --port "8081:8081@server:0" \
+    --port "4560:4560@server:0" \
+    --port "4561:4561@server:0"
+  mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
+  ```
+
+#### Opção 2: Dois Nós (Dual-Node / Segregação RIC vs xApps)
+* **Via Makefile:** `make cluster-create-2nodes`
+* **Comando Direto k3d:**
+  ```bash
+  k3d cluster create rancher-lab \
+    --servers 1 --agents 1 \
+    --port "36422:36422/SCTP@server:0" \
+    --port "8080:8080@server:0" \
+    --port "8081:8081@server:0" \
+    --port "4560:4560@server:0" \
+    --port "4561:4561@server:0"
+  mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
+  ```
+
+#### Opção 3: Três Nós (Triple-Node / Alta Performance MARL)
+* **Via Makefile:** `make cluster-create-3nodes`
+* **Comando Direto k3d:**
+  ```bash
+  k3d cluster create rancher-lab \
+    --servers 1 --agents 2 \
+    --port "36422:36422/SCTP@server:0" \
+    --port "8080:8080@server:0" \
+    --port "8081:8081@server:0" \
+    --port "4560:4560@server:0" \
+    --port "4561:4561@server:0"
+  mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
+  ```
+
+---
+
+### 1.4. Gestão do Ciclo de Vida do Cluster e Rancher
+
+* **Verificar Nós Ativos:**
+  ```bash
+  kubectl get nodes -o wide
+  ```
+* **Sincronização de Imagens Docker entre Nós:**
+  ```bash
+  ./scripts/deploy_reference_xapps.sh
+  ```
+* **Integração com Rancher Dashboard & Kiali:**
+  1. **Rancher Dashboard:** Gestão gráfica dos nós k3d, workloads e namespaces.
+  2. **Kiali Service Mesh:** Conexão direta aos pods injetados com proxy Envoy nos namespaces `ricxapp` e `ricplt`.
+
+---
+
+## 2. Visão Geral e Matriz de Cenários de Deploy
 
 O ciclo de vida da **xApp RDL Fase 2 (CA-RDL / MARL)** suporta três modos de implantação no cluster Kubernetes (k3d / K8s puro):
 
@@ -39,67 +142,44 @@ O ciclo de vida da **xApp RDL Fase 2 (CA-RDL / MARL)** suporta três modos de im
 
 ---
 
-## 2. Cenário A: Implantação Completa do Zero (Greenfield — Sem RIC, Sem xApps, Sem RDL)
+## 3. Cenário A: Implantação Completa do Zero (Greenfield — Sem RIC, Sem xApps, Sem RDL)
 
 Este cenário é o recomendado quando você está iniciando em uma máquina nova ou após recriar o ambiente. **Nenhum componente O-RAN precisa estar previamente instalado.**
 
-### 2.1. Passo 1: Criar o Cluster Kubernetes (k3d) com Portas O-RAN Expostas
-
-Você pode escolher entre **3 topologias de cluster** de acordo com sua capacidade de memória RAM e objetivo:
-
-#### Opção 1: 1 Nó Único (Single-Node — Padrão / Minimalista)
-```bash
-make cluster-create-1node
-# ou comando direto:
-k3d cluster create rancher-lab --servers 1 --agents 0 \
-  --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
-mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
-```
-
-#### Opção 2: 2 Nós (Dual-Node — Segregação RIC vs xApps)
-```bash
-make cluster-create-2nodes
-# ou comando direto:
-k3d cluster create rancher-lab --servers 1 --agents 1 \
-  --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
-mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
-```
-
-#### Opção 3: 3 Nós (Triple-Node — Alta Performance & Bancada MARL)
-```bash
-make cluster-create-3nodes
-# ou comando direto:
-k3d cluster create rancher-lab --servers 1 --agents 2 \
-  --port "36422:36422/SCTP@server:0" --port "8080:8080@server:0" --port "8081:8081@server:0" --port "4560:4560@server:0" --port "4561:4561@server:0"
-mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
-```
+### 3.1. Passo 1: Criar o Cluster Kubernetes (k3d)
+Escolha uma das topologias descritas na Seção 1 (ex: `make cluster-create-1node`).
 
 > [!IMPORTANT]
 > **Como alterar a topologia se o cluster `rancher-lab` já existir:**  
-> Se o cluster já estiver criado e você tentar criar outra topologia, o k3d acusará o erro:  
-> `FATA[0000] Failed to create cluster 'rancher-lab' because a cluster with that name already exists`  
-> **Solução:** Remova o cluster existente antes de criar a nova topologia:
+> Se o cluster já estiver criado e você tentar criar outra topologia, remova o cluster existente antes:
 > ```bash
 > make cluster-delete && make cluster-create-2nodes
 > ```
 
-### 2.2. Passo 2: Criar os Namespaces O-RAN
+### 3.2. Passo 2: Criar os Namespaces O-RAN
 ```bash
 kubectl create namespace ricplt --dry-run=client -o yaml | kubectl apply -f -
 kubectl create namespace ricxapp --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-### 2.3. Passo 3: Implantar a Plataforma Near-RT RIC (`ricplt`)
+### 3.3. Passo 3: Implantar a Plataforma Near-RT RIC (`ricplt`)
 Implanta o DBAAS Redis (Shared Data Layer - SDL) e serviços da plataforma:
+
 ```bash
-# Aplica o manifesto do Near-RT RIC:
+# 1. Navegue até o diretório do repositório F2
+cd ~/XApp-RDL-F2
+
+# 2. Garanta que os namespaces necessários existam
+kubectl apply -f deploy/kubernetes/namespace.yaml
+
+# 3. Aplique o manifesto do Near-RT RIC
 kubectl apply -f deploy/kubernetes/near-rt-ric.yaml -n ricplt
 
-# Aguarda a prontidão do Redis DBAAS:
+# 4. Aguarde a prontidão do Redis DBAAS
 kubectl rollout status deployment/deployment-ricplt-dbaas-redis -n ricplt --timeout=90s
 ```
 
-### 2.4. Passo 4: Implantar as Reference xApps (`ricxapp`)
+### 3.4. Passo 4: Implantar as Reference xApps (`ricxapp`)
 Implanta as Reference xApps que fornecerão métricas e atuarão nas decisões de rede:
 ```bash
 # Opção A: Script automatizado das 6 Reference xApps
@@ -114,7 +194,7 @@ kubectl apply -f deploy/kubernetes/xapp-traffic-steering.yaml -n ricxapp
 kubectl get pods -n ricxapp -o wide
 ```
 
-### 2.5. Passo 5: Compilar e Implantar a xApp RDL Fase 2 (CA-RDL / MARL)
+### 3.5. Passo 5: Compilar e Implantar a xApp RDL Fase 2 (CA-RDL / MARL)
 ```bash
 # 1. Build da imagem Docker da Fase 2 (v2.0.0 com PyTorch / MARL):
 make build
@@ -123,7 +203,7 @@ make build
 make helm-deploy-f2
 ```
 
-### 2.6. Pipeline Automatizado de Deploy Completo (Tudo em 1 Comando)
+### 3.6. Pipeline Automatizado de Deploy Completo (Tudo em 1 Comando)
 Você também pode executar a suíte completa de ponta a ponta:
 ```bash
 # Executa a criação dos namespaces, deploy do RIC, deploy das 3 xApps e deploy da RDL:
@@ -132,24 +212,24 @@ bash scripts/deploy_k8s.sh --with-rdl
 
 ---
 
-## 3. Cenário B: Implantação Incremental / Isolada (Brownfield — RIC e xApps já Ativos)
+## 4. Cenário B: Implantação Incremental / Isolada (Brownfield — RIC e xApps já Ativos)
 
 Utilize este cenário quando o Near-RT RIC e as Reference xApps já estiverem rodando no cluster e você deseja implantar ou atualizar **apenas** a xApp RDL Fase 2:
 
-### 3.1. Implantar/Atualizar Exclusivamente a Release da Fase 2:
+### 4.1. Implantar/Atualizar Exclusivamente a Release da Fase 2:
 ```bash
 make helm-deploy-f2
 ```
 *Premissa:* Não reinstala nem interrompe os componentes do `ricplt` nem as Reference xApps existentes.
 
-### 3.2. Atualização Declarativa (Helm Upgrade):
+### 4.2. Atualização Declarativa (Helm Upgrade):
 ```bash
 make helm-upgrade-f2
 ```
 
 ---
 
-## 4. Cenário C: Implantação de Coexistência Completa (H-RDL + CA-RDL Concorrentes + 6 Reference xApps)
+## 5. Cenário C: Implantação de Coexistência Completa (H-RDL + CA-RDL Concorrentes + 6 Reference xApps)
 
 Este cenário é ideal para **avaliações científicas comparativas**, benchmarking simultâneo de algoritmos e testes de governança hierárquica. Ele implanta a pilha completa do Near-RT RIC, as 6 Reference xApps e **ambas as versões do motor RDL operando concorrentemente**:
 
@@ -206,7 +286,7 @@ flowchart TD
     GEN -->|"Sondas HTTP / Métricas"| RDL_F2
 ```
 
-### 4.1. Mapeamento de Workloads e Releases no Cenário C:
+### 5.1. Mapeamento de Workloads e Releases no Cenário C:
 
 | Componente | Release Helm / Deployment | Versão | Portas Istio / Protocolos | Finalidade |
 | :--- | :--- | :---: | :--- | :--- |
@@ -217,13 +297,13 @@ flowchart TD
 | **2. Energy Saving** | `ricxapp-energy-saving` | `1.1.0` | `http-health: 8084`, `http-metrics: 8085`, `tcp-rmr-data: 4563` | Economia de Energia / Power Off |
 | **3. Traffic Steering** | `ricxapp-traffic-steering` | `1.1.0` | `http-health: 8086`, `http-metrics: 8087`, `tcp-rmr-data: 4564` | Handover A3 Offset |
 | **4. Beamformer** | `ricxapp-beamformer` | `1.1.0` | `http-health: 8088`, `http-metrics: 8089`, `tcp-rmr-data: 4565` | Massive MIMO / Downtilt elétrico |
-| **5. ISAC Radar** | `ricxapp-isac-radar` | `1.1.0` | `http-health: 8090`, `http-metrics: 8091`, `tcp-rmr-data: 4566` | Coexistência Sensoriamento 6G |
-| **6. Rogue Stress** | `ricxapp-rogue-stress` | `1.1.0` | `http-health: 8092`, `http-metrics: 8093`, `tcp-rmr-data: 4567` | Injeção de Anomalias / Ataques |
+| **5. ISAC Radar** | `ricxapp-isac-radar` | `1.1.0` | `http-health: 8090`, `http-metrics: 8091`, `tcp-rmr-data: 4566` | Sensoriamento Radar e Coexistência 6G |
+| **6. Rogue Stress** | `ricxapp-rogue-stress` | `1.1.0` | `http-health: 8092`, `http-metrics: 8093`, `tcp-rmr-data: 4567` | Injeção de Anomalias e Testes de Estresse |
 | **Gerador de Carga** | `traffic-generator` | `latest` | Client Outbound | Injeção Contínua para Kiali Mesh |
 
 ---
 
-### 4.2. Executar o Deploy Completo em 1 Comando:
+### 5.2. Executar o Deploy Completo em 1 Comando:
 
 ```bash
 # Executa a implantação do Near-RT RIC, H-RDL, CA-RDL e 6 Reference xApps:
@@ -235,9 +315,9 @@ bash scripts/deploy_dual_rdl_6xapps.sh
 
 ---
 
-## 5. Validação, Healthcheck e Monitoramento
+## 6. Validação, Healthcheck e Monitoramento
 
-### 4.1. Visualizar Status dos Pods em Todos os Namespaces:
+### 6.1. Visualizar Status dos Pods em Todos os Namespaces:
 ```bash
 # Namespace da Plataforma RIC:
 kubectl get pods -n ricplt -o wide
@@ -247,13 +327,13 @@ kubectl get pods -n ricxapp -o wide
 # ou: make status-f2
 ```
 
-### 4.2. Inspecionar Logs da xApp RDL Fase 2 em Tempo Real:
+### 6.2. Inspecionar Logs da xApp RDL Fase 2 em Tempo Real:
 ```bash
 make logs-f2
 # ou: kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl-f2 -f
 ```
 
-### 4.3. Testar Endpoints HTTP e Telemetria Prometheus:
+### 6.3. Testar Endpoints HTTP e Telemetria Prometheus:
 ```bash
 # Teste automatizado dos endpoints da Fase 2:
 make test-f2
@@ -270,26 +350,26 @@ make test-3xapps
 
 ---
 
-## 6. Limpeza e Reset do Ambiente (Tear Down)
+## 7. Limpeza e Reset do Ambiente (Tear Down)
 
-### 6.1. Limpeza Completa de Todos os Recursos O-RAN (Mantendo o Cluster Ativo):
+### 7.1. Limpeza Completa de Todos os Recursos O-RAN (Mantendo o Cluster Ativo):
 Remove todas as releases Helm, todos os Pods/Services nos namespaces `ricxapp` e `ricplt` e deleta os namespaces:
 ```bash
 make clean-all
 # ou: ./scripts/cleanup_all.sh
 ```
 
-### 6.2. Desinstalar Apenas a xApp RDL Fase 2:
+### 7.2. Desinstalar Apenas a xApp RDL Fase 2:
 ```bash
 make helm-uninstall-f2
 ```
 
-### 6.3. Desinstalar Todas as xApps (RDL Fase 1 e Fase 2):
+### 7.3. Desinstalar Todas as xApps (RDL Fase 1 e Fase 2):
 ```bash
 make uninstall-all-rdl
 ```
 
-### 6.4. Destruir ou Recriar o Cluster k3d por Completo:
+### 7.4. Destruir ou Recriar o Cluster k3d por Completo:
 ```bash
 # Destrói o cluster k3d e todos os contêineres/volumes associados:
 make cluster-delete
@@ -300,7 +380,7 @@ make cluster-recreate
 
 ---
 
-## 7. Mapeamento de Portas e Serviços O-RAN
+## 8. Mapeamento de Portas e Serviços O-RAN
 
 | Serviço / Componente | Namespace | Tipo | Porta do Contêiner | Porta Mapeada no Host | Finalidade |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -318,7 +398,7 @@ make cluster-recreate
 
 ---
 
-## 8. Resumo dos Targets do Makefile
+## 9. Resumo dos Targets do Makefile
 
 | Comando Makefile | Ação Executada | Escopo de Impacto |
 | :--- | :--- | :--- |

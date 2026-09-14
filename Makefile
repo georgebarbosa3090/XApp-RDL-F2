@@ -230,6 +230,8 @@ analyze-benchmarks:
 view-results:
 	@cat experiments/results/relatorio_comparativo.md
 
+sync:
+	python3 scripts/auto_sync_github.py
 
-
-
+auto-sync:
+	python3 scripts/auto_sync_github.py --watch
