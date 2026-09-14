@@ -152,39 +152,47 @@ Conforme evidenciado nos relatórios técnicos, as pilhas abertas padrão (srsRA
 Para realizar os experimentos práticos da **H-RDL** e da **CA-RDL** no PCT Guamá:
 
 ### Etapa 1: Preparação do Ambiente e Inicialização do Core 5G
-```bash
-# 1. Verificar sincronização PTP do switch Falcon-RX
-ptp4l -i eth0 -m -S
 
-# 2. Iniciar o Core 5G Open5GS no cluster Kubernetes
+1. Verificar sincronização PTP do switch Falcon-RX
+```bash
+ptp4l -i eth0 -m -S
+```
+
+2. Iniciar o Core 5G Open5GS no cluster Kubernetes
+```bash
 kubectl get pods -n open5gs -o wide
 ```
 
 ### Etapa 2: Deploy da Plataforma Near-RT RIC (OSC)
+
+* Implantar o Near-RT RIC no namespace ricplt:
 ```bash
-# Implantar o Near-RT RIC no namespace ricplt
 helm install ric-platform deploy/helm/ric-platform -n ricplt
 kubectl get pods -n ricplt -o wide
 ```
 
 ### Etapa 3: Inicialização da O-CU / O-DU com Conexão E2
+
+* Iniciar srsRAN gNodeB conectando ao E2Term do RIC:
 ```bash
-# Iniciar srsRAN gNodeB conectando ao E2Term do RIC
 sudo srsenb /etc/srsran/gnb_ru_foxconn.conf --e2.enable=true --e2.ric_ip=10.0.0.10 --e2.ric_port=36422
 ```
 
 ### Etapa 4: Deploy das 6 Reference xApps e da xApp RDL (Fase 2)
+
+* Deploy da Release Helm oficial da RDL Fase 2:
 ```bash
-# Deploy da Release Helm oficial da RDL Fase 2
 cd ~/XApp-RDL-F2
 make helm-deploy-f2
 make status-f2
 ```
 
 ### Etapa 5: Injeção de Tráfego Real e Execução da Suíte Experimental
+
+1. Conectar smartphones Samsung S23 Ultra e câmeras 4K FWA
+
+2. Executar coleta e arbitragem Near-RT
 ```bash
-# 1. Conectar smartphones Samsung S23 Ultra e câmeras 4K FWA
-# 2. Executar coleta e arbitragem Near-RT
 make run-suite
 make view-results
 ```

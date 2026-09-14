@@ -258,14 +258,19 @@ Os resultados empíricos da Fase 2 foram obtidos em malha fechada (*closed-loop*
 
 Para reproduzir integralmente os testes e benchmarks descritos:
 
+
+1. Executar os cenários de simulação ns-3 completos
 ```bash
-# 1. Executar os cenários de simulação ns-3 completos
 make run-suite
+```
 
-# 2. Executar testes de validação unitária e matemática do MAPPO GAE
+2. Executar testes de validação unitária e matemática do MAPPO GAE
+```bash
 pytest tests/test_marl_mappo.py -v
+```
 
-# 3. Executar o benchmark de escalabilidade e detecção de conflitos
+3. Executar o benchmark de escalabilidade e detecção de conflitos
+```bash
 python src/benchmarks/benchmark_conflict_engine.py
 ```
 

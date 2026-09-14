@@ -106,3 +106,11 @@ graph TD
 ---
 
 [Voltar para a Página Inicial (README.md)](../README.md)
+
+### 18. Estudo Científico das xApps, Interfaces E2/RMR, Relação H-RDL/CA-RDL e Normas
+* **[Volume 18: Estudo Científico das xApps: Gênese, Interfaces E2/RMR, Relação com H-RDL/CA-RDL, Conformidade Normativa e Análise Paramétrica](18_estudo_cientifico_xapps_relacoes_conflitos_e_normas.md)**
+  - **Conteúdo:** Origem e artigos científicos das xApps (ric-app/ts, qp, ad, kpimon, bouncer, xApp-ES, xApp-xSlice, xApp-Rogue); Matriz de Importação, Transporte e Exportação (I/O Matrix com ASN.1 APER, RMR e métricas 3GPP 28.552); Relação com H-RDL (Fase 1 determinística) e CA-RDL (Fase 2 cognitiva MARL/MAPPO); Auditoria e conformidade oficial (O-RAN WG2/WG3, OSC Releases F-J, OpenRAN@Brasil Blueprint v3, 3GPP TS 28.552/38.300/38.331/23.501); Análise de viabilidade paramétrica e estabilidade nos cenários S0-S8 e cenários avançados NTN/UAV/V2X/IIoT.
+
+### 19. Relatório de Execução e Validação Experimental dos Cenários S0 a S15
+* **[Volume 19: Relatório de Execução e Validação Experimental dos Cenários S0 a S15](19_relatorio_execucao_validacao_s0_s15.md)**
+  - **Conteúdo:** Resultados empíricos comparativos e taxa de aprovação de 100% dos 16 cenários formais (S0 a S15) para Baseline, H-RDL (Fase 1) e CA-RDL (Fase 2).

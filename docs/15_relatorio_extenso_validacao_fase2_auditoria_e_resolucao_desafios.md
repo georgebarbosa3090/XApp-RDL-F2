@@ -465,7 +465,7 @@ A segunda rodada de auditoria examinou o código resultante da primeira rodada e
 #### Solução Implementada:
 1. **Configuração Dinâmica do Coordenador:**
    Em `src/agents/reasoning_agent.py`:
-   ```python
+```python
    n_agents = int(self.config.get("n_agents", 6))
    obs_dim = int(self.config.get("obs_dim", 60))
    action_dim = int(self.config.get("action_dim", 7))
@@ -500,7 +500,7 @@ A multiplicação por 1000 era aplicada apenas se o nome contivesse `"RATIO"`, t
 #### Solução Implementada:
 1. **Dicionário Sistemático de Perfis ASN.1 APER:**
    Em `src/e2/rc_encoder.py`:
-   ```python
+```python
    PARAM_PROFILES = {
        "PRB_QUOTA":          {"id": 1,  "scale": 1,    "unit": "PRB",         "min": 0,    "max": 100},
        "TX_POWER":           {"id": 2,  "scale": 10,   "unit": "dBm_x10",     "min": -100, "max": 430},

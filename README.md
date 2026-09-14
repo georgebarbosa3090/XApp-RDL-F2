@@ -88,17 +88,24 @@ Para desenvolvimento ágil e validação com baixo consumo de recursos de comput
 
 ## 5. Guia Rápido de Execução e Deploy
 
+
+1. Executar a suíte completa de testes unitários e de integração (78/78 PASS)
 ```bash
-# 1. Executar a suíte completa de testes unitários e de integração (78/78 PASS)
 .venv/Scripts/pytest -v
+```
 
-# 2. Deploy Helm da Release oficial 'ricxapp-iqos-xapp-rdl-f2' (v2.0.0)
+2. Deploy Helm da Release oficial 'ricxapp-iqos-xapp-rdl-f2' (v2.0.0)
+```bash
 make helm-deploy-f2
+```
 
-# 3. Executar o pipeline de simulação física multi-semente (N = 30 runs)
+3. Executar o pipeline de simulação física multi-semente (N = 30 runs)
+```bash
 bash scripts/run_full_experiment.sh
+```
 
-# 4. Avaliação estatística em modo experimental estrito com FlowMonitor
+4. Avaliação estatística em modo experimental estrito com FlowMonitor
+```bash
 python scripts/run_multi_seed_evaluation.py --mode experiment --n-seeds 30
 ```
 

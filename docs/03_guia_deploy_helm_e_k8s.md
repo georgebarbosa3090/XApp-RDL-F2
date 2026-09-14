@@ -203,39 +203,49 @@ flowchart TD
 #### Comando de Implantação em 1 Clique:
 ```bash
 make deploy-full-coexistence
-# ou: bash scripts/deploy_dual_rdl_6xapps.sh
 ```
+
+* ou: bash scripts/deploy_dual_rdl_6xapps.sh:
 
 ---
 
 ## 4. Validação, Telemetria e Limpeza
 
 ### 4.1. Status dos Pods e Logs
+
+**Status dos Pods nas xApps e RIC:**
 ```bash
-# Status dos Pods nas xApps e RIC:
 kubectl get pods -n ricplt -o wide
 kubectl get pods -n ricxapp -o wide
+```
 
-# Streaming de logs da xApp RDL Fase 2 em tempo real:
+**Streaming de logs da xApp RDL Fase 2 em tempo real:**
+```bash
 make logs-f2
 ```
 
 ### 4.2. Endpoints HTTP e Telemetria Prometheus
-```bash
-# Teste automatizado de liveness e métricas:
-make test-f2
 
-# Testes manuais:
+**Teste automatizado de liveness e métricas:**
+```bash
+make test-f2
+```
+
+**Testes manuais:**
+```bash
 curl -i http://localhost:8080/health
 curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_"
 ```
 
 ### 4.3. Limpeza do Ambiente (Tear Down)
-```bash
-# Limpeza completa de todos os Pods, Releases Helm e Namespaces:
-make clean-all
 
-# Destruir e recriar o cluster k3d do zero:
+**Limpeza completa de todos os Pods, Releases Helm e Namespaces:**
+```bash
+make clean-all
+```
+
+**Destruir e recriar o cluster k3d do zero:**
+```bash
 make cluster-recreate
 ```
 

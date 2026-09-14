@@ -49,7 +49,7 @@ graph TD
 ### 2.1. Opção 1: Nó Único (Single-Node / Minimalista)
 * **Objetivo:** Execução leve e unificada para estações de trabalho compactas.
 * **Comando Direto k3d:**
-  ```bash
+```bash
   k3d cluster create rancher-lab \
     --servers 1 --agents 0 \
     --port "36422:36422/SCTP@server:0" \
@@ -60,11 +60,11 @@ graph TD
   mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
   ```
 * **Via Makefile (modo padrão ou 1 nó):**
-  ```bash
+```bash
   make cluster-create-1node
   ```
   Ou simplesmente:
-  ```bash
+```bash
   make cluster-create
   ```
 
@@ -73,7 +73,7 @@ graph TD
 ### 2.2. Opção 2: Dois Nós (Dual-Node / Segregação RIC vs xApps)
 * **Objetivo:** Isolar a infraestrutura do Near-RT RIC (`ricplt`) das aplicações cognitivas (`ricxapp`).
 * **Comando Direto k3d:**
-  ```bash
+```bash
   k3d cluster create rancher-lab \
     --servers 1 --agents 1 \
     --port "36422:36422/SCTP@server:0" \
@@ -84,7 +84,7 @@ graph TD
   mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
   ```
 * **Via Makefile:**
-  ```bash
+```bash
   make cluster-create-2nodes
   ```
 
@@ -93,7 +93,7 @@ graph TD
 ### 2.3. Opção 3: Três Nós (Triple-Node / Alta Performance e Avaliação Científica)
 * **Objetivo:** Máximo isolamento de recursos para bancada multi-agente, onde o motor MAPPO/PyTorch opera em nó dedicado sem contenção de CPU das 6 Reference xApps.
 * **Comando Direto k3d:**
-  ```bash
+```bash
   k3d cluster create rancher-lab \
     --servers 1 --agents 2 \
     --port "36422:36422/SCTP@server:0" \
@@ -104,7 +104,7 @@ graph TD
   mkdir -p ~/.kube && k3d kubeconfig get rancher-lab > ~/.kube/config
   ```
 * **Via Makefile:**
-  ```bash
+```bash
   make cluster-create-3nodes
   ```
 
@@ -117,7 +117,7 @@ graph TD
 kubectl get nodes -o wide
 ```
 * **Exemplo de saída (3 Nós):**
-  ```text
+```text
   NAME                    STATUS   ROLES                  AGE   VERSION
   k3d-rancher-lab-server-0   Ready    control-plane,master   2m    v1.28.2+k3s1
   k3d-rancher-lab-agent-0    Ready    <none>                 2m    v1.28.2+k3s1

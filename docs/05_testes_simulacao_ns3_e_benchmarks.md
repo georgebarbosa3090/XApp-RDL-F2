@@ -26,11 +26,14 @@ Para executar as simulações e co-simulações com o Near-RT RIC, o ambiente de
 
 O script automatizado instala todas as dependências do sistema (pacotes apt, GCC 11/12 para C++20, CMake >= 3.25), clona os repositórios oficiais e compila o ns-3 com CMake/Ninja:
 
-```bash
-# Executa o setup completo via Makefile:
-make setup-ns3
 
-# Ou execute diretamente o script bash:
+**Executa o setup completo via Makefile:**
+```bash
+make setup-ns3
+```
+
+**Ou execute diretamente o script bash:**
+```bash
 bash scripts/setup_ns3.sh
 ```
 
@@ -60,15 +63,18 @@ export CXX=g++-11
 mkdir -p ~/ns3-oran-workspace && cd ~/ns3-oran-workspace
 git clone https://gitlab.com/nsnam/ns-3-dev.git ns-3-oran --depth 1
 cd ns-3-oran
+```
 
-# Clonar o módulo 5G-LENA (nr) dentro de contrib/
+* Clonar o módulo 5G-LENA (nr) dentro de contrib/:
+```bash
 mkdir -p contrib
 git clone https://gitlab.com/cttc-lena/nr.git contrib/nr --depth 1
 ```
 
 #### Passo 4: Sincronizar os Cenários C++ do Projeto xApp RDL
+
+**Copia os arquivos de simulação para a pasta scratch do ns-3:**
 ```bash
-# Copia os arquivos de simulação para a pasta scratch do ns-3:
 mkdir -p scratch
 cp simulations/ns3/*.cc scratch/
 ```
@@ -76,11 +82,15 @@ cp simulations/ns3/*.cc scratch/
 #### Passo 5: Configurar com CMake e Compilar com Ninja
 ```bash
 cd ~/ns3-oran-workspace/ns-3-oran
+```
 
-# Configura o build otimizado com suporte a exemplos e testes:
+**Configura o build otimizado com suporte a exemplos e testes:**
+```bash
 ./ns3 configure -d optimized --enable-examples --enable-tests
+```
 
-# Compila o núcleo e os cenários do scratch:
+**Compila o núcleo e os cenários do scratch:**
+```bash
 ./ns3 build -j$(nproc)
 ```
 
@@ -119,9 +129,9 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **Dinâmica:** A xApp `energy-saving` propõe redução de potência de transmissão (`TX_POWER`) e throttling de PRB para reduzir consumo elétrico, colidindo com a `qos-xslice`, que exige garantia de SLA com baixa latência para URLLC.
 * **Topologia:** 1 Macro gNB ($3.5\text{ GHz}$, $50\text{ MHz}$) + 1 Micro gNB (Small Cell), 20 UEs com carga dinâmica.
 * **Comandos:**
-  ```bash
-  make run-scenario1          # Modo RDL com interface E2 ativa
-  make run-scenario1-baseline # Modo Baseline (sem RDL)
+```bash
+  make run-scenario1
+  make run-scenario1-baseline
   ```
 
 ---
@@ -132,9 +142,9 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **Dinâmica:** A xApp `traffic-steering` tenta balancear carga forçando handovers de UEs entre duas células, gerando risco de instabilidade, handover ping-pong e degradação da fatia URLLC.
 * **Topologia:** 2 gNodeBs separadas por 80 metros, 30 UEs divididos em 3 fatias de rede (URLLC 5QI 82, eMBB 5QI 9, mMTC 5QI 79).
 * **Comandos:**
-  ```bash
-  make run-scenario2          # Modo RDL com interface E2 ativa
-  make run-scenario2-baseline # Modo Baseline (sem RDL)
+```bash
+  make run-scenario2
+  make run-scenario2-baseline
   ```
 
 ---
@@ -145,7 +155,7 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **Dinâmica:** Otimização coordenada de *vertical downtilt* ($6^\circ-8^\circ$), agregação de portadoras FR1 ($3.5\text{ GHz}$) + FR3 ($10.5\text{ GHz}$) e quotas de fatiamento sob mobilidade heterogênea (estáticos, pedestres e veiculares).
 * **Topologia:** 3 gNodeBs em corredor urbano UMi ($1000\text{ m} \times 400\text{ m}$), 60 UEs, antenas UPA $16 \times 4$.
 * **Comando para Execução:**
-  ```bash
+```bash
   make run-scenario3
   ```
 
@@ -157,7 +167,7 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **Dinâmica:** Competição direta por símbolos OFDM e feixes direcionais entre sensoriamento radar ($\Delta R = \frac{c}{2B}$) e tráfego de dados de ultra-alta capacidade.
 * **Topologia:** 2 gNodeBs ISAC Dual-Function operando a $28\text{ GHz}$ ($400\text{ MHz}$ de banda), 30 UEs e alvos móveis.
 * **Comando para Execução:**
-  ```bash
+```bash
   make run-scenario4
   ```
 
@@ -169,7 +179,7 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 * **Dinâmica:** Injeção contínua de ações conflitantes e maliciosas de alta frequência ($5\text{ Hz}$); contenção via *Lockout Cooling Window* de 5 segundos e *Safety Guards*.
 * **Topologia:** Grade $2 \times 2$ com 4 gNodeBs e 40 UEs.
 * **Comando para Execução:**
-  ```bash
+```bash
   make run-scenario5
   ```
 
@@ -179,8 +189,9 @@ A validação experimental do projeto **xApp RDL (Fase 2: CA-RDL / MARL)** abran
 Para executar a suíte completa de todos os 5 cenários com múltiplas sementes aleatórias ($N=30$):
 ```bash
 make run-all-scenarios
-# Ou diretamente: bash scripts/run_all_scenarios_suite.sh
 ```
+
+* Ou diretamente: bash scripts/run_all_scenarios_suite.sh:
 
 > [!NOTE]
 > Para especificações aprofundadas de modelagem matemática, equações de recompensa MARL e formulação teórica de cada cenário, consulte o [Volume 11: Especificação de Cenários 5G/5GA/6G](docs/11_cenarios_de_teste_5g_5ga_6g_e_requisitos.md).
@@ -207,13 +218,15 @@ make run-all-scenarios
 ## 5. Execução da Suíte Experimental e Benchmarks no Prompt
 
 Para processar a suíte experimental completa e acompanhar as tabelas de métricas ao vivo no console:
+
+**No Linux / WSL2:**
 ```bash
-# No Linux / WSL2:
 python3 scripts/evaluate_and_improve_algorithms.py
 python3 scripts/run_experiment_suite.py
 ```
+
+**No Windows (PowerShell / CMD):**
 ```powershell
-# No Windows (PowerShell / CMD):
 python scripts/evaluate_and_improve_algorithms.py
 python scripts/run_experiment_suite.py
 ```
@@ -262,8 +275,9 @@ Ao término de qualquer simulação de cenário ou suíte de benchmarks, execute
 ### 7.1. Desinstalação da xApp RDL Fase 2 (CA-RDL / MARL)
 ```bash
 make helm-uninstall-f2
-# ou: helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp
 ```
+
+* ou: helm uninstall ricxapp-iqos-xapp-rdl-f2 -n ricxapp:
 
 ### 7.2. Desinstalação Simultânea de Todas as Versões RDL
 ```bash

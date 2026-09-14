@@ -131,15 +131,17 @@ chmod +x scripts/*.sh
 ```
 
 ### Passo 2: Reaplicar as Reference xApps e Plataforma RIC
+
+* Aplica os manifestos corrigidos com sidecar e portas Istio:
 ```bash
-# Aplica os manifestos corrigidos com sidecar e portas Istio
 kubectl apply -f deploy/kubernetes/near-rt-ric.yaml -n ricplt
 ./scripts/deploy_reference_xapps.sh
 ```
 
 ### Passo 3: Ativar o Gerador Contínuo de Tráfego
+
+* Inicia requisições contínuas a todas as 6 Reference xApps + CA-RDL Fase 2:
 ```bash
-# Inicia requisições contínuas a todas as 6 Reference xApps + CA-RDL Fase 2
 kubectl apply -f deploy/kubernetes/traffic-generator.yaml -n ricxapp
 ```
 

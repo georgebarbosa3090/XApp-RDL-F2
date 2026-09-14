@@ -6,7 +6,7 @@ Este guia detalha o fluxo completo para executar a infraestrutura O-RAN real ama
 
 ## 📋 Pré-requisitos no WSL2
 1. **Docker Daemon ativo**:
-   ```bash
+```bash
    sudo service docker status || sudo service docker start
    ```
 2. **Ferramentas de CLI instaladas**: `k3d`, `kubectl`, `helm`, `cmake`, `g++`, `python3`.
@@ -18,7 +18,7 @@ Este guia detalha o fluxo completo para executar a infraestrutura O-RAN real ama
 ### A. Modo Baseline (3 Reference xApps SEM RDL)
 Para medir o desempenho da rede **sem a camada de governança RDL** (para baseline comparativo):
 ```bash
-cd ~/XApp-RDL-F1  # ou path do repositório no WSL
+cd ~/XApp-RDL-F1
 bash scripts/deploy_helm.sh --baseline
 ```
 - **Componentes Ativados**:
@@ -30,12 +30,15 @@ bash scripts/deploy_helm.sh --baseline
 
 ### B. Modo Governança Cognitiva (Com xApp H-RDL / CA-RDL)
 Para ativar a camada determinística e Safe-RL de arbitragem de conflitos:
+
+**Na Fase 1 (H-RDL):**
 ```bash
-# Na Fase 1 (H-RDL):
 cd ~/XApp-RDL-F1
 bash scripts/deploy_helm.sh --with-rdl
+```
 
-# Na Fase 2 (CA-RDL / MARL MAPPO):
+**Na Fase 2 (CA-RDL / MARL MAPPO):**
+```bash
 cd ~/XApp-RDL-F2
 bash scripts/deploy_helm.sh --with-rdl
 ```
@@ -89,12 +92,15 @@ cd ~/workspace/ns-3-dev
 
 Após concluir a rodada de simulação, execute o validador de proveniência para atualizar o firewall editorial:
 
+
+**No repositório F1:**
 ```bash
-# No repositório F1:
 cd ~/XApp-RDL-F1
 python3 scripts/prepare_simulation_run.py
+```
 
-# No repositório F2:
+**No repositório F2:**
+```bash
 cd ~/XApp-RDL-F2
 python3 scripts/prepare_simulation_run.py
 python3 scripts/validate_ml_provenance.py
@@ -105,14 +111,14 @@ python3 scripts/validate_ml_provenance.py
 ## 🔍 Comandos de Diagnóstico Úteis
 
 - **Verificar Pods em execução**:
-  ```bash
+```bash
   kubectl get pods -A -o wide
   ```
 - **Verificar Logs do RDL em Tempo Real**:
-  ```bash
+```bash
   kubectl logs -n ricxapp -l app.kubernetes.io/name=iqos-xapp-rdl -f
   ```
 - **Verificar Mensagens RMR e E2AP**:
-  ```bash
+```bash
   kubectl logs -n ricplt deployment/deployment-ricplt-e2term -f
   ```

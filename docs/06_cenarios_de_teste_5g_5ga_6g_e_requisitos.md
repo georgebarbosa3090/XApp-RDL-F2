@@ -66,7 +66,7 @@ flowchart LR
 * **xApps Envolvidas:** `xApp-Beamformer` (Downtilt elétrico E2SM-RC Style 10), `xApp-TrafficSteering` (A3 Offset) e `xApp-PRBQuota` (ORIGAMI PIOR).
 * **Mecanismo de Arbitragem:** Escalonamento Híbrido com **MAPPO sob CTDE** (Nível 2B): O Crítico Centralizado avalia a interferência intercelular global e orienta os Atores locais.
 * **Comando para Execução:**
-  ```bash
+```bash
   make run-scenario3
   ```
 
@@ -82,7 +82,7 @@ flowchart LR
 * **Conflito:** Competição direta por símbolos OFDM e feixes de transmissão entre a `xApp-RadarSensing` (exige resolução fina $\Delta R = \frac{c}{2B}$) e a `xApp-eMBB-Plus` (demanda vazão $> 1\text{ Gbps}$).
 * **Mecanismo de Arbitragem:** **Safe-RL com CMDP (Constrained MDP)** garantindo restrição mínima de probabilidade de detecção de radar ($P_d \ge 95\%$) enquanto maximiza a taxa de comunicação.
 * **Comando para Execução:**
-  ```bash
+```bash
   make run-scenario4
   ```
 
@@ -93,7 +93,7 @@ flowchart LR
 * **Topologia & Operação:** Grade $2 \times 2$ com 4 gNBs e 40 UEs sob alta carga estocástica. Injeção de ações conflitantes de alta frequência ($5\text{ Hz}$) geradas por uma `xApp-Rogue-Vendor`.
 * **Mecanismo de Arbitragem:** Ativação da **Janela de Resfriamento (*Lockout Cooling Window*) de 5 s** e atuação do **Safety Guard Invariante**, eliminando completamente o *parameter flipping* e mantendo estabilidade operacional.
 * **Comando para Execução:**
-  ```bash
+```bash
   make run-scenario5
   ```
 
@@ -178,11 +178,14 @@ Para atender tanto a depuração de baixo nível quanto a validação de produç
 
 Indicado para análise de traces físicos, depuração de logs em nível completo e inspeção de camadas MAC/PHY:
 
-```bash
-# 1. Copiar todos os cenários para o scratch do ns-3
-cp simulations/ns3/scenario_rdl_*.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
 
-# 2. Configurar e compilar via Ninja
+1. Copiar todos os cenários para o scratch do ns-3
+```bash
+cp simulations/ns3/scenario_rdl_*.cc ~/ns3-oran-workspace/ns-3-oran/scratch/
+```
+
+2. Configurar e compilar via Ninja
+```bash
 cd ~/ns3-oran-workspace/ns-3-oran
 ./ns3 configure --build-profile=optimized -G Ninja
 ./ns3 build scratch/scenario_rdl_energy_vs_qos \
@@ -190,8 +193,10 @@ cd ~/ns3-oran-workspace/ns-3-oran
             scratch/scenario_rdl_5ga_multicarrier_mimo \
             scratch/scenario_rdl_6g_isac_sensing_coexistence \
             scratch/scenario_rdl_6g_cross_tier_governance
+```
 
-# 3. Execução individual de cada cenário com semente RNG controlada
+3. Execução individual de cada cenário com semente RNG controlada
+```bash
 ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --simTime=30 --seed=42"
 ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --simTime=30 --seed=42"
 ./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --simTime=40 --seed=101"
@@ -205,21 +210,34 @@ cd ~/ns3-oran-workspace/ns-3-oran
 
 Permite implantar a **xApp-RDL** e as **6 Reference xApps** diretamente no cluster Kubernetes (`k3d` / Rancher) no namespace `ricxapp` sem reinstalar a plataforma `ricplt`:
 
+
+1. Implantar a xApp RDL (Release: ricxapp-iqos-xapp-rdl-f2)
 ```bash
-# 1. Implantar a xApp RDL (Release: ricxapp-iqos-xapp-rdl-f2)
 make helm-deploy-f2
-# OU via script:
+```
+
+**OU via script:**
+```bash
 bash scripts/deploy_rdl_phase2.sh
+```
 
-# 2. Implantar todas as 6 Reference xApps (xSlice, EnergySaving, TrafficSteering, Beamformer, ISAC, Rogue)
+2. Implantar todas as 6 Reference xApps (xSlice, EnergySaving, TrafficSteering, Beamformer, ISAC, Rogue)
+```bash
 make helm-deploy-reference-xapps
-# OU via script dedicado:
+```
+
+**OU via script dedicado:**
+```bash
 bash scripts/deploy_reference_xapps.sh
+```
 
-# 3. Verificar o status e prontidão de todos os Pods no namespace ricxapp
+3. Verificar o status e prontidão de todos os Pods no namespace ricxapp
+```bash
 kubectl get pods -n ricxapp -o wide
+```
 
-# 4. Acompanhar streaming de logs da xApp RDL em tempo real
+4. Acompanhar streaming de logs da xApp RDL em tempo real
+```bash
 make logs-f2
 ```
 
@@ -233,11 +251,14 @@ Executa um pipeline completamente automatizado que:
 3. Executa sequencialmente todos os cenários com múltiplas sementes RNG independentes ($42, 101, 2026$);
 4. Coleta as métricas em `data/results_suite/` e gera a tabela comparativa multidimensional.
 
-```bash
-# Execução via atalho Makefile
-make run-all-scenarios
 
-# OU execução direta via script de orquestração
+* Execução via atalho Makefile:
+```bash
+make run-all-scenarios
+```
+
+* OU execução direta via script de orquestração:
+```bash
 bash scripts/run_all_scenarios_suite.sh
 ```
 
