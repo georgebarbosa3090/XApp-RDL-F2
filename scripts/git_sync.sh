@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script de Sincronizacao Rapida e Segura com o GitHub
-# Projeto: xApp RDL (Resource and Decision Layer) - Fase 2: Context-Aware RDL (CA-RDL / MARL)
+# Script de Sincronização Rápida e Segura com o GitHub
+# Projeto: xApp RDL (Resource and Decision Layer) - Fase 1
 # ==============================================================================
 
 set -e

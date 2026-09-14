@@ -1,258 +1,355 @@
-.PHONY: help build build-no-cache test validate package onboard install status status-f2 logs logs-f2 smoke-test uninstall helm-deploy helm-deploy-f2 helm-upgrade-f2 helm-uninstall-f2 helm-test-f2 test-f2 test-3xapps deploy-full-coexistence deploy-dual-rdl-6xapps cluster-create cluster-create-1node cluster-create-2nodes cluster-create-3nodes cluster-delete cluster-recreate clean-all sync-ns3-scratch setup-ns3 run-scenario1 run-scenario1-baseline run-scenario2 run-scenario2-baseline run-scenario3 run-scenario4 run-scenario5 run-all-scenarios run-baseline run-rdl run-experiments run-suite analyze-benchmarks view-results push-results sync auto-sync rollback rollback-push rollback-clean rollback-list
+.PHONY: build build-no-cache test test-pytest reproduce-f1 validate package onboard install status logs smoke-test uninstall helm-deploy helm-deploy-baseline helm-package helm-test helm-uninstall k8s-deploy k8s-deploy-baseline k8s-uninstall k8s-test test-3xapps kiali-install kiali-dashboard inject-traffic start-traffic stop-traffic cluster-create cluster-delete cluster-recreate rancher-start rancher-stop rancher-logs rancher-password rancher-connect setup-ns3 deploy-rdl deploy-baseline run-baseline run-rdl run-scenario1-rdl run-scenario1-baseline run-scenario2-rdl run-scenario2-baseline
 
-.DEFAULT_GOAL := help
 
 NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
 IMAGE_NAME ?= iqos-xapp-rdl
-IMAGE_TAG ?= 2.0.0
+IMAGE_TAG ?= 1.1.0
 CHART_DIR ?= deploy/helm/iqos-xapp-rdl
+K8S_DIR ?= deploy/kubernetes
 NAMESPACE_RIC ?= ricplt
 NAMESPACE ?= ricxapp
-RELEASE_NAME_F2 ?= ricxapp-iqos-xapp-rdl-f2
+RELEASE_NAME ?= ricxapp-iqos-xapp-rdl
 CLUSTER_NAME ?= rancher-lab
 
-# -------------------------------------------------------------
-# Ajuda e Documentação de Comandos
-# -------------------------------------------------------------
-help:
-	@echo "=================================================================================="
-	@echo "                   xApp RDL (Fase 2: CA-RDL / Safe-MARL) - Makefile               "
-	@echo "=================================================================================="
-	@echo ""
-	@echo "  [Deploy & Coexistência O-RAN]"
-	@echo "    make deploy-full-coexistence   Deploy completo: H-RDL F1 + CA-RDL F2 + 6 xApps + RIC"
-	@echo "    make deploy-dual-rdl-6xapps    Alias para deploy-full-coexistence"
-	@echo "    make helm-deploy-f2            Deploy isolado da xApp RDL Fase 2 (CA-RDL)"
-	@echo "    make helm-upgrade-f2           Atualização declarativa Helm Upgrade da CA-RDL"
-	@echo "    make helm-uninstall-f2         Remoção da release Helm da CA-RDL"
-	@echo "    make status-f2                 Exibe status dos pods no namespace ricxapp"
-	@echo "    make logs-f2                   Acompanha logs em tempo real da CA-RDL"
-	@echo "    make test-f2                   Testa endpoints /health e /metrics da CA-RDL"
-	@echo "    make test-3xapps               Verifica conectividade e métricas das Reference xApps"
-	@echo ""
-	@echo "  [Build e Testes Locais]"
-	@echo "    make build                     Compila a imagem Docker iqos-xapp-rdl:2.0.0"
-	@echo "    make build-no-cache            Compila a imagem Docker sem cache"
-	@echo "    make test                      Executa a suíte de testes unitários com pytest"
-	@echo ""
-	@echo "  [Gestão de Cluster k3d / Rancher]"
-	@echo "    make cluster-create            Cria cluster k3d de 1 nó (Control-Plane + Worker)"
-	@echo "    make cluster-create-2nodes     Cria cluster k3d de 2 nós"
-	@echo "    make cluster-create-3nodes     Cria cluster k3d de 3 nós"
-	@echo "    make cluster-delete            Remove o cluster k3d rancher-lab"
-	@echo "    make cluster-recreate          Recria o cluster do zero"
-	@echo "    make clean-all                 Limpa containers, recursos Helm e artefatos temporários"
-	@echo ""
-	@echo "  [Simulações ns-3 & Benchmarks]"
-	@echo "    make run-scenario1             Executa Cenário 1 (Energy vs QoS / EEVS com E2)"
-	@echo "    make run-scenario2             Executa Cenário 2 (Traffic Steering vs Slicing com E2)"
-	@echo "    make run-scenario3             Executa Cenário 3 (5G-Advanced Multi-Carrier & MIMO)"
-	@echo "    make run-scenario4             Executa Cenário 4 (6G ISAC Radar vs Comunicação)"
-	@echo "    make run-scenario5             Executa Cenário 5 (6G Governança Anti-Rogue)"
-	@echo "    make run-all-scenarios         Executa toda a suíte de cenários ns-3"
-	@echo "    make analyze-benchmarks        Executa análise estatística dos benchmarks"
-	@echo "    make view-results              Exibe relatório comparativo consolidado"
-	@echo "=================================================================================="
-	@echo ""
-
-# -------------------------------------------------------------
-# Build e Testes Locais da xApp RDL Fase 2
-# -------------------------------------------------------------
 build:
 	docker build --file docker/Dockerfile --tag $(IMAGE_NAME):$(IMAGE_TAG) .
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 2>/dev/null || true
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):latest 2>/dev/null || true
 
 build-no-cache:
 	docker build --no-cache --file docker/Dockerfile --tag $(IMAGE_NAME):$(IMAGE_TAG) .
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 2>/dev/null || true
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):latest 2>/dev/null || true
-
-import:
-	@echo "Importando imagens $(IMAGE_NAME):$(IMAGE_TAG) e :1.1.0 para o cluster k3d $(CLUSTER_NAME)..."
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 2>/dev/null || true
-	docker tag $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):latest 2>/dev/null || true
-	k3d image import $(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_NAME):1.1.0 $(IMAGE_NAME):latest -c $(CLUSTER_NAME) 2>/dev/null || true
 
 test:
-	PYTHONPATH=. pytest tests/ -v
+	pytest tests/ -v
+
+test-pytest:
+	pytest tests/ -v
+
+test-unit:
+	pytest tests/unit/ -v
+
+test-codec:
+	pytest tests/codec/ -v
+
+test-integration:
+	pytest tests/integration/ -v
+
+test-interop:
+	pytest tests/interoperability/ -v
+
+generate-golden-vectors:
+	python scripts/generate_golden_vectors.py
+
+verify-no-synthetic:
+	python scripts/check_no_synthetic_results.py
+
+verify-provenance: verify-no-synthetic
+	python scripts/validate_provenance.py
+
+gate1-check:
+	python scripts/validate_experiment_tree.py --check-gate1
+
+reproduce-paper: verify-no-synthetic gate1-check
+	python scripts/reproduce_paper_artifacts.py --seeds 30 --output-dir experiments/runs/reproduced_audit_2026
+
+test-campaign:
+	pytest tests/unit/test_campaign_scenarios.py -v
+
+run-campaign-s0-s8:
+	python scripts/run_full_campaign_s0_s8.py --seeds 30 --output-dir results/campaign_s0_s8
+
+run-3-rounds:
+	python scripts/run_3_consecutive_simulations.py --round all
+
+run-single-round:
+	python scripts/run_single_round_simulation.py --round 3
+
+reproduce-f1:
+	bash scripts/reproduce_f1.sh
+
+
 
 # -------------------------------------------------------------
-# Deploy Helm Exclusivo ou Coexistência Completa (H-RDL + CA-RDL + 6 xApps)
+# Gestão e Ciclo de Vida do Cluster k3d
 # -------------------------------------------------------------
-helm-deploy: helm-deploy-f2
+cluster-create:
+	@echo "Criando cluster k3d $(CLUSTER_NAME) com portas O-RAN..."
+	k3d cluster create $(CLUSTER_NAME) \
+	  --servers 1 \
+	  --agents 0 \
+	  --port "36422:36422/SCTP@server:0" \
+	  --port "8080:8080@server:0" \
+	  --port "8081:8081@server:0" \
+	  --port "8082:8082@server:0" \
+	  --port "8083:8083@server:0" \
+	  --port "8084:8084@server:0" \
+	  --port "8085:8085@server:0" \
+	  --port "8086:8086@server:0" \
+	  --port "8087:8087@server:0" \
+	  --port "4560:4560@server:0" \
+	  --port "4561:4561@server:0"
+	mkdir -p ~/.kube
+	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
+	chmod 600 ~/.kube/config
 
-deploy-full-coexistence: deploy-dual-rdl-6xapps
+cluster-delete:
+	@echo "Removendo cluster k3d $(CLUSTER_NAME)..."
+	k3d cluster delete $(CLUSTER_NAME)
 
-deploy-dual-rdl-6xapps:
-	@echo "Implantando ecossistema de coexistência completa (H-RDL F1 + CA-RDL F2 + 6 Reference xApps)..."
-	bash scripts/deploy_dual_rdl_6xapps.sh
+cluster-recreate: cluster-delete cluster-create
+	@echo "Cluster recriado com sucesso!"
 
+rancher-start:
+	@echo "Iniciando contêiner do Rancher Server (rancher-server)..."
+	@if [ "$$(docker ps -a -q -f name=^/rancher-server$$)" ]; then \
+		echo "Contêiner 'rancher-server' já existe. Garantindo inicialização..."; \
+		docker start rancher-server; \
+	else \
+		docker run -d --restart=unless-stopped \
+		  -p 8088:80 -p 8443:443 \
+		  --privileged \
+		  --name rancher-server \
+		  rancher/rancher:v2.8.5; \
+	fi
+	@echo "Aguarde ~60-90 segundos para a inicialização e acesse: https://localhost:8443"
+
+rancher-stop:
+	@echo "Parando e removendo contêiner do Rancher Server..."
+	docker rm -f rancher-server 2>/dev/null || true
+
+rancher-logs:
+	docker logs -f rancher-server
+
+rancher-password:
+	@echo "Obtendo Bootstrap Password do Rancher Server:"
+	@docker logs rancher-server 2>&1 | grep "Bootstrap Password:" || echo "Ainda inicializando ou senha já redefinida."
+
+rancher-connect:
+	@echo "Conectando Rancher Server ao cluster k3d e ajustando agente..."
+	bash scripts/register_rancher.sh "$(URL)"
+
+# -------------------------------------------------------------
+# Pipeline Kubernetes Nativo (K8s Puro / Kustomize)
+# -------------------------------------------------------------
+k8s-deploy:
+	@echo "Implantando Near-RT RIC + 3 Reference xApps + RDL (Modo Governança)..."
+	bash scripts/deploy_k8s.sh --with-rdl
+
+k8s-deploy-baseline:
+	@echo "Implantando Near-RT RIC + 3 Reference xApps (Modo Baseline SEM RDL)..."
+	bash scripts/deploy_k8s.sh --baseline
+
+k8s-uninstall:
+	kubectl delete -k $(K8S_DIR)
+
+k8s-test: test-3xapps
+
+deploy-reference-xapps:
+	@echo "Implantando Reference xApps no namespace $(NAMESPACE)..."
+	bash scripts/deploy_reference_xapps.sh
+
+# -------------------------------------------------------------
+# Pipeline Helm Chart (Padrão O-RAN)
+# -------------------------------------------------------------
+helm-deploy:
+	@echo "Implantando Near-RT RIC + 3 Reference xApps + RDL via Helm (Modo Governança)..."
+	bash scripts/deploy_helm.sh --with-rdl
+
+helm-deploy-baseline:
+	@echo "Implantando Near-RT RIC + 3 Reference xApps via Helm (Modo Baseline SEM RDL)..."
+	bash scripts/deploy_helm.sh --baseline
+
+# Deploy Exclusivo RDL Fase 2 (CA-RDL / MARL)
 helm-deploy-f2:
-	@echo "Implantando/Atualizando exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
+	@echo "Implantando exclusivamente a xApp RDL Fase 2 (ricxapp-iqos-xapp-rdl-f2)..."
 	bash scripts/deploy_rdl_phase2.sh
 
-helm-upgrade-f2:
-	@echo "Executando Helm Upgrade da release $(RELEASE_NAME_F2)..."
-	helm upgrade --install $(RELEASE_NAME_F2) $(CHART_DIR) \
-	  --namespace $(NAMESPACE) \
-	  --set image.repository=$(IMAGE_NAME) \
-	  --set image.tag=$(IMAGE_TAG) \
-	  --set image.pullPolicy=Never \
-	  --set fullnameOverride=$(RELEASE_NAME_F2) \
-	  --set env.useFakeSdl="false" \
-	  --set env.rmrWaitForReady="false" \
-	  --set env.enableTorch="true"
-
 helm-uninstall-f2:
-	@echo "Removendo exclusivamente a xApp RDL Fase 2 ($(RELEASE_NAME_F2))..."
-	helm uninstall $(RELEASE_NAME_F2) -n $(NAMESPACE) || echo "Release $(RELEASE_NAME_F2) nao encontrada."
-
-status: status-f2
+	@echo "Removendo exclusivamente a xApp RDL Fase 2..."
+	helm uninstall ricxapp-iqos-xapp-rdl-f2 -n $(NAMESPACE) || echo "Release ricxapp-iqos-xapp-rdl-f2 nao encontrada."
 
 status-f2:
 	@echo "=== Status das xApps no Namespace $(NAMESPACE) ==="
 	@kubectl get pods -n $(NAMESPACE) -o wide
-	@echo ""
-	@echo "=== Pod da xApp RDL Fase 2 ==="
-	@kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) -o wide 2>/dev/null || true
-	@kubectl get pods -n $(NAMESPACE) -l app=ricxapp-iqos-xapp-rdl -o wide 2>/dev/null || true
-
-logs: logs-f2
+	@echo "\n=== Pod da xApp RDL Fase 2 ==="
+	@kubectl get pods -n $(NAMESPACE) -l app=ricxapp-iqos-xapp-rdl-f2 -o wide
 
 logs-f2:
-	@if kubectl get pods -n $(NAMESPACE) -l app=$(RELEASE_NAME_F2) 2>&1 | grep -q "ricxapp-iqos-xapp-rdl-f2"; then \
-	  kubectl logs -l app=$(RELEASE_NAME_F2) -n $(NAMESPACE) -f; \
-	elif kubectl get pods -n $(NAMESPACE) -l app=ricxapp-iqos-xapp-rdl 2>&1 | grep -q "ricxapp-iqos-xapp-rdl"; then \
-	  kubectl logs -l app=ricxapp-iqos-xapp-rdl -n $(NAMESPACE) -f; \
-	else \
-	  kubectl logs deployment/$(RELEASE_NAME_F2) -n $(NAMESPACE) -f 2>/dev/null || kubectl logs deployment/ricxapp-iqos-xapp-rdl -n $(NAMESPACE) -f; \
-	fi
+	kubectl logs -l app=ricxapp-iqos-xapp-rdl-f2 -n $(NAMESPACE) -f
 
 test-f2:
 	@echo "Testando endpoints da xApp RDL Fase 2 (CA-RDL / MARL)..."
 	@curl -i http://localhost:8080/health || true
-	@echo ""
-	@echo "Métricas Prometheus:"
+	@echo "\nMétricas Prometheus:"
 	@curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_" || true
 
+sync-f1-f2-check:
+	@echo "=== Validação de Sincronização e Compatibilidade H-RDL (F1) <-> CA-RDL (F2) ==="
+	@python scripts/verify_f1_f2_cross_repo_sync.py
+	@python scripts/check_no_synthetic_results.py
+	@python scripts/validate_provenance.py
+	@pytest tests/unit/test_conflict_detection.py tests/unit/test_safety_guards.py -v
+	@echo "[OK] Contrato de Sincronização F1 <-> F2 Validado com Sucesso!"
+
+
+helm-package:
+
+	@echo "Validando e empacotando os 4 Helm Charts..."
+	helm lint deploy/helm/iqos-xapp-rdl
+	helm lint deploy/helm/xapp-qos-xslice
+	helm lint deploy/helm/xapp-energy-saving
+	helm lint deploy/helm/xapp-traffic-steering
+	helm package deploy/helm/iqos-xapp-rdl
+	helm package deploy/helm/xapp-qos-xslice
+	helm package deploy/helm/xapp-energy-saving
+	helm package deploy/helm/xapp-traffic-steering
+
+helm-test: test-3xapps
+
 test-3xapps:
-	@echo "Testando integridade das 3 Reference xApps no cluster..."
+	@echo "Testando endpoints das xApps no Kubernetes..."
 	bash scripts/verify_3_xapps.sh
 
-# -------------------------------------------------------------
-# Gestão do Cluster k3d (Topologias: 1 Nó, 2 Nós, 3 Nós)
-# -------------------------------------------------------------
-cluster-create: cluster-create-1node
-
-cluster-create-1node:
-	@echo "Criando cluster k3d $(CLUSTER_NAME) [Topologia: 1 Nó Único (Control-Plane + Worker)]..."
-	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 0 \
-	  --port "36422:36422/SCTP@server:0" \
-	  --port "8080:8080@server:0" \
-	  --port "8081:8081@server:0" \
-	  --port "4560:4560@server:0" \
-	  --port "4561:4561@server:0"
-	mkdir -p ~/.kube
-	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
-	@kubectl label namespace ricxapp istio-injection=enabled --overwrite 2>/dev/null || true
-	@kubectl label namespace ricplt istio-injection=enabled --overwrite 2>/dev/null || true
-
-cluster-create-2nodes:
-	@echo "Criando cluster k3d $(CLUSTER_NAME) [Topologia: 2 Nós (1 Server + 1 Agent)]..."
-	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 1 \
-	  --port "36422:36422/SCTP@server:0" \
-	  --port "8080:8080@server:0" \
-	  --port "8081:8081@server:0" \
-	  --port "4560:4560@server:0" \
-	  --port "4561:4561@server:0"
-	mkdir -p ~/.kube
-	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
-
-cluster-create-3nodes:
-	@echo "Criando cluster k3d $(CLUSTER_NAME) [Topologia: 3 Nós (1 Server + 2 Agents)]..."
-	k3d cluster create $(CLUSTER_NAME) --servers 1 --agents 2 \
-	  --port "36422:36422/SCTP@server:0" \
-	  --port "8080:8080@server:0" \
-	  --port "8081:8081@server:0" \
-	  --port "4560:4560@server:0" \
-	  --port "4561:4561@server:0"
-	mkdir -p ~/.kube
-	k3d kubeconfig get $(CLUSTER_NAME) > ~/.kube/config
-
-cluster-delete:
-	k3d cluster delete $(CLUSTER_NAME)
-
-cluster-recreate: cluster-delete cluster-create-1node
-
-clean-all:
-	@bash scripts/cleanup_all.sh
-
-PYTHON ?= python3
+helm-uninstall:
+	helm uninstall ricxapp-qos-xslice -n $(NAMESPACE) 2>/dev/null || true
+	helm uninstall ricxapp-energy-saving -n $(NAMESPACE) 2>/dev/null || true
+	helm uninstall ricxapp-traffic-steering -n $(NAMESPACE) 2>/dev/null || true
+	helm uninstall $(RELEASE_NAME) -n $(NAMESPACE) 2>/dev/null || true
+	helm uninstall ricxapp-iqos-xapp-rdl-f2 -n $(NAMESPACE) 2>/dev/null || true
 
 # -------------------------------------------------------------
-# Simulações ns-3 e Pipelines Experimentais
+# [OPCIONAL] Observabilidade Service Mesh (Kiali / Istio)
 # -------------------------------------------------------------
-sync-ns3-scratch:
-	@echo "Sincronizando cenários C++ com o diretório scratch do ns-3 ($(NS3_DIR)/scratch)..."
-	@mkdir -p $(NS3_DIR)/scratch
-	@cp -f simulations/ns3/*.cc $(NS3_DIR)/scratch/
+kiali-install:
+	bash scripts/install_kiali.sh
 
+kiali-dashboard:
+	@echo "Abrindo Kiali em http://localhost:20001/kiali (pressione Ctrl+C para parar)..."
+	kubectl port-forward -n istio-system svc/kiali 20001:20001 --address 0.0.0.0
+
+start-traffic:
+	@echo "Iniciando gerador contínuo de tráfego interno no cluster..."
+	kubectl apply -f deploy/kubernetes/traffic-generator.yaml
+	kubectl rollout status deployment/traffic-generator -n $(NAMESPACE) --timeout=60s
+	@echo "Tráfego ATIVO! Atualize o Kiali para ver o fluxo animado."
+
+stop-traffic:
+	@echo "Parando gerador de tráfego..."
+	kubectl delete -f deploy/kubernetes/traffic-generator.yaml --ignore-not-found=true
+
+inject-traffic:
+	bash scripts/inject_traffic.sh
+
+# -------------------------------------------------------------
+# Operações Gerais
+# -------------------------------------------------------------
+validate:
+	echo "Schema Validated"
+
+onboard:
+	dms_cli onboard configs/config-file.json configs/schema.json
+
+install:
+	dms_cli install --xapp-chart-name $(IMAGE_NAME) --version $(IMAGE_TAG) --namespace $(NAMESPACE)
+
+status:
+	@echo "=== Near-RT RIC Platform (ricplt) ==="
+	@kubectl get pods -n $(NAMESPACE_RIC) -o wide
+	@echo "\n=== xApps em Execução (ricxapp) ==="
+	@kubectl get pods -n $(NAMESPACE) -o wide
+
+logs:
+	kubectl logs -l app=$(RELEASE_NAME) -n $(NAMESPACE) -f
+
+smoke-test:
+	docker rm -f xapp-rdl-test 2>/dev/null || true
+	docker run -d --name xapp-rdl-test -p 8090:8080 -p 8091:8081 -e USE_FAKE_SDL=true $(IMAGE_NAME):$(IMAGE_TAG)
+	sleep 3
+	curl -i http://localhost:8090/health
+	curl http://localhost:8091/metrics | grep -E "rdl_|dl_"
+	docker logs xapp-rdl-test
+	docker rm -f xapp-rdl-test
+
+uninstall:
+	kubectl delete -k $(K8S_DIR) || $(MAKE) helm-uninstall
+
+# -------------------------------------------------------------
+# Simulações ns-3 NORI e Pipeline Experimental Modular
+# -------------------------------------------------------------
 setup-ns3:
 	bash scripts/setup_ns3.sh
 
-run-scenario1: sync-ns3-scratch
-	@echo "Executando Cenário 1: Energy Saving vs QoS (EEVS) com E2 ativo..."
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
+deploy-rdl: helm-deploy
 
-run-scenario1-baseline: sync-ns3-scratch
-	@echo "Executando Cenário 1: Energy Saving vs QoS (Baseline / Standalone)..."
-	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
+deploy-baseline: helm-deploy-baseline
 
-run-scenario2: sync-ns3-scratch
-	@echo "Executando Cenário 2: Traffic Steering vs Slicing (TVS) com E2 ativo..."
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-
-run-scenario2-baseline: sync-ns3-scratch
-	@echo "Executando Cenário 2: Traffic Steering vs Slicing (Baseline / Standalone)..."
-	cd $(NS3_DIR) && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-
-run-scenario3: sync-ns3-scratch
-	@echo "Executando Cenário 3: 5G-Advanced Multi-Carrier (FR1/FR3) & Massive MIMO UPA..."
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl5gaMulticarrierMimo=level_all" && ./ns3 run "scratch/scenario_rdl_5ga_multicarrier_mimo --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=40"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-
-run-scenario4: sync-ns3-scratch
-	@echo "Executando Cenário 4: 6G ISAC (Sensoriamento Radar vs Comunicação 28 GHz)..."
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl6gIsacSensingCoexistence=level_all" && ./ns3 run "scratch/scenario_rdl_6g_isac_sensing_coexistence --sensingRatio=0.35 --simTime=30"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-
-run-scenario5: sync-ns3-scratch
-	@echo "Executando Cenário 5: 6G Governança Cross-Tier & Escudo Anti-Rogue xApp..."
-	cd $(NS3_DIR) && export NS_LOG="ScenarioRdl6gCrossTierGovernance=level_all" && ./ns3 run "scratch/scenario_rdl_6g_cross_tier_governance --lockout=true --simTime=35"
-	@echo "\n[+] Atualizando relatórios locais e sincronizando com o GitHub..."
-
-
-run-baseline: sync-ns3-scratch
+run-baseline:
 	bash scripts/run_baseline_experiment.sh
 
-run-rdl: sync-ns3-scratch
+run-rdl:
 	bash scripts/run_rdl_experiment.sh
 
+run-scenario1:
+	@echo "Executando Cenário 1: Energy Saving vs QoS (EEVS) com logs em tempo real..."
+	@if [ ! -d "$(NS3_DIR)" ] || [ ! -f "$(NS3_DIR)/ns3" ]; then \
+		echo ""; \
+		echo " [ERRO] O executável do simulador ns-3 não foi encontrado em: $(NS3_DIR)"; \
+		echo " [DICA] Para instalar e compilar o ns-3 NORI / 5G-LENA automaticamente, execute:"; \
+		echo "        make setup-ns3"; \
+		echo "        ou execute com o caminho personalizado: make run-scenario1 NS3_DIR=/caminho/do/ns-3-oran"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+
+run-scenario1-baseline:
+	@echo "Executando Baseline Cenário 1: Energy Saving vs QoS (EEVS) [enableE2=false]..."
+	@if [ ! -d "$(NS3_DIR)" ] || [ ! -f "$(NS3_DIR)/ns3" ]; then \
+		echo ""; \
+		echo " [ERRO] O executável do simulador ns-3 não foi encontrado em: $(NS3_DIR)"; \
+		echo " [DICA] Execute 'make setup-ns3' para compilar o ambiente."; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_energy_vs_qos.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlEnergyVsQos=level_all" && ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30"
+
+run-scenario2:
+	@echo "Executando Cenário 2: Traffic Steering vs QoS (TVS) com logs em tempo real..."
+	@if [ ! -d "$(NS3_DIR)" ] || [ ! -f "$(NS3_DIR)/ns3" ]; then \
+		echo ""; \
+		echo " [ERRO] O executável do simulador ns-3 não foi encontrado em: $(NS3_DIR)"; \
+		echo " [DICA] Para instalar e compilar o ns-3 NORI / 5G-LENA automaticamente, execute:"; \
+		echo "        make setup-ns3"; \
+		echo "        ou execute com o caminho personalizado: make run-scenario2 NS3_DIR=/caminho/do/ns-3-oran"; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=true --ricIp=127.0.0.1 --ricPort=36422 --simTime=30"
+
+run-scenario2-baseline:
+	@echo "Executando Baseline Cenário 2: Traffic Steering vs QoS (TVS) [enableE2=false]..."
+	@if [ ! -d "$(NS3_DIR)" ] || [ ! -f "$(NS3_DIR)/ns3" ]; then \
+		echo ""; \
+		echo " [ERRO] O executável do simulador ns-3 não foi encontrado em: $(NS3_DIR)"; \
+		echo " [DICA] Execute 'make setup-ns3' para compilar o ambiente."; \
+		echo ""; \
+		exit 1; \
+	fi
+	@mkdir -p $(NS3_DIR)/scratch
+	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
+	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
+
+git-sync:
+	bash scripts/git_sync.sh "results: synchronize experimental datasets and reports"
+
+push-results:
+	git add experiments/results/ docs/ results/
+	git commit -m "results: update experimental datasets and FlowMonitor metrics" || true
+	git push origin $(shell git rev-parse --abbrev-ref HEAD)
 
 
-analyze-benchmarks:
-
-view-results:
-	@cat experiments/results/relatorio_comparativo.md
-
-sync:
-	python3 scripts/auto_sync_github.py
-
-auto-sync:
-	python3 scripts/auto_sync_github.py --watch
