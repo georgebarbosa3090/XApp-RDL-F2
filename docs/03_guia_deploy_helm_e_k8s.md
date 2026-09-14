@@ -22,12 +22,8 @@ cd XApp-RDL-F2
 make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
 make cluster-create-1node
 
-# 3. Criar os namespaces O-RAN:
-kubectl apply -f deploy/kubernetes/namespace.yaml
-
-# 4. Implantar o Near-RT RIC (DBAAS Redis) e aguardar a prontidão:
-kubectl apply -f deploy/kubernetes/near-rt-ric.yaml -n ricplt
-kubectl rollout status deployment/deployment-ricplt-dbaas-redis -n ricplt --timeout=90s
+# 3. Executar o pipeline automatizado de deploy via HELM (Near-RT RIC + Reference xApps + CA-RDL):
+bash scripts/deploy_helm.sh --with-rdl
 ```
 
 ---
@@ -120,31 +116,37 @@ kubectl apply -f deploy/kubernetes/near-rt-ric.yaml -n ricplt
 kubectl rollout status deployment/deployment-ricplt-dbaas-redis -n ricplt --timeout=90s
 ```
 
-#### Passo 4: Compilar Imagem Docker e Implantar as Reference xApps (`ricxapp`)
+#### Passo 4: Compilar Imagem Docker e Importar no k3d
 ```bash
-# 1. Compilar a imagem Docker local da xApp e criar a tag 1.1.0:
+# 1. Compilar a imagem Docker unificada e criar as tags 1.1.0 e 2.0.0:
 make build
 docker tag iqos-xapp-rdl:2.0.0 iqos-xapp-rdl:1.1.0 2>/dev/null || true
 
-# 2. Importar as imagens para o cluster k3d (previne ImagePullBackOff):
+# 2. Importar as imagens para os nós containerd do k3d:
 k3d image import iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0 -c rancher-lab
-
-# 3. Implantar as 6 Reference xApps:
-bash scripts/deploy_reference_xapps.sh
-
-# 4. Reiniciar deployments se necessário para aplicar as imagens locais:
-kubectl rollout restart deployment -n ricxapp
 ```
 
-#### Passo 5: Compilar e Implantar a xApp RDL Fase 2 (CA-RDL / MARL)
+#### Passo 5: Implantar as Reference xApps e a xApp RDL Fase 2 via HELM
 ```bash
-make build
-make helm-deploy-f2
+# 1. Deploy da QoS xSlice xApp via Helm:
+helm upgrade --install ricxapp-qos-xslice deploy/helm/xapp-qos-xslice -n ricxapp --create-namespace --set image.pullPolicy=Never
+
+# 2. Deploy da Energy Saving xApp via Helm:
+helm upgrade --install ricxapp-energy-saving deploy/helm/xapp-energy-saving -n ricxapp --create-namespace --set image.pullPolicy=Never
+
+# 3. Deploy da Traffic Steering xApp via Helm:
+helm upgrade --install ricxapp-traffic-steering deploy/helm/xapp-traffic-steering -n ricxapp --create-namespace --set image.pullPolicy=Never
+
+# 4. Deploy da xApp RDL Fase 2 (CA-RDL / MARL) via Helm:
+helm upgrade --install ricxapp-iqos-xapp-rdl-f2 deploy/helm/iqos-xapp-rdl -n ricxapp --create-namespace --set image.pullPolicy=Never --set image.tag=2.0.0
+
+# 5. Confirmar prontidão dos Pods no namespace ricxapp:
+kubectl get pods -n ricxapp -o wide
 ```
 
-#### Alternativa: Pipeline 1-Comando (Tudo Automatizado)
+#### Alternativa: Pipeline HELM 1-Comando (Tudo Automatizado)
 ```bash
-bash scripts/deploy_k8s.sh --with-rdl
+bash scripts/deploy_helm.sh --with-rdl
 ```
 
 ---
