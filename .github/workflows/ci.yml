@@ -54,7 +54,7 @@ jobs:
         USE_FAKE_SDL: "True"
         LD_LIBRARY_PATH: "/usr/local/lib:/usr/lib"
       run: |
-        pytest tests/ --cov=src --cov-fail-under=75 -v
+        pytest tests/ --cov=src --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=85 -v
         
   docker-build:
     needs: test

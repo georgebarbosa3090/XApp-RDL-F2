@@ -384,3 +384,5 @@ def test_rdl_xapp_lifecycle():
 def test_main_py_import():
     import src.main as main_mod
     assert hasattr(main_mod, 'RDLxApp')
+
+
