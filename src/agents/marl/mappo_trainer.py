@@ -132,6 +132,8 @@ class MAPPOTrainer:
         # Salva manifesto detalhado de treinamento com reprodutibilidade
         manifest = {
             "git_sha": _get_git_sha(),
+            "environment": "MAPPO_SMOKE_ENV",
+            "publication_eligible": False,
             "seed": seed,
             "episodes": episodes,
             "steps_per_episode": steps_per_episode,

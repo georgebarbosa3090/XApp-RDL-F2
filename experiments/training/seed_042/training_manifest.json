@@ -1,9 +1,11 @@
 {
-  "git_sha": "a7b26f8d0fc0daa82e891816ab8e4d16b6c8e153",
+  "git_sha": "8b9379b704cb7587f30a7f30792390e1349b34ed",
+  "environment": "MAPPO_SMOKE_ENV",
+  "publication_eligible": false,
   "seed": 42,
   "episodes": 20,
   "steps_per_episode": 50,
-  "training_time_s": 0.35,
+  "training_time_s": 0.26,
   "final_reward": 28.8184,
   "final_cost": 1.5507,
   "n_agents": 6,
