@@ -8,7 +8,7 @@
 
 ---
 
-## ⚡ 1. Execução Rápida no Terminal (Quickstart)
+## 1. Execução Rápida no Terminal (Quickstart)
 
 Para usuários que desejam **clonar/atualizar o repositório, resetar o cluster k3d antigo e implantar a infraestrutura Near-RT RIC**, execute o bloco abaixo diretamente no terminal:
 
@@ -26,7 +26,7 @@ bash scripts/deploy_helm.sh --with-rdl
 
 ---
 
-## 🏗️ 2. Topologias de Cluster k3d e Gestão de Infraestrutura
+## 2. Topologias de Cluster k3d e Gestão de Infraestrutura
 
 A implantação do ecossistema O-RAN no Kubernetes local via `k3d` suporta **três topologias operacionais**, permitindo adequar o consumo de RAM e CPU ao perfil da máquina de testes:
 
@@ -74,7 +74,7 @@ graph TD
 
 ---
 
-## 🚀 3. Cenários de Implantação no Kubernetes
+## 3. Cenários de Implantação no Kubernetes
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -202,7 +202,7 @@ make deploy-full-coexistence
 
 ---
 
-## 🔍 4. Validação, Telemetria e Limpeza
+## 4. Validação, Telemetria e Limpeza
 
 ### 4.1. Status dos Pods e Logs
 ```bash
@@ -235,7 +235,7 @@ make cluster-recreate
 
 ---
 
-## 📌 5. Apêndice: Mapeamento de Portas e Comandos Makefile
+## 5. Apêndice: Mapeamento de Portas e Comandos Makefile
 
 ### 5.1. Tabela de Serviços e Portas O-RAN Expostas
 
