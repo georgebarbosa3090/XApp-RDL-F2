@@ -107,13 +107,17 @@ class RDLxApp:
         self.pending_transactions: Dict[str, Dict[str, Any]] = {}
         
         self.running = False
-        
-        # 7. Framework Xapp e Modo de Transporte
+             # 7. Framework Xapp e Modo de Transporte
         fake_sdl = os.environ.get("USE_FAKE_SDL", "True").lower() == "true"
-        self.require_operational_transport = (
-            os.environ.get("REQUIRE_OPERATIONAL_TRANSPORT", "false").lower() == "true"
-            or self.config.get("require_operational_transport", False)
-        )
+        if self.oran_strict:
+            self.require_operational_transport = True
+            logger.info("🔒 Modo O_RAN_INTEROP estrito ativado: Transporte operacional real e SDL estrito exigidos (Fail-Closed).")
+        else:
+            self.require_operational_transport = (
+                os.environ.get("REQUIRE_OPERATIONAL_TRANSPORT", "false").lower() == "true"
+                or self.config.get("require_operational_transport", False)
+            )
+
         self.xapp = Xapp(entrypoint=self._entrypoint, rmr_port=4560, use_fake_sdl=fake_sdl)
         self.is_mock_transport = getattr(self.xapp, "is_mock_transport", not HAS_RICXAPPFRAME)
         self.transport_mode = "MOCK_TRANSPORT_SHIM" if self.is_mock_transport else "RMR_E2_OPERATIONAL"
@@ -138,16 +142,19 @@ class RDLxApp:
         self.xapp.register_callback(self._control_failure_handler, RIC_CONTROL_FAILURE)
 
     def start(self):
-        logger.info(f"Iniciando xApp RDL (H-RDL / CA-RDL Fase 2) [Transporte: {self.transport_mode}]")
-        self.health.run()
-        self.metrics.start()
         self.running = True
-        self.xapp.run()
+        logger.info("Iniciando RDLxApp Engine", transport=self.transport_mode, backend=self.backend.metadata.backend_id)
+        if not self.is_mock_transport and hasattr(self.xapp, "run"):
+            self.xapp.run()
+        else:
+            self._entrypoint(None)
 
     def stop(self):
         self.running = False
-        self.health.set_state(AppState.STOPPED)
-        self.xapp.stop()
+        self.health.set_state(AppState.STOPPING)
+        logger.info("Encerrando RDLxApp Engine")
+        if self.xapp and hasattr(self.xapp, "stop"):
+            self.xapp.stop()
         
     def _default_handler(self, xapp_instance, summary, sbuf):
         logger.debug("Mensagem RMR nao mapeada recebida", mtype=summary.get("mtype"))
@@ -163,18 +170,21 @@ class RDLxApp:
         self.metrics.record_kpm()
         payload = summary.get("payload")
         if payload:
-            reports_data = self.asn1_decoder.decode_indication(payload)
-            if reports_data:
-                for data in reports_data:
-                    report = KPMReport(
-                        node_id=data.get("node_id", "gnb_01"),
-                        ue_id=data.get("ue_id", "unknown"),
-                        drb_thp_dl=data.get("drb_thp_dl", 0.0),
-                        drb_thp_ul=data.get("drb_thp_ul", 0.0),
-                        drb_delay_dl=data.get("drb_delay_dl", 0.0),
-                        prb_used_dl=data.get("prb_used_dl", 0)
-                    )
-                    self.perception.update_kpm_report(report)
+            try:
+                reports_data = self.backend.decode_kpm(payload)
+                if reports_data:
+                    for data in reports_data:
+                        report = KPMReport(
+                            node_id=data.get("node_id", "gnb_01"),
+                            ue_id=data.get("ue_id", "unknown"),
+                            drb_thp_dl=data.get("drb_thp_dl", 0.0),
+                            drb_thp_ul=data.get("drb_thp_ul", 0.0),
+                            drb_delay_dl=data.get("drb_delay_dl", 0.0),
+                            prb_used_dl=data.get("prb_used_dl", 0)
+                        )
+                        self.perception.update_kpm_report(report)
+            except Exception as e:
+                logger.error("Erro ao decodificar telemetria KPM via backend", backend=self.backend.metadata.backend_id, error=str(e))
         if xapp_instance and sbuf:
             xapp_instance.rmr_free(sbuf)
 
@@ -210,21 +220,47 @@ class RDLxApp:
             xapp_instance.rmr_free(sbuf)
 
     def _control_ack_handler(self, xapp_instance: Xapp, summary: Dict[str, Any], sbuf: Any):
-        """Trata confirmações de execução de controle emitidas pelo E2 Node / E2Term com timestamp monotônico e correlação de ação."""
+        """Trata confirmações de execução de controle emitidas pelo E2 Node / E2Term com suporte a APER e JSON."""
         t_ack_now = time.perf_counter()
         payload = summary.get("payload")
         if payload:
+            tx_info = None
+            tx_id = None
             try:
-                data = json.loads(payload.decode('utf-8'))
-                tx_id = data.get("transaction_id")
-                if tx_id and tx_id in self.pending_transactions:
-                    tx_info = self.pending_transactions.pop(tx_id)
+                # 1. Tenta correlação via backend APER e RicRequestIdAllocator
+                ack_data = self.backend.correlate_ack(payload, allow_test_fallback=True)
+                req_id = ack_data.get("requestor_id")
+                inst_id = ack_data.get("instance_id")
+                node_id = ack_data.get("node_id", "gnb_01")
+                ran_fn_id = ack_data.get("ran_function_id", 3)
+                
+                if req_id is not None and inst_id is not None:
+                    ric_req_key = (node_id, ran_fn_id, req_id, inst_id)
+                    tx_info = self.pending_transactions.pop(ric_req_key, None)
+                    if not tx_info:
+                        # Busca por iteração de chaves
+                        for key, info in list(self.pending_transactions.items()):
+                            if info.get("ric_req_key") == ric_req_key:
+                                tx_info = self.pending_transactions.pop(key)
+                                break
+                                
+                # 2. Fallback para decodificação JSON
+                if not tx_info and isinstance(payload, bytes):
+                    try:
+                        data = json.loads(payload.decode('utf-8'))
+                        tx_id = data.get("transaction_id")
+                        if tx_id and tx_id in self.pending_transactions:
+                            tx_info = self.pending_transactions.pop(tx_id)
+                    except Exception:
+                        pass
+                        
+                if tx_info:
                     t_start = tx_info["t_dispatch_start"]
                     act = tx_info.get("action")
                     if act:
                         act.t_ack = t_ack_now
                     rtt_ms = (t_ack_now - t_start) * 1000.0
-                    logger.info("RIC_CONTROL_ACK recebido e confirmado", transaction_id=tx_id, rtt_ms=f"{rtt_ms:.3f}ms", action=act.parameter if act else None)
+                    logger.info("RIC_CONTROL_ACK recebido e confirmado", transaction_id=tx_id or "APER", rtt_ms=f"{rtt_ms:.3f}ms", action=act.parameter if act else None)
             except Exception as e:
                 logger.debug(f"Erro ao decodificar RIC_CONTROL_ACK: {e}")
         logger.info("Recebido RIC_CONTROL_ACK", summary=summary)
@@ -235,12 +271,29 @@ class RDLxApp:
         """Trata notificações de falha no E2 Node / E2Term."""
         payload = summary.get("payload")
         if payload:
+            tx_info = None
             try:
-                data = json.loads(payload.decode('utf-8'))
-                tx_id = data.get("transaction_id")
-                if tx_id and tx_id in self.pending_transactions:
-                    tx_info = self.pending_transactions.pop(tx_id)
-                    logger.warning("RIC_CONTROL_FAILURE recebido para transação pendente", transaction_id=tx_id, info=tx_info)
+                ack_data = self.backend.correlate_ack(payload, allow_test_fallback=True)
+                req_id = ack_data.get("requestor_id")
+                inst_id = ack_data.get("instance_id")
+                node_id = ack_data.get("node_id", "gnb_01")
+                ran_fn_id = ack_data.get("ran_function_id", 3)
+                
+                if req_id is not None and inst_id is not None:
+                    ric_req_key = (node_id, ran_fn_id, req_id, inst_id)
+                    tx_info = self.pending_transactions.pop(ric_req_key, None)
+                
+                if not tx_info and isinstance(payload, bytes):
+                    try:
+                        data = json.loads(payload.decode('utf-8'))
+                        tx_id = data.get("transaction_id")
+                        if tx_id and tx_id in self.pending_transactions:
+                            tx_info = self.pending_transactions.pop(tx_id)
+                    except Exception:
+                        pass
+                        
+                if tx_info:
+                    logger.warning("RIC_CONTROL_FAILURE recebido para transação pendente", info=tx_info)
             except Exception as e:
                 logger.debug(f"Erro ao processar RIC_CONTROL_FAILURE: {e}")
         logger.warning("Recebido RIC_CONTROL_FAILURE", summary=summary)
@@ -436,6 +489,13 @@ class RDLxApp:
             t_disp_0 = time.perf_counter()
             if action:
                 action.t_dispatch_start = t_disp_0
+            # Verificação estrita de Dry-Run declarativo
+            dry_run = self.config.get("control", {}).get("dry_run", False) or os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
+            if dry_run:
+                t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
+                logger.info("ℹ️ Dry-Run ativado: RIC_CONTROL_REQUEST simulado sem despacho via RMR socket", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
+                return True, t_encode_ms, 0.0
+
             ric_req_key = (node_id, ran_fn_id, requestor_id, instance_id)
             self.pending_transactions[tx_id] = {
                 "t_dispatch_start": t_disp_0,
@@ -445,15 +505,15 @@ class RDLxApp:
                 "value": value,
                 "ric_req_key": ric_req_key
             }
-            
-            # Verificação estrita de Dry-Run declarativo
-            dry_run = self.config.get("control", {}).get("dry_run", False) or os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
-            if dry_run:
-                t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
-                logger.info("ℹ️ Dry-Run ativado: RIC_CONTROL_REQUEST simulado sem despacho via RMR socket", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
-                return True, t_encode_ms, 0.0
+            self.pending_transactions[ric_req_key] = self.pending_transactions[tx_id]
 
-            success = self.xapp.rmr_send(payload=payload_bytes, mtype=RIC_CONTROL_REQ)
+            # Seleciona formato do payload RMR (Octetos APER brutos no ambiente nativo O-RAN)
+            if not self.is_mock_transport or os.getenv("RMR_RAW_PAYLOAD", "false").lower() in ("true", "1"):
+                send_payload = aper_bytes
+            else:
+                send_payload = payload_bytes
+
+            success = self.xapp.rmr_send(payload=send_payload, mtype=RIC_CONTROL_REQ)
             t_disp_end = time.perf_counter()
             t_dispatch_ms = (t_disp_end - t_disp_0) * 1000.0
             if action:

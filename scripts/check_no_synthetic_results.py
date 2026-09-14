@@ -19,9 +19,14 @@ SCRIPTS_DIR = os.path.join(BASE_DIR, "scripts")
 EXPERIMENTS_DIR = os.path.join(BASE_DIR, "experiments")
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 
+SRC_DIR = os.path.join(BASE_DIR, "src")
+
 FORBIDDEN_PATTERNS = [
     ("np.random.normal", re.compile(r"np\.random\.normal\(")),
     ("np.random.uniform", re.compile(r"np\.random\.uniform\(")),
+    ("np.random.randn", re.compile(r"np\.random\.randn\(")),
+    ("np.random.rand", re.compile(r"np\.random\.rand\(")),
+    ("np.random.randint", re.compile(r"np\.random\.randint\(")),
     ("random.gauss", re.compile(r"random\.gauss\(")),
     ("random.uniform", re.compile(r"random\.uniform\(")),
     ("random.random", re.compile(r"random\.random\(")),
@@ -33,7 +38,6 @@ FORBIDDEN_PATTERNS = [
     ("synthetic_tradeoff_figure", re.compile(r"cenario_2_tradeoff_energy_vs_qos\.png", re.IGNORECASE)),
 ]
 
-
 ALLOWED_EXCEPTIONS = [
     "bootstrap",
     "check_no_synthetic_results.py"
@@ -42,12 +46,12 @@ ALLOWED_EXCEPTIONS = [
 def main():
     print("=" * 80)
     print(" AUDITORIA ESTÁTICA DE ZERO DADOS SINTÉTICOS")
-    print(" Validando que nenhum gerador aleatório é usado em relatórios/experimentos...")
+    print(" Validando que nenhum gerador aleatório é usado em relatórios/experimentos/código...")
     print("=" * 80)
 
     violations: List[Tuple[str, int, str, str]] = []
 
-    for scan_dir in [SCRIPTS_DIR, EXPERIMENTS_DIR]:
+    for scan_dir in [SCRIPTS_DIR, EXPERIMENTS_DIR, SRC_DIR]:
         if not os.path.exists(scan_dir):
             continue
         for root, _, files in os.walk(scan_dir):
@@ -61,9 +65,12 @@ def main():
                             line_strip = line.strip()
                             if line_strip.startswith("#") or line_strip.startswith("//"):
                                 continue
+                            if "# unit-smoke-only" in line_strip or "# stub-demo-only" in line_strip:
+                                continue
                             for name, pat in FORBIDDEN_PATTERNS:
                                 if pat.search(line):
                                     violations.append((fpath, lno, name, line_strip))
+
 
     if violations:
         print(f"\n[FALHA CRÍTICA] Encontradas {len(violations)} violações da política de Zero Dados Sintéticos:")

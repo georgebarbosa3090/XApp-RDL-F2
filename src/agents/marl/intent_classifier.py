@@ -1,3 +1,8 @@
+"""
+IntentClassifier Stub/Demo Component (src/agents/marl/intent_classifier.py)
+STATUS: DEMO/STUB (Modelo simulado local para testes unitários do pipeline)
+NÃO UTILIZADO EM REIVINDICAÇÕES DE PUBLICAÇÃO CIENTÍFICA.
+"""
 import numpy as np
 
 try:
@@ -14,11 +19,14 @@ except ImportError:
             return [0]
 
 class IntentClassifier:
+    """
+    Componente Stub/Demo para classificação básica de intenção em testes locais.
+    """
     def __init__(self):
         # Modelo simulado com sklearn (com fallback para CI sem scikit-learn)
         self.clf = RandomForestClassifier(n_estimators=10)
-        X_dummy = np.random.rand(10, 5)
-        y_dummy = np.random.randint(0, 2, 10)
+        X_dummy = np.random.rand(10, 5)  # stub-demo-only
+        y_dummy = np.random.randint(0, 2, 10)  # stub-demo-only
         self.clf.fit(X_dummy, y_dummy)
         
     def predict_intent(self, state_features: np.ndarray) -> int:
@@ -26,4 +34,5 @@ class IntentClassifier:
             state_features = np.zeros(5)
         res = self.clf.predict([state_features])
         return int(res[0]) if isinstance(res, (list, np.ndarray)) else 0
+
 

@@ -1,11 +1,23 @@
 {
+  "git_sha": "a7b26f8d0fc0daa82e891816ab8e4d16b6c8e153",
   "seed": 2026,
   "episodes": 20,
   "steps_per_episode": 50,
-  "training_time_s": 0.31,
+  "training_time_s": 0.28,
   "final_reward": 28.8184,
   "final_cost": 1.5507,
   "n_agents": 6,
   "obs_dim": 60,
-  "action_dim": 7
+  "action_dim": 7,
+  "hyperparameters": {
+    "lr": 0.0003,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "cost_limit": 0.05
+  },
+  "pytorch_available": false,
+  "checkpoints": {
+    "actor": "actor_weights.npy",
+    "critic": "critic_weights.npy"
+  }
 }
