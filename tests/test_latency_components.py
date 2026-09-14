@@ -204,7 +204,7 @@ def test_rdl_xapp_runtime_full_cycle_and_payload_dispatch(monkeypatch):
     # 5. Validação do despacho de controle E2SM-RC
     assert len(sent_messages) >= 1
     dispatched = sent_messages[0]
-    assert dispatched["mtype"] == 12010 # RIC_CONTROL_REQ
+    assert dispatched["mtype"] == 12040 # RIC_CONTROL_REQ (O-RAN SC standard 12040)
     payload = dispatched["payload"]
     
     assert payload["node_id"] == "gnb_01"

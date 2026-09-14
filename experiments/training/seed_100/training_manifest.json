@@ -1,0 +1,11 @@
+{
+  "seed": 100,
+  "episodes": 20,
+  "steps_per_episode": 50,
+  "training_time_s": 0.36,
+  "final_reward": 28.8184,
+  "final_cost": 1.5507,
+  "n_agents": 6,
+  "obs_dim": 60,
+  "action_dim": 7
+}

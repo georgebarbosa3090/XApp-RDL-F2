@@ -48,12 +48,16 @@ from src.conflict_types import XAppAction, KPMReport
 
 logger = setup_logger("RDLxApp")
 
-# RMR Message Types (O-RAN WG3 standard)
-RIC_INDICATION = 12050
-RIC_CONTROL_REQ = 12010
-RIC_CONTROL_ACK = 12011
-RIC_CONTROL_FAILURE = 12012
-RDL_ACTION_PROPOSAL = 30000
+from src.e2.e2ap.constants import (
+    RIC_SUBSCRIPTION_REQ,
+    RIC_SUBSCRIPTION_RESP,
+    RIC_SUBSCRIPTION_FAILURE,
+    RIC_CONTROL_REQ,
+    RIC_CONTROL_ACK,
+    RIC_CONTROL_FAILURE,
+    RIC_INDICATION,
+    RDL_ACTION_PROPOSAL
+)
 
 def now_ts() -> float:
     return time.time()
@@ -442,6 +446,13 @@ class RDLxApp:
                 "ric_req_key": ric_req_key
             }
             
+            # Verificação estrita de Dry-Run declarativo
+            dry_run = self.config.get("control", {}).get("dry_run", False) or os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
+            if dry_run:
+                t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
+                logger.info("ℹ️ Dry-Run ativado: RIC_CONTROL_REQUEST simulado sem despacho via RMR socket", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
+                return True, t_encode_ms, 0.0
+
             success = self.xapp.rmr_send(payload=payload_bytes, mtype=RIC_CONTROL_REQ)
             t_disp_end = time.perf_counter()
             t_dispatch_ms = (t_disp_end - t_disp_0) * 1000.0

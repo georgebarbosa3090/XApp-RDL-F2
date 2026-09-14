@@ -23,6 +23,7 @@ results/*
 !results/.gitkeep
 
 *.csv
+!experiments/training/**/*.csv
 *.tsv
 *.parquet
 *.h5
@@ -94,6 +95,8 @@ __pycache__/
 *$py.class
 *.so
 *.pyd
+*.egg-info/
+
 
 # 8. Ambientes Virtuais
 .venv/
