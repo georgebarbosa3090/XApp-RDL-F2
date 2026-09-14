@@ -8,6 +8,24 @@
 
 ---
 
+## 0. Comandos Iniciais: Clonar/Atualizar Repositório e Reset do Cluster
+
+Antes de iniciar qualquer procedimento de implantação, execute o bloco de comandos no terminal para clonar ou atualizar o repositório, deletar qualquer cluster k3d criado anteriormente e implantar um novo cluster limpo:
+
+```bash
+# 1. Clonar ou atualizar o repositório F2 no terminal:
+git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git /home/george/XApp-RDL-F2 2>/dev/null || (cd /home/george/XApp-RDL-F2 && git pull)
+cd /home/george/XApp-RDL-F2
+
+# 2. Deletar qualquer cluster k3d implantado anteriormente (evita conflitos de portas ou namespaces):
+make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
+
+# 3. Criar e implantar um novo cluster k3d limpo (Topologia 1 Nó Único):
+make cluster-create-1node
+```
+
+---
+
 ## 1. Topologias de Cluster k3d e Gestão de Infraestrutura
 
 A implantação do ecossistema O-RAN no Kubernetes local via `k3d` suporta **três topologias operacionais distintas**, adequando-se ao perfil de hardware e aos requisitos de segregação de plano de controle e dados:
@@ -146,15 +164,19 @@ O ciclo de vida da **xApp RDL Fase 2 (CA-RDL / MARL)** suporta três modos de im
 
 Este cenário é o recomendado quando você está iniciando em uma máquina nova ou após recriar o ambiente. **Nenhum componente O-RAN precisa estar previamente instalado.**
 
-### 3.1. Passo 1: Criar o Cluster Kubernetes (k3d)
-Escolha uma das topologias descritas na Seção 1 (ex: `make cluster-create-1node`).
+### 3.1. Passo 1: Obter/Atualizar Repositório, Limpar Cluster Antigo e Criar k3d
 
-> [!IMPORTANT]
-> **Como alterar a topologia se o cluster `rancher-lab` já existir:**  
-> Se o cluster já estiver criado e você tentar criar outra topologia, remova o cluster existente antes:
-> ```bash
-> make cluster-delete && make cluster-create-2nodes
-> ```
+```bash
+# 1. Clonar ou atualizar o repositório F2 no terminal:
+git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git /home/george/XApp-RDL-F2 2>/dev/null || (cd /home/george/XApp-RDL-F2 && git pull)
+cd /home/george/XApp-RDL-F2
+
+# 2. Deletar qualquer cluster k3d implantado anteriormente:
+make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
+
+# 3. Criar o novo cluster Kubernetes k3d (Escolha a topologia desejada: 1, 2 ou 3 nós):
+make cluster-create-1node
+```
 
 ### 3.2. Passo 2: Criar os Namespaces O-RAN
 ```bash
