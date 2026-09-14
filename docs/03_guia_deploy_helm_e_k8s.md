@@ -14,8 +14,9 @@ Antes de iniciar qualquer procedimento de implantação, execute o bloco de coma
 
 ```bash
 # 1. Clonar ou atualizar o repositório F2 no terminal:
-git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git /home/george/XApp-RDL-F2 2>/dev/null || (cd /home/george/XApp-RDL-F2 && git pull)
-cd /home/george/XApp-RDL-F2
+cd ~
+git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git 2>/dev/null || (cd XApp-RDL-F2 && git pull)
+cd XApp-RDL-F2
 
 # 2. Deletar qualquer cluster k3d implantado anteriormente (evita conflitos de portas ou namespaces):
 make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
@@ -168,8 +169,9 @@ Este cenário é o recomendado quando você está iniciando em uma máquina nova
 
 ```bash
 # 1. Clonar ou atualizar o repositório F2 no terminal:
-git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git /home/george/XApp-RDL-F2 2>/dev/null || (cd /home/george/XApp-RDL-F2 && git pull)
-cd /home/george/XApp-RDL-F2
+cd ~
+git clone https://github.com/georgebarbosa3090/XApp-RDL-F2.git 2>/dev/null || (cd XApp-RDL-F2 && git pull)
+cd XApp-RDL-F2
 
 # 2. Deletar qualquer cluster k3d implantado anteriormente:
 make cluster-delete 2>/dev/null || k3d cluster delete rancher-lab 2>/dev/null
@@ -188,8 +190,8 @@ kubectl create namespace ricxapp --dry-run=client -o yaml | kubectl apply -f -
 Implanta o DBAAS Redis (Shared Data Layer - SDL) e serviços da plataforma:
 
 ```bash
-# 1. Navegue até o diretório do repositório F2 (caminho absoluto se estiver como root)
-cd /home/george/XApp-RDL-F2
+# 1. Navegue até o diretório do repositório F2
+cd ~/XApp-RDL-F2
 
 # 2. Garanta que os namespaces necessários existam
 kubectl apply -f deploy/kubernetes/namespace.yaml
