@@ -5,7 +5,8 @@
 
 # 1. Diretórios de Agentes e Skills Locais
 .agents/
-agents/
+/agents/
+!src/agents/
 skills/
 .system_generated/
 
