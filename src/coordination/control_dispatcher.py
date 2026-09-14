@@ -3,7 +3,7 @@ import uuid
 from typing import Dict, Optional
 from src.e2.rc_encoder import E2SMRCEncoder, ControlAction
 from src.infrastructure.sdl_repository import SdlRepository
-from src.domain.decisions import Decision
+from src.conflict_types import RDLDecision as Decision
 from src.observability.logging import setup_logger
 
 logger = setup_logger("ControlDispatcher")

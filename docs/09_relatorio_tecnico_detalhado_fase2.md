@@ -1,4 +1,4 @@
-﻿# Volume 09: Relatório Técnico Detalhado — Operações, Infraestrutura e Formulação da Fase 2 (CA-RDL / MARL)
+# Volume 09: Relatório Técnico Detalhado — Operações, Infraestrutura e Formulação da Fase 2 (CA-RDL / MARL)
 
 **Projeto:** xApp RDL (Resource and Decision Layer) — Governança Near-RT O-RAN  
 **Versão:** Fase 2 — *Context-Aware RDL (CA-RDL)* com Paradigma Multi-Agent Reinforcement Learning (MAPPO)  

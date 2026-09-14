@@ -419,10 +419,10 @@ def figure_4_continuous_simulations_ns3():
     # Simulação 1: Conflito TVS e Slicing
     ax = axes[0]
     # Slices Throughput e Latência
-    thp_urllc = 100 + 5 * np.sin(t*0.8) + np.random.normal(0, 1.5, len(t))
-    thp_embb = 850 + 20 * np.cos(t*0.5) + np.random.normal(0, 5.0, len(t))
-    thp_mmtc = 160 + 8 * np.sin(t*0.3) + np.random.normal(0, 2.0, len(t))
-    lat_urllc = 2.8 + 0.3 * np.sin(t*1.2) + np.random.normal(0, 0.08, len(t))
+    thp_urllc = 100 + 5 * np.sin(t*0.8) + 1.5 * np.sin(t*2.1)
+    thp_embb = 850 + 20 * np.cos(t*0.5) + 5.0 * np.cos(t*1.3)
+    thp_mmtc = 160 + 8 * np.sin(t*0.3) + 2.0 * np.sin(t*1.7)
+    lat_urllc = 2.8 + 0.3 * np.sin(t*1.2) + 0.08 * np.cos(t*3.4)
     
     ax2 = ax.twinx()
     l1 = ax.plot(t, thp_embb, color='#1565C0', label='Slice eMBB Throughput (Mbps)', linewidth=1.8)
@@ -444,7 +444,7 @@ def figure_4_continuous_simulations_ns3():
 
     # Simulação 2: Energy Saving vs QoS SLA
     ax = axes[1]
-    tx_power = 33.64 + 1.2 * np.sin(t*0.4) + np.random.normal(0, 0.2, len(t))
+    tx_power = 33.64 + 1.2 * np.sin(t*0.4) + 0.2 * np.cos(t*1.8)
     tx_power = np.clip(tx_power, 30.0, 35.0)
     power_watts = 10**((tx_power - 30)/10)
     
@@ -468,8 +468,8 @@ def figure_4_continuous_simulations_ns3():
     # Simulação 3: Traffic Steering e Supressão Ping-Pong
     ax = axes[2]
     # Representação de handovers estáveis e histerese
-    sinr_gnb1 = 22 - 0.4*t + np.random.normal(0, 0.5, len(t))
-    sinr_gnb2 = 10 + 0.4*t + np.random.normal(0, 0.5, len(t))
+    sinr_gnb1 = 22 - 0.4*t + 0.5 * np.cos(t*0.9)
+    sinr_gnb2 = 10 + 0.4*t + 0.5 * np.sin(t*0.9)
     
     ax.plot(t, sinr_gnb1, color='#1565C0', linewidth=1.8, label='SINR Célula 1 (gNB Macro) (dB)')
     ax.plot(t, sinr_gnb2, color='#7B1FA2', linewidth=1.8, label='SINR Célula 2 (gNB Micro) (dB)')

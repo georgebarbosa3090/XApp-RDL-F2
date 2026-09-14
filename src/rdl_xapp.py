@@ -34,6 +34,8 @@ except (ImportError, OSError, Exception):
 from src.infrastructure.config_manager import ConfigManager
 from src.infrastructure.sdl_repository import SdlRepository
 from src.infrastructure.memory_module import MemoryModule
+from src.infrastructure.ran_backend_factory import get_ran_backend_adapter
+from src.infrastructure.ric_request_id_allocator import get_ric_request_id_allocator
 from src.agents.perception_agent import PerceptionAgent
 from src.agents.reasoning_agent import ReasoningAgent
 from src.agents.refinement_agent import RefinementAgent
@@ -60,6 +62,13 @@ class RDLxApp:
     def __init__(self, config_path: str = "configs/config-file.json"):
         self.config_mgr = ConfigManager(config_path)
         self.config = self.config_mgr.load_config()
+        
+        # Modo de Operacao (O_RAN_INTEROP / ORAN-STRICT | SIMULATION / OFFLINE_SIMULATION | STANDALONE)
+        raw_mode = os.getenv("RDL_MODE", "OFFLINE_SIMULATION").upper()
+        self.mode = "O_RAN_INTEROP" if raw_mode in ("O_RAN_INTEROP", "ORAN-STRICT", "ORAN_STRICT", "STRICT") else raw_mode
+        self.oran_strict = (self.mode == "O_RAN_INTEROP")
+        self.backend = get_ran_backend_adapter(os.getenv("RAN_BACKEND"))
+        self.allocator = get_ric_request_id_allocator()
         
         # 1. Shared Data Layer
         sdl_host = os.environ.get("DBAAS_SERVICE_HOST", self.config.get("sdl_host", "localhost"))
@@ -379,43 +388,58 @@ class RDLxApp:
                         # Processa fora do lock para não travar RMR
                         threading.Thread(target=self._process_action_group, args=(actions_to_process,), daemon=True).start()
 
-    def _send_control(self, node_id: str, parameter: str, value: float, action: Optional[XAppAction] = None) -> Tuple[bool, float, float]:
+    def _send_control(self, node_id: str, parameter: str, value: float, action: Optional[XAppAction] = None, decision_id: Optional[str] = None) -> Tuple[bool, float, float]:
         """
-        Codifica a PDU APER e despacha via RMR.
+        Codifica a PDU APER e despacha via RMR utilizando o RANBackendAdapter e RicRequestIdAllocator.
         Retorna: (success: bool, t_encode_ms: float, t_dispatch_ms: float)
         """
         t_enc_0 = time.perf_counter()
         if action:
             action.t_encode_start = t_enc_0
+        
+        ran_fn_id = 3
+        req_id = self.allocator.allocate(
+            node_id=node_id,
+            ran_function_id=ran_fn_id,
+            decision_id=decision_id,
+            action_id=getattr(action, "action_id", None)
+        )
+        requestor_id = req_id.requestor_id
+        instance_id = req_id.instance_id
+        
         tx_id = str(uuid.uuid4())
         try:
-            # Encodifica APER ASN.1 Nativo Completo (Header + Message)
-            header_aper, msg_aper = self.rc_encoder.encode_control_pdu(node_id, parameter, value)
+            temp_action = action or XAppAction(xapp_id="cardl_core", node_id=node_id, parameter=parameter, value=value, priority=100)
+            aper_bytes = self.backend.map_action_to_control_pdu(temp_action, requestor_id=requestor_id, instance_id=instance_id)
             
-            # Formata para o dispatcher RMR do E2 Term
             payload_dict = {
                 "transaction_id": tx_id,
+                "decision_id": decision_id,
                 "node_id": node_id,
                 "parameter": parameter,
                 "value": value,
-                "header_aper_bytes": header_aper.hex() if hasattr(header_aper, "hex") else str(header_aper),
-                "msg_aper_bytes": msg_aper.hex() if hasattr(msg_aper, "hex") else str(msg_aper),
-                "aper_bytes": msg_aper.hex() if hasattr(msg_aper, "hex") else str(msg_aper), # Retrocompatibilidade
+                "requestor_id": requestor_id,
+                "instance_id": instance_id,
+                "ran_function_id": ran_fn_id,
+                "header_aper_bytes": aper_bytes.hex() if isinstance(aper_bytes, bytes) else str(aper_bytes),
+                "msg_aper_bytes": aper_bytes.hex() if isinstance(aper_bytes, bytes) else str(aper_bytes),
+                "aper_bytes": aper_bytes.hex() if isinstance(aper_bytes, bytes) else str(aper_bytes),
                 "transport_mode": self.transport_mode
             }
             payload_bytes = json.dumps(payload_dict).encode('utf-8')
             t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
             
-            # Timestamp monotônico para cálculo de RTT de confirmação no ACK
             t_disp_0 = time.perf_counter()
             if action:
                 action.t_dispatch_start = t_disp_0
+            ric_req_key = (node_id, ran_fn_id, requestor_id, instance_id)
             self.pending_transactions[tx_id] = {
                 "t_dispatch_start": t_disp_0,
                 "action": action,
                 "node_id": node_id,
                 "parameter": parameter,
-                "value": value
+                "value": value,
+                "ric_req_key": ric_req_key
             }
             
             success = self.xapp.rmr_send(payload=payload_bytes, mtype=RIC_CONTROL_REQ)
@@ -424,7 +448,7 @@ class RDLxApp:
             if action:
                 action.t_dispatch_end = t_disp_end
         except Exception as e:
-            logger.error(f"Falha ao gerar/despachar APER Control: {e}")
+            logger.error(f"Falha ao gerar/despachar APER Control via backend {self.backend.metadata.backend_id}: {e}")
             t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
             t_dispatch_ms = 0.0
             success = False
@@ -436,7 +460,7 @@ class RDLxApp:
                 "RIC_CONTROL_REQUEST despachado", 
                 node_id=node_id, param=parameter, val=value, tx_id=tx_id,
                 t_encode_ms=f"{t_encode_ms:.3f}ms", t_dispatch_ms=f"{t_dispatch_ms:.3f}ms",
-                mode=self.transport_mode
+                mode=self.transport_mode, backend=self.backend.metadata.backend_id
             )
         else:
             logger.error("Falha ao enviar RIC_CONTROL_REQUEST")

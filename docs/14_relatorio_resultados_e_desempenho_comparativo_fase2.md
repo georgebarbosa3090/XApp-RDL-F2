@@ -1,4 +1,4 @@
-﻿# Volume 14: Relatório de Resultados Experimentais e Tabela de Desempenho Comparativo (Antes e Depois da Superação das Limitações)
+# Volume 14: Relatório de Resultados Experimentais e Tabela de Desempenho Comparativo (Antes e Depois da Superação das Limitações)
 
 **Documento:** Volume Temático 14  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  

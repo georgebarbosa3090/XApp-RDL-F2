@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from src.e2.e2ap_decoder import decode_e2ap_ric_indication
 from src.e2.kpm_decoder import KpmDecoder
 from src.e2.rc_encoder import RCEncoder

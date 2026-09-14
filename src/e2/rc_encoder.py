@@ -150,4 +150,14 @@ class RCEncoder:
         scale = profile["scale"]
         return float(raw_int) / float(scale)
 
+@dataclass
+class ControlAction:
+    action_data: Any
+    target_node: str
+    target_cell: str
+
+E2SMRCEncoder = RCEncoder
+
+
+
 

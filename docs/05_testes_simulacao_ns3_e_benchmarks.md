@@ -1,4 +1,4 @@
-﻿# Volume 05: Guia de Simulação 5G NR no ns-3, Testes e Benchmarks Científicos
+# Volume 05: Guia de Simulação 5G NR no ns-3, Testes e Benchmarks Científicos
 
 **Documento:** Volume Temático 05  
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 2: Context-Aware RDL (CA-RDL / MARL)  

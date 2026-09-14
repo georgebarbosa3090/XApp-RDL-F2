@@ -1,4 +1,4 @@
-﻿# Volume 11: Especificação de Cenários de Teste 5G, 5G-Advanced e 6G, Características e Requisitos Técnicos
+# Volume 11: Especificação de Cenários de Teste 5G, 5G-Advanced e 6G, Características e Requisitos Técnicos
 
 ## Projeto xApp RDL — Roadmap de Avaliação Experimental e Benchmarks
 
