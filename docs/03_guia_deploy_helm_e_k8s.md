@@ -120,15 +120,20 @@ kubectl apply -f deploy/kubernetes/near-rt-ric.yaml -n ricplt
 kubectl rollout status deployment/deployment-ricplt-dbaas-redis -n ricplt --timeout=90s
 ```
 
-#### Passo 4: Implantar as Reference xApps (`ricxapp`)
+#### Passo 4: Compilar Imagem Docker e Implantar as Reference xApps (`ricxapp`)
 ```bash
-# Via script automatizado com as 6 Reference xApps:
+# 1. Compilar a imagem Docker local da xApp e criar a tag 1.1.0:
+make build
+docker tag iqos-xapp-rdl:2.0.0 iqos-xapp-rdl:1.1.0 2>/dev/null || true
+
+# 2. Importar as imagens para o cluster k3d (previne ImagePullBackOff):
+k3d image import iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0 -c rancher-lab
+
+# 3. Implantar as 6 Reference xApps:
 bash scripts/deploy_reference_xapps.sh
 
-# Ou via Kubectl direto:
-kubectl apply -f deploy/kubernetes/xapp-qos-xslice.yaml -n ricxapp
-kubectl apply -f deploy/kubernetes/xapp-energy-saving.yaml -n ricxapp
-kubectl apply -f deploy/kubernetes/xapp-traffic-steering.yaml -n ricxapp
+# 4. Reiniciar deployments se necessário para aplicar as imagens locais:
+kubectl rollout restart deployment -n ricxapp
 ```
 
 #### Passo 5: Compilar e Implantar a xApp RDL Fase 2 (CA-RDL / MARL)
