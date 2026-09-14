@@ -33,12 +33,15 @@ resources:
     memory: 256Mi
 
 env:
+  rdlMode: "O_RAN_INTEROP"
+  ranBackend: "SRSRAN_OPEN5GS"
+  requireOperationalTransport: "true"
   useFakeSdl: "false"
   dbaasHost: "service-ricplt-dbaas-tcp.ricplt"
   dbaasPort: "6379"
   rmrSeedRt: "/app/configs/routes.rt"
   configFile: "/app/configs/config-file.json"
-  rmrWaitForReady: "false"
+  rmrWaitForReady: "true"
   logLevel: "INFO"
   enableTorch: "true"
   marlAgents: "6"

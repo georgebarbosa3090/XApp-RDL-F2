@@ -3,9 +3,10 @@
     ".",
     "src"
   ],
-  "venvPath": "C:\\Users\\georg\\XApp-RDL-F1",
-  "venv": ".venv",
   "pythonVersion": "3.10",
   "typeCheckingMode": "basic",
-  "reportMissingImports": false
+  "reportMissingImports": false,
+  "include": [
+    "src"
+  ]
 }

@@ -44,7 +44,7 @@ from src.e2.rc_encoder import RCEncoder
 from src.observability.health import HealthServer, AppState
 from src.observability.metrics import MetricsCollector
 from src.observability.logging import setup_logger
-from src.conflict_types import XAppAction, KPMReport
+from src.conflict_types import XAppAction, KPMReport, RDLDecision
 
 logger = setup_logger("RDLxApp")
 
@@ -79,7 +79,11 @@ class RDLxApp:
         sdl_port = int(os.environ.get("DBAAS_SERVICE_PORT", self.config.get("sdl_port", 6379)))
         try:
             self.memory = SdlRepository(host=sdl_host, port=sdl_port)
-        except Exception:
+        except Exception as exc:
+            if getattr(self, "oran_strict", False) or getattr(self, "mode", "") in ("O_RAN_INTEROP", "ORAN-STRICT"):
+                raise RuntimeError(
+                    "SDL/DBaaS obrigatório no modo O_RAN_INTEROP; fallback local proibido."
+                ) from exc
             logger.warning("SDL Redis indisponivel. Usando MemoryModule (Fallback Local).")
             self.memory = MemoryModule()
             
@@ -228,7 +232,7 @@ class RDLxApp:
             tx_id = None
             try:
                 # 1. Tenta correlação via backend APER e RicRequestIdAllocator
-                ack_data = self.backend.correlate_ack(payload, allow_test_fallback=True)
+                ack_data = self.backend.correlate_ack(payload, allow_test_fallback=not self.oran_strict)
                 req_id = ack_data.get("requestor_id")
                 inst_id = ack_data.get("instance_id")
                 node_id = ack_data.get("node_id", "gnb_01")
@@ -273,7 +277,7 @@ class RDLxApp:
         if payload:
             tx_info = None
             try:
-                ack_data = self.backend.correlate_ack(payload, allow_test_fallback=True)
+                ack_data = self.backend.correlate_ack(payload, allow_test_fallback=not self.oran_strict)
                 req_id = ack_data.get("requestor_id")
                 inst_id = ack_data.get("instance_id")
                 node_id = ack_data.get("node_id", "gnb_01")
