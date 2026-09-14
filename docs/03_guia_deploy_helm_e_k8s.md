@@ -166,8 +166,8 @@ kubectl create namespace ricxapp --dry-run=client -o yaml | kubectl apply -f -
 Implanta o DBAAS Redis (Shared Data Layer - SDL) e serviços da plataforma:
 
 ```bash
-# 1. Navegue até o diretório do repositório F2
-cd ~/XApp-RDL-F2
+# 1. Navegue até o diretório do repositório F2 (caminho absoluto se estiver como root)
+cd /home/george/XApp-RDL-F2
 
 # 2. Garanta que os namespaces necessários existam
 kubectl apply -f deploy/kubernetes/namespace.yaml
