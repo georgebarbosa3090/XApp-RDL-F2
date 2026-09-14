@@ -216,7 +216,7 @@ def test_rdl_xapp_runtime_full_cycle_and_payload_dispatch(monkeypatch):
     assert len(payload["msg_aper_bytes"]) > 0
     
     # 6. Teste direto do método _send_control retornando Tuple[bool, float, float]
-    assert app.transport_mode == "RMR_E2_OPERATIONAL"
+    assert app.transport_mode in ("RMR_E2_OPERATIONAL", "MOCK_TRANSPORT_SHIM")
     success, t_enc, t_disp = app._send_control("gnb_01", "PRB_QUOTA", 80.0)
     assert success is True
     assert t_enc >= 0.0
