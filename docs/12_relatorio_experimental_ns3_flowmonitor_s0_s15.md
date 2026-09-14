@@ -2,7 +2,7 @@
 
 > **Documento Oficial:** Parecer Técnico e Análise Experimental Exaustiva  
 > **Projeto:** xApp RDL (Resource and Decision Layer) — Fases 1 (H-RDL) e 2 (CA-RDL)  
-> **Data de Consolidação:** 2026-09-14 17:58:31 UTC  
+> **Data de Consolidação:** 2026-09-14 18:07:11 UTC  
 > **Ambiente:** ns-3.48 / 5G-LENA v5.1 / NORI E2Sim / GCC 11 / CMake 3.28 / Linux x86_64  
 > **Diretriz de Conformidade:** *Zero Dados Sintéticos — 100% dos Dados Derivados do Módulo Físico FlowMonitor*
 
@@ -16,9 +16,9 @@ Este relatório constitui o registro oficial e exaustivo de desempenho físico d
 2. **Extração Fim-a-Fim do ns-3 FlowMonitor:** Cada ponto de dado é extraído diretamente dos traces de pacotes `FlowMonitor` gerados em tempo de simulação pela pilha 3GPP NR e protocolos de rede.
 3. **Rastreabilidade Criptográfica:** Todos os arquivos de entrada brutos possuem seus hashes SHA-256 documentados na Seção de Proveniência deste documento para garantir reprodutibilidade auditável.
 
-* **Diretório de Traces Brutos:** `C:\Users\george.barbosa\.gemini\antigravity\scratch\iqos-xapp-rdl-phase2\experiments\results\s0_s15_simulations`
+* **Diretório de Traces Brutos:** `/root/XApp-RDL-F2/experiments/results/s0_s15_simulations`
 * **Total de Arquivos XML do FlowMonitor:** 0
-* **Total de Arquivos CSV / Logs Identificados:** 0
+* **Total de Arquivos CSV / Logs Identificados:** 16
 
 ---
 
@@ -117,7 +117,22 @@ Auditoria de integridade dos arquivos gerados pelo ns-3 FlowMonitor:
 
 | Artefato de Dados | Tipo de Arquivo | Tamanho (Bytes) | Hash SHA-256 |
 | :--- | :---: | :---: | :--- |
-| *Nenhum arquivo bruto no diretório de resultados ainda* | - | - | - |
+| `scenario_rdl_closed_loop_nori.log` | `.log` | 1,025 | `7e8ec74a1f01a83d80fa128c413ed3e5f4fd6a91b3da2a5928135061e089f172` |
+| `scenario_rdl_conflict_storm.log` | `.log` | 644 | `58b8c6a7f0bdefb52945b1a3c21dcacc3814e5fd7069dfabef6619b75858419b` |
+| `scenario_rdl_direct_prb_conflict.log` | `.log` | 298 | `c55f6dffefb83ef2e56c6bb6a33b324c9b96574c20d0665c9685ce8051dfe737` |
+| `scenario_rdl_energy_vs_qos.log` | `.log` | 280 | `e3289c8b6d303d60c7e354f52070c741af555d4dde9aa449f3ca78f11f7387aa` |
+| `scenario_rdl_fault_injection.log` | `.log` | 648 | `6fe3e01a4f0eded974f2699a8649665541aea164b247bfc6960869b6fc77c45e` |
+| `scenario_rdl_no_conflict.log` | `.log` | 1,833 | `c247d76056bc188771a341e75b1362c07b5cbaa6297d820ad7c5808791b1b33c` |
+| `scenario_rdl_s10_uav_swarm_battery.log` | `.log` | 369 | `aefd8a04f4715794cb7b0335a0c8425543ed940fd4018d382a5a8623175a6e45` |
+| `scenario_rdl_s11_v2x_highway_platooning.log` | `.log` | 390 | `218f69eef72397369d3307ae81da7095672c210cd2e0ee7acac7e134eb6c513a` |
+| `scenario_rdl_s12_iiot_zero_jitter_slicing.log` | `.log` | 738 | `0b33a3370675ea1f347e00928b4f8943d95f061aafd80eb421aa6fbeea0e37a5` |
+| `scenario_rdl_s13_sagin_disaster_rescue.log` | `.log` | 385 | `52cd8fbb0d2fa182b9a823cf869f217e458148a54fa52c8acff99909ea626e6d` |
+| `scenario_rdl_s14_isac_radar_comm.log` | `.log` | 363 | `162012ce10739eeeb9d092ead4824d2cc22049f705387e2c2511c99469af9ff5` |
+| `scenario_rdl_s15_rogue_ntn_feeder_hijacking.log` | `.log` | 395 | `c99c5bd99c5df93abaf7e0ec750820a2d8eb11ad9415bc8ef55dd1e0d0da76d1` |
+| `scenario_rdl_s9_ntn_orbital_handover.log` | `.log` | 367 | `65239a1ddf12bfcc54c2afd3f16c69523c9bbab6528b5a1849b5196f04a95c4e` |
+| `scenario_rdl_temporal_pingpong.log` | `.log` | 656 | `c9c69dacc5c0a635b60aad73343d76ccccb5e1a7649d56c3c5045f96cd508963` |
+| `scenario_rdl_ts_vs_energy.log` | `.log` | 277 | `e4568fb5456d7ee04247595ef2304ebe5cc829c7317863b8e460d08f4b950ab0` |
+| `scenario_rdl_tvs_conflict.log` | `.log` | 277 | `936a59dbd6891015426764946475e737731918598a8e8f48b8af7e8a8e6acb43` |
 
 ---
 
