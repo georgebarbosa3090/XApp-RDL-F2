@@ -1,0 +1,6 @@
+{
+  "status": "ACK_RECEIVED",
+  "requestor_id": 123,
+  "instance_id": 7,
+  "rtt_ms": 1.8
+}
