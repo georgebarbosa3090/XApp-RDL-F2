@@ -1,39 +1,103 @@
 # =============================================================================
-# .gitignore — XApp-RDL-F2 (Context-Aware RDL / Safe-MARL)
+# .gitignore — XApp-RDL-F1 (H-RDL)
 # Regras Permanentes de Exclusão e Higienização de Repositório
 # =============================================================================
 
-# 1. Byte-compiled / Python Cache / Shared Objects / C-Extensions
+# 1. Diretórios de Agentes e Skills Locais (Permanentemente Proibido)
+.agents/
+agents/
+skills/
+.system_generated/
+
+# 2. Auditoria Técnica e Relatórios Extensos Internos (Permanentemente Proibido)
+*auditoria*
+*Auditoria*
+*relatorio_extenso*
+*.audit.md
+docs/relatorio_extenso*
+!docs/auditoria/
+
+# 3. Artefatos de Fase 2 (Não pertencem ao repositório Fase 1)
+experiments/results/rdl_phase2/
+*rdl_phase2*
+*phase2*
+
+# 4. Notebooks do Google Colab e Análises Locais
+notebooks/
+*.ipynb
+.ipynb_checkpoints/
+
+# 5. Artigos Científicos, Papers e Fontes LaTeX
+paper/
+paper_sbrc/
+*.tex
+*.bib
+*.sty
+*.cls
+*.bbl
+*.blg
+*.aux
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# 6. Scripts Locais de Experimentos, Benchmarks, Plotagem, Backup e Sincronização
+scripts/run_multi_seed_evaluation.py
+scripts/run_and_analyze_benchmarks.py
+scripts/plot_ns3_benchmarks.py
+scripts/evaluate_and_improve_algorithms.py
+scripts/collect_evidence.sh
+scripts/run_baseline_experiment.sh
+scripts/run_experiment_suite.py
+scripts/run_full_experiment.sh
+scripts/run_rdl_experiment.sh
+scripts/update_realtime_tracking_docs.py
+scripts/run_3_consecutive_simulations.py
+scripts/generate_sbrc_figures.py
+scripts/generate_scenario_figures.py
+scripts/generate_single_seed_publication_figures.py
+scripts/update_colab_notebook.py
+scripts/git_*.sh
+scripts/git_*.ps1
+scripts/fix_mermaid.py
+scripts/test_batching.py
+*backup*
+!scripts/backup_to_google_drive.*
+backups/
+*rollback*
+*sync*
+!docs/compliance/*.md
+
+
+# 7. Byte-compiled / Python Cache / DLLs
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 *.pyd
-*.egg-info/
-build/
-dist/
 
-# 2. Ambientes Virtuais e Gerenciadores de Pacote
+# 8. Ambientes Virtuais
 .venv/
 venv/
 ENV/
 env/
 
-# 3. Testes, Cobertura e Caches de IDE
+# 9. Testes e Cobertura
 .pytest_cache/
 .coverage
 htmlcov/
+
+# 10. Logs, Bancos de Dados e Binários Locais
+*.log
+*.sqlite3
+wheels/
+
+# 11. Sistema Operacional e IDEs
 .DS_Store
 .vscode/
 .idea/
 Thumbs.db
 
-# 4. Logs e Arquivos Temporários de Execução
-*.log
-*.sqlite3
-.snapshots/
-.system_generated/
-.agents/
-
-# 5. Caches de Notebooks
-.ipynb_checkpoints/
+# 12. Scripts PowerShell locais de automação IDE
+*.ps1
