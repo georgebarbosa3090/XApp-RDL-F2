@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script de Sincronizacao Continua e Automatica (Watcher / Daemon)
-# Projeto: xApp RDL (Resource and Decision Layer) - Fase 2: Context-Aware RDL (CA-RDL / MARL)
+# Script de Atualização Automática Contínua (Watcher / Auto-Sync)
+# Monitora qualquer modificação no repositório e sincroniza com o GitHub
+# Projeto: xApp RDL (Resource and Decision Layer) - Fase 1
 # ==============================================================================
 
 INTERVAL="${1:-5}" # Intervalo de verificação em segundos

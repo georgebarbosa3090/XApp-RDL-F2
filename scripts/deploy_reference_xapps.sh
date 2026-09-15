@@ -12,33 +12,24 @@ echo "==========================================================================
 echo " [*] Iniciando Implantacao Automatizada das Reference xApps no K8s ($NAMESPACE)"
 echo "=============================================================================="
 
-# 1. Garantir namespace com injecao automatica do Istio Sidecar (Envoy)
+# 1. Garantir namespace
 kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-kubectl create namespace "ricplt" --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null || true
-kubectl label namespace "$NAMESPACE" istio-injection=enabled --overwrite 2>/dev/null || true
-kubectl label namespace "ricplt" istio-injection=enabled --overwrite 2>/dev/null || true
 
 # 2. Garantir que as imagens necessárias (1.1.0 e 2.0.0) estejam presentes nos nós containerd do k3d
-if [ "${SKIP_IMAGE_IMPORT:-false}" != "true" ]; then
-    echo "[+] Sincronizando imagens Docker nos nós do cluster k3d..."
-    if docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1; then
-        docker tag iqos-xapp-rdl:2.0.0 iqos-xapp-rdl:1.1.0
-    elif docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1; then
-        docker tag iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0
-    fi
+echo "[+] Sincronizando imagens Docker nos nós do cluster k3d..."
+if docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1; then
+    docker tag iqos-xapp-rdl:2.0.0 iqos-xapp-rdl:1.1.0
+elif docker image inspect iqos-xapp-rdl:1.1.0 >/dev/null 2>&1 && ! docker image inspect iqos-xapp-rdl:2.0.0 >/dev/null 2>&1; then
+    docker tag iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0
+fi
 
-    if command -v k3d >/dev/null 2>&1; then
-        echo " -> Importando iqos-xapp-rdl:1.1.0 e 2.0.0 via k3d image import..."
-        k3d image import iqos-xapp-rdl:1.1.0 iqos-xapp-rdl:2.0.0 -c "rancher-lab" 2>/dev/null || true
-    else
-        for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" 2>/dev/null || true); do
-            docker save iqos-xapp-rdl:1.1.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
-            docker save iqos-xapp-rdl:2.0.0 | docker exec -i "$node" ctr images import - 2>/dev/null || true
+for IMG in "iqos-xapp-rdl:1.1.0" "iqos-xapp-rdl:2.0.0"; do
+    if docker image inspect "$IMG" >/dev/null 2>&1; then
+        for node in $(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)"); do
+            docker save "$IMG" | docker exec -i "$node" ctr images import - 2>/dev/null || true
         done
     fi
-else
-    echo "[+] Pulando importação de imagens (já sincronizadas nesta execução)..."
-fi
+done
 
 # 3. Se existirem os manifestos em deploy/kubernetes, aplica-os prioritariamente:
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -74,7 +65,6 @@ metadata:
   namespace: ${NAMESPACE}
   labels:
     app: ${APP_NAME}
-    version: "1.1.0"
     tier: reference-xapp
 spec:
   replicas: 1
@@ -85,10 +75,7 @@ spec:
     metadata:
       labels:
         app: ${APP_NAME}
-        version: "1.1.0"
         tier: reference-xapp
-      annotations:
-        sidecar.istio.io/inject: "true"
     spec:
       containers:
       - name: ${APP_NAME}
@@ -97,25 +84,20 @@ spec:
         command: ["python", "-u", "-c"]
         args:
           - |
-            import http.server, socketserver, os, threading
-            http_port = int(os.environ.get("HTTP_PORT", 8080))
-            metrics_port = int(os.environ.get("METRICS_PORT", 8081))
+            import http.server, socketserver, os
+            port = int(os.environ.get("HTTP_PORT", 8080))
             app_name = os.environ.get("APP_NAME", "xapp")
             class StubHandler(http.server.SimpleHTTPRequestHandler):
                 def do_GET(self):
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(f'{{"status":"UP","app":"{app_name}","path":"{self.path}"}}\n'.encode("utf-8"))
+                    self.wfile.write(f'{{"status":"UP","app":"{app_name}"}}\n'.encode("utf-8"))
                 def log_message(self, format, *args):
                     pass
-            def serve(p):
-                with socketserver.TCPServer(("", p), StubHandler) as httpd:
-                    httpd.serve_forever()
-            print(f"[*] {app_name} online on http:{http_port} metrics:{metrics_port}")
-            t = threading.Thread(target=serve, args=(metrics_port,), daemon=True)
-            t.start()
-            serve(http_port)
+            print(f"[*] {app_name} online on port {port}")
+            with socketserver.TCPServer(("", port), StubHandler) as httpd:
+                httpd.serve_forever()
         env:
         - name: APP_NAME
           value: "${APP_NAME}"
@@ -126,11 +108,11 @@ spec:
         - name: RMR_PORT
           value: "${RMR_PORT}"
         ports:
-        - name: http-health
+        - name: http
           containerPort: ${HTTP_PORT}
-        - name: http-metrics
+        - name: metrics
           containerPort: ${METRICS_PORT}
-        - name: tcp-rmr-data
+        - name: rmr
           containerPort: ${RMR_PORT}
         resources:
           limits:
@@ -149,15 +131,12 @@ spec:
   selector:
     app: ${APP_NAME}
   ports:
-  - name: http-health
+  - name: http
     port: ${HTTP_PORT}
     targetPort: ${HTTP_PORT}
-  - name: http-metrics
+  - name: metrics
     port: ${METRICS_PORT}
     targetPort: ${METRICS_PORT}
-  - name: tcp-rmr-data
-    port: ${RMR_PORT}
-    targetPort: ${RMR_PORT}
 EOF
 done
 

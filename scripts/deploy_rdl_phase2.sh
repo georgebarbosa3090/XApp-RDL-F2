@@ -43,25 +43,21 @@ docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest 2>/dev/null || true
 
 # 3. Importação das Imagens para os nós do k3d
 echo -e "\n${YELLOW}[2/4] Importando imagens (${IMAGE_NAME}:${IMAGE_TAG} e :1.1.0) para o cluster k3d...${NC}"
-if command -v k3d &> /dev/null; then
-    k3d image import ${IMAGE_NAME}:${IMAGE_TAG} -c ${CLUSTER_NAME} 2>/dev/null || true
-    k3d image import ${IMAGE_NAME}:1.1.0 -c ${CLUSTER_NAME} 2>/dev/null || true
+K3D_NODES=$(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server-[0-9]|agent-[0-9])" || true)
+if [ -n "$K3D_NODES" ]; then
+    for node in $K3D_NODES; do
+        echo " -> Importando no containerd do nó: $node"
+        docker save ${IMAGE_NAME}:${IMAGE_TAG} | docker exec -i $node ctr images import - || true
+        docker save ${IMAGE_NAME}:1.1.0 | docker exec -i $node ctr images import - || true
+    done
 else
-    K3D_NODES=$(docker ps --format '{{.Names}}' | grep -E "k3d-.*-(server|agent)" || true)
-    if [ -n "$K3D_NODES" ]; then
-        for node in $K3D_NODES; do
-            echo " -> Importando no containerd do nó: $node"
-            docker save ${IMAGE_NAME}:${IMAGE_TAG} | docker exec -i $node ctr images import - 2>/dev/null || true
-            docker save ${IMAGE_NAME}:1.1.0 | docker exec -i $node ctr images import - 2>/dev/null || true
-        done
+    if command -v k3d &> /dev/null; then
+        k3d image import ${IMAGE_NAME}:${IMAGE_TAG} -c ${CLUSTER_NAME} || true
+        k3d image import ${IMAGE_NAME}:1.1.0 -c ${CLUSTER_NAME} || true
     fi
 fi
 
-# 3.0. Garantir injecao automatica do Istio Sidecar (Envoy)
-kubectl label namespace ${NAMESPACE_XAPP} istio-injection=enabled --overwrite 2>/dev/null || true
-kubectl label namespace ${NAMESPACE_RIC} istio-injection=enabled --overwrite 2>/dev/null || true
-
-# 3.1. Reinicia pods de reference xApps caso estejam aguardando imagem ou sidecar
+# 3.1. Reinicia pods de reference xApps caso estejam aguardando imagem
 kubectl rollout restart deployment ricxapp-qos-xslice -n ${NAMESPACE_XAPP} 2>/dev/null || true
 kubectl rollout restart deployment ricxapp-energy-saving -n ${NAMESPACE_XAPP} 2>/dev/null || true
 kubectl rollout restart deployment ricxapp-traffic-steering -n ${NAMESPACE_XAPP} 2>/dev/null || true

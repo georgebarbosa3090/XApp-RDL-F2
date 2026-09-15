@@ -7,11 +7,8 @@
 set -e
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TODAY=$(date '+%Y-%m-%d')
-RUN_ID="run_$(date '+%H%M%S')"
-EXP_DIR="${1:-${EXP_DIR:-$BASE_DIR/experiments/results/$TODAY/$RUN_ID}}"
+EXP_DIR="${1:-${EXP_DIR:-$BASE_DIR/experiments/results}}"
 NS3_DIR="${NS3_DIR:-$HOME/ns3-oran-workspace/ns-3-oran}"
-SCENARIO="${2:-all}"  # "1", "2", ou "all"
 
 if command -v g++-11 >/dev/null 2>&1; then
     export CC=gcc-11
@@ -31,8 +28,7 @@ echo "Objetivo: Estabelecer a linha de base de degradacao e conflito entre as"
 echo "3 reference xApps concorrentes operando sem arbitragem:"
 echo "  -> 1. xSlice (peihaoY/xslice-oran) [PRB_QUOTA=80%]"
 echo "  -> 2. Energy Saving (Orange/FlexRIC) [TX_POWER=20dBm]"
-echo "  -> 3. Traffic Steering (o-ran-sc/ric-app-ts) [HANDOVER forcado]"
-echo "Cenario(s) selecionado(s): $SCENARIO"
+echo "  -> 3. Traffic Steering (o-ran-sc/ric-app-ts) [HANDOVER forçado]"
 echo "========================================================================"
 
 mkdir -p "$EXP_DIR/baseline"
@@ -49,30 +45,14 @@ if [ -d "$NS3_DIR" ]; then
 
     # Copiar cenarios para a pasta scratch do ns-3
     mkdir -p "$NS3_DIR/scratch"
+    cp "$BASE_DIR/simulations/ns3/scenario_rdl_tvs_conflict.cc" "$NS3_DIR/scratch/"
     if [ -f "$BASE_DIR/simulations/ns3/scenario_rdl_energy_vs_qos.cc" ]; then
         cp "$BASE_DIR/simulations/ns3/scenario_rdl_energy_vs_qos.cc" "$NS3_DIR/scratch/"
     fi
-    if [ -f "$BASE_DIR/simulations/ns3/scenario_rdl_tvs_conflict.cc" ]; then
-        cp "$BASE_DIR/simulations/ns3/scenario_rdl_tvs_conflict.cc" "$NS3_DIR/scratch/"
-    fi
 
     cd "$NS3_DIR"
-
-    # Executar Cenario 1 (EEVS) se selecionado
-    if [ "$SCENARIO" = "1" ] || [ "$SCENARIO" = "all" ]; then
-        echo ""
-        echo "[ns-3] >>> Executando Baseline Cenario 1: Energy Saving vs QoS (Standalone / enableE2=false)..."
-        export NS_LOG="ScenarioRdlEnergyVsQos=level_all"
-        ./ns3 run "scratch/scenario_rdl_energy_vs_qos --enableE2=false --simTime=30" > "$EXP_DIR/baseline/ns3_scenario1_output.log" 2>&1 || true
-    fi
-
-    # Executar Cenario 2 (TVS) se selecionado
-    if [ "$SCENARIO" = "2" ] || [ "$SCENARIO" = "all" ]; then
-        echo ""
-        echo "[ns-3] >>> Executando Baseline Cenario 2: Traffic Steering vs QoS (Standalone / enableE2=false)..."
-        export NS_LOG="ScenarioRdlTvsConflict=level_all"
-        ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30" > "$EXP_DIR/baseline/ns3_scenario2_output.log" 2>&1 || true
-    fi
+    echo "[ns-3] Executando Cenario 1: Conflito TVS Direto (Standalone / enableE2=false)..."
+    ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30" > "$EXP_DIR/baseline/ns3_output.log" 2>&1 || true
 
     # Coletar traces gerados pelo ns-3 e FlowMonitor XML
     mv "$NS3_DIR"/RxPacketTrace*.txt "$EXP_DIR/baseline/" 2>/dev/null || true
@@ -81,14 +61,8 @@ if [ -d "$NS3_DIR" ]; then
     cd "$BASE_DIR"
 else
     echo ""
-    echo "[AVISO] Diretorio ns-3 nao encontrado em $NS3_DIR."
-    echo "[AVISO] Gerando traces calibrados do Baseline (5G-LENA 3.5 GHz n78)."
-fi
-
-if [ -d "$EXP_DIR/baseline" ] && [ "$EXP_DIR" != "$BASE_DIR/experiments/results" ]; then
-    mkdir -p "$BASE_DIR/experiments/results/baseline" "$BASE_DIR/experiments/results/latest/baseline"
-    cp -r "$EXP_DIR/baseline/"* "$BASE_DIR/experiments/results/baseline/" 2>/dev/null || true
-    cp -r "$EXP_DIR/baseline/"* "$BASE_DIR/experiments/results/latest/baseline/" 2>/dev/null || true
+    echo "[INFO] ns-3 nativo nao detectado em $NS3_DIR. Executando simulação de eventos discretos 5G NR..."
+    python3 "$BASE_DIR/scripts/run_and_analyze_benchmarks.py" --output-dir "$EXP_DIR/baseline"
 fi
 
 echo ""
@@ -97,9 +71,9 @@ echo "[OK] Experimento de Baseline concluido com sucesso!"
 echo "Resultados e traces salvos em: $EXP_DIR/baseline/"
 echo ""
 echo "Proximos Passos Recomendados:"
-echo "  1. Implantar o orquestrador xApp RDL Fase 2 no Kubernetes/RIC:"
-echo "       make helm-deploy-f2"
-echo "  2. Executar os mesmos cenarios com a xApp RDL Fase 2 ativa:"
+echo "  1. Implantar o orquestrador xApp RDL no Kubernetes/RIC:"
+echo "       make helm-deploy"
+echo "  2. Executar os mesmos cenarios com a xApp RDL ativa:"
 echo "       make run-rdl"
 echo "  3. Gerar relatorios comparativos e datasets:"
 echo "       make analyze-benchmarks"
