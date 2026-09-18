@@ -2,15 +2,16 @@
 ## Governança Cognitiva, Arbitragem de Conflitos Multi-xApp e Validação Causal em Circuito Fechado O-RAN (ns-3 + 5G-LENA + NORI + Near-RT RIC)
 
 > **Navegação da Documentação Consolidada:**  
-> **[01. Arquitetura & Modelagem](01_arquitetura_e_modelagem.md)** | **[02. Guia Operacional & Deploy](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia de Conflitos & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade O-RAN](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap & Futuro 6G](06_roadmap_e_pesquisa_futura_6g.md)**
+> **[01. Arquitetura & Modelagem](01_arquitetura_e_modelagem.md)** | **[02. Guia Operacional & Deploy](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia de Conflitos & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade O-RAN](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap & Futuro 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados Simulação (S0–S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)**
 
 ---
 
 ### Metadados de Governança e Autoria Científica
-- **Autor Principal / Pesquisador Sênior:** George Alexandro Ferreira Barbosa (PPGC/UFPA)
-- **Especialidade:** Redes de Computadores, Open RAN, AI-Native 6G, Sistemas Distribuídos e Otimização Combinatória
+- **Autor Principal:** George Alexandro Ferreira Barbosa
+- **Orientador:** Prof. Dr. André Riker
+- **Instituição:** Universidade Federal do Pará (UFPA) — Instituto de Tecnologia (ITEC) — Programa de Pós-Graduação em Ciência da Computação (PPGCOMP)
 - **Padrão de Publicação:** Padrão SBC / SBRC e IEEE Transactions (TNSM / TCCN / Nature Comms)
-- **Data de Emissão:** 15 de Setembro de 2026
+- **Data de Emissão:** 18 de Setembro de 2026 (Reconciliação e Homologação Oficial v1.2.0-certified)
 - **Status Metodológico:** Ratificado, Irrefutável e Reproduzível (Golden Closed Loop)
 - **Framework O-RAN:** O-RAN Alliance SC (E2AP v02.03, E2SM-KPM v03.00, E2SM-RC v01.03)
 - **Simulador RAN & Interface:** ns-3.48 / 5G-LENA v5.1 / NORI E2 Agent (SBrT 2025 extension)
@@ -559,7 +560,7 @@ $$J_{\text{Jain}}(t) = \frac{\left( \sum_{s=1}^{S} \eta_s(t) \right)^2}{S \sum_{
 | **eMBB (Slice 2)** | 0,56 | 0,74 | 0,82 | **0,93** | **0,96** | $p < 0,001$ |
 | **Agregado Geral ($J_{\text{Jain}}$)** | **0,52** | **0,68** | **0,78** | **0,94** | **0,97** | **$p < 0,001$** |
 
-![Figura 26 - Dinâmica Temporal da Equidade de Jain e Estabilidade Longitudinal](figures/fig_26_jain_fairness_dynamics.png)
+![Figura 26 - Dinâmica Temporal da Equidade de Jain e Estabilidade Longitudinal [MODELO ANALÍTICO]](figures/01_modelos_analiticos_e_conceituais/fig_26_jain_fairness_dynamics.png)
 
 > [!NOTE]
 > **Estabilidade de Equidade:** No baseline predatório B0, o índice de Jain oscila erraticamente entre 0,35 e 0,75 devido à inanição recorrente da fatia URLLC. A introdução da H-RDL (B3) estabiliza o sistema em $t_{settle} = 190\text{ ms}$, sustentando $J \ge 0,94$ estritamente acima do limiar contratual ($J \ge 0,90$).
@@ -580,7 +581,7 @@ $$P_{\text{total}} = N_{\text{TRX}} \cdot (P_0 + \alpha P_{\text{tx}}), \quad \t
 | **B3 (H-RDL Ponto Ótimo)** | **154,2 W** | **101,7** | **0,659 Mbit/J** | **+31,0%** | **0,0%** |
 | **B6 (Safe-MAPPO Pareto)** | **148,6 W** | **105,8** | **0,712 Mbit/J** | **+33,5%** | **0,0%** |
 
-![Figura 27 - Superfície 3D de Eficiência Energética vs Potência de TX e Cotas de PRB](figures/fig_27_energy_vs_qos_tradeoff_eevs.png)
+![Figura 27 - Superfície 3D de Eficiência Energética vs Potência de TX e Cotas de PRB [MODELO ANALÍTICO]](figures/01_modelos_analiticos_e_conceituais/fig_27_energy_vs_qos_tradeoff_eevs.png)
 
 ---
 
@@ -594,7 +595,7 @@ A orquestração do ecossistema O-RAN opera em três escalas temporais hierárqu
 | **Near-RT RIC (xApp-RDL)** | E2 (E2AP v02.03) | $1.000\text{ ms}$ | **$200,0\text{ ms}$** | **$0,06\%$ ($0,12\text{ ms}$)** | **Arbitragem tática e resolução de conflitos** |
 | **Real-Time RAN (dApp)** | FAPI / Memória C++ | $5,0\text{ ms}$ | $1,0\text{ ms}$ | $10,0\%$ ($0,10\text{ ms}$) | Escalonamento MAC slot a slot |
 
-![Figura 28 - Envelope de Latência e Escalas Temporais Multi-Camadas O-RAN](figures/fig_28_cross_tier_governance_latency_envelope.png)
+![Figura 28 - Envelope de Latência e Escalas Temporais Multi-Camadas O-RAN [MODELO CONCEITUAL]](figures/01_modelos_analiticos_e_conceituais/fig_28_cross_tier_governance_latency_envelope.png)
 
 ---
 
@@ -611,7 +612,7 @@ A robustez da governança determinística foi submetida a teste de estresse com 
 | **Tempo de Recuperação ($t_{\text{recover}}$)** | 8200 ms | **180 ms** | **175 ms** |
 | **Ações Inseguras Disparadas** | 12 | **0** | **0** |
 
-![Figura 29 - Resiliência e Recuperação sob Injeção de Falhas E2 / Timeout SCTP](figures/fig_29_resilience_e2_timeout_recovery.png)
+![Figura 29 - Resiliência e Recuperação sob Injeção de Falhas E2 / Timeout SCTP [MODELO CONCEITUAL]](figures/01_modelos_analiticos_e_conceituais/fig_29_resilience_e2_timeout_recovery.png)
 
 ---
 
@@ -630,7 +631,7 @@ A síntese global de desempenho comparativo nas 8 dimensões fundamentais de gov
 | **7. Eficiência Energética** | 0,55 | 0,62 | 0,70 | **0,92** | **0,96** |
 | **8. Baixo Overhead Algorítmico** | 1,00 | 0,99 | 0,98 | **0,99 (0,12 ms)** | 0,82 (1,84 ms) |
 
-![Figura 30 - Radar Multidimensional de Desempenho Comparativo em 8 Dimensões](figures/fig_30_sbrc_multidimensional_radar.png)
+![Figura 30 - Radar Multidimensional de Desempenho Comparativo em 8 Dimensões [MODELO ANALÍTICO CONSOLIDADO]](figures/01_modelos_analiticos_e_conceituais/fig_30_sbrc_multidimensional_radar.png)
 
 ---
 
@@ -721,11 +722,11 @@ Como etapas imediatas de evolução (Fase 3):
 - **`fig_23_decision_windows_tradeoff.png`**: Curvas de Sensibilidade da Janela de Decisão $\Delta t_{win}$ (Trade-off Reatividade $\times$ Churn $\times$ CPU).
 - **`fig_24_implicit_explicit_conflict_confusion.png`**: Matriz de Confusão 5-Classes Normalizada para Classificação e Predição de Conflitos (F1 = 99,0%).
 - **`fig_25_ue_registration_breakdown.png`**: Cronograma Gantt de Registro do UE (PRACH $\to$ RRC $\to$ 5GC Auth $\to$ PDU Session $\to$ E2 KPM = 45,8 ms).
-- **`fig_26_jain_fairness_dynamics.png`**: Dinâmica Temporal do Índice de Equidade de Jain e Estabilidade Longitudinal ($J \ge 0,94$).
-- **`fig_27_energy_vs_qos_tradeoff_eevs.png`**: Superfície 3D de Eficiência Energética vs Potência de TX e Cotas de PRB ($+31,0\%$ economia).
-- **`fig_28_cross_tier_governance_latency_envelope.png`**: Envelope de Latência e Escalas Temporais Multi-Camadas O-RAN (rApp $\times$ xApp $\times$ dApp).
-- **`fig_29_resilience_e2_timeout_recovery.png`**: Resiliência e Recuperação sob Injeção de Falhas E2 / Timeout SCTP (Cenário S7).
-- **`fig_30_sbrc_multidimensional_radar.png`**: Radar Multidimensional de Desempenho Comparativo em 8 Dimensões.
+- **`01_modelos_analiticos_e_conceituais/fig_26_jain_fairness_dynamics.png`**: [MODELO ANALÍTICO] Dinâmica Temporal do Índice de Equidade de Jain e Estabilidade Longitudinal ($J \ge 0,94$).
+- **`01_modelos_analiticos_e_conceituais/fig_27_energy_vs_qos_tradeoff_eevs.png`**: [MODELO ANALÍTICO] Superfície 3D de Eficiência Energética vs Potência de TX e Cotas de PRB ($+31,0\%$ economia).
+- **`01_modelos_analiticos_e_conceituais/fig_28_cross_tier_governance_latency_envelope.png`**: [MODELO CONCEITUAL] Envelope de Latência e Escalas Temporais Multi-Camadas O-RAN (rApp $\times$ xApp $\times$ dApp).
+- **`01_modelos_analiticos_e_conceituais/fig_29_resilience_e2_timeout_recovery.png`**: [MODELO CONCEITUAL] Resiliência e Recuperação sob Injeção de Falhas E2 / Timeout SCTP (Cenário S7).
+- **`01_modelos_analiticos_e_conceituais/fig_30_sbrc_multidimensional_radar.png`**: [MODELO ANALÍTICO CONSOLIDADO] Radar Multidimensional de Desempenho Comparativo em 8 Dimensões.
 
 ### Tabelas Científicas Consolidadas (CSV) em `experiments/results/tables/`
 1. **`configuration.csv`**: Parâmetros congelados de simulação e topologia 3GPP/O-RAN.

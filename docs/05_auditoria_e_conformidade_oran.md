@@ -1,7 +1,7 @@
 # Volume 05: Relatório de Auditoria Técnico-Científica e Conformidade Normativa O-RAN
 
 > **Navegação da Documentação Consolidada:**  
-> **[01. Arquitetura & Modelagem](01_arquitetura_e_modelagem.md)** | **[02. Guia Operacional & Deploy](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia de Conflitos & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade O-RAN](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap & Futuro 6G](06_roadmap_e_pesquisa_futura_6g.md)**
+> **[01. Arquitetura & Modelagem](01_arquitetura_e_modelagem.md)** | **[02. Guia Operacional & Deploy](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia de Conflitos & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade O-RAN](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap & Futuro 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados Simulação (S0–S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)**
 
 ---
 
@@ -110,7 +110,7 @@ Qualquer alteração posterior em traces brutos ou métricas calculadas resulta 
 ### 6.1. Auditoria Estática de Zero Dados Sintéticos
 Em conformidade com a política de integridade estrita do projeto:
 * **Proibição Inviolável:** Nenhum script de análise ou experimento pode conter ruído aleatório sintético (`np.random.normal`, `random.gauss`, etc.).
-* **Status de Auditoria:** `scripts/check_no_synthetic_results.py` e `scripts/verify_provenance_and_integrity.py` executados com **0 violações (100% CONFORME)**.
+* **Status de Auditoria:** `scripts/verify_provenance_and_integrity.py` executados com **0 violações (100% CONFORME)**.
 
 ### 6.2. Reconciliação Formal do $p$-Valor & Exclusão da Grade Matemática Sintética
 * **Evidência Empírica Primária da Fase 1 ($N = 5$ sementes reais, 35 runs brutos):** Carregada estritamente dos traces reais de simulação ns-3.48 / FlowMonitor em `experiments/runs/` (sementes 1001 a 1005). O teste pareado bicaudal de Wilcoxon atinge exatamente o limite matemático $p_{\min} = (1/2)^4 = 0,0625$, comprovando que em 100% das sementes o H-RDL superou estritamente o FIFO ($\Delta\text{Throughput} = +13,30\text{ Mbps}$, $\Delta\text{Latência P95} = -7,20\text{ ms}$, $\Delta\text{SLA} = -24,00\text{ p.p.}$, $\Delta\text{Jain} = +0,29$).

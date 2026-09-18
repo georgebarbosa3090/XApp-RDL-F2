@@ -1,4 +1,17 @@
 # xApp RDL (Resource and Decision Layer) â€” O-RAN Multi-xApp Conflict Governance
+---
+
+## 7. Informações Acadêmicas e Governança
+
+- **Autor do Projeto:** George Alexandro Ferreira Barbosa
+- **Orientador:** Prof. Dr. André Riker
+- **Instituição:** Universidade Federal do Pará (UFPA) — Instituto de Tecnologia (ITEC)
+- **Programa:** Programa de Pós-Graduação em Ciência da Computação (PPGCOMP)
+- **Área de Concentração:** Sistemas de Computação e Redes de Comunicação
+- **Linha de Pesquisa:** Redes Sem Fio Inteligentes, Open RAN e Arquiteturas Cognitivas 6G
+- **Release Homologada:** 1.2.0-certified (18 de setembro de 2026)
+
+
 
 <div align="center">
 
