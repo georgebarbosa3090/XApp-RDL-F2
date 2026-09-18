@@ -1,0 +1,655 @@
+=== PAGE 1 ===
+Estado Atual do Projeto H-RDL
+Governança Determinística de Conflitos Multi-xApp em
+O-RAN
+Arquitetura, evidência experimental, limites estatísticos e próximos passos
+George Alexandro Ferreira Barbosa
+PPGCOMP/UFPA
+17 de setembro de 2026
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+1 / 28
+
+
+=== PAGE 2 ===
+Objetivo da apresentação
+Pergunta principal
+Como a H-RDL coordena decisões concorrentes de múltiplas xApps antes da atuação sobre
+a RAN?
+apresentar o estado atual da Fase 1 H-RDL;
+sintetizar arquitetura, componentes e fluxo de decisão;
+explicar E2AP, E2SM-KPM e E2SM-RC no projeto;
+modelar o motor determinístico de arbitragem;
+interpretar resultados preliminares B0–B3;
+indicar próximos passos para validação realista.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+2 / 28
+
+
+=== PAGE 3 ===
+Escopo da Fase 1
+O que está dentro
+H-RDL como camada determinística.
+Detecção de conflitos diretos, indiretos e
+temporais.
+Safety Guards antes do envio E2.
+Validação com ns-3.48, 5G-LENA v5.1 e
+NORI.
+Baselines B0, B1, B2 e B3.
+Material complementar
+B4–B6 contextualizam a
+continuidade.
+MAPPO e Knowledge Graph não
+compõem o núcleo H-RDL.
+S9–S15 possuem resumos B3,
+sem comparação pareada
+completa.
+Validação física completa
+permanece futura.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+3 / 28
+
+
+=== PAGE 4 ===
+Estado atual do projeto
+Eixo
+Estado atual
+Repositório
+XApp-RDL-F1 com documentação, campanhas, análise e gates de proveniência.
+Ambiente
+ns-3.48, 5G-LENA v5.1, NORI, Near-RT RIC, Docker/Kubernetes.
+Perfil F1
+30 UEs, 3,5 GHz, 100 MHz, numerologia 1, UMi, scheduler OFDMA-PF.
+Protocolos
+E2AP 02.03, E2SM-KPM 03.00, E2SM-RC 01.03 no manifesto atual.
+Base S1
+35 runs públicos: cinco sementes para B0–B6; inferência canônica B1–B3 em
+N = 5.
+Portfólio
+16 resumos B3 em S0–S15, separados da comparação multi-seed.
+Status científico
+Golden Closed Loop declarado, 81/81 testes e Wilcoxon exato p = 0,0625; grade
+N = 30 excluída da Fase 1.
+Configuração, tabela por semente e manifestos adotam o SHA canônico f99483a [Barbosa, 2026].
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+4 / 28
+
+
+=== PAGE 5 ===
+Arquitetura geral
+xApps concorrentes
+slicing, energia, QoS e traffic steering
+Contrato de proposta
+parâmetro, valor, alvo, prioridade, timestamp e action-id
+Núcleo H-RDL
+Perception Agent →Reasoning Agent →Refinement Agent
+Safety Guards
+potência, PRBs, anti-ping-pong e validade de capability
+RCMapper / Dispatcher
+E2SM-RC, E2AP, SCTP/RMR e correlação
+RAN controlada
+NORI + ns-3.48 + 5G-LENA v5.1;
+evolução para srsRAN + Open5GS
+Telemetria
+E2SM-KPM
+estado posterior
+Resposta E2
+ACK / Failure
+timeout no RIC
+Azul: propostas e controle
+Verde: telemetria e respostas externas. ACK confirma o procedimento; o efeito exige
+estado aplicado e KPM posterior.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+5 / 28
+
+
+=== PAGE 6 ===
+Componentes internos da H-RDL
+Componente
+Função
+Perception Agent
+recebe KPM/propostas, forma lote de 200 ms, normaliza estado e identifica
+conflito.
+Conflict Detector
+classifica conflito direto, indireto, implícito, temporal e storm.
+Reasoning Agent
+aplica hierarquia, matriz TVS/EEVS, memória e seleção determinística.
+Refinement Agent
+separa “melhor ação” de “ação admissível” usando Safety Guards.
+RCMapper
+traduz decisão para parâmetro controlável em E2SM-RC.
+ACK Tracker
+correlaciona requestor/instance/action-id com ACK, Failure ou Timeout.
+Observability
+expõe métricas de conflitos, decisões, latência e safety.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+6 / 28
+
+
+=== PAGE 7 ===
+Protocolos e modelos de serviço
+Entrada
+E2 Setup.
+Capability Discovery.
+Subscription.
+RIC Indication.
+E2SM-KPM.
+Saída
+RDLDecision.
+RIC Control Request.
+E2SM-RC.
+ACK/Failure.
+KPM pós-controle.
+KPM(t0) →Conflict →Decision →RC →ACK/Failure →∆RAN →KPM(t1)
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+7 / 28
+
+
+=== PAGE 8 ===
+Taxonomia de conflitos
+Classe
+Descrição
+Exemplo
+Direto
+duas xApps alteram o mesmo parâmetro com valores
+incompatíveis
+PRB_QUOTA 80% vs 30%
+Indireto
+parâmetros distintos afetam o mesmo KPI ou gargalo
+steering aumenta HOL delay
+Temporal
+comandos opostos em ciclos curtos
+40% ↔70%
+Implícito
+ações válidas isoladamente violam restrição global
+soma de cotas > 100%
+Storm
+taxa elevada de propostas ameaça deadline do RIC
+≥50 propostas/s
+Baseado na taxonomia do projeto e na literatura de conflict mitigation [Barbosa, 2026, Adamczyk and Kliks,
+2023, Giannopoulos et al., 2025].
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+8 / 28
+
+
+=== PAGE 9 ===
+Motor determinístico: modelagem
+Proposta de ação
+ai = (idi, xi, ni, pi, vi, πi, ti, di)
+Conflito direto
+Cdir(ai, aj) = I[ni = nj ∧pi = pj ∧vi̸ = vj]
+Conflito indireto
+Cind(ai, aj) = I[ni = nj ∧pi̸ = pj ∧K(pi) ∩K(pj)̸ = ∅]
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+9 / 28
+
+
+=== PAGE 10 ===
+Motor determinístico: seleção
+Utilidade
+U(a|s) = wT ˆT(a, s) −wLˆL(a, s) + wE ˆE(a, s) −wV ˆV (a, s)
+Seleção conjunta
+S⋆= arg max
+S∈Ft U(S|st)
+Interpretação
+A H-RDL não envia automaticamente a ação com maior utilidade. Primeiro ela escolhe uma
+alternativa candidata; depois o Refinement Agent verifica se ela é segura, compatível com
+capabilities e temporalmente estável.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+10 / 28
+
+
+=== PAGE 11 ===
+Safety Guards
+Pmin ≤Ptx ≤Pmax
+X
+s
+Quota(s) ≤100%
+∆topposite ≥∆tmin
+Safe(a, s) = 1 ⇒a ∈Aseg(s)
+Princípio
+Safety é uma fronteira independente
+da função de utilidade.
+Consequência
+A melhor ação matemática pode ser
+bloqueada se violar potência, PRB,
+anti-ping-pong ou capability.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+11 / 28
+
+
+=== PAGE 12 ===
+Fluxo causal exigido
+E2 Setup
+KPM t0
+Conflito
+Decisão
+Safety
+RC
+ACK/Failure
+∆RAN
+KPM t1
+Regra de validação
+O resultado não é apenas “decisão correta”. A evidência precisa mostrar comando enviado,
+resposta recebida, estado alterado e efeito observado.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+12 / 28
+
+
+=== PAGE 13 ===
+Metodologia experimental
+Base publicada
+Cinco sementes correspondentes em S1 para
+B0–B6. O recorte determinístico usa B0–B3; a
+semente 1001 permanece como estudo detalhado
+por execução.
+Unidade de análise
+O registro cenário–política–semente é a
+replicação. Fluxos FlowMonitor da mesma
+execução não são novas sementes.
+Base canônica da Fase 1
+Validar os 35 manifestos e hashes, extrair
+métricas dos diretórios, formar os cinco pares
+B1–B3 e regenerar figuras e testes. A ampliação
+física N = 30 pertence à Fase 2.
+Interface operacional
+make verify-provenance
+make gate1-check
+make reproduce-paper
+make run-campaign-s0-s8
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+13 / 28
+
+
+=== PAGE 14 ===
+Baselines B0–B3
+ID
+Estratégia
+Papel científico
+B0
+NO_COORDINATION
+mede efeito de não haver mediador.
+B1
+FIFO_QUEUE
+mede mediação simples sem inteligência de conflito.
+B2
+STATIC_PRIORITY
+mede regra determinística rígida.
+B3
+H_RDL_DETERMINISTIC
+mede governança com detecção, utilidade, memória e safety.
+Contrastes
+B2 × B3 é o contraste principal para medir ganho além de uma regra determinística de
+prioridade. B1 × B3 permanece comparação secundária contra mediação FIFO.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+14 / 28
+
+
+=== PAGE 15 ===
+Resultados reportados: throughput
+B0
+B1
+B2
+B3
+80
+90
+100
+86
+89.2
+92.9
+102.5
+Mbps
+Throughput médio por baseline
+Médias dos cinco registros por política em per_seed_detailed_metrics.csv; as linhas ligam categorias,
+não instantes [Barbosa, 2026].
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+15 / 28
+
+
+=== PAGE 16 ===
+Resultados reportados: latência
+B0
+B1
+B2
+B3
+0
+10
+20
+17.73
+15.13
+13.43
+11.23
+24.43
+20.93
+18.13
+13.73
+ms
+Latência média e P95 por baseline
+Média
+P95
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+16 / 28
+
+
+=== PAGE 17 ===
+Resultados reportados: SLA, fairness e churn
+B0
+B1
+B2
+B3
+0
+10
+20
+30
+40
+36.7
+24
+12.5
+0
+%
+Violação de SLA
+B0
+B1
+B2
+B3
+0
+0.5
+1
+0.52
+0.65
+0.78
+0.94
+Jain Fairness
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+17 / 28
+
+
+=== PAGE 18 ===
+Insight: eficiência da decisão
+B0
+B1
+B2
+B3
+0
+5 · 10−2
+0.1
+0
+4 · 10−2
+8 · 10−2
+0.12
+ms
+Latência de decisão reportada
+Interpretação
+O custo computacional da H-RDL é pequeno nos resultados reportados; o ponto crítico
+passa a ser provar o tempo total de malha fechada e a idade da telemetria usada na decisão.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+18 / 28
+
+
+=== PAGE 19 ===
+Resiliência sob falha E2
+Indicador
+B0
+B3
+B6
+Timeout detectado (ms)
+5000
+1000
+1000
+Fallback (ms)
+—
+310
+290
+Vazão durante a falha (Mbps)
+52,4
+96,0
+97,5
+Recuperação pós-restauração (ms)
+8200
+180
+175
+Ações inseguras reportadas
+12
+0
+0
+Leitura correta
+Timeout, fallback e recuperação usam instantes de referência distintos. Os valores S7 não
+devem ser combinados com os zeros de ações inseguras do CSV S1 como se fossem a
+mesma execução.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+19 / 28
+
+
+=== PAGE 20 ===
+Consistência estatística da Fase 1
+Base empírica canônica: N = 5
+O script atual lê os 35 diretórios e forma os cinco
+pares B1–B3. A menor probabilidade bilateral
+possível é
+pmin = 2(1/2)5 = 0,0625.
+A dominância nos cinco pares é descritivamente
+consistente, mas não produz p < 0,05.
+Grade matemática: N = 30
+A grade determinística foi formalmente excluída
+da evidência F1. O marco p < 0,001 exige 30
+runs físicos com traces brutos e permanece
+continuidade da Fase 2.
+Conclusão: o resultado estatístico vigente da Fase 1 é N = 5 e p = 0,0625.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+20 / 28
+
+
+=== PAGE 21 ===
+Insights iniciais
+Insight
+Interpretação
+B3 reduz SLA violation
+indica que a arbitragem evita decisões que sacrificam fatias críticas.
+B3 melhora fairness
+sugere distribuição mais equilibrada de recursos sob contenção.
+B3 reduz churn
+a janela e a memória reduzem alternância de comandos.
+B3 aumenta throughput
+pode resultar de menos colisão e menor desperdício por reversão.
+Overhead baixo
+precisa ser avaliado junto de batching, E2, aplicação e observação.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+21 / 28
+
+
+=== PAGE 22 ===
+Auditoria atualizada: inferência e versões
+ID
+Item auditado
+Situação atual no repositório público
+1
+Inferência F1
+Resolvido: script e CSV carregam os 35 runs e calculam os cinco pares B1–B3, com
+p = 0,0625.
+2
+Cohen dz
+Protegido contra divisão por zero; diferenças constantes produzem efeito infinito ou
+não informativo e devem ser acompanhadas pelos valores pareados.
+3
+SHA canônico
+Resolvido: configuração, tabela por semente e manifestos adotam f99483a.
+4
+E2SM-KPM
+Versão v03.00 conciliada no perfil F1; validação do conteúdo binário permanece um
+gate distinto.
+Delimitação estatística
+A antiga grade N = 30 não integra mais resultados, figuras ou conclusões da Fase 1.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+22 / 28
+
+
+=== PAGE 23 ===
+Auditoria atualizada: cadeia e integridade
+ID
+Item auditado
+Situação atual no repositório público
+5
+Golden Closed Loop
+Diretório, manifesto, cadeia causal, PCAP e hashes estão publicados. Os arquivos raw
+inspecionados ainda são marcadores textuais; bytes APER capturados permanecem
+pendentes.
+6
+Zero aleatoriedade
+artificial
+Resolvido: os auditores estáticos reportam zero ocorrências dos geradores proibidos.
+7
+Ilustração versus
+resultado
+Resolvido documentalmente: grade matemática excluída e modelos analíticos
+separados da evidência empírica.
+Status residual
+Integridade estrutural e rastreabilidade estão documentadas; a demonstração binária no transporte e a validação física
+continuam etapas próprias.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+23 / 28
+
+
+=== PAGE 24 ===
+Próxima etapa: testbed srsRAN + Open5GS
+Objetivo
+Levar a H-RDL de uma validação NORI/ns-3 para
+um ambiente 5G SA com gNB srsRAN e Core
+Open5GS.
+primeiro ZeroMQ;
+depois SDR/USRP;
+depois UE COTS;
+finalmente conexão com Near-RT RIC.
+Atenção
+Testbed físico exige controle de
+frequência, potência, clock,
+licença/ambiente autorizado e
+isolamento experimental.
+Baseado na documentação srsRAN para E2, COTS UE e Kubernetes [srsRAN Project, 2026c,b,a].
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+24 / 28
+
+
+=== PAGE 25 ===
+Demonstrações ao vivo
+Roteiro demonstrável
+S1 apresenta arbitragem de PRBs; S5 evidencia
+memória e cooling window; S7 exercita timeout e
+fallback; o cluster mostra saúde, métricas e logs
+correlacionados; srsRAN/Open5GS permanece
+validação incremental.
+CLI do repositório
+make verify-provenance
+make gate1-check
+bash simulations/ns3/
+run_all_s0_s15_simulations.sh S1
+make helm-deploy
+make test-3xapps
+Critério
+Cada demonstração termina com versão, log, identificadores de decisão, métrica posterior e
+hashes; uma tela favorável sem esse vínculo não fecha a evidência.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+25 / 28
+
+
+=== PAGE 26 ===
+Conclusão
+Síntese
+A H-RDL deve ser apresentada como uma camada de governança determinística que separa
+proposta, decisão, validação, despacho, confirmação e efeito observado.
+Contribuição científica
+O valor do projeto não é apenas “melhorar throughput”, mas demonstrar uma cadeia causal
+reproduzível de mitigação de conflitos multi-xApp.
+Próximo marco
+Substituir os marcadores raw por payloads APER verificáveis e avançar para a campanha
+física N = 30 da Fase 2, preservando a base canônica N = 5 da Fase 1.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+26 / 28
+
+
+=== PAGE 27 ===
+Referências I
+Cezary Adamczyk and Adrian Kliks. Conflict mitigation framework and conflict detection in
+o-ran near-rt ric. IEEE Communications Magazine, 61(12):199–205, 2023. doi:
+10.1109/MCOM.018.2200752.
+George Barbosa. XApp-RDL-F1: Arquitetura determinística e segura para mitigação de
+conflitos entre xapps no O-RAN Near-RT RIC. Repositório de software e documentação
+técnica, 2026. URL https://github.com/georgebarbosa3090/XApp-RDL-F1/.
+Consultado em 17 set. 2026.
+Anastasios E. Giannopoulos, Sotirios T. Spantideas, George Levis, Alexandros S. Kalafatelis,
+and Panagiotis Trakadas. Comix: Generalized conflict management in o-ran
+xapps—architecture, workflow, and a power control case. IEEE Access, 13:
+116684–116700, 2025. doi: 10.1109/ACCESS.2025.3585774.
+srsRAN Project. srsran gnb with cots ues. Documentação técnica, 2026a. URL
+https://docs.srsran.com/projects/project/en/latest/tutorials/source/
+cotsUE/source/index.html.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+27 / 28
+
+
+=== PAGE 28 ===
+Referências II
+srsRAN Project. srsran gnb on kubernetes. Documentação técnica, 2026b. URL
+https://docs.srsran.com/projects/project/en/latest/tutorials/source/
+k8s/source/index.html.
+srsRAN Project. O-ran nearrt-ric and xapp. Documentação técnica, 2026c. URL
+https://docs.srsran.com/projects/project/en/latest/tutorials/source/
+near-rt-ric/source/.
+George Alexandro Ferreira Barbosa (PPGCOMP/UFPA)
+H-RDL Fase 1
+17 de setembro de 2026
+28 / 28
+
+
