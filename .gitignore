@@ -113,3 +113,8 @@ Thumbs.db
 *.egg-info/
 *.egg-info
 artifacts/
+
+*.pdf
+*Dissertacao*
+*dissertacao*
+!docs/auditoria/ATUALIZACAO_DISSERTACAO_HRDL_2026.md
