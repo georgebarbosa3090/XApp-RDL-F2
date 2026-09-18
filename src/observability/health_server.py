@@ -1,6 +1,7 @@
 import time
 import threading
 from enum import Enum
+from pydantic import BaseModel
 
 class AppState(str, Enum):
     STARTING = "STARTING"
@@ -20,14 +21,20 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
+    class Response:
+        def __init__(self, *args, **kwargs):
+            self.status_code = kwargs.get("status_code", 200)
+    class status:
+        HTTP_200_OK = 200
+        HTTP_503_SERVICE_UNAVAILABLE = 503
 
 class HealthServer:
     def __init__(self, host: str = "0.0.0.0", port: int = 8080):
         self.host = host
         self.port = port
-        self.state = AppState.READY
+        self.state = AppState.STARTING
         self.start_time = time.time()
-        self.version = "2.0.0"
+        self.version = "1.1.0"
         self.server_thread = None
         
         if HAS_FASTAPI:
@@ -61,15 +68,12 @@ class HealthServer:
     def set_state(self, new_state: AppState):
         self.state = new_state
 
-    def _run_server(self):
-        try:
-            config = uvicorn.Config(self.app, host=self.host, port=self.port, log_level="warning")
-            server = uvicorn.Server(config)
-            server.run()
-        except Exception:
-            pass
-
     def run(self):
         if HAS_FASTAPI and self.app is not None:
-            self.server_thread = threading.Thread(target=self._run_server, daemon=True)
-            self.server_thread.start()
+            try:
+                config = uvicorn.Config(self.app, host=self.host, port=self.port, log_level="error")
+                server = uvicorn.Server(config)
+                self.server_thread = threading.Thread(target=server.run, daemon=True)
+                self.server_thread.start()
+            except Exception:
+                pass
