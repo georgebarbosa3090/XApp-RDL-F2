@@ -109,3 +109,7 @@ Thumbs.db
 !experiments/runs/certified_closed_loop_chain/*.log
 
 !src/agents/
+
+*.egg-info/
+*.egg-info
+artifacts/
