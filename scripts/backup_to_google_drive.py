@@ -33,8 +33,8 @@ from typing import Optional, Dict, Any, List
 GDRIVE_FOLDER_ID = "14ZHofqW5rT3UIXe248wb6JHiNX0WiGiM"
 GDRIVE_SHARE_URL = "https://drive.google.com/drive/folders/14ZHofqW5rT3UIXe248wb6JHiNX0WiGiM?usp=sharing"
 
-DEFAULT_PHASE2_DIR = Path(r"c:\Users\george.barbosa\.gemini\antigravity\scratch\iqos-xapp-rdl-phase2")
-DEFAULT_PHASE1_DIR = Path(r"c:\Users\george.barbosa\.gemini\antigravity\scratch\iqos-xapp-rdl-phase1")
+DEFAULT_PHASE2_DIR = Path(__file__).resolve().parent.parent.resolve().parent.parent
+DEFAULT_PHASE1_DIR = DEFAULT_PHASE2_DIR.parent / "iqos-xapp-rdl-phase1"
 
 EXCLUDE_DIRS = {
     ".git", "__pycache__", ".pytest_cache", ".venv", "venv", ".idea", 
@@ -255,11 +255,12 @@ def try_upload_rclone(file_path: Path, folder_id: str) -> bool:
 def try_local_gdrive_sync(file_path: Path) -> bool:
     """Verifica se há pastas de sincronização do Google Drive for Desktop instaladas."""
     print(f"\n[4/4] Verificando Google Drive for Desktop montado localmente...")
+    user_home = Path.home()
     possible_roots = [
         Path(r"G:\Meu Drive"),
         Path(r"G:\My Drive"),
-        Path(r"C:\Users\george.barbosa\Google Drive"),
-        Path(r"C:\Users\george.barbosa\Meu Drive"),
+        user_home / "Google Drive",
+        user_home / "Meu Drive",
     ]
     for root in possible_roots:
         if root.exists():

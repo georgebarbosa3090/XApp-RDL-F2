@@ -1682,15 +1682,17 @@ def test_mappo_agent_rollout_and_update_f2():
 
 def test_main_entrypoint_roles_f2(monkeypatch):
     import runpy
+    from pathlib import Path
     from unittest.mock import MagicMock
 
     # Mock time.sleep to raise KeyboardInterrupt immediately
     monkeypatch.setattr("time.sleep", MagicMock(side_effect=KeyboardInterrupt))
 
+    main_path = str(Path(__file__).resolve().parents[1] / "src" / "main.py")
     for role in ["qos-xslice", "energy-saving", "traffic-steering", "rdl"]:
         monkeypatch.setenv("XAPP_ROLE", role)
         try:
-            runpy.run_path(r"C:\Users\george.barbosa\.gemini\antigravity\scratch\iqos-xapp-rdl-phase2\src\main.py", run_name="__main__")
+            runpy.run_path(main_path, run_name="__main__")
         except KeyboardInterrupt:
             pass
         except Exception as e:

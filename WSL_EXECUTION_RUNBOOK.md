@@ -1,14 +1,15 @@
-﻿# 🐧 Guia Completo de Execução em WSL2 — k3d, Rancher, Near-RT RIC & ns-3 5G-LENA
+# 🐧 Guia Completo de Execução em WSL2 — k3d, Rancher, Near-RT RIC & ns-3 5G-LENA
 
-Este guia detalha o fluxo completo para executar a infraestrutura O-RAN real amanhã dentro do **WSL2 (Ubuntu)**, alternando entre a avaliação **Baseline (sem RDL)** e **Governança (com H-RDL e CA-RDL)** em malha fechada com o **ns-3.48 / 5G-LENA v5.1 / NORI**.
+Este guia detalha o fluxo completo para executar a infraestrutura O-RAN real dentro do **WSL2 (Ubuntu)**, alternando entre a avaliação **Baseline (sem RDL)** e **Governança (com H-RDL e CA-RDL)** em malha fechada com o **ns-3.48 / 5G-LENA v5.1 / NORI**.
 
 ---
 
 ## 📋 Pré-requisitos no WSL2
+
 1. **Docker Daemon ativo**:
 ```bash
-   sudo service docker status || sudo service docker start
-   ```
+sudo service docker status || sudo service docker start
+```
 2. **Ferramentas de CLI instaladas**: `k3d`, `kubectl`, `helm`, `cmake`, `g++`, `python3`.
 
 ---
@@ -61,7 +62,7 @@ Execute o script de compilação automatizado para baixar o `ns-3.48`, o módulo
 ```bash
 bash scripts/setup_ns3.sh
 ```
-> **Nota**: O script automaticamente converte permisssões, copia os cenários C++ para `scratch/` e compila o ns-3 com `CMake`.
+> **Nota**: O script automaticamente converte permissões, copia os cenários C++ para `scratch/` e compila o ns-3 com `CMake`.
 
 ---
 
@@ -92,7 +93,6 @@ cd ~/workspace/ns-3-dev
 
 Após concluir a rodada de simulação, execute o validador de proveniência para atualizar o firewall editorial:
 
-
 **No repositório F1:**
 ```bash
 cd ~/XApp-RDL-F1
@@ -112,13 +112,15 @@ python3 scripts/validate_ml_provenance.py
 
 - **Verificar Pods em execução**:
 ```bash
-  kubectl get pods -A -o wide
-  ```
+kubectl get pods -A -o wide
+```
+
 - **Verificar Logs do RDL em Tempo Real**:
 ```bash
-  kubectl logs -n ricxapp -l app.kubernetes.io/name=iqos-xapp-rdl -f
-  ```
+kubectl logs -n ricxapp -l app.kubernetes.io/name=iqos-xapp-rdl -f
+```
+
 - **Verificar Mensagens RMR e E2AP**:
 ```bash
-  kubectl logs -n ricplt deployment/deployment-ricplt-e2term -f
-  ```
+kubectl logs -n ricplt deployment/deployment-ricplt-e2term -f
+```

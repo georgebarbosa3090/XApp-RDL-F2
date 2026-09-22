@@ -38,7 +38,7 @@ if TORCH_AVAILABLE and nn is not None:
         r"""Rede Neural Actor para seleção probabilística descentralizada de ações O-RAN: a_i ~ \pi_{\theta_i}(. | o_i)."""
         def __init__(self, obs_dim: int, action_dim: int):
             super().__init__()
-            self.net = nn.Sequential(
+            self.backbone = nn.Sequential(
                 nn.Linear(obs_dim, 128),
                 nn.LayerNorm(128),
                 nn.ReLU(),
@@ -47,20 +47,25 @@ if TORCH_AVAILABLE and nn is not None:
                 nn.ReLU(),
                 nn.Linear(256, 128),
                 nn.ReLU(),
-                nn.Linear(128, action_dim),
-                nn.Softmax(dim=-1)
+                nn.Linear(128, action_dim)
             )
+            with torch.no_grad():
+                nn.init.orthogonal_(self.backbone[-1].weight, gain=0.01)
+                if hasattr(self.backbone[-1], "bias") and self.backbone[-1].bias is not None:
+                    self.backbone[-1].bias.fill_(2.0)
+                    if action_dim > 1:
+                        self.backbone[-1].bias[-1] = -5.0
+            self.net = self.backbone
             
         def forward(self, obs: torch.Tensor) -> torch.Tensor:
-            return self.net(obs)
+            logits = self.backbone(obs)
+            return torch.softmax(logits, dim=-1)
 
         def get_action_probs(self, obs: torch.Tensor, action_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
-            probs = self.net(obs)
+            logits = self.backbone(obs)
             if action_mask is not None:
-                probs = probs * action_mask
-                prob_sum = torch.sum(probs, dim=-1, keepdim=True)
-                probs = torch.where(prob_sum > 0, probs / (prob_sum + 1e-8), probs)
-            return probs
+                logits = torch.where(action_mask > 0.5, logits, torch.tensor(-1e9, dtype=logits.dtype, device=logits.device))
+            return torch.softmax(logits, dim=-1)
 
     class CriticNetwork(nn.Module):
         r"""Rede Neural Critic com observação global centralizada (CTDE): V_\phi(s^{global})."""
@@ -670,36 +675,43 @@ class MAPPOCoordinator:
         valid_mask = np.zeros(self.action_dim, dtype=bool)
         for i in range(min(n_proposals, self.action_dim - 1)):
             valid_mask[i] = True
-        valid_mask[self.action_dim - 1] = True # No-Op sempre admissível
+        if n_proposals == 0 or self.config.get("allow_noop", False):
+            valid_mask[self.action_dim - 1] = True
         
         leader_agent = self.agents[0]
         
         if hasattr(leader_agent, "actor") and hasattr(leader_agent.actor, "get_action_probs") and callable(leader_agent.actor.get_action_probs):
             try:
-                obs_input = torch.FloatTensor(obs).unsqueeze(0) if (PYTORCH_AVAILABLE and torch is not None) else obs
-                mask_input = torch.FloatTensor(valid_mask.astype(np.float32)).unsqueeze(0) if (PYTORCH_AVAILABLE and torch is not None) else valid_mask
-                probs_ret = leader_agent.actor.get_action_probs(obs_input, mask_input)
-                if probs_ret is not None:
+                if PYTORCH_AVAILABLE and torch is not None:
+                    with torch.no_grad():
+                        obs_input = torch.FloatTensor(obs).unsqueeze(0)
+                        mask_input = torch.FloatTensor(valid_mask.astype(np.float32)).unsqueeze(0)
+                        probs_ret = leader_agent.actor.get_action_probs(obs_input, mask_input)
+                        if hasattr(probs_ret, "detach"):
+                            probs = probs_ret.detach().cpu().squeeze(0).numpy()
+                        elif hasattr(probs_ret, "numpy"):
+                            probs = probs_ret.squeeze(0).numpy()
+                        else:
+                            probs = np.array(probs_ret).squeeze()
+                else:
+                    probs_ret = leader_agent.actor.get_action_probs(obs, valid_mask)
                     if hasattr(probs_ret, "numpy"):
                         probs = probs_ret.squeeze(0).numpy()
                     else:
                         probs = np.array(probs_ret).squeeze()
-                    action_idx = int(np.argmax(probs))
-                    confidence = float(probs[action_idx])
-                else:
-                    action_idx, log_prob = leader_agent.select_action(obs)
-                    if action_idx >= n_proposals and action_idx != self.action_dim - 1:
-                        action_idx = self.action_dim - 1
-                    confidence = 0.85
-            except Exception:
+                        
+                action_idx = int(np.argmax(probs))
+                confidence = float(probs[action_idx])
+            except Exception as e:
+                logger.warning(f"[MAPPO] Fallback em inferencia: {e}")
                 action_idx, log_prob = leader_agent.select_action(obs)
                 if action_idx >= n_proposals and action_idx != self.action_dim - 1:
-                    action_idx = self.action_dim - 1
+                    action_idx = 0 if n_proposals > 0 else (self.action_dim - 1)
                 confidence = 0.85
         else:
             action_idx, log_prob = leader_agent.select_action(obs)
             if action_idx >= n_proposals and action_idx != self.action_dim - 1:
-                action_idx = self.action_dim - 1
+                action_idx = 0 if n_proposals > 0 else (self.action_dim - 1)
             confidence = 0.85
 
         confidence = max(0.80, float(confidence))

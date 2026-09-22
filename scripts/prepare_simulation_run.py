@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Prepara, Executa e Autentica a Campanha de Simulacao do XApp-RDL-F2 (CA-RDL)
 Gera evidencias brutas, manifestos com hash SHA-256 e validacao de proveniencia ML.
@@ -13,7 +13,7 @@ import yaml
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 RESULTS_DIR = os.path.join(BASE_DIR, "experiments", "results")
-CLAIMS_FILE = os.path.join(BASE_DIR, "paper_sbrc", "claims.yaml")
+CLAIMS_FILE = os.path.join(BASE_DIR, "specs", "claims.yaml")
 
 def sha256_file(filepath: str) -> str:
     h = hashlib.sha256()
@@ -62,7 +62,7 @@ def main():
 
         with open(CLAIMS_FILE, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, sort_keys=False, allow_unicode=True)
-        print("  [OK] claims.yaml atualizado com sucesso com vinculo de proveniencia.")
+        print("  [OK] specs/claims.yaml atualizado com sucesso com vinculo de proveniencia.")
 
     print("\n" + "=" * 80)
     print(" [SUCESSO] AMBIENTE DE SIMULACAO TOTALMENTE AUTENTICADO E PRONTO!")

@@ -4,7 +4,7 @@ except ImportError:
     pytest = None
 import numpy as np
 from src.conflict_types import ConflictEvent, ConflictType, ConflictSeverity, XAppAction
-from src.agents.marl.mappo_agent import MAPPOCoordinator, MAPPOAgent, TORCH_AVAILABLE
+from src.agents.marl.mappo_agent import MAPPOCoordinator, MAPPOAgent, TORCH_AVAILABLE, torch
 
 def test_mappo_coordinator_initialization():
     coordinator = MAPPOCoordinator(n_agents=2, obs_dim=10, action_dim=5)
@@ -133,7 +133,6 @@ def test_mappo_dynamic_n_xapps_support():
     assert obs[0] == 0.5  # INDIRECT
     
     if TORCH_AVAILABLE and torch is not None:
-        import torch
         fixed_test_probs = torch.tensor([[0.50, 0.20, 0.15, 0.10, 0.05]], dtype=torch.float32)
         coordinator.agents[0].actor.get_action_probs = lambda obs, mask=None: fixed_test_probs
         coordinator.agents[0].actor.forward = lambda obs: fixed_test_probs
