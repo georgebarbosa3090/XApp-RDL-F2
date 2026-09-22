@@ -334,9 +334,41 @@ Conforme evidenciado no **Scatter Hexbin SINR × Throughput (Figura 10)** e no g
 
 ![Figura 11 - Curvas de Adaptação de Enlace MCS vs BLER](figures/fig_11_mcs_bler.png)
 
-A correlação multivariada completa entre as variáveis cross-layer é consolidada no pairplot a seguir:
+A correlação multivariada completa entre as variáveis cross-layer (Camada Física, MAC, RLC e Aplicação/QoS) é consolidada no **Dashboard Mestre de Governança Cross-Layer** e detalhada em gráficos modulares especializados:
 
-![Figura 19 - Pairplot Multivariado Cross-Layer PHY/MAC/RLC/App](figures/fig_19_crosslayer_pairplot.png)
+![Figura 19 - Dashboard Mestre de Avaliação Multidimensional Cross-Layer (PHY/MAC/RLC/QoS)](figures/fig_19_crosslayer_pairplot.png)
+
+### 10.1 Análise Detalhada dos Sub-Gráficos Cross-Layer
+
+Para máxima clareza e isolamento analítico de cada dimensão de controle, os dados empíricos são estratificados nos seguintes gráficos especializados:
+
+#### A. Trade-off de Desempenho e Fronteira de Pareto (QoS × Latência)
+Demonstra o envelope ótimo de operação onde as abordagens com governança (**H-RDL B3** e **CA-RDL B6**) atingem a zona de conformidade estrita de SLA (Latência $< 11,5\text{ ms}$ e Vazão $> 100\text{ Mbps}$), enquanto a rede sem governança (B0) sofre com latência severa ($17,8\text{ ms}$) e degradação de vazão ($85,2\text{ Mbps}$).
+
+![Figura 19A - Fronteira de Pareto e Envelope de Latência x Vazão](figures/fig_19a_crosslayer_pareto_throughput_latency.png)
+
+#### B. Acoplamento Físico-Transporte (SINR × Vazão)
+Ilustra o ganho de eficiência espectral: para um mesmo patamar de SINR de rádio ($\approx 15,5\text{ dB}$), **CA-RDL** e **H-RDL** extraem até $+25\%$ mais vazão útil do que B0 e B1, devido à alocação balanceada de esquemas de modulação e codificação (MCS) sem saturação de buffer.
+
+![Figura 19B - Acoplamento Físico-Transporte SINR vs Throughput](figures/fig_19b_crosslayer_phy_sinr_throughput.png)
+
+#### C. Estabilidade do Controle e Supressão de Ping-Pong (PRB × Action Churn)
+Evidencia que políticas desgovernadas (B0/B1) operam com ocupação caótica de PRB ($> 90\%$) e churn inaceitável ($> 0,85\text{ ações/s}$), induzindo oscilações e tempestades de sinalização. **H-RDL** e **CA-RDL** estabilizam o churn em patamares seguros ($< 0,10\text{ ações/s}$) mantendo ocupação equilibrada de PRBs ($78\text{--}80\%$).
+
+![Figura 19C - Supressão de Churn e Ocupação MAC de PRB](figures/fig_19c_crosslayer_mac_stability_churn.png)
+
+#### D. Matriz de Correlação Multivariada Cross-Layer
+Consolida os coeficientes de correlação de Pearson ($r$) entre todas as camadas do stack O-RAN:
+- Forte correlação negativa entre **Vazão e Latência** ($r = -0,97$);
+- Alta correlação positiva entre **Vazão e SINR** ($r = 0,87$);
+- Quase perfeita correlação direta entre **Uso Desordenado de PRB e Latência** ($r = 0,99$).
+
+![Figura 19D - Matriz de Correlação Cross-Layer Global](figures/fig_19d_crosslayer_correlation_heatmap.png)
+
+#### E. Distribuições Marginais por Camada de Protocolo (PHY / MAC / RLC / QoS)
+Boxplots com pontos empíricos individuais destacando a variabilidade mínima e a consistência estatística de **H-RDL (B3)** e **CA-RDL (B6)** frente aos baselines não-coordenados.
+
+![Figura 19E - Distribuição das Métricas por Política de Controle](figures/fig_19e_crosslayer_metric_distributions_violin.png)
 
 ---
 
