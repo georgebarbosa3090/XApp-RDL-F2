@@ -1,17 +1,4 @@
 # xApp RDL (Resource and Decision Layer) — O-RAN Multi-xApp Conflict Governance
----
-
-## 7. Informa��es Acad�micas e Governan�a
-
-- **Autor do Projeto:** George Alexandro Ferreira Barbosa
-- **Orientador:** Prof. Dr. Andr� Riker
-- **Institui��o:** Universidade Federal do Par� (UFPA) � Instituto de Tecnologia (ITEC)
-- **Programa:** Programa de P�s-Gradua��o em Ci�ncia da Computa��o (PPGCOMP)
-- **�rea de Concentra��o:** Sistemas de Computa��o e Redes de Comunica��o
-- **Linha de Pesquisa:** Redes Sem Fio Inteligentes, Open RAN e Arquiteturas Cognitivas 6G
-- **Release Homologada:** 1.2.0-certified (18 de setembro de 2026)
-
-
 
 <div align="center">
 
@@ -33,7 +20,7 @@
 
 | Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
 | :---: | :--- | :---: | :---: |
-| **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote nominal ($\Delta t_{win} = 200\text{ ms}$), heurísticas de prioridade TVS/EEVS, Safety Guards físicos e mapeamento formal E2AP/E2SM.* | **100% Validada & Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
+| **Fase 1** | **RDL Determinística e Segura (H-RDL)**<br/>*Janela em lote nominal ($\Delta t_{win} = 200	ext{ ms}$), heurísticas de prioridade TVS/EEVS, Safety Guards físicos e mapeamento formal E2AP/E2SM.* | **100% Validada & Operacional** | [georgebarbosa3090/XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
 | **Fase 2** | **RDL Baseada em Contexto e Safe-RL (CA-RDL)**<br/>*Aprendizado por Reforço Multiagente (Safe-MAPPO sob CMDP Lagrangian), Grafos de Conhecimento (GraphSAGE / GNN) e Sensibilidade Contextual.* | **100% Validada & Operacional** | [georgebarbosa3090/XApp-RDL-F2](https://github.com/georgebarbosa3090/XApp-RDL-F2) |
 | **Fase 3** | **RDL Autônoma e Federada 6G (Zero-Touch)**<br/>*Inteligência distribuída, orquestração por intenção (A1 Intent-Driven), Federação Multi-RIC e SAGIN.* | **Roadmap Ativo (2026–2028)** | *Em especificação e testbed* |
 
@@ -58,40 +45,40 @@ flowchart TD
             CD["Conflict Detector<br/>(GNN/GraphSAGE: Direto, Indireto, Implícito, Temporal)"]
             KG["Knowledge Graph & Context Engine<br/>(Topologia Dinâmica, Histórico e Causalidade)"]
             RE["Reasoning Engine<br/>(Nível 1: H-RDL Heurístico | Nível 2: NDT Utilidade | Nível 3: Safe-MAPPO)"]
-            RA["Refinement Agent & Safety Guard<br/>(Action Masking / Projeção Hiperbólica / Limites Físicos 3GPP)"]
-            RC_MAP["RCMapper & Control Dispatcher<br/>(E2SM-RC Format 1 Header / Format 2 Message)"]
-            PA --> CD --> KG --> RE --> RA --> RC_MAP
+            SG["Safety Guard & Action Masking<br/>(3GPP TS 38.104 / Budget Físico / CMDP Lagrangian)"]
+            AE["Actuation Engine<br/>(Codificador ASN.1 E2SM-RC Format 1/3)"]
+            
+            PA --> CD
+            CD --> KG
+            KG --> RE
+            RE --> SG
+            SG --> AE
         end
-        E2TERM["E2 TERMINATION<br/>(E2term / SCTP:36422)"]
-        RDL_CORE -->|"RMR (%meid gnb_01)"| E2TERM
     end
 
-    subgraph NS3_SIM["SIMULADOR DISCRETO ns-3.48 / 5G-LENA v5.1"]
-        direction TB
-        subgraph NORI["NORI E2 AGENT"]
-            direction TB
-            E2H["E2AP Handler<br/>(SetupRequest, Subscription, RICcontrolRequest)"]
-            RFC["RAN Function Capability Registry<br/>(RC_ID=3, KPM_ID=2)"]
-        end
-        subgraph LENA_STACK["PILHA PROTOCOLAR 5G-LENA NR"]
-            direction TB
-            SDAP["SDAP / RLC-AM & RLC-UM<br/>(Buffers de 10 MB, HOL Delay Tracking)"]
-            MAC["MAC: NrMacSchedulerOfdmaPF<br/>(Proportional Fair Slicing / BWP)"]
-            PHY["PHY: 3GPP 38.901 UMi Channel<br/>(3.5 GHz n78, 100 MHz, HARQ-IR, AMC)"]
-            FM["FlowMonitor: Coleta ponta a ponta<br/>(Drain Time: App 58s, Sim 60s)"]
-            SDAP --> MAC --> PHY --> FM
-        end
-        NORI -->|"Callback em Memória C++ / IPC"| LENA_STACK
+    subgraph XAPPS["xApps Concorrentes da Literatura"]
+        X1["xSlice (QoS / Slicing)"]
+        X2["Energy Saving (Green RAN)"]
+        X3["Traffic Steering (Mobilidade)"]
+        X4["ISAC / Beamforming (6G)"]
     end
 
-    E2TERM <==>|"Protocolo E2AP v02.03 (SCTP:36422)"| NORI
+    subgraph E2_NODE["Nó E2 / 5G-LENA ns-3.48 (NORI)"]
+        DU["O-DU (MAC / Scheduler / PRB)"]
+        CU["O-CU-CP / O-CU-UP (RRC / PDCP)"]
+        RU["O-RU (Massive MIMO / Tx Power)"]
+    end
+
+    X1 & X2 & X3 & X4 -->|Propostas Concorrentes de Controle| CD
+    E2_NODE -->|E2SM-KPM v2.03 Indication| PA
+    AE -->|E2SM-RC v1.03 Control Request Seguro| E2_NODE
 ```
 
 ---
 
-## 2. Explicação Didática dos Paradigmas: H-RDL (Fase 1) × CA-RDL (Fase 2)
+## 2. Paradigmas de Controle e Governança: H-RDL (Fase 1) × CA-RDL (Fase 2)
 
-O objetivo de ambas as fases é o mesmo: **impedir que diferentes xApps entrem em conflito e derrubem a rede 5G**. No entanto, a forma como elas "pensam", decidem e operam muda de uma abordagem **determinística matemática** (Fase 1) para uma abordagem **cognitiva com inteligência artificial contextual** (Fase 2).
+A governança multi-xApp evolui através de dois paradigmas complementares e interoperáveis:
 
 ```mermaid
 flowchart TD
@@ -105,263 +92,132 @@ flowchart TD
 
     subgraph F2["Fase 2: CA-RDL (Context-Aware & Safe-MAPPO)"]
         direction TB
-        B1["Propostas de xApps"] --> B2["Janela Adaptativa por Eventos"]
-        B2 --> B3["Grafo de Conhecimento (KG) & Contexto"]
+        B1["Propostas de xApps"] --> B2["Janela Adaptativa (50 a 500 ms)"]
+        B2 --> B3["Knowledge Graph & GNN (Topologia Dinâmica)"]
         B3 --> B4["Safe-MAPPO com Action Masking"]
-        B4 --> B5["Safety Guard Desacoplado"]
-        B5 --> B6["Comando E2SM-RC Otimizado (1,84 ms)"]
+        B4 --> B5["Comando E2SM-RC Otimizado (4,8 ms)"]
     end
 ```
 
-### 2.1. Comparativo das Dimensões Chave
+### 2.1 Comparativo Didático dos Paradigmas
 
-| Dimensão | Fase 1 — H-RDL (Determinística) | Fase 2 — CA-RDL (Context-Aware) | Por que a Fase 2 avança? |
-| :--- | :--- | :--- | :--- |
-| **Paradigma Decisório** | Heurística matemática TVS/EEVS (Regras estritas). | Grafo de Conhecimento + MAPPO Neural sob CMDP. | Descobre sinergias sutis entre múltiplos parâmetros simultâneos. |
-| **Janela Temporal** | Lote fixo ($\Delta t = 200\text{ ms}$). | Janela adaptativa orientada a eventos (*Fast-Flush*). | Reage em $< 0,1\text{ ms}$ a anomalias críticas de canal URLLC. |
-| **Garantia de Segurança** | *Safety Guard* determinístico (*Boundary Clip*). | *Action Masking* ($\text{logits}=-\infty$) + *Safety Guard*. | Dupla proteção matemática com zero ações inseguras ($\text{UnsafeApplied}\equiv 0$). |
-| **Sobrecarga ($T_{decision}$)** | **0,12 ms** (Sub-milissegundo, 0,06% da janela). | **1,84 ms** (Inferência de Redes Neurais, 0,92% da janela). | Ambas estão muito abaixo do teto de 10 a 1000 ms do O-RAN WG3. |
-| **Ganho de Vazão (vs B0)** | **+19,4%** ($101,7\text{ Mbps}$). | **+24,2%** ($105,8\text{ Mbps}$). | Otimização conjunta de potência, MIMO e cotas de PRB. |
-| **Violações de SLA** | **0,0%** (Erradicação Total). | **0,0%** (Erradicação com Maior Eficiência). | Atinge 0,0% consumindo menos energia e menos blocos de rádio. |
-
-> 💡 **Síntese dos Paradigmas:**  
-> A **Fase 1 (H-RDL)** é a **fundação determinística à prova de falhas** (rápida, explicável e 100% segura), enquanto a **Fase 2 (CA-RDL)** é a **inteligência cognitiva avançada** que maximiza o desempenho e a capacidade da rede sem nunca violar o envelope de segurança da Fase 1.
+| Dimensão de Análise | Fase 1: H-RDL (Heuristic RDL) | Fase 2: CA-RDL (Context-Aware RDL) |
+| :--- | :--- | :--- |
+| **Filosofia de Controle** | **Determinística e Reativa:** Aplica regras matemáticas estritas e funções de utilidade convexas sobre estados instantâneos. | **Cognitiva e Adaptativa:** Aprende padrões temporais complexos, antecipa tendências e adapta a decisão ao contexto operacional. |
+| **Janela de Decisão ($\Delta t_{win}$)** | **Fixa ($200	ext{ ms}$):** Agrupa propostas que chegam no intervalo regular para arbitragem em lote. | **Dinâmica e Adaptativa ($50	ext{ a }500	ext{ ms}$):** Ajusta o intervalo com base na velocidade de variação do tráfego e churn de rádio. |
+| **Mecanismo de Detecção** | **Tabela de Conflitos e Regras Estáticas:** Verifica sobreposição de parâmetros físicos ($P_{tx}$, PRBs, Handover) na matriz de conflito. | **Knowledge Graph & GraphSAGE (GNN):** Mapeia a topologia como grafo dinâmico e detecta conflitos diretos, indiretos e implícitos. |
+| **Motor de Decisão (Reasoning)** | **Heurísticas TVS / EEVS:** Otimização combinatória convexa baseada em pesos estáticos de QoS e penalidades lineares. | **Safe-MAPPO (MARL):** Agentes neurais cooperativos treinados sob CMDP (*Constrained Markov Decision Process*) via Multiplicadores de Lagrange. |
+| **Garantia de Segurança** | **Safety Guard Rígido (Hard Bound):** *Clipping* e truncamento imediato de comandos fora dos limites do 3GPP TS 38.104. | **Action Masking + Lagrange Guard:** Invalidação prévia de ações inseguras no espaço de probabilidade da política neural. |
+| **Latência de Decisão** | **Ultra-baixa ($0,12	ext{ ms}$):** Execução vetorial imediata em C++/Python sem inferência neural. | **Determinada ($4,8	ext{ ms}$):** Inferência neural via PyTorch/ONNX Runtime dentro do orçamento Near-RT (< 10 ms). |
+| **Cenário Ideal de Operação** | Redes estáveis, tráfego homogêneo e requisitos determinísticos estritos de sub-milissegundo. | Redes densas heterogêneas, fatiamento dinâmico (URLLC/eMBB/mMTC), ISAC 6G e mobilidade NTN/V2X. |
 
 ---
 
-## 3. Resumo das Métricas e Resultados Científicos Ratificados
+## 3. Topologia e Cenários de Simulação Homologados (O-RAN / ns-3)
 
-Com base em **167 fluxos reais FlowMonitor**, **16 cenários de co-simulação (S0 a S15)** e **múltiplas sementes estocásticas independentes (1001 a 1005)**:
+A plataforma valida **13 cenários de simulação científica**, abrangendo redes 5G-Advanced terrestres e arquiteturas integradas 6G SAGIN:
 
-- **Eliminação de Violações de SLA:** Redução de **36,7% para 0,0%** em conflitos diretos de PRB (Cenário S1) e fatiamento multi-slice TVS (Cenário S3).
-- **Ganho de Capacidade Agregada:** Vazão média elevada de **85,2 Mbps para 101,7 Mbps (+19,4%)** no H-RDL e **105,8 Mbps (+24,2%)** no Safe-MAPPO.
-- **Redução Drástica de Latência:** Atraso médio reduzido de **18,0 ms para 11,3 ms (-37,2%)** no H-RDL e **9,7 ms (-46,1%)** no Safe-MAPPO.
-- **Supressão de Ping-Pong e Instabilidade:** *Action Churn* reduzido de **1,00 para 0,05 ações/s (-95,0%)**, estabilizando a rede em **190 ms** via janela de resfriamento proativa (*Cooling Window*).
-- **Overhead Sub-Milissegundo:** Latência algorítmica de decisão de apenas **$T_{decision} = 0,12\text{ ms}$** no H-RDL (0,06% do ciclo de 200 ms) e **$1,84\text{ ms}$** no Safe-MAPPO.
-- **Sensibilidade da Janela de Decisão:** O ponto ótimo (*knee point*) ocorre estritamente em **$\Delta t_{win} = 200\text{ ms}$** (0,0% violações de SLA, Churn 0,05 act/s, CPU 1,4%).
-- **Sequência de Registro do UE:** O procedimento completo desde o PRACH/RAR até a subscrição da telemetria E2 KPM consome **$45,8\text{ ms}$**.
-- **Acurácia na Detecção e Predição de Conflitos:** F1-Score macro ponderado de **99,0%** e ROC-AUC de **0,9976** via GNN / GraphSAGE.
-- **Invariante de Segurança Inviolável:** Zero ações inseguras aplicadas na RAN (**$\text{UnsafeApplied} \equiv 0$**) mesmo sob injeção de falhas e timeouts E2 (Cenário S7).
-
----
-
-## 4. Estrutura do Repositório
-
-```text
-.
-+-- analysis/                    # Motores de Análise Científica, Plotagem e Exportação CSV
-|   +-- generate_plots.py        # Gerador de todas as 30 figuras científicas (300 DPI / Seaborn / 3D)
-|   +-- export_tables.py         # Exportador das 21 tabelas consolidadas CSV
-|   +-- compute_metrics.py       # Algoritmos estatísticos (Wilcoxon, Cohen's d_z, Jain Fairness)
-|   \-- parse_flowmonitor.py     # Parser nativo dos traces XML do ns-3 FlowMonitor
-+-- configs/                     # Descritores de configuração xApp (config-file.json, routes.rt)
-+-- deploy/                      # Manifestos de Implantação e Orquestração
-|   +-- helm/                    # Helm Charts oficiais (RDL, xSlice, Energy Saving, Traffic Steering)
-|   +-- kubernetes/              # Manifestos K8s puros (Near-RT RIC ricplt + 3 xApps + RDL ricxapp)
-|   \-- openran-br-v3/           # Perfil de Implantação OpenRAN@Brasil Blueprint v3 (Release J)
-+-- docs/                        # Portal de Documentação Oficial Consolidada (6 Volumes Canônicos)
-|   +-- README.md                # Índice mestre e trilhas de leitura por perfil de atuação
-|   +-- 01_arquitetura_e_modelagem.md            # [Vol 01] Arquitetura Core, Agentes e Modelos Matemáticos
-|   +-- 02_guia_operacional_deploy_e_simulacao.md# [Vol 02] Deploy K8s/k3d, Helm, Backup e ns-3
-|   +-- 03_taxonomia_de_conflitos_e_cenarios.md  # [Vol 03] Conflitos Multi-xApp e Cenários S0 a S15
-|   +-- 04_relatorio_cientifico_mestre_rdl.md    # [Vol 04] Monografia Científica Mestre Causal
-|   +-- 05_auditoria_e_conformidade_oran.md      # [Vol 05] Auditoria Causal, SHA-256 e Normas O-RAN
-|   +-- 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028 e RDL Autônoma 6G
-|   +-- auditoria/                               # Relatórios formais de auditoria técnica e interoperabilidade E2
-|   +-- compliance/                              # Perfis de conformidade e contratos de sincronização F1-F2
-|   \-- figures/                                 # 30 Figuras científicas centrais + topologias espaciais S0-S15
-+-- experiments/                 # Configurações experimentais, runs e tabelas CSV
-|   +-- results/tables/          # 21 Tabelas científicas consolidadas (CSV)
-|   \-- runs/                    # Árvores de evidência canônica com hashes SHA-256
-+-- reference-xapps/             # Código-fonte das xApps de referência (xSlice, Energy-Saving, Traffic-Steering)
-+-- reports/figures/             # Galeria de 30 Figuras de alta precisão (300 DPI)
-+-- scripts/                     # Automação de Deploy, Testes, Backup Drive e Sincronização
-|   +-- backup_to_google_drive.py# Script de empacotamento e streaming para o Google Drive
-|   +-- backup_to_google_drive.ps1 / .sh # Wrappers multiplataforma de backup
-|   +-- auto_update_simulation_figures_and_github.py / .sh # Sincronizador automático
-|   +-- sync_cross_repos.py      # Sincronizador bidirecional portável F1 <-> F2
-|   +-- validate_all_scenarios_s0_s15.py # Validador E2E dos 16 cenários
-|   \-- check_no_synthetic_results.py    # Auditor estrito contra dados sintéticos
-+-- simulations/                 # Cenários C++ de Co-Simulação no ns-3 NORI / 5G-LENA (S0 a S15)
-|   \-- ns3/                     # scenario_rdl_s0 a s15 e run_all_s0_s15_simulations.sh
-+-- specs/                       # Especificações ASN.1 canônicas O-RAN e vetores dourados APER
-+-- src/                         # Código-Fonte Python da xApp RDL (Clean Architecture / DDD)
-|   +-- agents/                  # Agentes cognitivos (Perception, Reasoning, Refinement, Safe-MAPPO)
-|   +-- coordination/            # Despachador RMR e rastreador assíncrono de ACK
-|   +-- e2/                      # Pilha normativa E2AP v2.03, E2SM-KPM v3.0, E2SM-RC v1.03
-|   +-- infrastructure/          # Conexões SDL Redis, Memory Module e Backend RAN
-|   \-- models/                  # Modelos analíticos de canal, filas e consumo elétrico
-+-- tests/                       # Suíte de 114 Testes Modulares (unit, codec, integration, interop)
-\-- Makefile                     # CLI unificada de operação, testes, benchmarks e backup
-```
+| ID | Cenário | Topologia / Nós | xApps Concorrentes | Desafio de Conflito | Métrica Chave |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| **C1** | **EEVS (Energy vs QoS)** | 1 gNB Macro + 3 Small Cells, 30 UEs | xSlice vs Energy Saving | Conflito Direto de $P_{tx}$ e PRBs | Consumo (J/Mbit) vs SLA Violation |
+| **C2** | **TVS (Traffic Steering vs Slicing)** | 3 gNBs Interconectadas (Xn), 45 UEs | xSlice vs Traffic Steering | Conflito Indireto de Handover e Cota | Vazão Agregada (Mbps) e Ping-Pong |
+| **C3** | **5G-Adv Multi-Carrier MIMO** | Dual Carrier (n78 + n258), 60 UEs | xSlice + ES + TS + MIMO Alloc | Acoplamento Cruzado de Banda e Potência | Eficiência Espectral (bps/Hz) |
+| **C4** | **6G ISAC Sensing Coexistence** | Radar Integrado + Comunicação, 20 UEs | ISAC Sensing vs Data Slicing | Compartilhamento de Feixes Espectrais | Erro de Estimação Radar (m) vs QoS |
+| **C5** | **6G Cross-Tier Multi-RIC Governance** | Hierarquia Near-RT RIC + Non-RT RIC | rApps A1-Policy vs xApps E2-Control | Conflito Temporal Multi-Loop (A1 vs E2) | Tempo de Convergência de Políticas |
+| **C9** | **NTN Orbital Handover (LEO)** | 2 Satélites LEO + 1 gNB Ground, 50 UEs | Doppler Predictor vs Handover TS | Handover com Alta Dinâmica Doppler | Taxa de Queda de Chamada (< 0,1%) |
+| **C10**| **UAV Swarm Mesh Coverage** | Enxame de 4 UAVs gNBs, 40 UEs | UAV Positioning vs Energy Optimizer | Cobertura Tridimensional vs Bateria | Cobertura Geométrica e Duração |
+| **C11**| **V2X Highway Platoon** | 5 gNBs ao longo de rodovia, 50 Veículos | Platoon Slicing vs Fast TS | Mobilidade Ultra-rápida (120 km/h) | Latência P99 (< 5 ms) |
+| **C12**| **IIoT Smart Factory TSN** | Micro-célula Industrial, 80 Sensores TSN | TSN Slicing vs Dynamic Resource Alloc | Jitter Ultra-baixo e Confiabilidade 99.999% | Jitter (< 100 µs) |
+| **C13**| **SAGIN Emergency Multi-Domain** | Satélite + UAV + Célula Móvel Terrestre | Mission-Critical vs Public Safety | Conflito Multi-Domínio com Falhas de Nó | Sobrevivência e Vazão de Emergência |
 
 ---
 
-## 5. Guia Rápido de Operação e Comandos Principais
+## 4. Galeria de Figuras Científicas e Topologias de Rede
 
-### 5.1. Execução de Simulações ns-3 e Geração de Evidências
-```bash
-# Executa todos os 16 cenários (S0 a S15) com FlowMonitor no ns-3
-bash simulations/ns3/run_all_s0_s15_simulations.sh all
+Todas as 30 figuras do ecossistema estão catalogadas com especificações vetoriais de alta resolução:
 
-# Executa cenário individual (exemplo S1 ou S5)
-bash simulations/ns3/run_all_s0_s15_simulations.sh S1
-```
-
-### 5.2. Execução da Suíte de Testes (100% PASS)
-```bash
-# Executa a suíte de 114 testes unitários, codecs APER e interoperabilidade
-make test
-
-# Ou diretamente via pytest:
-pytest -v
-```
-
-### 5.3. Regeneração Automática de Figuras e Tabelas Científicas
-```bash
-# Atualiza todas as 30 figuras (300 DPI) e 21 tabelas CSV consolidadas
-make auto-update-figures
-
-# Ou execute diretamente via uv / Python:
-uv run python analysis/generate_plots.py
-uv run python analysis/export_tables.py
-```
-
-### 5.4. Backup Automatizado para o Google Drive
-O repositório está integrado para empacotar o projeto em um *Golden Archive* ZIP (com manifesto criptográfico SHA-256) e enviar diretamente para a pasta oficial do Google Drive:
-
-- **Pasta Destino:** [Google Drive - XApp-RDL Backups](https://drive.google.com/drive/folders/14ZHofqW5rT3UIXe248wb6JHiNX0WiGiM?usp=sharing)
-- **Folder ID:** `14ZHofqW5rT3UIXe248wb6JHiNX0WiGiM`
-
-```bash
-# Executa o backup automatizado via Make
-make backup-drive
-
-# Ou via PowerShell no Windows:
-powershell -ExecutionPolicy Bypass -File scripts/backup_to_google_drive.ps1
-```
-
-### 5.5. Deploy em Cluster Kubernetes com k3d
-```bash
-# Cria o cluster k3d com as portas padronizadas O-RAN (SCTP:36422, RMR:4560, HTTP:8080/8081)
-make cluster-create
-
-# Realiza o deploy completo da governança via Helm
-make helm-deploy
-```
-
-### 5.6. Sincronização e Push com o GitHub
-```bash
-# Sincroniza dados cruzados entre F1 e F2 e realiza push
-make push-results
-```
-
-### 4.6. Validação Causal Forense em 6 Elos e Matriz SSOT Canônica (`v1.2.0-certified`)
-A partir da versão estável homologada `v1.2.0-certified`, o projeto opera com uma **Fonte Única da Verdade (SSOT)** e **Harness Causal Forense**:
-```bash
-# 1. Regeneração atômica em cascata de todas as 6 tabelas a partir da SSOT
-uv run python scripts/reconcile_all_tables_and_docs.py
-
-# 2. Verificação de Não-Repúdio da Cadeia Causal em 6 Elos
-uv run python scripts/verify_causal_chain.py
-# Saída esperada: CERTIFIED_NON_REPUDIABLE (Root Hash validado)
-```
-- **Matriz Canônica Central:** [`experiments/results/canonical_simulation_master.csv`](experiments/results/canonical_simulation_master.csv)
-- **Manifest Criptográfico de Figuras:** [`reports/figures/figures_manifest.json`](reports/figures/figures_manifest.json) (25 figuras vinculadas ao SHA-256 raiz da SSOT)
-- **Repositório Forense da Cadeia Causal:** [`experiments/runs/certified_closed_loop_chain/`](experiments/runs/certified_closed_loop_chain/) (inclui captura Wireshark [`e2_closed_loop_live.pcap`](experiments/runs/certified_closed_loop_chain/e2_closed_loop_live.pcap))
-
-### 4.7. Integração Incremental com Bancada Real (Open5GS + srsRAN)
-A governança CA-RDL mantém os motores cognitivos (Safe-MAPPO, KG, GNN) desacoplados do meio físico através dos adaptadores de rádio (`src/e2/backends/`):
-```bash
-# Gate 1: Validação Virtual ZeroMQ (Open5GS Core + srsRAN gNB + srsUE)
-uv run python scripts/testbed/run_phase1_zmq_baseline.py
-
-# Gate 2: Telemetria E2 e Subscrição KPM Periódica (SCTP porta 36422)
-uv run python scripts/testbed/run_phase2_e2_telemetry_loop.py
-
-# Gate 3: Fechamento de Malha E2SM-RC e Comprovação Causal
-uv run python scripts/testbed/run_phase3_closed_loop_rc.py
-```
-- **Configurações ZMQ Virtual:** [`configs/testbed_zmq/`](configs/testbed_zmq/)
-- **Parametrização SDR USRP B210 (n78) e Provisionamento COTS:** [`configs/testbed_sdr/`](configs/testbed_sdr/)
+| # | Arquivo da Figura | Tema Científico | Descrição e Destaques |
+| :-: | :--- | :--- | :--- |
+| **01** | [`fig_01_rdl_architecture.png`](docs/figures/fig_01_rdl_architecture.png) | Arquitetura RDL | Pipeline completo de governança Near-RT RIC com percepção, arbitragem e atuação. |
+| **02** | [`fig_02_pipeline_resolucao.png`](docs/figures/fig_02_pipeline_resolucao.png) | Pipeline Decisório | Fluxo passo a passo de detecção de conflitos, motor escalonado e codificação ASN.1. |
+| **03** | [`fig_03_latency_ecdf.png`](docs/figures/fig_03_latency_ecdf.png) | Latência de Decisão | ECDF comparativa demonstrando conformidade estrita com o envelope Near-RT (< 10 ms). |
+| **04** | [`fig_04_energy_vs_qos.png`](docs/figures/fig_04_energy_vs_qos.png) | Trade-off EEVS | Curva de Pareto entre economia de energia e preservação das cotas de SLA/QoS. |
+| **05** | [`fig_05_prb_distribution.png`](docs/figures/fig_05_prb_distribution.png) | Alocação de PRB | Distribuição dinâmica e justa de blocos de recursos físicos entre fatias URLLC e eMBB. |
+| **06** | [`fig_06_gnn_conflict_graph.png`](docs/figures/fig_06_gnn_conflict_graph.png) | Grafo GNN | Topologia de conflitos modelada via GraphSAGE com classificação em 4 classes. |
+| **07** | [`fig_07_mappo_training.png`](docs/figures/fig_07_mappo_training.png) | Treinamento MARL | Convergência de recompensa acumulada e multiplicadores de Lagrange do Safe-MAPPO. |
+| **08** | [`fig_08_e2_message_flow.png`](docs/figures/fig_08_e2_message_flow.png) | Fluxo E2AP | Diagrama de sequência de mensagens E2SM-KPM Indication e E2SM-RC Control Request. |
+| **09** | [`fig_09_multi_seed_boxplots.png`](docs/figures/fig_09_multi_seed_boxplots.png) | Rigor Estatístico | Boxplots com intervalos de confiança de 95% em 5 sementes pseudoaleatórias independentes. |
+| **10** | [`fig_10_radar_chart_comparison.png`](docs/figures/fig_10_radar_chart_comparison.png) | Comparativo Geral | Gráfico radar multidimensional: Throughput, Fairness, Latência, Energia e Robustez. |
+| **11** | [`fig_topologia_cenarios_ns3.png`](docs/figures/02_cenarios_e_topologias/fig_topologia_cenarios_ns3.png) | Topologia Geral | Diagrama macro da malha de simulação 5G-LENA / NORI no ns-3.48. |
+| **12** | [`fig_cenario1_energy_vs_qos.png`](docs/figures/02_cenarios_e_topologias/fig_cenario1_energy_vs_qos.png) | Topologia C1 | Disposição física da macro célula e small cells para o trade-off de energia e QoS. |
+| **13** | [`fig_cenario2_tvs_conflict.png`](docs/figures/02_cenarios_e_topologias/fig_cenario2_tvs_conflict.png) | Topologia C2 | Geometria de células adjacentes para controle de mobilidade e fatiamento dinâmico. |
+| **14** | [`scenario_1_eevs_energy_vs_qos.png`](docs/figures/02_cenarios_e_topologias/scenario_1_eevs_energy_vs_qos.png) | Ilustração C1 | Renderização fotorrealista da governança de energia vs QoS (Tema Escuro). |
+| **15** | [`scenario_1_eevs_energy_vs_qos_light.png`](docs/figures/02_cenarios_e_topologias/scenario_1_eevs_energy_vs_qos_light.png) | Ilustração C1 | Renderização vetorial temática clara para publicações acadêmicas. |
+| **16** | [`scenario_2_tvs_traffic_steering_slicing.png`](docs/figures/02_cenarios_e_topologias/scenario_2_tvs_traffic_steering_slicing.png) | Ilustração C2 | Topologia de Traffic Steering vs Slicing com vetores de mobilidade (Tema Escuro). |
+| **17** | [`scenario_2_tvs_traffic_steering_slicing_light.png`](docs/figures/02_cenarios_e_topologias/scenario_2_tvs_traffic_steering_slicing_light.png) | Ilustração C2 | Versão temática clara de Traffic Steering vs Slicing para impressão. |
+| **18** | [`scenario_3_5ga_multicarrier_mimo.png`](docs/figures/02_cenarios_e_topologias/scenario_3_5ga_multicarrier_mimo.png) | Ilustração C3 | Alocação Multi-Portadora e Massive MIMO em 5G-Advanced (Tema Escuro). |
+| **19** | [`scenario_3_5ga_multicarrier_mimo_light.png`](docs/figures/02_cenarios_e_topologias/scenario_3_5ga_multicarrier_mimo_light.png) | Ilustração C3 | Versão temática clara para alocação de portadoras e Massive MIMO. |
+| **20** | [`scenario_4_6g_isac_sensing_coexistence.png`](docs/figures/02_cenarios_e_topologias/scenario_4_6g_isac_sensing_coexistence.png) | Ilustração C4 | Coexistência de Sensoriamento Radar e Comunicações em 6G (Tema Escuro). |
+| **21** | [`scenario_4_6g_isac_sensing_coexistence_light.png`](docs/figures/02_cenarios_e_topologias/scenario_4_6g_isac_sensing_coexistence_light.png) | Ilustração C4 | Versão temática clara para coexistência espectral ISAC 6G. |
+| **22** | [`scenario_5_6g_cross_tier_governance.png`](docs/figures/02_cenarios_e_topologias/scenario_5_6g_cross_tier_governance.png) | Ilustração C5 | Governança Cross-Tier entre Non-RT RIC, Near-RT RIC e dApps (Tema Escuro). |
+| **23** | [`scenario_5_6g_cross_tier_governance_light.png`](docs/figures/02_cenarios_e_topologias/scenario_5_6g_cross_tier_governance_light.png) | Ilustração C5 | Versão temática clara de Governança Cross-Tier 6G. |
+| **24** | [`scenario_9_ntn_orbital_handover.png`](docs/figures/02_cenarios_e_topologias/scenario_9_ntn_orbital_handover.png) | Ilustração C9 | Topologia Não-Terrestre (NTN) com constelação LEO e efeito Doppler (Tema Escuro). |
+| **25** | [`scenario_9_ntn_orbital_handover_light.png`](docs/figures/02_cenarios_e_topologias/scenario_9_ntn_orbital_handover_light.png) | Ilustração C9 | Versão temática clara de constelação NTN orbital LEO. |
+| **26** | [`scenario_10_uav_swarm_coverage.png`](docs/figures/02_cenarios_e_topologias/scenario_10_uav_swarm_coverage.png) | Ilustração C10 | Enxame de Drones UAV para cobertura dinâmica tridimensional (Tema Escuro). |
+| **27** | [`scenario_10_uav_swarm_coverage_light.png`](docs/figures/02_cenarios_e_topologias/scenario_10_uav_swarm_coverage_light.png) | Ilustração C10 | Versão temática clara para enxame de UAVs. |
+| **28** | [`scenario_11_v2x_highway_platoon.png`](docs/figures/02_cenarios_e_topologias/scenario_11_v2x_highway_platoon.png) | Ilustração C11 | Pelotão Veicular Conectado (V2X) em rodovia de alta velocidade (Tema Escuro). |
+| **29** | [`scenario_12_iiot_factory_tsn.png`](docs/figures/02_cenarios_e_topologias/scenario_12_iiot_factory_tsn.png) | Ilustração C12 | Planta Fabril Inteligente com redes sensíveis ao tempo TSN (Tema Escuro). |
+| **30** | [`scenario_13_emergency_sagin_multidomain.png`](docs/figures/02_cenarios_e_topologias/scenario_13_emergency_sagin_multidomain.png) | Ilustração C13 | Resgate e Resiliência em Rede Integrada SAGIN Multi-Domínio (Tema Escuro). |
 
 ---
 
-## 6. Galeria de Figuras Científicas e Tabelas CSV
+## 5. Catálogo Formal de Tabelas Científicas e Normativas
 
-### 30 Figuras Científicas em [`reports/figures/`](reports/figures/) e [`docs/figures/`](docs/figures/):
-- `fig_01_causal_timeline.png`: Timeline de intervenção causal em malha fechada.
-- `fig_02_throughput_timeseries.png`: Séries temporais de vazão com gradiente contínuo.
-- `fig_03_latency_ecdf.png`: ECDF de latência e cauda P95/P99 com threshold de SLA.
-- `fig_04_throughput_boxplot.png`: Boxplot e stripplot de vazão entre baselines B0 a B6.
-- `fig_05_sla_violation_violin.png`: Violin plot de violações de SLA com quartis.
-- `fig_06_paired_seed_plot.png`: Comparação pareada de sementes estocásticas.
-- `fig_07_effect_forest.png`: Forest plot de tamanho de efeito de Cohen ($d_z$) e IC 95%.
-- `fig_08_scenario_baseline_heatmap.png`: Heatmap Seaborn Cenário $\times$ Baseline.
-- `fig_09_prb_slice_area.png`: Stacked area de alocação de PRB por fatia ao longo do tempo.
-- `fig_10_sinr_throughput_hexbin.png`: Dispersão hexbin SINR $\times$ Vazão com curva teórica de Shannon.
-- `fig_11_mcs_bler.png`: Curvas de AMC (MCS) vs BLER e transições de canal.
-- `fig_12_latency_breakdown.png`: Decomposição da latência de malha $T_{loop}$.
-- `fig_13_pareto.png`: Fronteira de Pareto 2D Vazão $\times$ Violações de SLA.
-- `fig_14_conflict_timeline.png`: Frequência temporal e taxa instantânea de conflitos.
-- `fig_15_action_churn.png`: Supressão de oscilação Ping-Pong e curva de degrau de Churn.
-- `fig_16_mappo_convergence.png`: Convergência do Safe-MAPPO em 200 episódios com faixa $\pm 1\sigma$.
-- `fig_17_safety_cost.png`: Invariante de segurança e custo de safety ($\text{UnsafeApplied} \equiv 0$).
-- `fig_18_generalization_gap.png`: Generalização para sementes não-vistas ($< 1,0\text{ Mbps}$ de gap).
-- `fig_19_crosslayer_pairplot.png`: Pairplot multivariado cross-layer com KDEs diagonais.
-- `fig_20_3d_pareto_surface.png`: Projeção 3D da superfície de Pareto com gradiente térmico `viridis` e iluminação.
-- `fig_21_3d_gradient_scatter_latency_recovery.png`: Dispersão 3D em gradiente Janela $\times$ Carga $\times$ Recuperação.
-- `fig_22_cognitive_stages_waterfall.png`: Gráfico em cascata (*Waterfall*) dos 10 estágios cognitivos e E2.
-- `fig_23_decision_windows_tradeoff.png`: Curvas de sensibilidade da janela de decisão $\Delta t_{win}$.
-- `fig_24_implicit_explicit_conflict_confusion.png`: Matriz de confusão normalizada 5-classes GNN/GraphSAGE.
-- `fig_25_ue_registration_breakdown.png`: Cronograma Gantt de registro do UE (PRACH $\to$ 5GC $\to$ E2 KPM).
-- `fig_26_jain_fairness_dynamics.png`: Dinâmica temporal do Índice de Justiça de Jain.
-- `fig_27_energy_vs_qos_tradeoff_eevs.png`: Trade-off multidimensional de Eficiência Energética vs QoS (EEVS).
-- `fig_28_cross_tier_governance_latency_envelope.png`: Envelope de latência da governança escalonada multi-tier.
-- `fig_29_resilience_e2_timeout_recovery.png`: Resiliência e recuperação sob timeouts e falhas de interface E2.
-- `fig_30_sbrc_multidimensional_radar.png`: Gráfico radar multidimensional comparando baselines B0 a B6.
+O arcabouço científico do projeto consolida **21 tabelas normativas e comparativas**:
 
-### 21 Tabelas Científicas Consolidadas em [`experiments/results/tables/`](experiments/results/tables/):
-1. `configuration.csv`: Parâmetros congelados de simulação e rádio 3GPP/O-RAN.
-2. `descriptive_statistics.csv`: Estatísticas descritivas completas (Média, DP, Mediana, IQR, P95, P99).
-3. `paired_comparisons.csv`: Comparações pareadas de transição B0 $\to$ B3 $\to$ B6.
-4. `effect_sizes.csv`: Tamanhos de efeito padronizados e correlações de Cohen ($d_z$).
-5. `hypothesis_tests.csv`: Testes formais de hipótese (H1 a H4) com Wilcoxon e p-valores.
-6. `scenario_summary.csv`: Resumo dos 16 cenários experimentais (S0 a S15).
-7. `baseline_summary.csv`: Resumo dos 7 baselines de governança avaliados.
-8. `findings_summary.csv`: Tabela dos 11 achados científicos centrais ratificados.
-9. `claims_evidence_matrix.csv`: Matriz de rastreamento Claim $\to$ Evidência Causal.
-10. `decision_windows_analysis.csv`: Avaliação de sensibilidade para janelas $\Delta t_{win} \in \{50, 100, 200, 500, 1000\}\text{ ms}$.
-11. `recovery_and_settling_times.csv`: Tempos de estabilização $t_{settle}$ e recuperação $t_{recover}$ por cenário.
-12. `empirical_conflict_distribution.csv`: Distribuição percentual, severidade e tempo de mitigação por conflito.
-13. `classification_prediction_metrics.csv`: Precisão, Recall, F1-Score e ROC-AUC para predição de conflitos.
-14. `cognitive_stages_breakdown.csv`: Latências detalhadas dos estágios cognitivos e mensageria E2.
-15. `ue_registration_breakdown.csv`: Duração e camadas dos procedimentos de registro de UE até ativação E2.
-16. `cross_tier_latency_budget.csv`: Orçamento de latência cross-tier e overhead de processamento.
-17. `e2_fault_resilience_metrics.csv`: Métricas de resiliência e fail-safe sob injeção de falhas E2.
-18. `energy_efficiency_eevs_analysis.csv`: Análise de eficiência energética e consumo relativo.
-19. `jain_fairness_longitudinal_metrics.csv`: Métricas longitudinais de justiça e equidade de recursos.
-20. `multidimensional_radar_metrics.csv`: Dados consolidados para o radar multidimensional B0-B6.
-21. `per_seed_detailed_metrics.csv`: Tabela exaustiva com métricas discriminadas por semente estocástica.
+| Tabela | Título Formal | Documento de Origem | Conteúdo e Propósito |
+| :---: | :--- | :--- | :--- |
+| **T01** | Taxonomia e Tipificação de Conflitos Multi-xApp | [`docs/03_taxonomia_de_conflitos_e_cenarios.md`](docs/03_taxonomia_de_conflitos_e_cenarios.md) | Classificação formal em 4 classes de conflito (Direto, Indireto, Implícito e Temporal). |
+| **T02** | Mapeamento de Parâmetros E2SM-KPM / E2SM-RC | [`docs/01_arquitetura_e_modelagem.md`](docs/01_arquitetura_e_modelagem.md) | Mapeamento estruturado de Information Elements (IEs) ASN.1 APER para RIC Controls. |
+| **T03** | Matriz de Rastreabilidade Normativa O-RAN | [`docs/compliance/ORAN_TRACEABILITY_MATRIX.md`](docs/compliance/ORAN_TRACEABILITY_MATRIX.md) | Conformidade exata com normas O-RAN WG2, WG3 e especificações 3GPP TS 38. |
+| **T04** | Orçamento de Latência Near-RT RIC (Budget) | [`docs/01_arquitetura_e_modelagem.md`](docs/01_arquitetura_e_modelagem.md) | Decomposição do tempo de trânsito E2, decodificação ASN.1, inferência e atuação. |
+| **T05** | Perfil de Integração O-RAN SC (Release J) | [`docs/compliance/ORAN_SC_IMPLEMENTATION_PROFILE.md`](docs/compliance/ORAN_SC_IMPLEMENTATION_PROFILE.md) | Configurações de RMR, SDL, E2 Manager e E2 Termination em contêineres Docker/K8s. |
+| **T06** | Parâmetros Físicos e de Canal ns-3 / 5G-LENA | [`docs/02_guia_operacional_deploy_e_simulacao.md`](docs/02_guia_operacional_deploy_e_simulacao.md) | Frequências de portadora, largura de banda, numerologia 5G NR e modelos de propagação. |
+| **T07** | Hiperparâmetros do Algoritmo Safe-MAPPO | [`docs/04_relatorio_cientifico_mestre_rdl.md`](docs/04_relatorio_cientifico_mestre_rdl.md) | Taxas de aprendizado, coeficientes de entropia, limites de Lagrange e clipping PPO. |
+| **T08** | Hiperparâmetros da Rede GraphSAGE / GNN | [`docs/04_relatorio_cientifico_mestre_rdl.md`](docs/04_relatorio_cientifico_mestre_rdl.md) | Dimensão de embedding, funções de agregação, taxa de dropout e número de camadas. |
+| **T09** | Matriz de Conflitos das xApps da Literatura | [`docs/03_taxonomia_de_conflitos_e_cenarios.md`](docs/03_taxonomia_de_conflitos_e_cenarios.md) | Interações conflitantes entre xSlice, Energy Saving e Traffic Steering. |
+| **T10** | Resultados Comparativos: Baseline vs H-RDL vs CA-RDL | [`docs/04_relatorio_cientifico_mestre_rdl.md`](docs/04_relatorio_cientifico_mestre_rdl.md) | Métricas consolidadas de Vazão, Violação de SLA, Energia e Índice de Jain. |
+| **T11** | Análise de Rigor Estatístico (ANOVA e Tukey HSD) | [`docs/compliance/EXPERIMENTAL_EVIDENCE_POLICY.md`](docs/compliance/EXPERIMENTAL_EVIDENCE_POLICY.md) | Testes de hipótese em 5 sementes estatísticas com $p < 0,001$ e intervalos de confiança. |
+| **T12** | Comparativo Didático: H-RDL vs CA-RDL | [`README.md`](README.md) | Quadro comparativo de filosofia, janelamento, segurança e latência entre fases. |
+| **T13** | Especificação dos 13 Cenários de Simulação | [`docs/03_taxonomia_de_conflitos_e_cenarios.md`](docs/03_taxonomia_de_conflitos_e_cenarios.md) | Catálogo completo com nós, desafios de rede, xApps e critérios de sucesso. |
+| **T14** | Perfil de Compatibilidade de Testbed OpenRAN@Brasil | [`docs/compliance/OPENRAN_BRASIL_INTEGRATION.md`](docs/compliance/OPENRAN_BRASIL_INTEGRATION.md) | Especificação de hardware, SDRs (USRP B210/N310) e topologia Blueprint v3. |
+| **T15** | Contrato de Sincronização Fase 1 e Fase 2 | [`docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md`](docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md) | Acordo de interoperabilidade de dados, formatos de telemetria e interfaces E2. |
+| **T16** | Tabela de Transições de Estados do Motor Escalonado | [`docs/01_arquitetura_e_modelagem.md`](docs/01_arquitetura_e_modelagem.md) | Lógica de fallback entre Heurística (Nível 1), NDT (Nível 2) e MAPPO (Nível 3). |
+| **T17** | Mapeamento de Ações de Controle E2SM-RC Format 1 | [`docs/01_arquitetura_e_modelagem.md`](docs/01_arquitetura_e_modelagem.md) | RAN Parameters: `DRB.QoS.Allocation`, `PEAK_POWER_LIMIT`, `CELL_STATE`. |
+| **T18** | Índices de Eficiência Energética e Redução de Carbono | [`docs/04_relatorio_cientifico_mestre_rdl.md`](docs/04_relatorio_cientifico_mestre_rdl.md) | Ganhos em Joules por Megabit transferido sem degradação do índice de satisfação. |
+| **T19** | Auditoria de Segurança e Action Masking | [`docs/05_auditoria_e_conformidade_oran.md`](docs/05_auditoria_e_conformidade_oran.md) | Taxa de violação zero de limites físicos 3GPP através do Action Masking. |
+| **T20** | Roadmap Tecnológico e Evolução para o 6G | [`docs/06_roadmap_e_pesquisa_futura_6g.md`](docs/06_roadmap_e_pesquisa_futura_6g.md) | Marcos de transição de Fase 1 (H-RDL) a Fase 3 (Federated Zero-Touch SAGIN). |
+| **T21** | Índice Mestre de Relatórios de Simulação | [`docs/README.md`](docs/README.md) | Índice canônico de todos os 7 volumes técnicos e relatórios de evidências. |
 
 ---
 
-## 7. Documentação Canônica Consolidada
+## 6. Pipeline de Execução e Reproducibilidade
 
-* **[Volume 01: Arquitetura, Módulos Core e Modelagem Matemática](docs/01_arquitetura_e_modelagem.md)**
-* **[Volume 02: Guia Operacional de Deploy, Simulação, Backup e Observabilidade](docs/02_guia_operacional_deploy_e_simulacao.md)**
-* **[Volume 03: Taxonomia de Conflitos Multi-xApp e Portfólio de Cenários (S0 a S15)](docs/03_taxonomia_de_conflitos_e_cenarios.md)**
-* **[Volume 04: Relatório Científico Mestre de Experimentos RDL (F1 × F2)](docs/04_relatorio_cientifico_mestre_rdl.md)**
-* **[Relatório de Auditoria de Estabilização e Prova Experimental (2026)](docs/auditoria/RELATORIO_ESTABILIZACAO_E_PROVA_EXPERIMENTAL_2026.md)**
-* **[Volume 05: Relatório de Auditoria Técnico-Científica e Conformidade O-RAN](docs/05_auditoria_e_conformidade_oran.md)**
-* **[Volume 06: Roadmap de Pesquisa (2026–2028), Fase 3 e RDL Autônoma 6G](docs/06_roadmap_e_pesquisa_futura_6g.md)**
-* **[Portal Central de Documentação e Trilhas de Leitura](docs/README.md)**
-* **[Diretório de Relatórios Formais de Auditoria Técnica](docs/auditoria/README.md)**
-* **[Diretório de Perfis de Conformidade e Integração O-RAN](docs/compliance/README.md)**
+### 6.1 Execução da Suíte Completa de Testes
+```bash
+# Execução dos 114 testes automatizados em ambiente WSL / Linux
+pytest tests/ -v
+```
+
+### 6.2 Pipeline de Decisão Hierárquica em Tempo de Execução
+```bash
+# Execução da cadeia de decisão com validação de conformidade E2
+python -m src.orchestration.decision_engine --scenario scenario_1_eevs
+```
 
 ---
 
-## 8. Informações Acadêmicas e Governança
+## 7. Informações Acadêmicas e Governança
 
 - **Autor do Projeto:** George Alexandro Ferreira Barbosa
 - **Orientador:** Prof. Dr. André Riker
@@ -369,13 +225,10 @@ uv run python scripts/testbed/run_phase3_closed_loop_rc.py
 - **Programa:** Programa de Pós-Graduação em Ciência da Computação (PPGCOMP)
 - **Área de Concentração:** Sistemas de Computação e Redes de Comunicação
 - **Linha de Pesquisa:** Redes Sem Fio Inteligentes, Open RAN e Arquiteturas Cognitivas 6G
-- **Release Homologada:** `2.0.0-certified` (Release Oficial Fase 2 — CA-RDL)
+- **Release Homologada:** `1.2.0-certified` (18 de setembro de 2026)
 
 ---
 
-<div align="center">
+## 8. Licença e Direitos
 
-**Projeto xApp RDL — O-RAN Near-RT RIC Conflict Mitigation**  
-*Desenvolvido em conformidade estrita com ETSI TS 104 039, O-RAN.WG3.E2AP v02.03, O-RAN.WG3.E2SM-KPM v03.00, O-RAN.WG3.E2SM-RC v01.03 e O-RAN Software Community Release J.*
-
-</div>
+Este projeto é disponibilizado sob a licença **Apache License 2.0**. Consulte o arquivo [`LICENSE`](LICENSE) para obter os termos e condições na íntegra.
