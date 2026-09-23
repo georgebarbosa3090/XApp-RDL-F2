@@ -121,7 +121,6 @@ scripts/git_*.*
 scripts/sync_*.*
 scripts/verify_f1_f2_cross_repo_sync.*
 scripts/package_and_sync_raw_results.*
-scripts/auto_update_simulation_figures_and_github.*
 *backup*
 *snapshot*
 *sync*
