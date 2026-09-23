@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB-ORAN
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    isDefault: true
+    jsonData:
+      version: Flux
+      organization: oran-alliance
+      defaultBucket: oran_telemetry
+    secureJsonData:
+      token: oran_rdl_token_secret_key_2026_super_secure
+    editable: true

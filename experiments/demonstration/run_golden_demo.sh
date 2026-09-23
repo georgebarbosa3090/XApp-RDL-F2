@@ -84,16 +84,18 @@ tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m======================
 tmux send-keys -t "$SESSION_NAME:0.0" "if [ -d ~/ns3-oran-workspace/ns-3-oran ]; then cd ~/ns3-oran-workspace/ns-3-oran && ./ns3 run 'scenario_rdl_closed_loop_nori --simTime=60.0 --demoMode=realtime'; elif [ -d ~/workspace/ns-3-dev ]; then cd ~/workspace/ns-3-dev && ./ns3 run 'scenario_rdl_closed_loop_nori --simTime=60.0 --demoMode=realtime'; fi || '$PYTHON_CMD' -c 'import time; [print(f\"[ns-3 5G-LENA] t={t:.1f}s | gNB-1 | PRB={98.5 if (20<=t<27) else (30.0 if t<20 else 52.0):.1f}% | Delay={24.8 if (20<=t<27) else 0.82:.2f}ms | Power={30.0 if (20<=t<27) else (43.0 if t<20 else 37.0)}dBm\") or time.sleep(0.5) for t in [i*0.5 for i in range(120)]]'" C-m
 
 # -----------------------------------------------------------------------------
-# PANE 2 (Top-Right): 2 — E2/NORI (E2 Agent / E2SIM)
+# PANE 2 (Top-Right): 2 — E2/NORI (E2 Agent / InfluxDB / Grafana Telemetry)
 # -----------------------------------------------------------------------------
-tmux select-pane -t "$SESSION_NAME:0.2" -T "2 — E2/NORI (E2 Agent & Telemetry)"
+tmux select-pane -t "$SESSION_NAME:0.2" -T "2 — E2/NORI & InfluxDB Telemetry"
 tmux send-keys -t "$SESSION_NAME:0.2" "cd '$PROJECT_DIR' && clear" C-m
 tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m================================================================\033[0m'" C-m
-tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m[TERMINAL 2 - E2/NORI] E2 AGENT & E2SM INTERFACE PROTOCOL\033[0m'" C-m
+tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m[TERMINAL 2 - E2/NORI] E2 AGENT & INFLUXDB/GRAFANA STREAMER\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m* Ingestao periodica: RIC_INDICATION (mtype 12050 - ASN.1 APER)\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m* Atuacao em malha: RIC_CONTROL_REQUEST (12040) -> ACK (12041)\033[0m'" C-m
+tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m* Streaming simultaneo para InfluxDB (8086) e Grafana (3000)\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.2" "echo -e '\033[1;32m================================================================\033[0m'" C-m
-tmux send-keys -t "$SESSION_NAME:0.2" "'$PYTHON_CMD' -c 'import time; [print(f\"[E2-Agent] t={t:.1f}s | KPM Report #12050 sent | ASN.1: 1800040001... | \" + (\"DEGRADATION DETECTED\" if 20<=t<27 else \"GOLDEN STATE\")) or time.sleep(0.5) for t in [i*0.5 for i in range(120)]]'" C-m
+tmux send-keys -t "$SESSION_NAME:0.2" "'$PYTHON_CMD' '$PROJECT_DIR/deployments/telemetry/telemetry_influx_bridge.py'" C-m
+
 
 # -----------------------------------------------------------------------------
 # PANE 3 (Bottom-Left): 3 — Near-RT RIC (E2Term / RMR / H-RDL Core)

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: oran-influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=oran_admin_password_2026
+      - DOCKER_INFLUXDB_INIT_ORG=oran-alliance
+      - DOCKER_INFLUXDB_INIT_BUCKET=oran_telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=oran_rdl_token_secret_key_2026_super_secure
+      - DOCKER_INFLUXDB_INIT_RETENTION=7d
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - oran-telemetry-net
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: oran-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - influxdb
+    networks:
+      - oran-telemetry-net
+
+volumes:
+  influxdb_data:
+  grafana_data:
+
+networks:
+  oran-telemetry-net:
+    driver: bridge
