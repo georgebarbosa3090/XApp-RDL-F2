@@ -15,26 +15,36 @@ set -e
 SESSION_NAME="rdl-live-demo"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-# Ensure virtual environment exists or activate
-if [ -d "$PROJECT_DIR/.venv" ]; then
-    PYTHON_CMD="$PROJECT_DIR/.venv/bin/python"
-elif [ -d "$PROJECT_DIR/../.venv" ]; then
-    PYTHON_CMD="$PROJECT_DIR/../.venv/bin/python"
-else
+# Robust Python Executable Detection (prefer venv with packages, fallback to system python3)
+PYTHON_CMD=""
+for candidate in \
+    "/home/george/.venv-rdl/bin/python" \
+    "$PROJECT_DIR/.venv/bin/python" \
+    "$PROJECT_DIR/../.venv/bin/python" \
+    "$(command -v python3 2>/dev/null)" \
+    "$(command -v python 2>/dev/null)"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+        PYTHON_CMD="$candidate"
+        break
+    fi
+done
+
+if [ -z "$PYTHON_CMD" ]; then
     PYTHON_CMD="python3"
 fi
 
 # Check for tmux
 if ! command -v tmux &> /dev/null; then
-    echo "[!] Tmux não encontrado. Instalando tmux via apt..."
+    echo "[!] Tmux nao encontrado. Instalando tmux via apt..."
     sudo apt update && sudo apt install -y tmux
 fi
 
 # Kill previous session if running
 tmux kill-session -t "$SESSION_NAME" 2>/dev/null || true
 
-echo "[+] Inicializando Sessão Multi-Janela: $SESSION_NAME..."
-echo "[+] Diretório do Projeto: $PROJECT_DIR"
+echo "[+] Inicializando Sessao Multi-Janela: $SESSION_NAME..."
+echo "[+] Diretorio do Projeto: $PROJECT_DIR"
+echo "[+] Python Executable: $PYTHON_CMD"
 
 # 1. Create session with Pane 1 (ns-3 / RAN Simulator)
 tmux new-session -d -s "$SESSION_NAME" -n "RDL-Demo-Workspace"
@@ -63,7 +73,7 @@ tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m======================
 tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m[PANE 1] ns-3.48 / 5G-LENA v5.1 / NORI RAN SIMULATOR\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m[Step 1-2] 3GPP PRACH->RRC->NAS->PDU & E2 Telemetry\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m========================================================\033[0m'" C-m
-tmux send-keys -t "$SESSION_NAME:0.0" "if [ -f ~/workspace/ns-3-dev/ns3 ]; then cd ~/workspace/ns-3-dev && ./ns3 run scenario_rdl_closed_loop_nori; else '$PYTHON_CMD' -c 'import time, sys; [print(f\"[ns-3 5G-LENA] TTI={t*1000:.1f}ms | gNB-1 | UEs=3 | PRB_URLLC=30% | SINR=18.5dB | KPM Indication #12050 sent\") or time.sleep(0.5) for t in [i*0.001 for i in range(1, 1000)]]'; fi" C-m
+tmux send-keys -t "$SESSION_NAME:0.0" "if [ -f ~/workspace/ns-3-dev/ns3 ]; then cd ~/workspace/ns-3-dev && ./ns3 run scenario_rdl_closed_loop_nori; elif [ -f ~/ns3-oran-workspace/ns-3-oran/ns3 ]; then cd ~/ns3-oran-workspace/ns-3-oran && ./ns3 run scenario_rdl_closed_loop_nori; else '$PYTHON_CMD' -c 'import time, sys; [print(f\"[ns-3 5G-LENA] TTI={t*1000:.1f}ms | gNB-1 | UEs=3 | PRB_URLLC=30% | SINR=18.5dB | KPM Indication #12050 sent\") or time.sleep(0.5) for t in [i*0.001 for i in range(1, 1000)]]'; fi" C-m
 
 # -----------------------------------------------------------------------------
 # Configure Pane 2: H-RDL / CA-RDL Near-RT RIC Core
@@ -104,5 +114,5 @@ tmux set-option -t "$SESSION_NAME" pane-border-status top
 tmux set-option -t "$SESSION_NAME" pane-border-format " [#{pane_index}: #{pane_title}] "
 
 # Attach to session
-echo "[+] Anexando à sessão Tmux multi-janelas..."
+echo "[+] Anexando a sessao Tmux multi-janelas..."
 tmux attach-session -t "$SESSION_NAME"
