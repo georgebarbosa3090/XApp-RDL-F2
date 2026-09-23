@@ -1,10 +1,10 @@
-# 🐧 Guia Completo de Execução em WSL2 — k3d, Rancher, Near-RT RIC & ns-3 5G-LENA
+# Guia Completo de Execução em WSL2 — k3d, Rancher, Near-RT RIC & ns-3 5G-LENA
 
 Este guia detalha o fluxo completo para executar a infraestrutura O-RAN real dentro do **WSL2 (Ubuntu)**, alternando entre a avaliação **Baseline (sem RDL)** e **Governança (com H-RDL e CA-RDL)** em malha fechada com o **ns-3.48 / 5G-LENA v5.1 / NORI**.
 
 ---
 
-## 📋 Pré-requisitos no WSL2
+## Pré-requisitos no WSL2
 
 1. **Docker Daemon ativo**:
 ```bash
@@ -14,7 +14,7 @@ sudo service docker status || sudo service docker start
 
 ---
 
-## 🚀 Etapa 1: Provisionar Cluster k3d + Near-RT RIC
+## Etapa 1: Provisionar Cluster k3d + Near-RT RIC
 
 ### A. Modo Baseline (3 Reference xApps SEM RDL)
 Para medir o desempenho da rede **sem a camada de governança RDL** (para baseline comparativo):
@@ -48,7 +48,7 @@ bash scripts/deploy_helm.sh --with-rdl
 
 ---
 
-## 📡 Etapa 2: Registro no Rancher (Opcional)
+## Etapa 2: Registro no Rancher (Opcional)
 Se você estiver utilizando a interface web do **Rancher** para monitoramento visual:
 ```bash
 bash scripts/register_rancher.sh
@@ -56,7 +56,7 @@ bash scripts/register_rancher.sh
 
 ---
 
-## 🌐 Etapa 3: Preparar o Simulador ns-3 + 5G-LENA + Módulo NORI
+## Etapa 3: Preparar o Simulador ns-3 + 5G-LENA + Módulo NORI
 
 Execute o script de compilação automatizado para baixar o `ns-3.48`, o módulo `5G-LENA (nr v5.1)` e a extensão `NORI E2SIM`:
 ```bash
@@ -66,7 +66,7 @@ bash scripts/setup_ns3.sh
 
 ---
 
-## 🔬 Etapa 4: Executar os Cenários de Co-Simulação E2AP / E2SM
+## Etapa 4: Executar os Cenários de Co-Simulação E2AP / E2SM
 
 Acesse o diretório do ns-3 compilado (padrão: `~/workspace/ns-3-dev` ou `~/ns-3-dev`) e execute os cenários:
 
@@ -89,7 +89,7 @@ cd ~/workspace/ns-3-dev
 
 ---
 
-## 📊 Etapa 5: Coleta de Resultados & Manifesto SHA-256
+## Etapa 5: Coleta de Resultados & Manifesto SHA-256
 
 Após concluir a rodada de simulação, execute o validador de proveniência para atualizar o firewall editorial:
 
@@ -108,7 +108,7 @@ python3 scripts/validate_ml_provenance.py
 
 ---
 
-## 🔍 Comandos de Diagnóstico Úteis
+## Comandos de Diagnóstico Úteis
 
 - **Verificar Pods em execução**:
 ```bash

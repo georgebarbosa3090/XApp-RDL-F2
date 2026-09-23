@@ -87,10 +87,10 @@ Digite sua opção [1-4] (Padrão: 1):
 
 | Cenário | Comando de Execução | Foco Científico | Nível Cognitivo |
 | :--- | :--- | :--- | :---: |
-| **Cenário A** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s a` | ⚔️ **Conflict Storm**: 3 xApps disputando cotas de PRB e potência celular. Conflitos C1, C2 e C3. | **Nível 3 (Safe-MAPPO)** |
-| **Cenário B** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s b` | ⚡ **Preempção URLLC & dApp**: Two-Tier AI (Near-RT RIC $\leftrightarrow$ O-DU $< 1\text{ms}$ TTI). Conflito C5 e Bounding Box $\Omega_{\text{dApp}}$. | **Nível 2 (NDT / Utilidade)** |
-| **Cenário C** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s c` | 🔄 **Flapping Temporal**: Oscilação *ping-pong* entre Handover A3 e Tilt de Antena. Lockout de $5.0\text{ s}$ no Grafo. | **Nível 1 (Heurístico)** |
-| **Todos** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s all` | 📊 **Execução Sequencial (A $\to$ B $\to$ C)** com validação e certificação dos 4-Gates. | **Multi-Tier** |
+| **Cenário A** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s a` | **Conflict Storm**: 3 xApps disputando cotas de PRB e potência celular. Conflitos C1, C2 e C3. | **Nível 3 (Safe-MAPPO)** |
+| **Cenário B** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s b` | **Preempção URLLC & dApp**: Two-Tier AI (Near-RT RIC $\leftrightarrow$ O-DU $< 1\text{ms}$ TTI). Conflito C5 e Bounding Box $\Omega_{\text{dApp}}$. | **Nível 2 (NDT / Utilidade)** |
+| **Cenário C** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s c` | **Flapping Temporal**: Oscilação *ping-pong* entre Handover A3 e Tilt de Antena. Lockout de $5.0\text{ s}$ no Grafo. | **Nível 1 (Heurístico)** |
+| **Todos** | `python3 experiments/demonstration/run_rich_terminal_inspector.py -s all` | **Execução Sequencial (A $\to$ B $\to$ C)** com validação e certificação dos 4-Gates. | **Multi-Tier** |
 
 #### Flags Úteis da CLI:
 * `--no-stream`: Executa apenas a inspeção imediata no terminal sem aguardar o streaming de telemetria contínua.
@@ -103,7 +103,7 @@ Digite sua opção [1-4] (Padrão: 1):
 
 Enquanto o inspetor roda no terminal, os dados de rádio e as decisões cognitivas são persistidos no **InfluxDB** e renderizados no **Grafana**.
 
-### 📊 Grafana Dashboard ([http://localhost:3000](http://localhost:3000))
+### Grafana Dashboard ([http://localhost:3000](http://localhost:3000))
 
 * **Link Direto do Painel**: [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop)
 * **Usuário**: `admin` | **Senha**: `admin`
@@ -118,7 +118,7 @@ Enquanto o inspetor roda no terminal, os dados de rádio e as decisões cognitiv
 
 ---
 
-### 🗄️ InfluxDB v2.7 ([http://localhost:8086](http://localhost:8086))
+### InfluxDB v2.7 ([http://localhost:8086](http://localhost:8086))
 
 * **Dashboard Nativo**: [http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000](http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000)
 * **Username**: `admin` | **Password**: `oran_admin_password_2026`
@@ -135,7 +135,7 @@ python3 deployments/telemetry/setup_influxdb_dashboard.py
 
 A **Fase 1 (H-RDL)** do projeto foca em controle determinístico de ultra-baixa latência com base em regras estritas de prioridade, *Safety Guards* físicos (3GPP TS 38.104) e janela de agregação sincronizada fixa de $200.0\text{ ms}$.
 
-### 📐 Schema de Telemetria da Fase 1 (`hrdl_fase1` no InfluxDB)
+### Schema de Telemetria da Fase 1 (`hrdl_fase1` no InfluxDB)
 
 A telemetria da Fase 1 é ingerida na medição `hrdl_fase1` via Influx Line Protocol:
 
@@ -155,7 +155,7 @@ hrdl_fase1,phase=phase1_deterministic,paradigm=heuristic tvs_priority_score=0.90
 
 ---
 
-### ⚖️ Comparativo de Observabilidade: Fase 1 (H-RDL) vs Fase 2 (CA-RDL)
+### Comparativo de Observabilidade: Fase 1 (H-RDL) vs Fase 2 (CA-RDL)
 
 | Dimensão de Observabilidade | Fase 1: H-RDL (Determinística) | Fase 2: CA-RDL (Cognitiva Safe-MAPPO) |
 | :--- | :--- | :--- |
@@ -168,13 +168,13 @@ hrdl_fase1,phase=phase1_deterministic,paradigm=heuristic tvs_priority_score=0.90
 
 ---
 
-### 📈 Painéis Grafana Dedicados à Fase 1 ([http://localhost:3000](http://localhost:3000))
+### Painéis Grafana Dedicados à Fase 1 ([http://localhost:3000](http://localhost:3000))
 
-No painel oficial Grafana (`/d/oran-rdl-closed-loop`), a linha dedicada **"⚡ Fase 1: H-RDL Determinística (Heurísticas TVS/EEVS & Decisão 0.103ms)"** exibe:
-1. **⚡ H-RDL Decision Latency**: Stat gauge medindo a latência instantânea de $0.103\text{ ms}$.
-2. **🛡️ H-RDL Safety Violations**: Indicador em verde absoluto (`0 violações`).
-3. **⚖️ H-RDL TVS Priority & Action Churn**: Gráfico temporal do escore TVS e da estabilidade de churn.
-4. **🔋 H-RDL EEVS Power Reduction**: Série temporal da atenuação controlada em dB.
+No painel oficial Grafana (`/d/oran-rdl-closed-loop`), a linha dedicada **"Fase 1: H-RDL Determinística (Heurísticas TVS/EEVS & Decisão 0.103ms)"** exibe:
+1. **H-RDL Decision Latency**: Stat gauge medindo a latência instantânea de $0.103\text{ ms}$.
+2. **H-RDL Safety Violations**: Indicador em verde absoluto (`0 violações`).
+3. **H-RDL TVS Priority & Action Churn**: Gráfico temporal do escore TVS e da estabilidade de churn.
+4. **H-RDL EEVS Power Reduction**: Série temporal da atenuação controlada em dB.
 
 #### Queries Flux Nativas da Fase 1:
 ```flux

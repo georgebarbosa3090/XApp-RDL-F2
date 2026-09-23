@@ -16,14 +16,14 @@
 
 | Protocolo / Interface | Versão Alvo (Fase 1) | Especificação O-RAN SC / WG3 | Módulo Python / Codec | Variante PER | Status Técnico e Validação |
 | :--- | :---: | :--- | :--- | :---: | :--- |
-| **E2AP** | `v02.03` | O-RAN.WG3.E2AP-v02.03 | `src/e2/e2ap/pdu.py` | Unaligned PER (APER) | 🟢 PDU Canônica (`InitiatingMessage` / `Outcome` com `ProtocolIEs`) |
-| **E2SM-KPM** | `v03.00` | O-RAN.WG3.E2SM-KPM-v03.00 | `src/e2/kpm/` | Unaligned PER (APER) | 🟢 Codec APER Estrutural / 🟡 Interoperabilidade E2 Node em Validação |
-| **E2SM-RC** | `v01.03` | O-RAN.WG3.E2SM-RC-v01.03 | `src/e2/rc/` | Unaligned PER (APER) | 🟢 Header + Message + `RanFunctionCapabilityRegistry` / 🟡 Interoperabilidade |
-| **RMR** | `v4.9.4+` | O-RAN SC `ric-plt/lib/rmr` | `ricxappframe` / SI95 | N/A (TCP/IPC) | 🟢 Integrado nativamente no ciclo de vida xApp |
-| **SDL (DBAAS)** | Redis 6/7 | O-RAN SC `ric-plt/sdl` | `redis-py` / SDL C++ | N/A | 🟢 Suportado (Redis Cluster e Standalone) |
-| **E2 Node (NORI)** | Commit `lasseufpa/nori` | SBrT 2025 / ns-O-RAN | C++20 / SCTP E2AP v02.03 | APER ASN1C | 🟢 Cenários Closed-Loop Prontos / 🟡 Testes em Ambiente Real |
-| **5G RAN Simulator** | 5G-LENA v5.1 | 3GPP Rel 16/17 NR | ns-3.48 / CMake / Ninja | N/A | 🟢 Modelagem analítica Shannon, M/G/1 e Earth Model |
-| **Infraestrutura** | Blueprint v3 | OpenRAN@Brasil (LABORA/UFG) | Kubernetes 1.28+ / k3d / Rancher | N/A | 🟢 Manifestos `deploy/openran-br-v3/` para namespace `ricxapp` |
+| **E2AP** | `v02.03` | O-RAN.WG3.E2AP-v02.03 | `src/e2/e2ap/pdu.py` | Unaligned PER (APER) | [CONFORME] PDU Canônica (`InitiatingMessage` / `Outcome` com `ProtocolIEs`) |
+| **E2SM-KPM** | `v03.00` | O-RAN.WG3.E2SM-KPM-v03.00 | `src/e2/kpm/` | Unaligned PER (APER) | [CONFORME] Codec APER Estrutural / [EM VALIDACAO] Interoperabilidade E2 Node em Validação |
+| **E2SM-RC** | `v01.03` | O-RAN.WG3.E2SM-RC-v01.03 | `src/e2/rc/` | Unaligned PER (APER) | [CONFORME] Header + Message + `RanFunctionCapabilityRegistry` / [EM VALIDACAO] Interoperabilidade |
+| **RMR** | `v4.9.4+` | O-RAN SC `ric-plt/lib/rmr` | `ricxappframe` / SI95 | N/A (TCP/IPC) | [CONFORME] Integrado nativamente no ciclo de vida xApp |
+| **SDL (DBAAS)** | Redis 6/7 | O-RAN SC `ric-plt/sdl` | `redis-py` / SDL C++ | N/A | [CONFORME] Suportado (Redis Cluster e Standalone) |
+| **E2 Node (NORI)** | Commit `lasseufpa/nori` | SBrT 2025 / ns-O-RAN | C++20 / SCTP E2AP v02.03 | APER ASN1C | [CONFORME] Cenários Closed-Loop Prontos / [EM VALIDACAO] Testes em Ambiente Real |
+| **5G RAN Simulator** | 5G-LENA v5.1 | 3GPP Rel 16/17 NR | ns-3.48 / CMake / Ninja | N/A | [CONFORME] Modelagem analítica Shannon, M/G/1 e Earth Model |
+| **Infraestrutura** | Blueprint v3 | OpenRAN@Brasil (LABORA/UFG) | Kubernetes 1.28+ / k3d / Rancher | N/A | [CONFORME] Manifestos `deploy/openran-br-v3/` para namespace `ricxapp` |
 
 ---
 

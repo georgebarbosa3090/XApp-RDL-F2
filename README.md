@@ -16,7 +16,7 @@
 
 ---
 
-### 🗺️ Navegação Multi-Fases do Projeto RDL (Resource and Decision Layer)
+### Navegação Multi-Fases do Projeto RDL (Resource and Decision Layer)
 
 | Fase do Projeto | Descrição e Paradigma de Controle | Status de Implementação | Repositório Oficial |
 | :---: | :--- | :---: | :---: |
@@ -115,15 +115,15 @@ flowchart TD
 
 A plataforma disponibiliza observabilidade ponta a ponta integrada com telemetria física (`ns-3.48 / 5G-LENA v5.1` ou `srsRAN Project + Open5GS 5G SA`):
 
-* **💻 Inspetor Rico de Terminal:** [`experiments/demonstration/run_rich_terminal_inspector.py`](experiments/demonstration/run_rich_terminal_inspector.py)
+* **Inspetor Rico de Terminal:** [`experiments/demonstration/run_rich_terminal_inspector.py`](experiments/demonstration/run_rich_terminal_inspector.py)
   * Suporta execução interativa ou flags diretas (`-s a`, `-s b`, `-s c`, `-s all`, `-c`, `-d <segundos>`).
   * Renderiza os 8 estágios do ciclo fechado, decodifica ASN.1 APER (KPM/RC), desenha o Grafo de Conhecimento e exibe métricas comparativas H-RDL vs CA-RDL.
-* **📊 Grafana Dashboard:** [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) (`admin`/`admin`)
+* **Grafana Dashboard:** [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) (`admin`/`admin`)
   * Linha dedicada para **Fase 1 (H-RDL Determinística)**: Latência de $0.103\text{ ms}$, Violações de Safety Guard ($0$), Dinâmica TVS vs EEVS e Action Churn.
   * Linha de **Fase 2 (CA-RDL)**: FSM Closed-Loop, Safe-MAPPO, Conflitos C1-C5, Pareto Score ($0.942$) e Envelopes dApp ($< 1\text{ms}$).
-* **🗄️ InfluxDB v2.7:** [http://localhost:8086](http://localhost:8086) (Bucket: `oran_telemetry` | Token: `oran_rdl_token_secret_key_2026_super_secure`).
+* **InfluxDB v2.7:** [http://localhost:8086](http://localhost:8086) (Bucket: `oran_telemetry` | Token: `oran_rdl_token_secret_key_2026_super_secure`).
   * Ingestão nativa de medições `hrdl_fase1`, `ran_kpi`, `rdl_decision` e `rdl_conflicts`.
-* **📖 Guia Completo de Demonstração & Telemetria:** Consulte [`experiments/demonstration/README.md`](experiments/demonstration/README.md).
+* **Guia Completo de Demonstração & Telemetria:** Consulte [`experiments/demonstration/README.md`](experiments/demonstration/README.md).
 
 ---
 
@@ -238,9 +238,9 @@ python3 experiments/demonstration/run_rich_terminal_inspector.py -s a
 ```
 
 **Painéis de Observabilidade Disponíveis:**
-* 📊 **Grafana Live Closed-Loop**: [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) *(User: `admin` / Pass: `admin`)*
-* 🗄️ **InfluxDB Dashboard Nativo**: [http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000](http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000) *(User: `admin` / Pass: `oran_admin_password_2026`, Org: `oran-alliance`, Bucket: `oran_telemetry`)*
-* 📖 **Guia Completo de Demonstração**: [`experiments/demonstration/README.md`](experiments/demonstration/README.md)
+* **Grafana Live Closed-Loop**: [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) *(User: `admin` / Pass: `admin`)*
+* **InfluxDB Dashboard Nativo**: [http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000](http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000) *(User: `admin` / Pass: `oran_admin_password_2026`, Org: `oran-alliance`, Bucket: `oran_telemetry`)*
+* **Guia Completo de Demonstração**: [`experiments/demonstration/README.md`](experiments/demonstration/README.md)
 
 ---
 

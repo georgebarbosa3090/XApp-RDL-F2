@@ -9,7 +9,7 @@
 
 ---
 
-## 📚 Estrutura Consolidada da Documentação
+## Estrutura Consolidada da Documentação
 
 A documentação do projeto foi consolidada em **7 volumes canônicos**, eliminando redundâncias e estabelecendo uma fonte única e autoritativa de verdade técnica e científica:
 
@@ -30,7 +30,7 @@ docs/
 
 ---
 
-## 🧭 Guia de Leitura por Perfil de Atuação
+## Guia de Leitura por Perfil de Atuação
 
 | Perfil de Interesse | Volumes Recomendados | Objetivo Principal |
 | :--- | :--- | :--- |
@@ -41,7 +41,7 @@ docs/
 
 ---
 
-## 🚀 Resumo Executivo dos Volumes
+## Resumo Executivo dos Volumes
 
 ### [Volume 01: Arquitetura, Módulos Core e Modelagem Matemática](01_arquitetura_e_modelagem.md)
 Apresenta o design da xApp RDL sob Clean Architecture / DDD, os agentes especialistas (`PerceptionAgent`, `ReasoningAgent`, `RefinementAgent`), modelos analíticos físicos de rádio (Shannon com calibração 3GPP, filas $M/G/1$, consumo Earth Project) e formulação CMDP / Safe-MAPPO com *Safety Guards* invariantes.
