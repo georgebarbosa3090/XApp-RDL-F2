@@ -215,6 +215,19 @@ pytest tests/ -v
 python -m src.orchestration.decision_engine --scenario scenario_1_eevs
 ```
 
+### 6.3 Suíte de Demonstração em Tempo Real & Observabilidade (Terminal, Grafana & InfluxDB)
+Para executar a demonstração interativa dos 8 estágios canônicos com inspeção ASN.1 APER, grafos em ASCII e streaming ao vivo:
+
+```bash
+# Execução do Inspetor Rico no Terminal (Menu interativo ou flags -s a, -s b, -s c, -s all):
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s a
+```
+
+**Painéis de Observabilidade Disponíveis:**
+* 📊 **Grafana Live Closed-Loop**: [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) *(User: `admin` / Pass: `admin`)*
+* 🗄️ **InfluxDB Dashboard Nativo**: [http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000](http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000) *(User: `admin` / Pass: `oran_admin_password_2026`, Org: `oran-alliance`, Bucket: `oran_telemetry`)*
+* 📖 **Guia Completo de Demonstração**: [`experiments/demonstration/README.md`](experiments/demonstration/README.md)
+
 ---
 
 ## 7. Informações Acadêmicas e Governança
