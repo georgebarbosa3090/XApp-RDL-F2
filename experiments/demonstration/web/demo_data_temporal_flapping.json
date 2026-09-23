@@ -9,7 +9,7 @@
     {
       "stage_id": 1,
       "stage_name": "1. Registro de UEs & Setup de Canal 5G (PRACH -> RRC -> NAS -> PDU -> E2)",
-      "timestamp_ms": 1790164991509.7002,
+      "timestamp_ms": 1790165480016.3333,
       "duration_ms": 45.8,
       "status": "COMPLETED",
       "details": {
@@ -45,7 +45,7 @@
     {
       "stage_id": 2,
       "stage_name": "2. Ingestão de Telemetria E2SM-KPM (Gate 1 - ASN.1 APER Indication)",
-      "timestamp_ms": 1790164991509.7002,
+      "timestamp_ms": 1790165480016.3333,
       "duration_ms": 8.2,
       "status": "COMPLETED",
       "details": {
@@ -146,8 +146,8 @@
     {
       "stage_id": 3,
       "stage_name": "3. Janela de Agregação de Propostas das xApps (200 ms)",
-      "timestamp_ms": 1790164991509.7002,
-      "duration_ms": 12.5,
+      "timestamp_ms": 1790165480016.8738,
+      "duration_ms": 13.040494918823242,
       "status": "COMPLETED",
       "details": {
         "aggregation_window_ms": 200.0,
@@ -219,8 +219,8 @@
     {
       "stage_id": 4,
       "stage_name": "4. Ativação do Knowledge Graph Dinâmico (Topologia & Relações Heterogêneas)",
-      "timestamp_ms": 1790164991510.2278,
-      "duration_ms": 15.327381896972657,
+      "timestamp_ms": 1790165480016.8738,
+      "duration_ms": 14.8,
       "status": "COMPLETED",
       "details": {
         "nodes": [
@@ -319,7 +319,7 @@
     {
       "stage_id": 5,
       "stage_name": "5. Detecção & Classificação Formal de Conflitos (C1-C5 e Multi-Tier)",
-      "timestamp_ms": 1790164991510.2278,
+      "timestamp_ms": 1790165480016.8738,
       "duration_ms": 9.6,
       "status": "COMPLETED",
       "details": {
@@ -345,7 +345,7 @@
     {
       "stage_id": 6,
       "stage_name": "6. Refinamento Cognitivo Escalonado (H-RDL / CA-RDL)",
-      "timestamp_ms": 1790164991510.2278,
+      "timestamp_ms": 1790165480016.8738,
       "duration_ms": 14.39,
       "status": "COMPLETED",
       "details": {
@@ -365,8 +365,8 @@
     {
       "stage_id": 7,
       "stage_name": "7. Validação de Safety Guard & Envelopes de Tempo Real dApp (nGRG-RR-2024-10)",
-      "timestamp_ms": 1790164991510.2278,
-      "duration_ms": 6.4,
+      "timestamp_ms": 1790165480018.7944,
+      "duration_ms": 8.320700073242188,
       "status": "COMPLETED",
       "details": {
         "safety_guard_all_passed": true,
@@ -425,7 +425,7 @@
     {
       "stage_id": 8,
       "stage_name": "8. Emissão de Controle E2SM-RC & Convergência RAN em Ciclo Fechado (Gate 3/4)",
-      "timestamp_ms": 1790164991510.2278,
+      "timestamp_ms": 1790165480018.7944,
       "duration_ms": 12.8,
       "status": "COMPLETED",
       "details": {

@@ -1,40 +1,52 @@
 {
   "scenario": {
-    "id": "scenario_b_urllc_dapp",
-    "title": "Cenário B: Preempção Rápida URLLC & Envelopes dApp Multi-Tier",
-    "subtitle": "Controle em Tempo Real (< 1ms TTI) em O-DU sob Governança Near-RT (nGRG-RR-2024-10)",
-    "description": "Demonstração do modelo Two-Tier AI e hierarquia de controle O-RAN: o Near-RT RIC (CA-RDL) projeta envelopes de segurança Omega_dApp para o O-DU, permitindo que a dApp execute preempção e ajuste de feixe em microsegundos durante o TTI sem violar a estabilidade macro da rede."
+    "id": "scenario_a_conflict_storm",
+    "title": "Cenário A: Tempestade de Conflitos (Conflict Storm - 3 xApps)",
+    "subtitle": "Arbitragem Concorrente: QoS Slicing vs. Energy-Saving vs. Traffic-Steering",
+    "description": "Três xApps com objetivos concorrentes solicitam modificações simultâneas no gNB-1: a xSlice demanda +35% de PRB para URLLC, a xEnergy demanda corte de 13 dBm na potência e redução de PRBs, e a xTS tenta forçar handover de UEs de alta prioridade. Demonstra a ativação do Knowledge Graph e a escalada do H-RDL até o Nível 3 (Safe-MAPPO)."
   },
   "stages": [
     {
       "stage_id": 1,
       "stage_name": "1. Registro de UEs & Setup de Canal 5G (PRACH -> RRC -> NAS -> PDU -> E2)",
-      "timestamp_ms": 1790165479999.1643,
+      "timestamp_ms": 1790165480027.8025,
       "duration_ms": 45.8,
       "status": "COMPLETED",
       "details": {
-        "total_ues_registered": 2,
+        "total_ues_registered": 3,
         "ues": [
           {
-            "ue_id": "UE-201",
-            "imsi": "001010123456201",
-            "rnti": 201,
+            "ue_id": "UE-101",
+            "imsi": "001010123456001",
+            "rnti": 101,
             "slice_id": "Slice-URLLC",
             "service_type": "URLLC",
-            "sinr_db": 16.0,
-            "buffer_kb": 850.0,
+            "sinr_db": 18.5,
+            "buffer_kb": 450.0,
             "target_gnb": "gNB-1",
             "state": "CONNECTED_PDU_ACTIVE",
             "registration_latency_ms": 45.8
           },
           {
-            "ue_id": "UE-202",
-            "imsi": "001010123456202",
-            "rnti": 202,
+            "ue_id": "UE-102",
+            "imsi": "001010123456002",
+            "rnti": 102,
             "slice_id": "Slice-eMBB",
             "service_type": "eMBB",
-            "sinr_db": 25.0,
-            "buffer_kb": 3000.0,
+            "sinr_db": 22.0,
+            "buffer_kb": 1200.0,
+            "target_gnb": "gNB-1",
+            "state": "CONNECTED_PDU_ACTIVE",
+            "registration_latency_ms": 45.8
+          },
+          {
+            "ue_id": "UE-103",
+            "imsi": "001010123456003",
+            "rnti": 103,
+            "slice_id": "Slice-mMTC",
+            "service_type": "mMTC",
+            "sinr_db": 14.0,
+            "buffer_kb": 80.0,
             "target_gnb": "gNB-1",
             "state": "CONNECTED_PDU_ACTIVE",
             "registration_latency_ms": 45.8
@@ -45,28 +57,37 @@
       "protocol_messages": [
         {
           "type": "3GPP_REGISTRATION_COMPLETE",
-          "ue_id": "UE-201",
-          "rnti": 201,
+          "ue_id": "UE-101",
+          "rnti": 101,
           "slice_id": "Slice-URLLC",
           "assigned_pdu_session_id": 1,
           "total_time_ms": 45.8,
-          "asn1_rrc_summary": "RRCSetupComplete (rnti=201, pduSession=1, qosFlowId=1)"
+          "asn1_rrc_summary": "RRCSetupComplete (rnti=101, pduSession=1, qosFlowId=1)"
         },
         {
           "type": "3GPP_REGISTRATION_COMPLETE",
-          "ue_id": "UE-202",
-          "rnti": 202,
+          "ue_id": "UE-102",
+          "rnti": 102,
           "slice_id": "Slice-eMBB",
           "assigned_pdu_session_id": 1,
           "total_time_ms": 45.8,
-          "asn1_rrc_summary": "RRCSetupComplete (rnti=202, pduSession=1, qosFlowId=1)"
+          "asn1_rrc_summary": "RRCSetupComplete (rnti=102, pduSession=1, qosFlowId=1)"
+        },
+        {
+          "type": "3GPP_REGISTRATION_COMPLETE",
+          "ue_id": "UE-103",
+          "rnti": 103,
+          "slice_id": "Slice-mMTC",
+          "assigned_pdu_session_id": 1,
+          "total_time_ms": 45.8,
+          "asn1_rrc_summary": "RRCSetupComplete (rnti=103, pduSession=1, qosFlowId=1)"
         }
       ]
     },
     {
       "stage_id": 2,
       "stage_name": "2. Ingestão de Telemetria E2SM-KPM (Gate 1 - ASN.1 APER Indication)",
-      "timestamp_ms": 1790165479999.1643,
+      "timestamp_ms": 1790165480027.8025,
       "duration_ms": 8.2,
       "status": "COMPLETED",
       "details": {
@@ -84,7 +105,7 @@
           "measurements": [
             {
               "slice_id": "Slice-URLLC",
-              "prb_usage_pct": 25.0,
+              "prb_usage_pct": 30.0,
               "dl_throughput_mbps": 42.5,
               "rlc_latency_ms": 1.4,
               "packet_drop_rate": 8e-05,
@@ -93,7 +114,7 @@
             },
             {
               "slice_id": "Slice-eMBB",
-              "prb_usage_pct": 75.0,
+              "prb_usage_pct": 50.0,
               "dl_throughput_mbps": 185.0,
               "rlc_latency_ms": 14.2,
               "packet_drop_rate": 0.0012,
@@ -102,7 +123,7 @@
             },
             {
               "slice_id": "Slice-mMTC",
-              "prb_usage_pct": 0.0,
+              "prb_usage_pct": 20.0,
               "dl_throughput_mbps": 8.0,
               "rlc_latency_ms": 48.0,
               "packet_drop_rate": 0.0001,
@@ -134,7 +155,7 @@
           "measurements": [
             {
               "slice_id": "Slice-URLLC",
-              "prb_usage_pct": 25.0,
+              "prb_usage_pct": 30.0,
               "dl_throughput_mbps": 42.5,
               "rlc_latency_ms": 1.4,
               "packet_drop_rate": 8e-05,
@@ -143,7 +164,7 @@
             },
             {
               "slice_id": "Slice-eMBB",
-              "prb_usage_pct": 75.0,
+              "prb_usage_pct": 50.0,
               "dl_throughput_mbps": 185.0,
               "rlc_latency_ms": 14.2,
               "packet_drop_rate": 0.0012,
@@ -152,7 +173,7 @@
             },
             {
               "slice_id": "Slice-mMTC",
-              "prb_usage_pct": 0.0,
+              "prb_usage_pct": 20.0,
               "dl_throughput_mbps": 8.0,
               "rlc_latency_ms": 48.0,
               "packet_drop_rate": 0.0001,
@@ -167,35 +188,47 @@
     {
       "stage_id": 3,
       "stage_name": "3. Janela de Agregação de Propostas das xApps (200 ms)",
-      "timestamp_ms": 1790165479999.1643,
+      "timestamp_ms": 1790165480027.8025,
       "duration_ms": 12.5,
       "status": "COMPLETED",
       "details": {
         "aggregation_window_ms": 200.0,
-        "proposals_count": 2,
+        "proposals_count": 3,
         "proposals": [
           {
             "xapp_id": "xApp-QoS-Slice",
-            "intent_type": "FAST_URLLC_ENVELOPE",
+            "intent_type": "SLA_PROTECTION_URLLC",
             "target_slice": "Slice-URLLC",
             "target_cell": "gNB-1",
             "proposed_rcp": "RRMPolicyRatio.PRB.Dedicated",
-            "proposed_value": 50.0,
+            "proposed_value": 65.0,
             "unit": "%",
             "priority": 1,
-            "rationale": "Estabelecimento de bounding box para dApp de escalonamento rápido no O-DU.",
+            "rationale": "Surto de tráfego crítico; buffer acumulado > 400KB requer elevação de PRBs dedicados de 30% para 65%.",
             "arrival_offset_ms": 12.0
           },
           {
             "xapp_id": "xApp-Energy-Saving",
-            "intent_type": "MODERATE_POWER_SAVING",
-            "target_slice": null,
+            "intent_type": "GREEN_RAN_POWER_REDUCTION",
+            "target_slice": "Slice-URLLC",
             "target_cell": "gNB-1",
             "proposed_rcp": "Cell.TxPower",
-            "proposed_value": 38.0,
+            "proposed_value": 30.0,
             "unit": "dBm",
+            "priority": 3,
+            "rationale": "Otimização de eficiência energética; redução de Tx Power de 43 dBm para 30 dBm para economia de 38% de consumo.",
+            "arrival_offset_ms": 36.0
+          },
+          {
+            "xapp_id": "xApp-Traffic-Steering",
+            "intent_type": "LOAD_BALANCING_HANDOVER",
+            "target_slice": "Slice-eMBB",
+            "target_cell": "gNB-1",
+            "proposed_rcp": "HO.A3Offset",
+            "proposed_value": -4.0,
+            "unit": "dB",
             "priority": 2,
-            "rationale": "Redução conservadora de 5 dBm mantendo margem segura para canal URLLC.",
+            "rationale": "Balanceamento de carga preventiva; forçar migração de UE-102 para gNB-2 para desobstruir célula local.",
             "arrival_offset_ms": 24.0
           }
         ]
@@ -207,14 +240,14 @@
           "xapp_id": "xApp-QoS-Slice",
           "payload": {
             "xapp_id": "xApp-QoS-Slice",
-            "intent_type": "FAST_URLLC_ENVELOPE",
+            "intent_type": "SLA_PROTECTION_URLLC",
             "target_slice": "Slice-URLLC",
             "target_cell": "gNB-1",
             "proposed_rcp": "RRMPolicyRatio.PRB.Dedicated",
-            "proposed_value": 50.0,
+            "proposed_value": 65.0,
             "unit": "%",
             "priority": 1,
-            "rationale": "Estabelecimento de bounding box para dApp de escalonamento rápido no O-DU.",
+            "rationale": "Surto de tráfego crítico; buffer acumulado > 400KB requer elevação de PRBs dedicados de 30% para 65%.",
             "arrival_offset_ms": 12.0
           }
         },
@@ -224,14 +257,31 @@
           "xapp_id": "xApp-Energy-Saving",
           "payload": {
             "xapp_id": "xApp-Energy-Saving",
-            "intent_type": "MODERATE_POWER_SAVING",
-            "target_slice": null,
+            "intent_type": "GREEN_RAN_POWER_REDUCTION",
+            "target_slice": "Slice-URLLC",
             "target_cell": "gNB-1",
             "proposed_rcp": "Cell.TxPower",
-            "proposed_value": 38.0,
+            "proposed_value": 30.0,
             "unit": "dBm",
+            "priority": 3,
+            "rationale": "Otimização de eficiência energética; redução de Tx Power de 43 dBm para 30 dBm para economia de 38% de consumo.",
+            "arrival_offset_ms": 36.0
+          }
+        },
+        {
+          "mtype": 12080,
+          "name": "XAPP_INTENT_PROPOSAL",
+          "xapp_id": "xApp-Traffic-Steering",
+          "payload": {
+            "xapp_id": "xApp-Traffic-Steering",
+            "intent_type": "LOAD_BALANCING_HANDOVER",
+            "target_slice": "Slice-eMBB",
+            "target_cell": "gNB-1",
+            "proposed_rcp": "HO.A3Offset",
+            "proposed_value": -4.0,
+            "unit": "dB",
             "priority": 2,
-            "rationale": "Redução conservadora de 5 dBm mantendo margem segura para canal URLLC.",
+            "rationale": "Balanceamento de carga preventiva; forçar migração de UE-102 para gNB-2 para desobstruir célula local.",
             "arrival_offset_ms": 24.0
           }
         }
@@ -240,8 +290,8 @@
     {
       "stage_id": 4,
       "stage_name": "4. Ativação do Knowledge Graph Dinâmico (Topologia & Relações Heterogêneas)",
-      "timestamp_ms": 1790165480003.3237,
-      "duration_ms": 18.95945053100586,
+      "timestamp_ms": 1790165480027.8025,
+      "duration_ms": 14.8,
       "status": "COMPLETED",
       "details": {
         "nodes": [
@@ -264,14 +314,26 @@
             "color": "#00ff9d"
           },
           {
-            "id": "UE-201",
-            "label": "UE-201 (URLLC)",
+            "id": "Slice-mMTC",
+            "label": "Slice-mMTC",
+            "type": "SLICE",
+            "color": "#00ff9d"
+          },
+          {
+            "id": "UE-101",
+            "label": "UE-101 (URLLC)",
             "type": "UE",
             "color": "#ffaa00"
           },
           {
-            "id": "UE-202",
-            "label": "UE-202 (eMBB)",
+            "id": "UE-102",
+            "label": "UE-102 (eMBB)",
+            "type": "UE",
+            "color": "#ffaa00"
+          },
+          {
+            "id": "UE-103",
+            "label": "UE-103 (mMTC)",
             "type": "UE",
             "color": "#ffaa00"
           },
@@ -284,6 +346,12 @@
           {
             "id": "xApp-Energy-Saving",
             "label": "xApp-Energy-Saving",
+            "type": "XAPP",
+            "color": "#bd00ff"
+          },
+          {
+            "id": "xApp-Traffic-Steering",
+            "label": "xApp-Traffic-Steering",
             "type": "XAPP",
             "color": "#bd00ff"
           },
@@ -314,14 +382,26 @@
             "weight": 1.0
           },
           {
-            "source": "UE-201",
+            "source": "gNB-1",
+            "target": "Slice-mMTC",
+            "relation": "hosts_slice",
+            "weight": 1.0
+          },
+          {
+            "source": "UE-101",
             "target": "Slice-URLLC",
             "relation": "attached_to",
             "weight": 1.0
           },
           {
-            "source": "UE-202",
+            "source": "UE-102",
             "target": "Slice-eMBB",
+            "relation": "attached_to",
+            "weight": 1.0
+          },
+          {
+            "source": "UE-103",
+            "target": "Slice-mMTC",
             "relation": "attached_to",
             "weight": 1.0
           },
@@ -333,7 +413,13 @@
           },
           {
             "source": "xApp-Energy-Saving",
-            "target": "gNB-1",
+            "target": "Slice-URLLC",
+            "relation": "controls_rcp",
+            "weight": 1.0
+          },
+          {
+            "source": "xApp-Traffic-Steering",
+            "target": "Slice-eMBB",
             "relation": "controls_rcp",
             "weight": 1.0
           },
@@ -364,23 +450,47 @@
     {
       "stage_id": 5,
       "stage_name": "5. Detecção & Classificação Formal de Conflitos (C1-C5 e Multi-Tier)",
-      "timestamp_ms": 1790165480003.3237,
+      "timestamp_ms": 1790165480027.8025,
       "duration_ms": 9.6,
       "status": "COMPLETED",
       "details": {
-        "conflicts_detected_count": 1,
+        "conflicts_detected_count": 3,
         "conflicts": [
           {
-            "conflict_id": "CONF-004",
-            "type": "MULTI_TIER_C5_CROSS_LAYER",
-            "severity": "HIGH",
+            "conflict_id": "CONF-001",
+            "type": "DIRECT_C1_PRB_CONTENTION",
+            "severity": "CRITICAL",
             "parties": [
               "xApp-QoS-Slice",
-              "dApp-O-DU-FastScheduler"
+              "xApp-Energy-Saving"
             ],
-            "rcp": "TTI_PRB_Preemption",
-            "description": "Disputa de controle entre envelope de Near-RT (xApp) e preempção sub-1ms de O-DU (dApp).",
-            "coupling_coefficient": 0.82
+            "rcp": "RRMPolicyRatio.PRB.Dedicated",
+            "description": "xSlice demanda +35% de PRBs enquanto xEnergy requer teto restrito de alocação de rádio.",
+            "coupling_coefficient": 0.89
+          },
+          {
+            "conflict_id": "CONF-002",
+            "type": "INDIRECT_C2_POWER_VS_QOS",
+            "severity": "HIGH",
+            "parties": [
+              "xApp-Energy-Saving",
+              "xApp-QoS-Slice"
+            ],
+            "rcp": "Cell.TxPower vs URLLC_SINR",
+            "description": "Corte de 13 dBm degrada cobertura de borda e viola o SLA de latência URLLC (< 1.5ms).",
+            "coupling_coefficient": 0.76
+          },
+          {
+            "conflict_id": "CONF-003",
+            "type": "IMPLICIT_HO_INTERFERENCE",
+            "severity": "MEDIUM",
+            "parties": [
+              "xApp-Traffic-Steering",
+              "xApp-QoS-Slice"
+            ],
+            "rcp": "HO.A3Offset",
+            "description": "Handover forçado de UE-102 causa redistribuição de canal e flutuações de interferência.",
+            "coupling_coefficient": 0.54
           }
         ],
         "max_severity": "CRITICAL"
@@ -390,16 +500,17 @@
     {
       "stage_id": 6,
       "stage_name": "6. Refinamento Cognitivo Escalonado (H-RDL / CA-RDL)",
-      "timestamp_ms": 1790165480003.3237,
-      "duration_ms": 14.39,
+      "timestamp_ms": 1790165480028.8027,
+      "duration_ms": 15.390165939331055,
       "status": "COMPLETED",
       "details": {
-        "tier_selected": 2,
-        "tier_name": "NÍVEL 2: Utilidade Contextual & Network Digital Twin (NDT)",
-        "decision_summary": "Otimização multiobjetivo baseada em gradiente de utilidade e predição NDT em janela rápida.",
+        "tier_selected": 3,
+        "tier_name": "NÍVEL 3: Safe-MAPPO (Cooperative Multi-Agent RL com Action Masking)",
+        "decision_summary": "Convergência de política conjunta Pareto-ótima via CTDE e multiplicadores Lagrangianos para garantia de SLA.",
         "weight_distribution": {
-          "xApp-QoS-Slice": 0.7,
-          "xApp-Energy-Saving": 0.3
+          "xApp-QoS-Slice": 0.58,
+          "xApp-Energy-Saving": 0.28,
+          "xApp-Traffic-Steering": 0.14
         },
         "pareto_optimality_score": 0.942,
         "sla_violation_probability": 0.0001,
@@ -410,7 +521,7 @@
     {
       "stage_id": 7,
       "stage_name": "7. Validação de Safety Guard & Envelopes de Tempo Real dApp (nGRG-RR-2024-10)",
-      "timestamp_ms": 1790165480003.3237,
+      "timestamp_ms": 1790165480028.8027,
       "duration_ms": 6.4,
       "status": "COMPLETED",
       "details": {
@@ -470,7 +581,7 @@
     {
       "stage_id": 8,
       "stage_name": "8. Emissão de Controle E2SM-RC & Convergência RAN em Ciclo Fechado (Gate 3/4)",
-      "timestamp_ms": 1790165480003.3237,
+      "timestamp_ms": 1790165480028.8027,
       "duration_ms": 12.8,
       "status": "COMPLETED",
       "details": {
@@ -489,25 +600,37 @@
           },
           "registered_ues": [
             {
-              "ue_id": "UE-201",
-              "imsi": "001010123456201",
-              "rnti": 201,
+              "ue_id": "UE-101",
+              "imsi": "001010123456001",
+              "rnti": 101,
               "slice_id": "Slice-URLLC",
               "service_type": "URLLC",
-              "sinr_db": 16.0,
-              "buffer_kb": 850.0,
+              "sinr_db": 18.5,
+              "buffer_kb": 450.0,
               "target_gnb": "gNB-1",
               "state": "CONNECTED_PDU_ACTIVE",
               "registration_latency_ms": 45.8
             },
             {
-              "ue_id": "UE-202",
-              "imsi": "001010123456202",
-              "rnti": 202,
+              "ue_id": "UE-102",
+              "imsi": "001010123456002",
+              "rnti": 102,
               "slice_id": "Slice-eMBB",
               "service_type": "eMBB",
-              "sinr_db": 25.0,
-              "buffer_kb": 3000.0,
+              "sinr_db": 22.0,
+              "buffer_kb": 1200.0,
+              "target_gnb": "gNB-1",
+              "state": "CONNECTED_PDU_ACTIVE",
+              "registration_latency_ms": 45.8
+            },
+            {
+              "ue_id": "UE-103",
+              "imsi": "001010123456003",
+              "rnti": 103,
+              "slice_id": "Slice-mMTC",
+              "service_type": "mMTC",
+              "sinr_db": 14.0,
+              "buffer_kb": 80.0,
               "target_gnb": "gNB-1",
               "state": "CONNECTED_PDU_ACTIVE",
               "registration_latency_ms": 45.8
@@ -612,14 +735,26 @@
         "color": "#00ff9d"
       },
       {
-        "id": "UE-201",
-        "label": "UE-201 (URLLC)",
+        "id": "Slice-mMTC",
+        "label": "Slice-mMTC",
+        "type": "SLICE",
+        "color": "#00ff9d"
+      },
+      {
+        "id": "UE-101",
+        "label": "UE-101 (URLLC)",
         "type": "UE",
         "color": "#ffaa00"
       },
       {
-        "id": "UE-202",
-        "label": "UE-202 (eMBB)",
+        "id": "UE-102",
+        "label": "UE-102 (eMBB)",
+        "type": "UE",
+        "color": "#ffaa00"
+      },
+      {
+        "id": "UE-103",
+        "label": "UE-103 (mMTC)",
         "type": "UE",
         "color": "#ffaa00"
       },
@@ -632,6 +767,12 @@
       {
         "id": "xApp-Energy-Saving",
         "label": "xApp-Energy-Saving",
+        "type": "XAPP",
+        "color": "#bd00ff"
+      },
+      {
+        "id": "xApp-Traffic-Steering",
+        "label": "xApp-Traffic-Steering",
         "type": "XAPP",
         "color": "#bd00ff"
       },
@@ -662,14 +803,26 @@
         "weight": 1.0
       },
       {
-        "source": "UE-201",
+        "source": "gNB-1",
+        "target": "Slice-mMTC",
+        "relation": "hosts_slice",
+        "weight": 1.0
+      },
+      {
+        "source": "UE-101",
         "target": "Slice-URLLC",
         "relation": "attached_to",
         "weight": 1.0
       },
       {
-        "source": "UE-202",
+        "source": "UE-102",
         "target": "Slice-eMBB",
+        "relation": "attached_to",
+        "weight": 1.0
+      },
+      {
+        "source": "UE-103",
+        "target": "Slice-mMTC",
         "relation": "attached_to",
         "weight": 1.0
       },
@@ -681,7 +834,13 @@
       },
       {
         "source": "xApp-Energy-Saving",
-        "target": "gNB-1",
+        "target": "Slice-URLLC",
+        "relation": "controls_rcp",
+        "weight": 1.0
+      },
+      {
+        "source": "xApp-Traffic-Steering",
+        "target": "Slice-eMBB",
         "relation": "controls_rcp",
         "weight": 1.0
       },
@@ -717,25 +876,37 @@
     },
     "registered_ues": [
       {
-        "ue_id": "UE-201",
-        "imsi": "001010123456201",
-        "rnti": 201,
+        "ue_id": "UE-101",
+        "imsi": "001010123456001",
+        "rnti": 101,
         "slice_id": "Slice-URLLC",
         "service_type": "URLLC",
-        "sinr_db": 16.0,
-        "buffer_kb": 850.0,
+        "sinr_db": 18.5,
+        "buffer_kb": 450.0,
         "target_gnb": "gNB-1",
         "state": "CONNECTED_PDU_ACTIVE",
         "registration_latency_ms": 45.8
       },
       {
-        "ue_id": "UE-202",
-        "imsi": "001010123456202",
-        "rnti": 202,
+        "ue_id": "UE-102",
+        "imsi": "001010123456002",
+        "rnti": 102,
         "slice_id": "Slice-eMBB",
         "service_type": "eMBB",
-        "sinr_db": 25.0,
-        "buffer_kb": 3000.0,
+        "sinr_db": 22.0,
+        "buffer_kb": 1200.0,
+        "target_gnb": "gNB-1",
+        "state": "CONNECTED_PDU_ACTIVE",
+        "registration_latency_ms": 45.8
+      },
+      {
+        "ue_id": "UE-103",
+        "imsi": "001010123456003",
+        "rnti": 103,
+        "slice_id": "Slice-mMTC",
+        "service_type": "mMTC",
+        "sinr_db": 14.0,
+        "buffer_kb": 80.0,
         "target_gnb": "gNB-1",
         "state": "CONNECTED_PDU_ACTIVE",
         "registration_latency_ms": 45.8

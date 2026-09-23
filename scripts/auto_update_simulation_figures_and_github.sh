@@ -40,9 +40,9 @@ fi
 echo "[4/4] Sincronizando repositório e enviando commits para o GitHub..."
 if [ -d ".git" ]; then
     mkdir -p reports/figures docs/figures experiments/results/tables
-    git add -A || true
+    git add experiments/ results/ reports/figures/ docs/figures/ docs/
     
-    COMMIT_MSG="results(sim): auto-update figures, CSV tables and reports [$(date '+%Y-%m-%d %H:%M')]"
+    COMMIT_MSG="results(sim): auto-update 20 figures, CSV tables and reports [$(date '+%Y-%m-%d %H:%M')]"
     git commit -m "${COMMIT_MSG}" || echo "[INFO] Nenhuma alteração pendente para commit."
     
     echo "Executando git pull --rebase e git push origin HEAD:main..."
