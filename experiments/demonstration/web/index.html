@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H-RDL & CA-RDL Scientific Demonstration Dashboard | 5G-Adv/6G O-RAN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0c10;
+            --bg-surface: #12161f;
+            --bg-card: rgba(22, 27, 34, 0.85);
+            --bg-card-hover: rgba(30, 38, 48, 0.95);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(0, 240, 255, 0.3);
+            
+            --neon-cyan: #00f0ff;
+            --neon-green: #00ff9d;
+            --neon-purple: #bd00ff;
+            --neon-red: #ff0055;
+            --neon-amber: #ffaa00;
+            --neon-blue: #38bdf8;
+            
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'Fira Code', monospace;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-glow: 0 0 20px rgba(0, 240, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 240, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(189, 0, 255, 0.03) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        /* Top Bar Header */
+        header {
+            background: rgba(18, 22, 31, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge-live {
+            background: rgba(0, 255, 157, 0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 157, 0.4);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-live::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--neon-green);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.4; }
+        }
+
+        .title-text h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .title-text span {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-mono: var(--font-mono);
+        }
+
+        .gates-strip {
+            display: flex;
+            gap: 8px;
+        }
+
+        .gate-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .gate-pill.active {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 157, 0.1);
+            color: var(--neon-green);
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.2);
+        }
+
+        /* Controls & Scenarios Bar */
+        .controls-bar {
+            padding: 12px 24px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--neon-cyan);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+        }
+
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-ctrl {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-ctrl:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-ctrl.btn-primary {
+            background: var(--neon-cyan);
+            color: #000;
+            border: none;
+            font-weight: 700;
+        }
+
+        .btn-ctrl.btn-primary:hover {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+            transform: translateY(-1px);
+        }
+
+        /* Stepper Stage Navigation */
+        .stepper-container {
+            padding: 14px 24px;
+            background: rgba(10, 12, 16, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .stepper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 900px;
+            position: relative;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: var(--border-color);
+            z-index: 1;
+        }
+
+        .step-progress-fill {
+            position: absolute;
+            top: 14px;
+            left: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green));
+            z-index: 2;
+            transition: width 0.4s ease;
+        }
+
+        .step-item {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step-node {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg-surface);
+            border: 2px solid var(--border-color);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            transition: all 0.3s ease;
+        }
+
+        .step-item.active .step-node {
+            background: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+            transform: scale(1.15);
+        }
+
+        .step-item.completed .step-node {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            color: #000;
+        }
+
+        .step-label {
+            margin-top: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 105px;
+            line-height: 1.2;
+            transition: color 0.3s;
+        }
+
+        .step-item.active .step-label {
+            color: var(--neon-cyan);
+        }
+
+        .step-item.completed .step-label {
+            color: var(--text-primary);
+        }
+
+        /* Main Workspace Grid */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 360px;
+            gap: 16px;
+            padding: 16px 24px;
+            min-height: calc(100vh - 180px);
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 280px 1fr;
+            }
+            .sidebar-right {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Card Container Styles */
+        .dashboard-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title-icon {
+            color: var(--neon-cyan);
+        }
+
+        /* Stage Focus Banner */
+        .stage-banner {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(189, 0, 255, 0.08) 100%);
+            border: 1px solid var(--border-highlight);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .stage-badge {
+            align-self: flex-start;
+            background: rgba(0, 240, 255, 0.2);
+            color: var(--neon-cyan);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+
+        .stage-banner h2 {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+        }
+
+        .stage-banner p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Knowledge Graph Canvas */
+        .kg-container {
+            height: 380px;
+            position: relative;
+            background: #0d1117;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        #kgCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .kg-legend {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(18, 22, 31, 0.85);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 10px;
+            display: flex;
+            gap: 10px;
+            font-family: var(--font-mono);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Proposal Ingestion Window Cards */
+        .proposal-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--neon-purple);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .prop-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        .prop-rcp {
+            color: var(--neon-cyan);
+            font-weight: 600;
+        }
+
+        /* Conflict Alert Box */
+        .conflict-box {
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid rgba(255, 0, 85, 0.4);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .conflict-badge {
+            align-self: flex-start;
+            background: var(--neon-red);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Protocol Inspector Code Box */
+        .code-box {
+            background: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--neon-green);
+            overflow-x: auto;
+            max-height: 220px;
+            white-space: pre-wrap;
+        }
+
+        /* Metrics & KPI Stat Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .kpi-tile {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .kpi-value {
+            font-size: 18px;
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+        }
+
+        .kpi-value.good { color: var(--neon-green); }
+        .kpi-value.warn { color: var(--neon-amber); }
+        .kpi-value.alert { color: var(--neon-red); }
+
+        /* Progress Bar */
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.05);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--neon-cyan);
+            transition: width 0.4s ease;
+        }
+
+        /* Waterfall Latency Component */
+        .waterfall-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .waterfall-bar:last-child {
+            border-bottom: none;
+        }
+
+        .waterfall-name {
+            color: var(--text-secondary);
+        }
+
+        .waterfall-time {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--neon-cyan);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Bar -->
+    <header>
+        <div class="brand-title">
+            <div class="badge-live">LIVE RDL DEMO</div>
+            <div class="title-text">
+                <h1>H-RDL & CA-RDL Demonstration Platform</h1>
+                <span>5G-Advanced / 6G Open RAN Cognitive Orchestration Suite</span>
+            </div>
+        </div>
+
+        <div class="gates-strip">
+            <div class="gate-pill active" id="gate1">Gate 1: Real KPM ✓</div>
+            <div class="gate-pill active" id="gate2">Gate 2: Near-RT Latency (<50ms) ✓</div>
+            <div class="gate-pill active" id="gate3">Gate 3: Real RC Control & ACK ✓</div>
+            <div class="gate-pill active" id="gate4">Gate 4: Closed-Loop Converged ✓</div>
+        </div>
+    </header>
+
+    <!-- Controls & Scenario Selector -->
+    <div class="controls-bar">
+        <div class="scenario-tabs">
+            <button class="tab-btn active" onclick="loadScenario('scenario_a_conflict_storm')">Cenário A: Conflict Storm</button>
+            <button class="tab-btn" onclick="loadScenario('scenario_b_urllc_dapp')">Cenário B: URLLC & dApp Multi-Tier</button>
+            <button class="tab-btn" onclick="loadScenario('scenario_c_temporal_flapping')">Cenário C: Flapping Lockout</button>
+        </div>
+
+        <div class="playback-controls">
+            <button class="btn-ctrl" onclick="stepPrev()">◀ Anterior</button>
+            <button class="btn-ctrl btn-primary" id="playBtn" onclick="togglePlay()">▶ Executar Passo a Passo</button>
+            <button class="btn-ctrl" onclick="stepNext()">Próximo ▶</button>
+            <button class="btn-ctrl" onclick="resetDemo()">↺ Reiniciar</button>
+            <select class="btn-ctrl" id="speedSelect" onchange="changeSpeed(this.value)">
+                <option value="2000">Velocidade: 1x</option>
+                <option value="1000" selected>Velocidade: 2x</option>
+                <option value="400">Velocidade: 5x</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Stepper Navigation -->
+    <div class="stepper-container">
+        <div class="stepper" id="stepper">
+            <div class="step-progress-fill" id="stepProgress" style="width: 0%;"></div>
+            
+            <div class="step-item active" onclick="jumpToStage(1)">
+                <div class="step-node">1</div>
+                <div class="step-label">Registro UEs (3GPP)</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(2)">
+                <div class="step-node">2</div>
+                <div class="step-label">Telemetria E2SM-KPM</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(3)">
+                <div class="step-node">3</div>
+                <div class="step-label">Janela xApps (200ms)</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(4)">
+                <div class="step-node">4</div>
+                <div class="step-label">Knowledge Graph</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(5)">
+                <div class="step-node">5</div>
+                <div class="step-label">Detecção Conflitos</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(6)">
+                <div class="step-node">6</div>
+                <div class="step-label">Arbitragem CA-RDL</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(7)">
+                <div class="step-node">7</div>
+                <div class="step-label">Safety & Envelopes dApp</div>
+            </div>
+            <div class="step-item" onclick="jumpToStage(8)">
+                <div class="step-node">8</div>
+                <div class="step-label">Controle E2SM-RC & ACK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Grid -->
+    <div class="main-layout">
+        
+        <!-- Left Sidebar: Topology & UEs Status -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">◈</span> Topologia & UEs Conectados</span>
+                    <span id="ueCountBadge" style="font-size: 10px; background: rgba(0,240,255,0.1); color: var(--neon-cyan); padding: 1px 6px; border-radius: 4px;">3 UEs</span>
+                </div>
+                <div id="ueListContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Dynamically populated UEs -->
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">⏱</span> Decomposição de Latência RDL</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Ingestão ASN.1 KPM:</span>
+                        <span class="waterfall-time">1.82 ms</span>
+                    </div>
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Buffer Temporal Window:</span>
+                        <span class="waterfall-time">200.00 ms (Async)</span>
+                    </div>
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Atualização GraphSAGE KG:</span>
+                        <span class="waterfall-time">2.14 ms</span>
+                    </div>
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Detecção de Conflitos:</span>
+                        <span class="waterfall-time">1.45 ms</span>
+                    </div>
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Arbitragem Safe-MAPPO:</span>
+                        <span class="waterfall-time">6.25 ms</span>
+                    </div>
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Validação Safety Guard:</span>
+                        <span class="waterfall-time">0.84 ms</span>
+                    </div>
+                    <div class="waterfall-bar">
+                        <span class="waterfall-name">Codificação E2SM-RC:</span>
+                        <span class="waterfall-time">1.89 ms</span>
+                    </div>
+                    <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-weight: 700;">
+                        <span>Latência Total Decisão:</span>
+                        <span style="color: var(--neon-green); font-family: var(--font-mono);">14.39 ms &lt; 50 ms ✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Column: Active Stage Banner & Dynamic Knowledge Graph Canvas -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <!-- Dynamic Stage Explanation Banner -->
+            <div class="stage-banner" id="stageBanner">
+                <div class="stage-badge" id="stageBadge">ESTÁGIO 1 / 8</div>
+                <h2 id="stageTitle">1. Registro de UEs & Setup de Canal 5G</h2>
+                <p id="stageDesc">Execução da sequência canônica de 5 passos 3GPP: PRACH Msg1/Msg2, RRCSetupComplete, 5G-AKA Auth, PDU Session Binding e amarração de telemetria no nó E2.</p>
+            </div>
+
+            <!-- Dynamic Knowledge Graph Interactive Visualizer -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">🕸</span> Dynamic Knowledge Graph Visualizer (CA-RDL GraphSAGE)</span>
+                    <span style="font-size: 10px; color: var(--text-muted); font-mono: var(--font-mono);">Force-Directed Dynamic Canvas</span>
+                </div>
+                <div class="kg-container">
+                    <canvas id="kgCanvas"></canvas>
+                    <div class="kg-legend">
+                        <div class="legend-item"><div class="legend-color" style="background: #00f0ff;"></div> gNB Cell</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #00ff9d;"></div> Slice</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #ffaa00;"></div> UE</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #bd00ff;"></div> xApp</div>
+                        <div class="legend-item"><div class="legend-color" style="background: #ff0055;"></div> Conflict Edge</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protocol Message Inspector (ASN.1 APER / Hex) -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">⚡</span> Protocol Inspector (E2AP / E2SM-KPM / E2SM-RC)</span>
+                    <span id="protoMsgType" style="font-size: 11px; font-family: var(--font-mono); color: var(--neon-cyan);">RIC_INDICATION (mtype: 12050)</span>
+                </div>
+                <pre class="code-box" id="protocolCodeBox"></pre>
+            </div>
+
+        </div>
+
+        <!-- Right Sidebar: Proposals, Conflicts & Real-Time KPIs -->
+        <div class="sidebar-right" style="display: flex; flex-direction: column; gap: 16px;">
+            
+            <!-- Real-Time KPI Summary -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">📊</span> Telemetria de Rádio & KPIs</span>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Latência URLLC (RLC):</span>
+                        <span class="kpi-value good" id="kpiUrllcDelay">0.82 ms</span>
+                    </div>
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Throughput eMBB:</span>
+                        <span class="kpi-value" id="kpiEmbbTput">185 Mbps</span>
+                    </div>
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Potência Célula:</span>
+                        <span class="kpi-value warn" id="kpiTxPower">37.0 dBm</span>
+                    </div>
+                    <div class="kpi-tile">
+                        <span class="kpi-label">Consumo Energia:</span>
+                        <span class="kpi-value good" id="kpiEnergy">395 W (-17.7%)</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                        <span>Alocação Total de PRBs:</span>
+                        <span id="prbTotalPct" style="font-weight: 700; color: var(--neon-cyan);">90% / 100%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="prbProgressBar" style="width: 90%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proposals Ingestion Buffer -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">📥</span> Propostas xApps (Janela 200ms)</span>
+                </div>
+                <div id="proposalsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Dynamically populated proposals -->
+                </div>
+            </div>
+
+            <!-- Conflicts & Arbitrated Actions -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <span class="card-title"><span class="card-title-icon">🛡</span> Resolução de Conflitos & dApp</span>
+                </div>
+                <div id="conflictsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Dynamically populated conflicts -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Script Implementation -->
+    <script>
+        // Scenario Datasets
+        const SCENARIOS = {
+            "scenario_a_conflict_storm": {
+                title: "Cenário A: Tempestade de Conflitos (Conflict Storm - 3 xApps)",
+                subtitle: "Arbitragem Concorrente: QoS Slicing vs. Energy-Saving vs. Traffic-Steering",
+                desc: "Três xApps com objetivos concorrentes solicitam modificações simultâneas no gNB-1: a xSlice demanda +35% de PRB para URLLC, a xEnergy demanda corte de 13 dBm na potência, e a xTS tenta forçar handover. O CA-RDL ativa o Knowledge Graph e converge via Safe-MAPPO.",
+                ues: [
+                    { id: "UE-101", slice: "Slice-URLLC", type: "URLLC", sinr: "18.5 dB", buffer: "450 KB", status: "CONNECTED" },
+                    { id: "UE-102", slice: "Slice-eMBB", type: "eMBB", sinr: "22.0 dB", buffer: "1200 KB", status: "CONNECTED" },
+                    { id: "UE-103", slice: "Slice-mMTC", type: "mMTC", sinr: "14.0 dB", buffer: "80 KB", status: "CONNECTED" }
+                ],
+                proposals: [
+                    { xapp: "xApp-QoS-Slice", rcp: "PRB Dedicated", val: "65%", prio: 1, rationale: "Surto de tráfego crítico; buffer > 400KB requer elevação de PRB de 30% para 65%." },
+                    { xapp: "xApp-Energy-Saving", rcp: "Cell TxPower", val: "30 dBm", prio: 3, rationale: "Otimização de consumo; redução de 43 dBm para 30 dBm (-38% W)." },
+                    { xapp: "xApp-Traffic-Steering", rcp: "HO A3-Offset", val: "-4 dB", prio: 2, rationale: "Balanceamento de carga preventivo descarregando UE-102 para gNB-2." }
+                ],
+                conflicts: [
+                    { id: "CONF-001", type: "DIRECT_C1", name: "Disputa Direta de PRB", desc: "xSlice demanda 65% PRBs enquanto xEnergy impõe teto restritivo de alocação de rádio.", sev: "CRITICAL" },
+                    { id: "CONF-002", type: "INDIRECT_C2", name: "Conflito Indireto Potência vs QoS", desc: "Corte de 13 dBm degrada cobertura de borda e viola o SLA de latência URLLC (< 1.5ms).", sev: "HIGH" }
+                ],
+                arbitration: {
+                    tier: "Nível 3 (Safe-MAPPO)",
+                    desc: "Convergência multiobjetivo Pareto-ótima via CTDE e multiplicadores Lagrangianos.",
+                    weights: "xSlice: 58% | xEnergy: 28% | xTS: 14%",
+                    final_prb: "URLLC: 52% | eMBB: 38% | mMTC: 10%",
+                    final_power: "37.0 dBm (-17.7% Consumo)",
+                    urllc_delay: "0.82 ms (SLA < 1.5ms OK)"
+                },
+                dapp: {
+                    node: "O-DU-gNB-1 (Tier 3: < 1ms)",
+                    envelope: "PRB_URLLC ∈ [40%, 65%] | TxPower ∈ [35, 40] dBm | Max Preemption Slots: 2",
+                    actions: "Fast Beam Tracking (0.25ms) + URLLC Puncturing em TTI de slot"
+                }
+            },
+            "scenario_b_urllc_dapp": {
+                title: "Cenário B: Preempção Rápida URLLC & Envelopes dApp Multi-Tier",
+                subtitle: "Controle em Tempo Real (< 1ms TTI) sob Governança Near-RT (nGRG-RR-2024-10)",
+                desc: "Surto súbito de pacotes industriais críticos. O Near-RT RIC despacha envelopes de segurança Omega_dApp para o O-DU, e a dApp co-localizada executa preempção em microsegundos.",
+                ues: [
+                    { id: "UE-201", slice: "Slice-URLLC", type: "URLLC", sinr: "16.0 dB", buffer: "850 KB", status: "CONNECTED" },
+                    { id: "UE-202", slice: "Slice-eMBB", type: "eMBB", sinr: "25.0 dB", buffer: "3000 KB", status: "CONNECTED" }
+                ],
+                proposals: [
+                    { xapp: "xApp-QoS-Slice", rcp: "PRB Fast Bounding", val: "50%", prio: 1, rationale: "Estabelecimento de envelope seguro para dApp de escalonamento ultra-rápido." },
+                    { xapp: "xApp-Energy-Saving", rcp: "Cell TxPower", val: "38 dBm", prio: 2, rationale: "Redução conservadora mantendo margem de segurança para canal URLLC." }
+                ],
+                conflicts: [
+                    { id: "CONF-004", type: "MULTI_TIER_C5", name: "Coordenação Cross-Layer", desc: "Alinhamento de preempção instantânea da dApp no TTI com os limites macro de fatia do Near-RT RIC.", sev: "MEDIUM" }
+                ],
+                arbitration: {
+                    tier: "Nível 2 (Utilidade Contextual / NDT)",
+                    desc: "Projeção proativa de envelope com simulação rápida em Network Digital Twin.",
+                    weights: "xSlice: 70% | xEnergy: 30%",
+                    final_prb: "URLLC: 50% | eMBB: 50%",
+                    final_power: "38.0 dBm",
+                    urllc_delay: "0.64 ms"
+                },
+                dapp: {
+                    node: "O-DU-gNB-1 (Tier 3: < 1ms)",
+                    envelope: "PRB_URLLC ∈ [35%, 60%] | Preempção ativada para mini-slots < 125µs",
+                    actions: "Execução determinística em C++ Zero-Copy SHM"
+                }
+            },
+            "scenario_c_temporal_flapping": {
+                title: "Cenário C: Eliminação de Flapping Temporal (Ping-Pong Lockout)",
+                subtitle: "Convergência Causal e Janela de Resfriamento Temporal via Knowledge Graph",
+                desc: "Duas xApps em frequências distintas produzem oscilações cíclicas no Handover e no Tilt. O CA-RDL detecta o acoplamento temporal no grafo e impõe lockout de 5s.",
+                ues: [
+                    { id: "UE-301", slice: "Slice-eMBB", type: "eMBB", sinr: "12.0 dB", buffer: "600 KB", status: "CONNECTED" }
+                ],
+                proposals: [
+                    { xapp: "xApp-Traffic-Steering", rcp: "HO A3-Offset", val: "-6 dB", prio: 1, rationale: "Re-direcionamento forçado para célula secundária." },
+                    { xapp: "xApp-Coverage-Capacity", rcp: "Cell Tilt", val: "+2 deg", prio: 2, rationale: "Expansão de cobertura de borda contrária ao handover." }
+                ],
+                conflicts: [
+                    { id: "CONF-005", type: "TEMPORAL_C3", name: "Oscilação Ping-Pong Flapping", desc: "Handover cíclico a cada 150ms é revertido pela alteração de tilt elétrico da célula.", sev: "CRITICAL" }
+                ],
+                arbitration: {
+                    tier: "Nível 1 (Heurística & Lockout)",
+                    desc: "Aplicação de janela de resfriamento (cooling lockout de 5s) e bloqueio do handover oscilatório.",
+                    weights: "xTS: 0% (Bloqueada por Lockout) | CCO: 100%",
+                    final_prb: "eMBB: 100%",
+                    final_power: "43.0 dBm",
+                    urllc_delay: "N/A (eMBB Stable)"
+                },
+                dapp: {
+                    node: "O-CU-CP-gNB-1",
+                    envelope: "Lockout de Handover ativo por 5000 ms",
+                    actions: "Supressão de relatórios A3 duplicados"
+                }
+            }
+        };
+
+        let currentScenarioKey = "scenario_a_conflict_storm";
+        let currentStage = 1;
+        let isPlaying = false;
+        let playInterval = null;
+        let playSpeed = 1000;
+
+        // Stage Metadata Details
+        const STAGE_CONFIGS = [
+            {
+                id: 1,
+                name: "1. Registro de UEs & Setup de Canal 5G",
+                desc: "Execução do ciclo de 5 passos 3GPP: PRACH Msg1/Msg2, RRCSetupComplete, 5G-AKA Auth, PDU Session Binding e amarração no nó E2.",
+                proto_name: "3GPP_REGISTRATION_COMPLETE",
+                code: `// 3GPP TS 38.331 RRCSetupComplete & PDU Binding
+RRCSetupComplete {
+  rnti: 101,
+  selectedPLMN-Identity: "001-01",
+  dedicatedNAS-Message: "5G-AKA SecurityModeComplete",
+  pduSessionResourceSetupResponseList: [
+    { pduSessionId: 1, qosFlowId: 1, sliceId: "Slice-URLLC" }
+  ],
+  e2TelemetryBinding: "gNB-1/E2Agent_OK"
+}`
+            },
+            {
+                id: 2,
+                name: "2. Ingestão de Telemetria E2SM-KPM (Gate 1)",
+                desc: "Coleta e decodificação de telemetria ASN.1 APER real (mtype 12050): ocupação de PRBs por fatia, buffer status BSR, SINR e latência de rádio.",
+                proto_name: "RIC_INDICATION (mtype: 12050 - E2SM-KPM-v02.03)",
+                code: `// E2SM-KPM Indication Message (ASN.1 APER Decoded)
+E2SM-KPM-IndicationMessage {
+  ranFunctionId: 2,
+  indicationHeader: { timestamp: "2026-09-23T08:55:12.140Z", ranNode: "gNB-1" },
+  indicationMessage: {
+    measurements: [
+      { name: "PRB.Usage.Slice-URLLC", value: 30.0, unit: "%" },
+      { name: "DRB.Throughput.Slice-eMBB", value: 185.0, unit: "Mbps" },
+      { name: "QoS.RLCDelay.Slice-URLLC", value: 1.40, unit: "ms" },
+      { name: "BufferStatus.Bytes.URLLC", value: 450000, unit: "Bytes" },
+      { name: "Radio.UL_SINR", value: 18.5, unit: "dB" }
+    ]
+  },
+  gate1Validation: "REAL_ASN1_APER_PASS"
+}`
+            },
+            {
+                id: 3,
+                name: "3. Janela de Agregação de Propostas (200 ms)",
+                desc: "Buffer temporal sincronizado de 200 ms onde as intenções concorrentes das xApps são recebidas e emparelhadas antes do pipeline de decisão.",
+                proto_name: "XAPP_INTENT_PROPOSALS (Janela Temporal: 200ms)",
+                code: `// Concurrent xApp Ingestion Window (T_win = 200ms)
+[
+  { xapp: "xApp-QoS-Slice", rcp: "PRB.Dedicated.URLLC", request: "+35% (65% total)", prio: 1 },
+  { xapp: "xApp-Energy-Saving", rcp: "Cell.TxPower", request: "30 dBm (-13 dBm)", prio: 3 },
+  { xapp: "xApp-Traffic-Steering", rcp: "HO.A3Offset", request: "-4 dB (Force HO)", prio: 2 }
+]`
+            },
+            {
+                id: 4,
+                name: "4. Ativação do Knowledge Graph Dinâmico",
+                desc: "Construção do grafo heterogêneo G=(V,E) com nós de UEs, Fatias, Células, Parâmetros RCP e xApps, inferindo correlações e dependências.",
+                proto_name: "KNOWLEDGE_GRAPH_TOPOLOGY_ACTIVATION",
+                code: `// Dynamic Knowledge Graph Representation G=(V,E)
+Nodes (|V| = 9):
+  - Cell: [gNB-1]
+  - Slices: [Slice-URLLC, Slice-eMBB, Slice-mMTC]
+  - UEs: [UE-101 (URLLC), UE-102 (eMBB), UE-103 (mMTC)]
+  - xApps: [xApp-QoS-Slice, xApp-Energy-Saving, xApp-Traffic-Steering]
+Edges (|E| = 12):
+  - (xApp-QoS) --[controls]--> (RCP-PRB-URLLC)
+  - (xApp-Energy) --[controls]--> (RCP-TxPower)
+  - (RCP-TxPower) --[degrades_sinr]--> (Slice-URLLC) [Weight: 0.89]
+  - (xApp-QoS) <--[MUTUAL_CONTENTION]--> (xApp-Energy) [Weight: 2.5]`
+            },
+            {
+                id: 5,
+                name: "5. Detecção & Classificação Formal de Conflitos",
+                desc: "O classificador GraphSAGE/GNN identifica Conflitos Diretos (C1: PRBs), Indiretos (C2: Potência vs Latência) e Temporais com base na taxonomia formal.",
+                proto_name: "FORMAL_CONFLICT_DETECTION_REPORT",
+                code: `// Conflict Classification Matrix C(c, s)
+Detected Conflicts:
+  1. DIRECT_C1: xSlice (65% PRB) vs xEnergy (limite PRB) -> Severity: CRITICAL
+  2. INDIRECT_C2: xEnergy (-13 dBm) viola SLA de Latência URLLC (< 1.5ms) -> Severity: HIGH
+  3. IMPLICIT: Handover xTS altera distribuição de interferência -> Severity: MEDIUM
+Max Coupling Severity: CRITICAL (0.89)`
+            },
+            {
+                id: 6,
+                name: "6. Refinamento Cognitivo Escalonado (H-RDL / CA-RDL)",
+                desc: "A xApp-RDL escala do Nível 1 para o Nível 3 (Safe-MAPPO com Action Masking e Lagrangianos), calculando a solução conjunta Pareto-ótima.",
+                proto_name: "CA_RDL_TIER3_SAFE_MAPPO_ARBITRATION",
+                code: `// Multi-Tier Cognitive Decision Output
+Tier Selected: TIER_3 (Safe-MAPPO Multi-Agent Optimization)
+Optimization Objective: Maximize Throughput + Energy Efficiency s.t. URLLC Latency < 1.5ms
+Resulting Policy:
+  - xApp-QoS-Slice Allocated PRB: 52% (atende demanda com segurança)
+  - xApp-Energy-Saving TxPower: 37 dBm (redução segura de 6 dBm; -17.7% Watts)
+  - xApp-Traffic-Steering: Handover modulado com A3-Offset -1 dB
+Pareto Optimality Score: 0.942 | SLA Violation Risk: 0.01%`
+            },
+            {
+                id: 7,
+                name: "7. Validação de Safety Guard & Envelopes dApp",
+                desc: "O Safety Guard independente verifica restrições físicas e despacha o envelope de operação segura Omega_dApp para inferência em tempo real no O-DU (< 1ms).",
+                proto_name: "SAFETY_GUARD_CERTIFICATION & dAPP_ENVELOPE",
+                code: `// Independent Safety Guard & nGRG dApp Real-Time Bounding Box
+Safety Verification:
+  [PASS] Total PRBs: 52% + 38% + 10% = 100% (No Over-allocation)
+  [PASS] Min TxPower: 37 dBm >= 33 dBm (Coverage Preserved)
+  [PASS] Packet Drop Margin: 0.00002 < 0.0001
+dApp Real-Time Bounding Box (Omega_dApp para O-DU):
+  - Autonomous PRB Range: [40%, 65%]
+  - Autonomous TxPower Range: [35, 40] dBm
+  - Fast TTI Preemption: ENABLED for Mini-slot < 125µs`
+            },
+            {
+                id: 8,
+                name: "8. Emissão de Controle E2SM-RC & Convergência RAN (Gate 3/4)",
+                desc: "Despacho da mensagem RIC_CONTROL_REQUEST (mtype 12040) em ASN.1 APER, confirmação de ACK (12041) e restauração comprovada dos KPIs na RAN.",
+                proto_name: "RIC_CONTROL_REQUEST & ACKNOWLEDGE (Gate 3 & Gate 4)",
+                code: `// E2SM-RC Control Message (mtype 12040) & Confirmation
+RIC_CONTROL_REQUEST {
+  ranFunctionId: 3 (E2SM-RC-v01.03),
+  ricRequestId: { requestId: 2001, instanceId: 1 },
+  ranNodeId: "gNB-1",
+  controlHeader: { format: 1, actionType: "SET_RADIO_PARAMETERS" },
+  controlMessage: {
+    actuationParameters: [
+      { rcpId: 101, name: "RRMPolicyRatio.URLLC", value: 52.0 },
+      { rcpId: 102, name: "RRMPolicyRatio.eMBB", value: 38.0 },
+      { rcpId: 201, name: "Cell.TxPower", value: 37.0 }
+    ]
+  }
+}
+--> RIC_CONTROL_ACKNOWLEDGE (mtype 12041): SUCCESS
+// Gate 4 Closed-Loop Response:
+// URLLC Delay: 1.40ms -> 0.82ms | Energy: 480W -> 395W (-17.7%) | SLA: 100% OK`
+            }
+        ];
+
+        // Canvas Knowledge Graph Simulation
+        const canvas = document.getElementById("kgCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        let graphNodes = [
+            { id: "gNB-1", label: "gNB-1", type: "CELL", color: "#00f0ff", x: 250, y: 190, vx: 0, vy: 0 },
+            { id: "Slice-URLLC", label: "URLLC Slice", type: "SLICE", color: "#00ff9d", x: 150, y: 110, vx: 0, vy: 0 },
+            { id: "Slice-eMBB", label: "eMBB Slice", type: "SLICE", color: "#00ff9d", x: 350, y: 110, vx: 0, vy: 0 },
+            { id: "UE-101", label: "UE-101", type: "UE", color: "#ffaa00", x: 90, y: 60, vx: 0, vy: 0 },
+            { id: "UE-102", label: "UE-102", type: "UE", color: "#ffaa00", x: 410, y: 60, vx: 0, vy: 0 },
+            { id: "xApp-QoS", label: "xApp-QoS", type: "XAPP", color: "#bd00ff", x: 120, y: 280, vx: 0, vy: 0 },
+            { id: "xApp-Energy", label: "xApp-Energy", type: "XAPP", color: "#bd00ff", x: 380, y: 280, vx: 0, vy: 0 },
+            { id: "RCP-PRB", label: "RCP: PRB", type: "RCP", color: "#ff0055", x: 200, y: 320, vx: 0, vy: 0 },
+            { id: "RCP-Power", label: "RCP: TxPower", type: "RCP", color: "#ff0055", x: 300, y: 320, vx: 0, vy: 0 }
+        ];
+
+        let graphEdges = [
+            { source: 0, target: 1, isConflict: false },
+            { source: 0, target: 2, isConflict: false },
+            { source: 1, target: 3, isConflict: false },
+            { source: 2, target: 4, isConflict: false },
+            { source: 5, target: 7, isConflict: false },
+            { source: 6, target: 8, isConflict: false },
+            { source: 5, target: 6, isConflict: true }
+        ];
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Edges
+            graphEdges.forEach(edge => {
+                const n1 = graphNodes[edge.source];
+                const n2 = graphNodes[edge.target];
+                if (!n1 || !n2) return;
+
+                ctx.beginPath();
+                ctx.moveTo(n1.x, n1.y);
+                ctx.lineTo(n2.x, n2.y);
+                
+                if (edge.isConflict && currentStage >= 4) {
+                    ctx.strokeStyle = "#ff0055";
+                    ctx.lineWidth = 2.5;
+                    ctx.setLineDash([4, 4]);
+                } else {
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([]);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+
+            // Draw Nodes
+            const timeNow = Date.now() * 0.003;
+            graphNodes.forEach((node, i) => {
+                // Subtle organic motion
+                const offsetX = Math.sin(timeNow + i) * 1.5;
+                const offsetY = Math.cos(timeNow + i * 1.3) * 1.5;
+
+                ctx.beginPath();
+                ctx.arc(node.x + offsetX, node.y + offsetY, 14, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.shadowColor = node.color;
+                ctx.shadowBlur = (currentStage >= 4) ? 12 : 4;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Labels
+                ctx.fillStyle = "#f0f6fc";
+                ctx.font = "10px 'Inter', sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(node.label, node.x + offsetX, node.y + offsetY + 24);
+            });
+
+            requestAnimationFrame(drawGraph);
+        }
+        requestAnimationFrame(drawGraph);
+
+        // Scenario Loader
+        function loadScenario(scKey) {
+            currentScenarioKey = scKey;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(scKey));
+            if (clickedBtn) clickedBtn.classList.add('active');
+
+            resetDemo();
+        }
+
+        // Render Active Stage UI
+        function updateStageUI() {
+            const sc = SCENARIOS[currentScenarioKey];
+            const cfg = STAGE_CONFIGS[currentStage - 1];
+
+            // Progress bar in stepper
+            const progressPct = ((currentStage - 1) / (STAGE_CONFIGS.length - 1)) * 100;
+            document.getElementById("stepProgress").style.width = progressPct + "%";
+
+            // Update Stepper Nodes
+            document.querySelectorAll('.step-item').forEach((item, idx) => {
+                item.classList.remove('active', 'completed');
+                if (idx + 1 === currentStage) {
+                    item.classList.add('active');
+                } else if (idx + 1 < currentStage) {
+                    item.classList.add('completed');
+                }
+            });
+
+            // Banner
+            document.getElementById("stageBadge").innerText = `ESTÁGIO ${currentStage} / 8`;
+            document.getElementById("stageTitle").innerText = cfg.name;
+            document.getElementById("stageDesc").innerText = cfg.desc;
+
+            // Code Inspector
+            document.getElementById("protoMsgType").innerText = cfg.proto_name;
+            document.getElementById("protocolCodeBox").innerText = cfg.code;
+
+            // Render UEs List
+            const ueContainer = document.getElementById("ueListContainer");
+            ueContainer.innerHTML = "";
+            sc.ues.forEach(ue => {
+                const div = document.createElement("div");
+                div.className = "proposal-item";
+                div.style.borderLeftColor = (ue.type === "URLLC") ? "var(--neon-green)" : "var(--neon-cyan)";
+                div.innerHTML = `
+                    <div class="prop-header">
+                        <span>${ue.id} (${ue.type})</span>
+                        <span style="color: var(--neon-green); font-size: 10px;">${(currentStage >= 1) ? '● PDU_ACTIVE' : '○ SYNCING'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 11px;">
+                        <span>SINR: ${ue.sinr}</span>
+                        <span>Buffer: ${ue.buffer}</span>
+                        <span>Slice: ${ue.slice}</span>
+                    </div>
+                `;
+                ueContainer.appendChild(div);
+            });
+            document.getElementById("ueCountBadge").innerText = `${sc.ues.length} UEs Conectados`;
+
+            // Render Proposals List
+            const propContainer = document.getElementById("proposalsContainer");
+            propContainer.innerHTML = "";
+            if (currentStage >= 3) {
+                sc.proposals.forEach(p => {
+                    const div = document.createElement("div");
+                    div.className = "proposal-item";
+                    div.innerHTML = `
+                        <div class="prop-header">
+                            <span style="color: var(--neon-purple);">${p.xapp}</span>
+                            <span style="font-size: 10px; color: var(--neon-amber);">Prio: ${p.prio}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="prop-rcp">${p.rcp}</span>
+                            <span style="font-weight: 700; color: #fff;">${p.val}</span>
+                        </div>
+                        <div style="font-size: 10px; color: var(--text-muted);">${p.rationale}</div>
+                    `;
+                    propContainer.appendChild(div);
+                });
+            } else {
+                propContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 11px; text-align: center; padding: 12px;">Aguardando janela de agregação (Estágio 3)...</div>`;
+            }
+
+            // Render Conflicts & Arbitration
+            const confContainer = document.getElementById("conflictsContainer");
+            confContainer.innerHTML = "";
+            if (currentStage >= 5 && sc.conflicts.length > 0) {
+                sc.conflicts.forEach(c => {
+                    const div = document.createElement("div");
+                    div.className = "conflict-box";
+                    div.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="conflict-badge">${c.type}</span>
+                            <span style="font-size: 10px; font-weight: 700; color: var(--neon-red);">${c.sev}</span>
+                        </div>
+                        <div style="font-weight: 700; font-size: 12px;">${c.name}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${c.desc}</div>
+                    `;
+                    confContainer.appendChild(div);
+                });
+            }
+
+            if (currentStage >= 6) {
+                const arbDiv = document.createElement("div");
+                arbDiv.style.background = "rgba(0, 240, 255, 0.05)";
+                arbDiv.style.border = "1px solid rgba(0, 240, 255, 0.3)";
+                arbDiv.style.borderRadius = "6px";
+                arbDiv.style.padding = "10px";
+                arbDiv.style.fontSize = "11px";
+                arbDiv.innerHTML = `
+                    <div style="font-weight: 800; color: var(--neon-cyan); margin-bottom: 4px;">ARBITRAGEM: ${sc.arbitration.tier}</div>
+                    <div style="color: var(--text-secondary);">${sc.arbitration.desc}</div>
+                    <div style="margin-top: 4px; font-family: var(--font-mono); color: var(--neon-green); font-weight: 600;">PRB: ${sc.arbitration.final_prb}</div>
+                    <div style="font-family: var(--font-mono); color: var(--neon-amber);">TxPower: ${sc.arbitration.final_power}</div>
+                `;
+                confContainer.appendChild(arbDiv);
+            }
+
+            if (currentStage >= 7 && sc.dapp) {
+                const dappDiv = document.createElement("div");
+                dappDiv.style.background = "rgba(189, 0, 255, 0.05)";
+                dappDiv.style.border = "1px solid rgba(189, 0, 255, 0.3)";
+                dappDiv.style.borderRadius = "6px";
+                dappDiv.style.padding = "10px";
+                dappDiv.style.fontSize = "11px";
+                dappDiv.innerHTML = `
+                    <div style="font-weight: 800; color: var(--neon-purple); margin-bottom: 4px;">⚡ dApp Real-Time Bounding Box (nGRG-RR-2024-10)</div>
+                    <div style="color: var(--text-secondary);">Nó Alvo: ${sc.dapp.node}</div>
+                    <div style="font-family: var(--font-mono); color: var(--neon-cyan); font-size: 10px; margin-top: 2px;">${sc.dapp.envelope}</div>
+                `;
+                confContainer.appendChild(dappDiv);
+            }
+
+            // Update KPI Tiles
+            if (currentStage < 8) {
+                document.getElementById("kpiUrllcDelay").innerText = (sc.ues[0].type === "URLLC") ? "1.40 ms" : "N/A";
+                document.getElementById("kpiUrllcDelay").className = "kpi-value warn";
+                document.getElementById("kpiTxPower").innerText = "43.0 dBm";
+                document.getElementById("kpiEnergy").innerText = "480 W (Baseline)";
+                document.getElementById("prbTotalPct").innerText = "100% (Contention)";
+                document.getElementById("prbProgressBar").style.width = "100%";
+            } else {
+                document.getElementById("kpiUrllcDelay").innerText = sc.arbitration.urllc_delay;
+                document.getElementById("kpiUrllcDelay").className = "kpi-value good";
+                document.getElementById("kpiTxPower").innerText = sc.arbitration.final_power.split(' ')[0] + " dBm";
+                document.getElementById("kpiEnergy").innerText = "395 W (-17.7%)";
+                document.getElementById("prbTotalPct").innerText = "90% (Safe Optimal)";
+                document.getElementById("prbProgressBar").style.width = "90%";
+            }
+        }
+
+        // Stepper Navigation Handlers
+        function jumpToStage(s) {
+            currentStage = s;
+            updateStageUI();
+        }
+
+        function stepNext() {
+            if (currentStage < 8) {
+                currentStage++;
+                updateStageUI();
+            } else {
+                pauseDemo();
+            }
+        }
+
+        function stepPrev() {
+            if (currentStage > 1) {
+                currentStage--;
+                updateStageUI();
+            }
+        }
+
+        function resetDemo() {
+            pauseDemo();
+            currentStage = 1;
+            updateStageUI();
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                pauseDemo();
+            } else {
+                playDemo();
+            }
+        }
+
+        function playDemo() {
+            isPlaying = true;
+            document.getElementById("playBtn").innerText = "⏸ Pausar";
+            document.getElementById("playBtn").style.background = "var(--neon-amber)";
+            playInterval = setInterval(() => {
+                if (currentStage < 8) {
+                    stepNext();
+                } else {
+                    pauseDemo();
+                }
+            }, playSpeed);
+        }
+
+        function pauseDemo() {
+            isPlaying = false;
+            if (playInterval) clearInterval(playInterval);
+            document.getElementById("playBtn").innerText = "▶ Executar Passo a Passo";
+            document.getElementById("playBtn").style.background = "var(--neon-cyan)";
+        }
+
+        function changeSpeed(val) {
+            playSpeed = parseInt(val);
+            if (isPlaying) {
+                pauseDemo();
+                playDemo();
+            }
+        }
+
+        // Initial Boot
+        updateStageUI();
+    </script>
+</body>
+</html>

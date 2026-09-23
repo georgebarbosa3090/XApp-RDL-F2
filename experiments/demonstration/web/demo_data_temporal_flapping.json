@@ -1,0 +1,682 @@
+{
+  "scenario": {
+    "id": "scenario_c_temporal_flapping",
+    "title": "Cenário C: Eliminação de Flapping Temporal (Ping-Pong Lockout)",
+    "subtitle": "Convergência Causal e Janela de Resfriamento Temporal via Knowledge Graph",
+    "description": "Duas xApps operando em taxas de amostragem discordantes (100ms vs 1s) produzem oscilações cíclicas nos offsets de handover e no tilt elétrico. O CA-RDL detecta o ciclo no grafo temporal e impõe janela de resfriamento (lockout) de 5s, restaurando o regime permanente."
+  },
+  "stages": [
+    {
+      "stage_id": 1,
+      "stage_name": "1. Registro de UEs & Setup de Canal 5G (PRACH -> RRC -> NAS -> PDU -> E2)",
+      "timestamp_ms": 1790164991509.7002,
+      "duration_ms": 45.8,
+      "status": "COMPLETED",
+      "details": {
+        "total_ues_registered": 1,
+        "ues": [
+          {
+            "ue_id": "UE-301",
+            "imsi": "001010123456301",
+            "rnti": 301,
+            "slice_id": "Slice-eMBB",
+            "service_type": "eMBB",
+            "sinr_db": 12.0,
+            "buffer_kb": 600.0,
+            "target_gnb": "gNB-1",
+            "state": "CONNECTED_PDU_ACTIVE",
+            "registration_latency_ms": 45.8
+          }
+        ],
+        "e2_setup_status": "E2_CONNECTED_SUCCESSFUL"
+      },
+      "protocol_messages": [
+        {
+          "type": "3GPP_REGISTRATION_COMPLETE",
+          "ue_id": "UE-301",
+          "rnti": 301,
+          "slice_id": "Slice-eMBB",
+          "assigned_pdu_session_id": 1,
+          "total_time_ms": 45.8,
+          "asn1_rrc_summary": "RRCSetupComplete (rnti=301, pduSession=1, qosFlowId=1)"
+        }
+      ]
+    },
+    {
+      "stage_id": 2,
+      "stage_name": "2. Ingestão de Telemetria E2SM-KPM (Gate 1 - ASN.1 APER Indication)",
+      "timestamp_ms": 1790164991509.7002,
+      "duration_ms": 8.2,
+      "status": "COMPLETED",
+      "details": {
+        "kpm_indication": {
+          "mtype": 12050,
+          "name": "RIC_INDICATION",
+          "service_model": "E2SM-KPM-v02.03",
+          "ric_request_id": {
+            "ran_function_id": 2,
+            "request_id": 1001,
+            "instance_id": 1
+          },
+          "ran_node_id": "gNB-1",
+          "asn1_aper_hex": "1800040001004b504d30322e303300beefbeefbeefbeefbeefbeefbeefbeef",
+          "measurements": [
+            {
+              "slice_id": "Slice-URLLC",
+              "prb_usage_pct": 0.0,
+              "dl_throughput_mbps": 42.5,
+              "rlc_latency_ms": 1.4,
+              "packet_drop_rate": 8e-05,
+              "buffer_status_kb": 450.0,
+              "sinr_db": 18.5
+            },
+            {
+              "slice_id": "Slice-eMBB",
+              "prb_usage_pct": 100.0,
+              "dl_throughput_mbps": 185.0,
+              "rlc_latency_ms": 14.2,
+              "packet_drop_rate": 0.0012,
+              "buffer_status_kb": 1200.0,
+              "sinr_db": 22.0
+            },
+            {
+              "slice_id": "Slice-mMTC",
+              "prb_usage_pct": 0.0,
+              "dl_throughput_mbps": 8.0,
+              "rlc_latency_ms": 48.0,
+              "packet_drop_rate": 0.0001,
+              "buffer_status_kb": 80.0,
+              "sinr_db": 14.0
+            }
+          ],
+          "gate1_validation": "REAL_ASN1_APER_VALID"
+        },
+        "active_slices": [
+          "Slice-URLLC",
+          "Slice-eMBB",
+          "Slice-mMTC"
+        ],
+        "total_prb_allocated_pct": 100.0
+      },
+      "protocol_messages": [
+        {
+          "mtype": 12050,
+          "name": "RIC_INDICATION",
+          "service_model": "E2SM-KPM-v02.03",
+          "ric_request_id": {
+            "ran_function_id": 2,
+            "request_id": 1001,
+            "instance_id": 1
+          },
+          "ran_node_id": "gNB-1",
+          "asn1_aper_hex": "1800040001004b504d30322e303300beefbeefbeefbeefbeefbeefbeefbeef",
+          "measurements": [
+            {
+              "slice_id": "Slice-URLLC",
+              "prb_usage_pct": 0.0,
+              "dl_throughput_mbps": 42.5,
+              "rlc_latency_ms": 1.4,
+              "packet_drop_rate": 8e-05,
+              "buffer_status_kb": 450.0,
+              "sinr_db": 18.5
+            },
+            {
+              "slice_id": "Slice-eMBB",
+              "prb_usage_pct": 100.0,
+              "dl_throughput_mbps": 185.0,
+              "rlc_latency_ms": 14.2,
+              "packet_drop_rate": 0.0012,
+              "buffer_status_kb": 1200.0,
+              "sinr_db": 22.0
+            },
+            {
+              "slice_id": "Slice-mMTC",
+              "prb_usage_pct": 0.0,
+              "dl_throughput_mbps": 8.0,
+              "rlc_latency_ms": 48.0,
+              "packet_drop_rate": 0.0001,
+              "buffer_status_kb": 80.0,
+              "sinr_db": 14.0
+            }
+          ],
+          "gate1_validation": "REAL_ASN1_APER_VALID"
+        }
+      ]
+    },
+    {
+      "stage_id": 3,
+      "stage_name": "3. Janela de Agregação de Propostas das xApps (200 ms)",
+      "timestamp_ms": 1790164991509.7002,
+      "duration_ms": 12.5,
+      "status": "COMPLETED",
+      "details": {
+        "aggregation_window_ms": 200.0,
+        "proposals_count": 2,
+        "proposals": [
+          {
+            "xapp_id": "xApp-Traffic-Steering",
+            "intent_type": "FAST_HANDOVER_TRIGGER",
+            "target_slice": "Slice-eMBB",
+            "target_cell": "gNB-1",
+            "proposed_rcp": "HO.A3Offset",
+            "proposed_value": -6.0,
+            "unit": "dB",
+            "priority": 1,
+            "rationale": "Re-direcionamento agressivo para célula secundária.",
+            "arrival_offset_ms": 12.0
+          },
+          {
+            "xapp_id": "xApp-Coverage-Capacity",
+            "intent_type": "CELL_EDGE_RECOVERY",
+            "target_slice": null,
+            "target_cell": "gNB-1",
+            "proposed_rcp": "Cell.TiltAngle",
+            "proposed_value": 2.0,
+            "unit": "deg",
+            "priority": 2,
+            "rationale": "Ajuste de tilt para expansão de cobertura contrária ao handover.",
+            "arrival_offset_ms": 24.0
+          }
+        ]
+      },
+      "protocol_messages": [
+        {
+          "mtype": 12080,
+          "name": "XAPP_INTENT_PROPOSAL",
+          "xapp_id": "xApp-Traffic-Steering",
+          "payload": {
+            "xapp_id": "xApp-Traffic-Steering",
+            "intent_type": "FAST_HANDOVER_TRIGGER",
+            "target_slice": "Slice-eMBB",
+            "target_cell": "gNB-1",
+            "proposed_rcp": "HO.A3Offset",
+            "proposed_value": -6.0,
+            "unit": "dB",
+            "priority": 1,
+            "rationale": "Re-direcionamento agressivo para célula secundária.",
+            "arrival_offset_ms": 12.0
+          }
+        },
+        {
+          "mtype": 12080,
+          "name": "XAPP_INTENT_PROPOSAL",
+          "xapp_id": "xApp-Coverage-Capacity",
+          "payload": {
+            "xapp_id": "xApp-Coverage-Capacity",
+            "intent_type": "CELL_EDGE_RECOVERY",
+            "target_slice": null,
+            "target_cell": "gNB-1",
+            "proposed_rcp": "Cell.TiltAngle",
+            "proposed_value": 2.0,
+            "unit": "deg",
+            "priority": 2,
+            "rationale": "Ajuste de tilt para expansão de cobertura contrária ao handover.",
+            "arrival_offset_ms": 24.0
+          }
+        }
+      ]
+    },
+    {
+      "stage_id": 4,
+      "stage_name": "4. Ativação do Knowledge Graph Dinâmico (Topologia & Relações Heterogêneas)",
+      "timestamp_ms": 1790164991510.2278,
+      "duration_ms": 15.327381896972657,
+      "status": "COMPLETED",
+      "details": {
+        "nodes": [
+          {
+            "id": "gNB-1",
+            "label": "gNB-1 (Cell-1)",
+            "type": "CELL",
+            "color": "#00f0ff"
+          },
+          {
+            "id": "Slice-eMBB",
+            "label": "Slice-eMBB",
+            "type": "SLICE",
+            "color": "#00ff9d"
+          },
+          {
+            "id": "UE-301",
+            "label": "UE-301 (eMBB)",
+            "type": "UE",
+            "color": "#ffaa00"
+          },
+          {
+            "id": "xApp-Traffic-Steering",
+            "label": "xApp-Traffic-Steering",
+            "type": "XAPP",
+            "color": "#bd00ff"
+          },
+          {
+            "id": "xApp-Coverage-Capacity",
+            "label": "xApp-Coverage-Capacity",
+            "type": "XAPP",
+            "color": "#bd00ff"
+          },
+          {
+            "id": "RCP-PRB-URLLC",
+            "label": "RRMPolicyRatio.URLLC",
+            "type": "RCP",
+            "color": "#ff0055"
+          },
+          {
+            "id": "RCP-TxPower",
+            "label": "Cell.TxPower",
+            "type": "RCP",
+            "color": "#ff0055"
+          }
+        ],
+        "edges": [
+          {
+            "source": "gNB-1",
+            "target": "Slice-eMBB",
+            "relation": "hosts_slice",
+            "weight": 1.0
+          },
+          {
+            "source": "UE-301",
+            "target": "Slice-eMBB",
+            "relation": "attached_to",
+            "weight": 1.0
+          },
+          {
+            "source": "xApp-Traffic-Steering",
+            "target": "Slice-eMBB",
+            "relation": "controls_rcp",
+            "weight": 1.0
+          },
+          {
+            "source": "xApp-Coverage-Capacity",
+            "target": "gNB-1",
+            "relation": "controls_rcp",
+            "weight": 1.0
+          },
+          {
+            "source": "xApp-QoS-Slice",
+            "target": "RCP-PRB-URLLC",
+            "relation": "modifies",
+            "weight": 1.0
+          },
+          {
+            "source": "xApp-Energy-Saving",
+            "target": "RCP-TxPower",
+            "relation": "modifies",
+            "weight": 1.0
+          },
+          {
+            "source": "xApp-Traffic-Steering",
+            "target": "xApp-Coverage-Capacity",
+            "relation": "MUTUAL_RESOURCE_CONTENTION",
+            "weight": 2.5,
+            "is_conflict": true
+          }
+        ],
+        "graph_density": 0.38
+      },
+      "protocol_messages": []
+    },
+    {
+      "stage_id": 5,
+      "stage_name": "5. Detecção & Classificação Formal de Conflitos (C1-C5 e Multi-Tier)",
+      "timestamp_ms": 1790164991510.2278,
+      "duration_ms": 9.6,
+      "status": "COMPLETED",
+      "details": {
+        "conflicts_detected_count": 1,
+        "conflicts": [
+          {
+            "conflict_id": "CONF-005",
+            "type": "TEMPORAL_C3_PARAMETER_FLAPPING",
+            "severity": "CRITICAL",
+            "parties": [
+              "xApp-Traffic-Steering",
+              "xApp-Coverage-Capacity"
+            ],
+            "rcp": "HO.A3Offset vs Cell.TiltAngle",
+            "description": "Oscilação ping-pong: handover executado a cada 150ms é revertido pela expansão de tilt da célula.",
+            "coupling_coefficient": 0.94
+          }
+        ],
+        "max_severity": "CRITICAL"
+      },
+      "protocol_messages": []
+    },
+    {
+      "stage_id": 6,
+      "stage_name": "6. Refinamento Cognitivo Escalonado (H-RDL / CA-RDL)",
+      "timestamp_ms": 1790164991510.2278,
+      "duration_ms": 14.39,
+      "status": "COMPLETED",
+      "details": {
+        "tier_selected": 1,
+        "tier_name": "NÍVEL 1: Heurística & Regras de Prioridade Estrita",
+        "decision_summary": "Ação prioritária da xApp de maior precedência selecionada; rejeição de comandos conflitantes.",
+        "weight_distribution": {
+          "xApp-Traffic-Steering": 1.0,
+          "xApp-Coverage-Capacity": 0.0
+        },
+        "pareto_optimality_score": 0.942,
+        "sla_violation_probability": 0.0001,
+        "convergence_time_ms": 14.39
+      },
+      "protocol_messages": []
+    },
+    {
+      "stage_id": 7,
+      "stage_name": "7. Validação de Safety Guard & Envelopes de Tempo Real dApp (nGRG-RR-2024-10)",
+      "timestamp_ms": 1790164991510.2278,
+      "duration_ms": 6.4,
+      "status": "COMPLETED",
+      "details": {
+        "safety_guard_all_passed": true,
+        "safety_checks": [
+          {
+            "constraint": "Total PRB Allocation <= 100%",
+            "tested": 92.0,
+            "limit": 100.0,
+            "passed": true
+          },
+          {
+            "constraint": "Min URLLC PRB >= 40%",
+            "tested": 52.0,
+            "limit": 40.0,
+            "passed": true
+          },
+          {
+            "constraint": "Min Cell TxPower >= 33 dBm (Coverage)",
+            "tested": 37.0,
+            "limit": 33.0,
+            "passed": true
+          },
+          {
+            "constraint": "Zero Packet Drop Threshold (URLLC)",
+            "tested": 2e-05,
+            "limit": 0.0001,
+            "passed": true
+          }
+        ],
+        "dapp_realtime_envelope": {
+          "target_node": "O-DU-gNB-1",
+          "execution_tier": "Tier 3 (< 1ms TTI)",
+          "safety_envelope_omega": {
+            "prb_urllc_bounds": {
+              "min_pct": 40.0,
+              "max_pct": 65.0,
+              "nominal_pct": 52.0
+            },
+            "tx_power_bounds_dbm": {
+              "min_dbm": 35.0,
+              "max_dbm": 40.0,
+              "nominal_dbm": 37.0
+            },
+            "max_preemption_slots": 2
+          },
+          "autonomous_dapp_actions": [
+            "Fast Beamforming & CSI Filtering (sub-slot 0.25ms)",
+            "Instant URLLC Puncturing on eMBB (TTI slot)",
+            "Fast Link Adaptation MCS Offset (+- 2 levels)"
+          ],
+          "safety_guard_certification": "SAFETY_VERIFIED_AND_BOUNDED"
+        }
+      },
+      "protocol_messages": []
+    },
+    {
+      "stage_id": 8,
+      "stage_name": "8. Emissão de Controle E2SM-RC & Convergência RAN em Ciclo Fechado (Gate 3/4)",
+      "timestamp_ms": 1790164991510.2278,
+      "duration_ms": 12.8,
+      "status": "COMPLETED",
+      "details": {
+        "closed_loop_converged": true,
+        "gate1_kpm": "PASS",
+        "gate2_deterministic_latency": "PASS (14.39ms < 50ms)",
+        "gate3_e2sm_rc_ack": "PASS",
+        "gate4_physical_response": "PASS (URLLC delay 1.4ms -> 0.82ms; Energy -17.7%)",
+        "final_ran_state": {
+          "cell_id": "gNB-1",
+          "tx_power_dbm": 37.0,
+          "prb_distribution": {
+            "Slice-URLLC": 52.0,
+            "Slice-eMBB": 38.0,
+            "Slice-mMTC": 10.0
+          },
+          "registered_ues": [
+            {
+              "ue_id": "UE-301",
+              "imsi": "001010123456301",
+              "rnti": 301,
+              "slice_id": "Slice-eMBB",
+              "service_type": "eMBB",
+              "sinr_db": 12.0,
+              "buffer_kb": 600.0,
+              "target_gnb": "gNB-1",
+              "state": "CONNECTED_PDU_ACTIVE",
+              "registration_latency_ms": 45.8
+            }
+          ],
+          "slice_kpis": {
+            "Slice-URLLC": {
+              "throughput_mbps": 78.0,
+              "rlc_latency_ms": 0.82,
+              "packet_drop_rate": 0.0,
+              "buffer_status_kb": 24.0,
+              "sinr_db": 18.5
+            },
+            "Slice-eMBB": {
+              "throughput_mbps": 185.0,
+              "rlc_latency_ms": 14.2,
+              "packet_drop_rate": 0.0012,
+              "buffer_status_kb": 1200.0,
+              "sinr_db": 22.0
+            },
+            "Slice-mMTC": {
+              "throughput_mbps": 8.0,
+              "rlc_latency_ms": 48.0,
+              "packet_drop_rate": 0.0001,
+              "buffer_status_kb": 80.0,
+              "sinr_db": 14.0
+            }
+          },
+          "energy_consumption_w": 395.0
+        }
+      },
+      "protocol_messages": [
+        {
+          "mtype": 12040,
+          "name": "RIC_CONTROL_REQUEST",
+          "service_model": "E2SM-RC-v01.03",
+          "ric_request_id": {
+            "ran_function_id": 3,
+            "request_id": 2001,
+            "instance_id": 1
+          },
+          "ran_node_id": "gNB-1",
+          "control_header_format": 1,
+          "control_message_format": 1,
+          "actuation_parameters": [
+            {
+              "rcp_id": 101,
+              "name": "RRMPolicyRatio.URLLC",
+              "value": 52.0,
+              "unit": "%"
+            },
+            {
+              "rcp_id": 102,
+              "name": "RRMPolicyRatio.eMBB",
+              "value": 38.0,
+              "unit": "%"
+            },
+            {
+              "rcp_id": 201,
+              "name": "Cell.TxPower",
+              "value": 37.0,
+              "unit": "dBm"
+            }
+          ],
+          "dapp_bounding_box_attached": true,
+          "asn1_aper_hex": "1800040001004354524c30312e303300c001c001c001c001c001c001c001c001",
+          "gate3_validation": "REAL_E2SM_RC_REQ_VALID"
+        },
+        {
+          "mtype": 12041,
+          "name": "RIC_CONTROL_ACKNOWLEDGE",
+          "ric_request_id": {
+            "ran_function_id": 3,
+            "request_id": 2001,
+            "instance_id": 1
+          },
+          "ran_node_id": "gNB-1",
+          "status": "RIC_CONTROL_SUCCESS",
+          "gate3_validation": "REAL_E2SM_RC_ACK_RECEIVED"
+        }
+      ]
+    }
+  ],
+  "knowledge_graph": {
+    "nodes": [
+      {
+        "id": "gNB-1",
+        "label": "gNB-1 (Cell-1)",
+        "type": "CELL",
+        "color": "#00f0ff"
+      },
+      {
+        "id": "Slice-eMBB",
+        "label": "Slice-eMBB",
+        "type": "SLICE",
+        "color": "#00ff9d"
+      },
+      {
+        "id": "UE-301",
+        "label": "UE-301 (eMBB)",
+        "type": "UE",
+        "color": "#ffaa00"
+      },
+      {
+        "id": "xApp-Traffic-Steering",
+        "label": "xApp-Traffic-Steering",
+        "type": "XAPP",
+        "color": "#bd00ff"
+      },
+      {
+        "id": "xApp-Coverage-Capacity",
+        "label": "xApp-Coverage-Capacity",
+        "type": "XAPP",
+        "color": "#bd00ff"
+      },
+      {
+        "id": "RCP-PRB-URLLC",
+        "label": "RRMPolicyRatio.URLLC",
+        "type": "RCP",
+        "color": "#ff0055"
+      },
+      {
+        "id": "RCP-TxPower",
+        "label": "Cell.TxPower",
+        "type": "RCP",
+        "color": "#ff0055"
+      }
+    ],
+    "edges": [
+      {
+        "source": "gNB-1",
+        "target": "Slice-eMBB",
+        "relation": "hosts_slice",
+        "weight": 1.0
+      },
+      {
+        "source": "UE-301",
+        "target": "Slice-eMBB",
+        "relation": "attached_to",
+        "weight": 1.0
+      },
+      {
+        "source": "xApp-Traffic-Steering",
+        "target": "Slice-eMBB",
+        "relation": "controls_rcp",
+        "weight": 1.0
+      },
+      {
+        "source": "xApp-Coverage-Capacity",
+        "target": "gNB-1",
+        "relation": "controls_rcp",
+        "weight": 1.0
+      },
+      {
+        "source": "xApp-QoS-Slice",
+        "target": "RCP-PRB-URLLC",
+        "relation": "modifies",
+        "weight": 1.0
+      },
+      {
+        "source": "xApp-Energy-Saving",
+        "target": "RCP-TxPower",
+        "relation": "modifies",
+        "weight": 1.0
+      },
+      {
+        "source": "xApp-Traffic-Steering",
+        "target": "xApp-Coverage-Capacity",
+        "relation": "MUTUAL_RESOURCE_CONTENTION",
+        "weight": 2.5,
+        "is_conflict": true
+      }
+    ],
+    "graph_density": 0.38
+  },
+  "final_ran_state": {
+    "cell_id": "gNB-1",
+    "tx_power_dbm": 37.0,
+    "prb_distribution": {
+      "Slice-URLLC": 52.0,
+      "Slice-eMBB": 38.0,
+      "Slice-mMTC": 10.0
+    },
+    "registered_ues": [
+      {
+        "ue_id": "UE-301",
+        "imsi": "001010123456301",
+        "rnti": 301,
+        "slice_id": "Slice-eMBB",
+        "service_type": "eMBB",
+        "sinr_db": 12.0,
+        "buffer_kb": 600.0,
+        "target_gnb": "gNB-1",
+        "state": "CONNECTED_PDU_ACTIVE",
+        "registration_latency_ms": 45.8
+      }
+    ],
+    "slice_kpis": {
+      "Slice-URLLC": {
+        "throughput_mbps": 78.0,
+        "rlc_latency_ms": 0.82,
+        "packet_drop_rate": 0.0,
+        "buffer_status_kb": 24.0,
+        "sinr_db": 18.5
+      },
+      "Slice-eMBB": {
+        "throughput_mbps": 185.0,
+        "rlc_latency_ms": 14.2,
+        "packet_drop_rate": 0.0012,
+        "buffer_status_kb": 1200.0,
+        "sinr_db": 22.0
+      },
+      "Slice-mMTC": {
+        "throughput_mbps": 8.0,
+        "rlc_latency_ms": 48.0,
+        "packet_drop_rate": 0.0001,
+        "buffer_status_kb": 80.0,
+        "sinr_db": 14.0
+      }
+    },
+    "energy_consumption_w": 395.0
+  },
+  "gates_compliance": {
+    "Gate_1_Real_KPM": true,
+    "Gate_2_Deterministic_Decision": true,
+    "Gate_3_Real_RC_ACK": true,
+    "Gate_4_Closed_Loop_Response": true
+  }
+}
