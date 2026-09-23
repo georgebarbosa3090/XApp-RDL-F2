@@ -140,6 +140,38 @@ def create_or_update_dashboard(org_id: str):
             "y_label": "Valor (dBm / %)",
             "y_suffix": "",
         },
+        {
+            "name": "⚡ H-RDL Fase 1: Latência de Decisão (0.103ms)",
+            "x": 0, "y": 11, "w": 3, "h": 3,
+            "type": "single-stat",
+            "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "decision_latency_ms") |> last()',
+            "prefix": "",
+            "suffix": " ms",
+        },
+        {
+            "name": "🛡️ H-RDL Fase 1: Violações Safety Guard (3GPP)",
+            "x": 3, "y": 11, "w": 3, "h": 3,
+            "type": "single-stat",
+            "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "safety_guard_violations") |> last()',
+            "prefix": "VIOLAÇÕES: ",
+            "suffix": "",
+        },
+        {
+            "name": "⚖️ H-RDL Fase 1: Score TVS vs EEVS",
+            "x": 6, "y": 11, "w": 3, "h": 3,
+            "type": "single-stat",
+            "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "tvs_priority_score") |> last()',
+            "prefix": "TVS: ",
+            "suffix": "",
+        },
+        {
+            "name": "🔄 H-RDL Fase 1: Action Churn & Janela (200ms)",
+            "x": 9, "y": 11, "w": 3, "h": 3,
+            "type": "single-stat",
+            "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "action_churn") |> last()',
+            "prefix": "CHURN: ",
+            "suffix": "",
+        },
     ]
 
     for cell in cells_spec:

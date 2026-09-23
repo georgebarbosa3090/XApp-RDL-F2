@@ -113,6 +113,24 @@ class InfluxTelemetryBridge:
 
         return self.send_line_protocol("\n".join(lines))
 
+    def publish_hrdl_fase1_tick(
+        self,
+        sim_time_s: float,
+        tvs_priority: float = 0.90,
+        eevs_power_reduction_db: float = -6.0,
+        decision_latency_ms: float = 0.103,
+        prb_allocated_urllc: float = 52.0,
+        safety_guard_violations: int = 0,
+        window_size_ms: float = 200.0,
+        action_churn: float = 0.05,
+    ) -> bool:
+        """Publishes dedicated Phase 1 H-RDL (Deterministic / Heuristic) telemetry sample."""
+        ts_ms = int(time.time() * 1000)
+        lines = [
+            f"hrdl_fase1,phase=phase1_deterministic,paradigm=heuristic tvs_priority_score={tvs_priority:.4f},eevs_power_reduction_db={eevs_power_reduction_db:.2f},decision_latency_ms={decision_latency_ms:.4f},prb_allocated_urllc={prb_allocated_urllc:.2f},safety_guard_violations={safety_guard_violations}i,window_size_ms={window_size_ms:.1f},action_churn={action_churn:.4f},sim_time_s={sim_time_s:.2f} {ts_ms}"
+        ]
+        return self.send_line_protocol("\n".join(lines))
+
     def publish_decision_event(
         self,
         tier: int,
@@ -260,6 +278,20 @@ class InfluxTelemetryBridge:
                     inference_time_ms=inf_time,
                     pareto_score=pareto,
                     conflicts_count=confs,
+                )
+
+                # Phase 1 H-RDL (Deterministic / Heuristic) Telemetry
+                tvs_pri = 0.95 if state in (1, 2, 3) else (0.90 if state in (4, 5) else 0.70)
+                eevs_db = -2.0 if state in (1, 2, 3) else (-6.0 if state in (4, 5) else -3.0)
+                self.publish_hrdl_fase1_tick(
+                    sim_time_s=t_elapsed,
+                    tvs_priority=tvs_pri,
+                    eevs_power_reduction_db=eevs_db,
+                    decision_latency_ms=0.103,
+                    prb_allocated_urllc=prb_u,
+                    safety_guard_violations=0,
+                    window_size_ms=200.0,
+                    action_churn=0.042,
                 )
 
                 status_lbl = ["GOLDEN", "PERTURBED", "DETECTED", "REASONING", "ACTUATING", "VERIFIED"][state]

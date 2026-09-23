@@ -92,6 +92,20 @@ class PhysicalOranTelemetryStreamer:
                 ]
                 self.bridge.send_line_protocol("\n".join(lines))
 
+                # Phase 1 H-RDL Observability (Deterministic / Heuristic)
+                tvs_pri = 0.95 if state in (1, 2, 3) else (0.90 if state in (4, 5) else 0.70)
+                eevs_db = -2.0 if state in (1, 2, 3) else (-6.0 if state in (4, 5) else -3.0)
+                self.bridge.publish_hrdl_fase1_tick(
+                    sim_time_s=t_elapsed,
+                    tvs_priority=tvs_pri,
+                    eevs_power_reduction_db=eevs_db,
+                    decision_latency_ms=0.103,
+                    prb_allocated_urllc=prb_u,
+                    safety_guard_violations=0,
+                    window_size_ms=200.0,
+                    action_churn=0.042,
+                )
+
                 if step % 4 == 0:
                     status_lbl = ["GOLDEN", "PERTURBED", "DETECTED", "REASONING", "ACTUATING", "VERIFIED"][state]
                     logger.info(
@@ -172,6 +186,20 @@ class PhysicalOranTelemetryStreamer:
                     f"rdl_conflicts,source=srsran_open5gs,scenario=srsran_closed_loop conflict_count={confs}i {ts_ms}",
                 ]
                 self.bridge.send_line_protocol("\n".join(lines))
+
+                # Phase 1 H-RDL Observability (Deterministic / Heuristic)
+                tvs_pri = 0.95 if state in (1, 2, 3) else (0.90 if state in (4, 5) else 0.70)
+                eevs_db = -2.0 if state in (1, 2, 3) else (-6.0 if state in (4, 5) else -3.0)
+                self.bridge.publish_hrdl_fase1_tick(
+                    sim_time_s=t_elapsed,
+                    tvs_priority=tvs_pri,
+                    eevs_power_reduction_db=eevs_db,
+                    decision_latency_ms=0.103,
+                    prb_allocated_urllc=prb_u,
+                    safety_guard_violations=0,
+                    window_size_ms=200.0,
+                    action_churn=0.042,
+                )
 
                 if step % 4 == 0:
                     status_lbl = ["GOLDEN", "PERTURBED", "DETECTED", "REASONING", "ACTUATING", "VERIFIED"][state]

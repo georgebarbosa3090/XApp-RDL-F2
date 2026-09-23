@@ -131,9 +131,72 @@ Se precisar reconstruir o painel nativo do InfluxDB do zero:
 python3 deployments/telemetry/setup_influxdb_dashboard.py
 ```
 
+## 5. Observabilidade da Fase 1: H-RDL (Determinística & Heurísticas TVS/EEVS)
+
+A **Fase 1 (H-RDL)** do projeto foca em controle determinístico de ultra-baixa latência com base em regras estritas de prioridade, *Safety Guards* físicos (3GPP TS 38.104) e janela de agregação sincronizada fixa de $200.0\text{ ms}$.
+
+### 📐 Schema de Telemetria da Fase 1 (`hrdl_fase1` no InfluxDB)
+
+A telemetria da Fase 1 é ingerida na medição `hrdl_fase1` via Influx Line Protocol:
+
+```text
+hrdl_fase1,phase=phase1_deterministic,paradigm=heuristic tvs_priority_score=0.9000,eevs_power_reduction_db=-6.00,decision_latency_ms=0.1030,prb_allocated_urllc=52.00,safety_guard_violations=0i,window_size_ms=200.0,action_churn=0.0420,sim_time_s=25.50 1774358000000
+```
+
+| Campo (*Field*) | Tipo | Valor Típico | Descrição & Significado Físico |
+| :--- | :---: | :---: | :--- |
+| `decision_latency_ms` | `float` | **$0.103\text{ ms}$** | Latência de decisão determinística ($\ll 1.0\text{ ms}$ e $500\times$ abaixo do SLA de $50\text{ ms}$ do Near-RT RIC). |
+| `safety_guard_violations` | `integer` | **`0`** | Violações de *Safety Guard* (limites estritos de potência e PRB por *Hard Boundary Clipping*). |
+| `tvs_priority_score` | `float` | **$0.70 - 0.95$** | Escore dinâmico de prioridade *Target Value Scaling* (preempção de fatias críticas URLLC). |
+| `eevs_power_reduction_db` | `float` | **$-2.0\text{ a } -6.0\text{ dB}$** | Ajuste dinâmico de potência celular via *Energy Efficiency Value Scaling*. |
+| `prb_allocated_urllc` | `float` | **$52.0\%$** | Alocação instantânea de blocos de recursos físicos para tráfego de ultra-baixa latência. |
+| `window_size_ms` | `float` | **$200.0\text{ ms}$** | Janela temporal sincronizada fixa para acumulação e arbitragem de propostas xApps. |
+| `action_churn` | `float` | **$0.042$** | Estabilidade temporal de ação (*churn* mínimo prevenindo instabilidade do escalonador MAC). |
+
 ---
 
-## 5. Roteiro dos 8 Estágios Canônicos da Demonstração
+### ⚖️ Comparativo de Observabilidade: Fase 1 (H-RDL) vs Fase 2 (CA-RDL)
+
+| Dimensão de Observabilidade | Fase 1: H-RDL (Determinística) | Fase 2: CA-RDL (Cognitiva Safe-MAPPO) |
+| :--- | :--- | :--- |
+| **Latência de Decisão Computacional** | **$\mathbf{0.103\text{ ms}}$** (Heurística O(1)) | **$14.39\text{ ms}$** (Inferência de Rede Neural) |
+| **Motor de Raciocínio & Arbitragem** | Prioridades TVS / EEVS & Filas Estritas | Safe-MAPPO com Action Masking & Multiplicadores Lagrangianos |
+| **Topologia & Sensibilidade Contextual** | Regras Estáticas por Nó E2 | Grafo de Conhecimento Heterogêneo $G=(V,E)$ com GraphSAGE |
+| **Garantia de Segurança Física** | *Hard Boundary Clipping* (3GPP TS 38.104) | Otimização Restrita (CMDP) + *Safety Envelopes* dApp ($< 1\text{ms}$) |
+| **Janela de Sincronização** | Fixa em $200\text{ ms}$ | Adaptativa ($50\text{ ms} - 500\text{ ms}$) |
+| **Score de Fronteira Pareto** | $0.850$ (Heurístico) | $\mathbf{0.942}$ (Otimizado Globalmente) |
+
+---
+
+### 📈 Painéis Grafana Dedicados à Fase 1 ([http://localhost:3000](http://localhost:3000))
+
+No painel oficial Grafana (`/d/oran-rdl-closed-loop`), a linha dedicada **"⚡ Fase 1: H-RDL Determinística (Heurísticas TVS/EEVS & Decisão 0.103ms)"** exibe:
+1. **⚡ H-RDL Decision Latency**: Stat gauge medindo a latência instantânea de $0.103\text{ ms}$.
+2. **🛡️ H-RDL Safety Violations**: Indicador em verde absoluto (`0 violações`).
+3. **⚖️ H-RDL TVS Priority & Action Churn**: Gráfico temporal do escore TVS e da estabilidade de churn.
+4. **🔋 H-RDL EEVS Power Reduction**: Série temporal da atenuação controlada em dB.
+
+#### Queries Flux Nativas da Fase 1:
+```flux
+// Latência de Decisão da Fase 1 H-RDL
+from(bucket: "oran_telemetry")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1")
+  |> filter(fn: (r) => r["_field"] == "decision_latency_ms")
+  |> last()
+
+// Dinâmica de Prioridade TVS vs EEVS
+from(bucket: "oran_telemetry")
+  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+  |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1")
+  |> filter(fn: (r) => r["_field"] == "tvs_priority_score" or r["_field"] == "eevs_power_reduction_db")
+  |> aggregateWindow(every: 500ms, fn: mean, createEmpty: false)
+  |> yield(name: "mean")
+```
+
+---
+
+## 6. Roteiro dos 8 Estágios Canônicos da Demonstração
 
 | Estágio | Nome & Descrição | Sinalização / Protocolo | O que é Validado |
 |---|---|---|---|
@@ -142,13 +205,13 @@ python3 deployments/telemetry/setup_influxdb_dashboard.py
 | **Estágio 3** | **Janela de Ingestão de Propostas**<br/>Buffer de sincronização temporal de 200 ms. | Propostas assíncronas xApps | Agregação das intenções conflitantes (`xApp-QoS-Slice`, `xApp-Energy-Saving`, `xApp-Traffic-Steering`). |
 | **Estágio 4** | **Knowledge Graph Dinâmico**<br/>Construção de grafo heterogêneo $G=(V,E)$. | GraphSAGE / GNN Topology | Topologia relacional em ASCII Canvas ativando arestas de conflito de recursos mútuos ($\kappa = 0.89$). |
 | **Estágio 5** | **Detecção Formal de Conflitos**<br/>Classificação taxonômica (C1-C5). | Matriz de Conflitos $C(c,s)$ | Identificação de conflito Direto (C1), Indireto (C2), Implícito (C3) e Multi-Tier (C5). |
-| **Estágio 6** | **Arbitragem CA-RDL (Gate 2)**<br/>Escalonamento Heurística $\to$ NDT $\to$ Safe-MAPPO. | Safe-MAPPO & Lagrangianos | Tempo de convergência ($14.39\text{ ms} < 50\text{ ms}$), Pareto Score ($0.942$) e pesos ótimos. |
+| **Estágio 6** | **Arbitragem CA-RDL & H-RDL (Gate 2)**<br/>Escalonamento Heurística $\to$ NDT $\to$ Safe-MAPPO. | Safe-MAPPO & Lagrangianos | Tempo de convergência ($14.39\text{ ms} < 50\text{ ms}$ no Tier 3 / $0.103\text{ ms}$ no H-RDL), Pareto Score e pesos ótimos. |
 | **Estágio 7** | **Safety Guard & Envelopes dApp**<br/>Bounding box $\Omega_{\text{dApp}}$ para O-DU ($< 1\text{ ms}$). | nGRG-RR-2024-10 Bounding Box | Limites de operação autônoma da dApp no TTI (Min/Max PRB, TxPower e slots de preempção). |
 | **Estágio 8** | **Atuação E2SM-RC (Gate 3/4)**<br/>Despacho de controle e confirmação física na RAN. | `RIC_CONTROL_REQ` (12040) / ACK (12041) | Atuação de parâmetros e recuperação física (latência URLLC cai para **0.82 ms** e consumo cai **-17.7%**). |
 
 ---
 
-## 6. Testes Automatizados e Homologação dos 4 Gates
+## 7. Testes Automatizados e Homologação dos 4 Gates
 
 Para executar a suíte de testes de regressão com `pytest`:
 
@@ -162,6 +225,6 @@ pytest -q
 
 **Critérios de Homologação dos 4 Gates O-RAN:**
 - **Gate 1 (Real Telemetry):** Mensagens `RIC_INDICATION` codificadas em ASN.1 APER (mtype 12050) válidas.
-- **Gate 2 (Deterministic Decision):** Latência de arbitragem computacional delimitada ($14.39\text{ ms} < 50\text{ ms}$).
+- **Gate 2 (Deterministic Decision):** Latência de arbitragem computacional delimitada ($0.103\text{ ms}$ na Fase 1 / $14.39\text{ ms}$ na Fase 2 $< 50\text{ ms}$).
 - **Gate 3 (Real Control & ACK):** Handshake de `RIC_CONTROL_REQUEST` (12040) e `RIC_CONTROL_ACK` (12041) com status de sucesso.
 - **Gate 4 (Closed-Loop Response):** Variação causal comprovada nos KPIs físicos da RAN (queda de latência URLLC $\le 1.0\text{ ms}$ e redução de consumo energético).

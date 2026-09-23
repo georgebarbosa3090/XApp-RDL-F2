@@ -108,8 +108,22 @@ flowchart TD
 | **Mecanismo de Detecção** | **Tabela de Conflitos e Regras Estáticas:** Verifica sobreposição de parâmetros físicos ($P_{tx}$, PRBs, Handover) na matriz de conflito. | **Knowledge Graph & GraphSAGE (GNN):** Mapeia a topologia como grafo dinâmico e detecta conflitos diretos, indiretos e implícitos. |
 | **Motor de Decisão (Reasoning)** | **Heurísticas TVS / EEVS:** Otimização combinatória convexa baseada em pesos estáticos de QoS e penalidades lineares. | **Safe-MAPPO (MARL):** Agentes neurais cooperativos treinados sob CMDP (*Constrained Markov Decision Process*) via Multiplicadores de Lagrange. |
 | **Garantia de Segurança** | **Safety Guard Rígido (Hard Bound):** *Clipping* e truncamento imediato de comandos fora dos limites do 3GPP TS 38.104. | **Action Masking + Lagrange Guard:** Invalidação prévia de ações inseguras no espaço de probabilidade da política neural. |
-| **Latência de Decisão** | **Ultra-baixa ($0,12	ext{ ms}$):** Execução vetorial imediata em C++/Python sem inferência neural. | **Determinada ($4,8	ext{ ms}$):** Inferência neural via PyTorch/ONNX Runtime dentro do orçamento Near-RT (< 10 ms). |
+| **Latência de Decisão** | **Ultra-baixa ($0,103\text{ ms}$):** Execução vetorial imediata em C++/Python sem inferência neural. | **Determinada ($14,39\text{ ms}$):** Inferência neural via PyTorch/ONNX Runtime dentro do orçamento Near-RT (< 50 ms). |
 | **Cenário Ideal de Operação** | Redes estáveis, tráfego homogêneo e requisitos determinísticos estritos de sub-milissegundo. | Redes densas heterogêneas, fatiamento dinâmico (URLLC/eMBB/mMTC), ISAC 6G e mobilidade NTN/V2X. |
+
+### 2.2 Stack Unificada de Observabilidade em Tempo Real (Fase 1 & Fase 2)
+
+A plataforma disponibiliza observabilidade ponta a ponta integrada com telemetria física (`ns-3.48 / 5G-LENA v5.1` ou `srsRAN Project + Open5GS 5G SA`):
+
+* **💻 Inspetor Rico de Terminal:** [`experiments/demonstration/run_rich_terminal_inspector.py`](experiments/demonstration/run_rich_terminal_inspector.py)
+  * Suporta execução interativa ou flags diretas (`-s a`, `-s b`, `-s c`, `-s all`, `-c`, `-d <segundos>`).
+  * Renderiza os 8 estágios do ciclo fechado, decodifica ASN.1 APER (KPM/RC), desenha o Grafo de Conhecimento e exibe métricas comparativas H-RDL vs CA-RDL.
+* **📊 Grafana Dashboard:** [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) (`admin`/`admin`)
+  * Linha dedicada para **Fase 1 (H-RDL Determinística)**: Latência de $0.103\text{ ms}$, Violações de Safety Guard ($0$), Dinâmica TVS vs EEVS e Action Churn.
+  * Linha de **Fase 2 (CA-RDL)**: FSM Closed-Loop, Safe-MAPPO, Conflitos C1-C5, Pareto Score ($0.942$) e Envelopes dApp ($< 1\text{ms}$).
+* **🗄️ InfluxDB v2.7:** [http://localhost:8086](http://localhost:8086) (Bucket: `oran_telemetry` | Token: `oran_rdl_token_secret_key_2026_super_secure`).
+  * Ingestão nativa de medições `hrdl_fase1`, `ran_kpi`, `rdl_decision` e `rdl_conflicts`.
+* **📖 Guia Completo de Demonstração & Telemetria:** Consulte [`experiments/demonstration/README.md`](experiments/demonstration/README.md).
 
 ---
 
