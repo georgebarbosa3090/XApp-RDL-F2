@@ -9,8 +9,8 @@
     {
       "stage_id": 1,
       "stage_name": "1. Registro de UEs & Setup de Canal 5G (PRACH -> RRC -> NAS -> PDU -> E2)",
-      "timestamp_ms": 1790173970074.9697,
-      "duration_ms": 45.86270408630371,
+      "timestamp_ms": 1790175088181.3718,
+      "duration_ms": 45.84005432128906,
       "status": "COMPLETED",
       "details": {
         "total_ues_registered": 2,
@@ -66,8 +66,8 @@
     {
       "stage_id": 2,
       "stage_name": "2. Ingestão de Telemetria E2SM-KPM (Gate 1 - ASN.1 APER Indication)",
-      "timestamp_ms": 1790173970075.029,
-      "duration_ms": 8.25364418029785,
+      "timestamp_ms": 1790175088181.4072,
+      "duration_ms": 8.2307559967041,
       "status": "COMPLETED",
       "details": {
         "kpm_indication": {
@@ -167,8 +167,8 @@
     {
       "stage_id": 3,
       "stage_name": "3. Janela de Agregação de Propostas das xApps (200 ms)",
-      "timestamp_ms": 1790173970075.0667,
-      "duration_ms": 12.531232833862305,
+      "timestamp_ms": 1790175088181.5454,
+      "duration_ms": 12.631607055664062,
       "status": "COMPLETED",
       "details": {
         "aggregation_window_ms": 200.0,
@@ -240,8 +240,8 @@
     {
       "stage_id": 4,
       "stage_name": "4. Ativação do Knowledge Graph Dinâmico (Topologia & Relações Heterogêneas)",
-      "timestamp_ms": 1790173970075.11,
-      "duration_ms": 14.840769577026368,
+      "timestamp_ms": 1790175088181.7925,
+      "duration_ms": 15.011477279663087,
       "status": "COMPLETED",
       "details": {
         "nodes": [
@@ -364,8 +364,8 @@
     {
       "stage_id": 5,
       "stage_name": "5. Detecção & Classificação Formal de Conflitos (C1-C5 e Multi-Tier)",
-      "timestamp_ms": 1790173970075.1406,
-      "duration_ms": 9.627894973754882,
+      "timestamp_ms": 1790175088181.8428,
+      "duration_ms": 9.646730041503906,
       "status": "COMPLETED",
       "details": {
         "conflicts_detected_count": 1,
@@ -390,8 +390,8 @@
     {
       "stage_id": 6,
       "stage_name": "6. Refinamento Cognitivo Escalonado (H-RDL / CA-RDL)",
-      "timestamp_ms": 1790173970075.167,
-      "duration_ms": 14.41431869506836,
+      "timestamp_ms": 1790175088182.1074,
+      "duration_ms": 14.620789184570313,
       "status": "COMPLETED",
       "details": {
         "tier_selected": 2,
@@ -410,8 +410,8 @@
     {
       "stage_id": 7,
       "stage_name": "7. Validação de Safety Guard & Envelopes de Tempo Real dApp (nGRG-RR-2024-10)",
-      "timestamp_ms": 1790173970075.187,
-      "duration_ms": 6.418119812011719,
+      "timestamp_ms": 1790175088182.3408,
+      "duration_ms": 6.627212905883789,
       "status": "COMPLETED",
       "details": {
         "safety_guard_all_passed": true,
@@ -470,8 +470,8 @@
     {
       "stage_id": 8,
       "stage_name": "8. Emissão de Controle E2SM-RC & Convergência RAN em Ciclo Fechado (Gate 3/4)",
-      "timestamp_ms": 1790173970075.205,
-      "duration_ms": 12.816450881958009,
+      "timestamp_ms": 1790175088182.6663,
+      "duration_ms": 13.103983688354493,
       "status": "COMPLETED",
       "details": {
         "closed_loop_converged": true,
