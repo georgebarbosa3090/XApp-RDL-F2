@@ -16,7 +16,7 @@ Este relatório constitui o registro oficial e exaustivo de desempenho físico d
 2. **Extração Fim-a-Fim do ns-3 FlowMonitor:** Cada ponto de dado é extraído diretamente dos traces de pacotes `FlowMonitor` gerados em tempo de simulação pela pilha 3GPP NR e protocolos de rede.
 3. **Rastreabilidade Criptográfica:** Todos os arquivos de entrada brutos possuem seus hashes SHA-256 documentados na Seção de Proveniência deste documento para garantir reprodutibilidade auditável.
 
-* **Diretório de Traces Brutos:** `C:\Users\george.barbosa\.gemini\antigravity\scratch\iqos-xapp-rdl-phase2\experiments\results\s0_s15_simulations`
+* **Diretório de Traces Brutos:** `experiments/results/s0_s15_simulations`
 * **Total de Arquivos XML do FlowMonitor:** 10
 * **Total de Arquivos CSV / Logs Identificados:** 16
 

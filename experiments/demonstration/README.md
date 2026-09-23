@@ -90,7 +90,7 @@ Se preferir utilizar a extensão **Live Server** do VSCode:
    ```powershell
    .venv\Scripts\python experiments/demonstration/rdl_demonstration_engine.py --scenario all
    ```
-2. No VSCode Explorer, clique com o botão direito no arquivo [`experiments/demonstration/web/index.html`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/demonstration/web/index.html) e selecione **"Open with Live Server"**.
+2. No VSCode Explorer, clique com o botão direito no arquivo `experiments/demonstration/web/index.html` e selecione **"Open with Live Server"**.
 
 ---
 
@@ -100,7 +100,7 @@ Para executar o cenário físico completo com o ns-3 e o nó E2 real:
 
 1. **Terminal 1 (WSL2 / Linux - Near-RT RIC & Engine):**
    ```bash
-   cd /mnt/c/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2
+   cd ~/XApp-RDL-F2
    source .venv/bin/activate
    python experiments/demonstration/rdl_demonstration_engine.py --scenario conflict_storm --serve --port 8080
    ```

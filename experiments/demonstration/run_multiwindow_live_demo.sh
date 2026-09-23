@@ -18,7 +18,6 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # Robust Python Executable Detection (prefer venv with packages, fallback to system python3)
 PYTHON_CMD=""
 for candidate in \
-    "/home/george/.venv-rdl/bin/python" \
     "$PROJECT_DIR/.venv/bin/python" \
     "$PROJECT_DIR/../.venv/bin/python" \
     "$(command -v python3 2>/dev/null)" \
