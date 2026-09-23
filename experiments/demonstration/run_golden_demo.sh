@@ -113,6 +113,13 @@ tmux set-option -t "$SESSION_NAME" mouse on
 tmux set-option -t "$SESSION_NAME" pane-border-status top
 tmux set-option -t "$SESSION_NAME" pane-border-format " [#{pane_title}] "
 
-# Attach to tmux session
-echo "[+] Conectando aos 4 Terminais da Sessao Tmux..."
-tmux attach-session -t "$SESSION_NAME"
+# Attach to tmux session if running in an interactive terminal
+if [ -t 1 ]; then
+    echo "[+] Conectando aos 4 Terminais da Sessao Tmux..."
+    tmux attach-session -t "$SESSION_NAME"
+else
+    echo "[+] Sessao Tmux '$SESSION_NAME' criada em background com sucesso!"
+    echo "[+] Para conectar aos 4 quadrantes na tela, execute no terminal:"
+    echo "    tmux attach-session -t $SESSION_NAME"
+fi
+
