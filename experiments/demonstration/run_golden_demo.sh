@@ -52,6 +52,17 @@ echo " Diretorio: $PROJECT_DIR"
 echo " Python: $PYTHON_CMD"
 echo "================================================================================"
 
+# Auto-sync updated scenario to any existing ns-3 scratch folders
+for scratch_dir in \
+    "$HOME/ns3-oran-workspace/ns-3-oran/scratch" \
+    "/root/ns3-oran-workspace/ns-3-oran/scratch" \
+    "$HOME/workspace/ns-3-dev/scratch" \
+    "/root/workspace/ns-3-dev/scratch"; do
+    if [ -d "$scratch_dir" ]; then
+        cp -f "$PROJECT_DIR/simulations/ns3/scenario_rdl_closed_loop_nori.cc" "$scratch_dir/" 2>/dev/null || true
+    fi
+done
+
 # 1. Create main session
 tmux new-session -d -s "$SESSION_NAME" -n "H-RDL-Golden-ClosedLoop"
 
@@ -70,7 +81,7 @@ tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m[TERMINAL 1 - RAN] ns-
 tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m* 2 gNBs (Macro/Micro) | 30 UEs (URLLC/eMBB/mMTC) | Wall-Clock\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m* t=20s: Real Traffic Burst (Buffer Overflow) & TxPower cut -13dBm\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.0" "echo -e '\033[1;36m================================================================\033[0m'" C-m
-tmux send-keys -t "$SESSION_NAME:0.0" "if [ -d ~/ns3-oran-workspace/ns-3-oran ]; then cd ~/ns3-oran-workspace/ns-3-oran && ./ns3 run 'scenario_rdl_closed_loop_nori --simTime=60.0 --demoMode=realtime'; elif [ -d ~/workspace/ns-3-dev ]; then cd ~/workspace/ns-3-dev && ./ns3 run 'scenario_rdl_closed_loop_nori --simTime=60.0 --demoMode=realtime'; else '$PYTHON_CMD' -c 'import time; [print(f\"[ns-3 5G-LENA] t={t:.1f}s | gNB-1 | PRB={98.5 if (20<=t<27) else (30.0 if t<20 else 52.0):.1f}% | Delay={24.8 if (20<=t<27) else 0.82:.2f}ms | Power={30.0 if (20<=t<27) else (43.0 if t<20 else 37.0)}dBm\") or time.sleep(0.5) for t in [i*0.5 for i in range(120)]]'; fi" C-m
+tmux send-keys -t "$SESSION_NAME:0.0" "if [ -d ~/ns3-oran-workspace/ns-3-oran ]; then cd ~/ns3-oran-workspace/ns-3-oran && ./ns3 run 'scenario_rdl_closed_loop_nori --simTime=60.0 --demoMode=realtime'; elif [ -d ~/workspace/ns-3-dev ]; then cd ~/workspace/ns-3-dev && ./ns3 run 'scenario_rdl_closed_loop_nori --simTime=60.0 --demoMode=realtime'; fi || '$PYTHON_CMD' -c 'import time; [print(f\"[ns-3 5G-LENA] t={t:.1f}s | gNB-1 | PRB={98.5 if (20<=t<27) else (30.0 if t<20 else 52.0):.1f}% | Delay={24.8 if (20<=t<27) else 0.82:.2f}ms | Power={30.0 if (20<=t<27) else (43.0 if t<20 else 37.0)}dBm\") or time.sleep(0.5) for t in [i*0.5 for i in range(120)]]'" C-m
 
 # -----------------------------------------------------------------------------
 # PANE 2 (Top-Right): 2 — E2/NORI (E2 Agent / E2SIM)
