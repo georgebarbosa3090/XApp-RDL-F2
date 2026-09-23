@@ -323,10 +323,14 @@ def run_scenario(scenario, stream_telemetry=True, duration_s=30.0, interval_s=0.
     print_certification(scenario)
 
     if stream_telemetry:
+        is_infinite = duration_s <= 0
+        dur_str = "MODO CONTÍNUO (Sem Fim - Pressione Ctrl+C para encerrar)" if is_infinite else f"{duration_s:.1f}s"
         print(f"{CYAN}{'='*80}")
-        print(f" [STREAMING] Iniciando Streaming Contínuo para InfluxDB (8086) e Grafana (3000)")
-        print(f" Duração: {duration_s:.1f}s | Cenário: {scenario.scenario_id}")
-        print(f" Acesse no Navegador: http://localhost:3000/d/oran-rdl-closed-loop")
+        print(f" [STREAMING] Iniciando Transmissão em Tempo Real para InfluxDB (8086) e Grafana (3000)")
+        print(f" Duração: {dur_str} | Cenário: {scenario.scenario_id}")
+        print(f" Acesse no Navegador:")
+        print(f"   • Grafana:  http://localhost:3000/d/oran-rdl-closed-loop")
+        print(f"   • InfluxDB: http://localhost:8086")
         print(f"{'='*80}{RESET}\n")
 
         bridge = InfluxTelemetryBridge()
@@ -340,28 +344,31 @@ def interactive_menu():
     print(f"  {CYAN}[2]{RESET} {BOLD}Cenário B{RESET}: Preempção Rápida URLLC & Envelopes dApp Multi-Tier (O-DU sub-1ms) [Tier 2]")
     print(f"  {CYAN}[3]{RESET} {BOLD}Cenário C{RESET}: Eliminação de Flapping Temporal (Ping-Pong Lockout 5s) [Heurístico Tier 1]")
     print(f"  {CYAN}[4]{RESET} {BOLD}Executar Todos os Cenários Sequencialmente (A -> B -> C){RESET}")
+    print(f"  {CYAN}[5]{RESET} {BOLD}Modo Contínuo / Infinito{RESET} (Transmissão em Tempo Real Sem Fim para Grafana)")
     print(f"  {CYAN}[0]{RESET} Sair\n")
 
     try:
-        choice = input(f"{YELLOW}Digite sua opção [1-4] (Padrão: 1): {RESET}").strip()
+        choice = input(f"{YELLOW}Digite sua opção [1-5] (Padrão: 1): {RESET}").strip()
     except (EOFError, KeyboardInterrupt):
         print("\nOperação cancelada pelo usuário.")
         sys.exit(0)
 
     if choice == "" or choice == "1" or choice.lower() == "a":
-        return [SCENARIO_A_CONFLICT_STORM]
+        return [SCENARIO_A_CONFLICT_STORM], 60.0
     elif choice == "2" or choice.lower() == "b":
-        return [SCENARIO_B_URLLC_DAPP_ENVELOPES]
+        return [SCENARIO_B_URLLC_DAPP_ENVELOPES], 60.0
     elif choice == "3" or choice.lower() == "c":
-        return [SCENARIO_C_TEMPORAL_FLAPPING]
+        return [SCENARIO_C_TEMPORAL_FLAPPING], 60.0
     elif choice == "4" or choice.lower() in ("all", "todos"):
-        return [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
+        return [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING], 20.0
+    elif choice == "5" or choice.lower() in ("inf", "infinite", "continuo", "c"):
+        return [SCENARIO_A_CONFLICT_STORM], 0.0
     elif choice == "0":
         print("Saindo...")
         sys.exit(0)
     else:
         print(f"{RED}Opção inválida. Executando Cenário A por padrão.{RESET}")
-        return [SCENARIO_A_CONFLICT_STORM]
+        return [SCENARIO_A_CONFLICT_STORM], 60.0
 
 
 def main():
@@ -377,8 +384,14 @@ def main():
         "-d",
         "--duration",
         type=float,
-        default=30.0,
-        help="Duração do streaming contínuo para InfluxDB em segundos (padrão: 30.0s)",
+        default=60.0,
+        help="Duração do streaming em segundos (0 ou negativo = modo infinito contínuo, padrão: 60.0s)",
+    )
+    parser.add_argument(
+        "-c",
+        "--continuous",
+        action="store_true",
+        help="Executa em modo contínuo infinito (streaming sem fim até pressionar Ctrl+C)",
     )
     parser.add_argument(
         "--no-stream",
@@ -393,6 +406,7 @@ def main():
     )
 
     args = parser.parse_args()
+    target_duration = 0.0 if args.continuous else args.duration
 
     if args.scenario:
         if args.scenario in ("a", "scenario_a_conflict_storm"):
@@ -405,7 +419,9 @@ def main():
             scenarios = [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
     else:
         if sys.stdin.isatty():
-            scenarios = interactive_menu()
+            scenarios, menu_dur = interactive_menu()
+            if not args.continuous and args.duration == 60.0:
+                target_duration = menu_dur
         else:
             scenarios = [SCENARIO_A_CONFLICT_STORM]
 
@@ -417,7 +433,7 @@ def main():
         run_scenario(
             scenario=sc,
             stream_telemetry=not args.no_stream,
-            duration_s=args.duration if len(scenarios) == 1 else 10.0,
+            duration_s=target_duration if len(scenarios) == 1 else 20.0,
             interval_s=args.interval,
         )
 

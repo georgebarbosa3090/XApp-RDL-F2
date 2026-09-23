@@ -130,115 +130,162 @@ class InfluxTelemetryBridge:
         return self.send_line_protocol("\n".join(lines))
 
     def stream_live_closed_loop_demo(self, duration_s: float = 60.0, interval_s: float = 0.5) -> None:
-        """Runs the 60s real-time closed-loop stream directly into InfluxDB."""
-        logger.info(f"Iniciando streaming contínuo para InfluxDB ({self.host}:{self.port}/{self.bucket})...")
-        steps = int(duration_s / interval_s)
+        """
+        Runs real-time closed-loop telemetry streaming directly into InfluxDB.
+        Supports arbitrary duration (e.g. 300s, 600s, 3600s) or infinite mode (duration_s <= 0).
+        Executes periodic 60-second perturbation & cognitive recovery cycles with realistic RF jitter.
+        """
+        import random
+        is_infinite = duration_s <= 0
+        dur_label = "MODO CONTÍNUO (Ctrl+C para encerrar)" if is_infinite else f"{duration_s:.1f} segundos"
+        logger.info(f"Iniciando streaming ({dur_label}) para InfluxDB ({self.host}:{self.port}/{self.bucket})...")
+        
+        step = 0
+        t_elapsed = 0.0
 
-        for step in range(steps):
-            t = step * interval_s
-            # Dynamic closed-loop dynamics
-            if t < 20.0:
-                # 0-20s: Golden
-                state = 0
-                prb_u, prb_e, prb_m = 30.0, 55.0, 15.0
-                delay_u = 0.82
-                tput = 85.0
-                pwr = 43.0
-                es = 0.0
-                tier = 1
-                confs = 0
-                pareto = 0.95
-                inf_time = 4.2
-            elif 20.0 <= t < 23.0:
-                # 20-23s: Perturbation & Perception
-                state = 1
-                prb_u, prb_e, prb_m = 98.5, 30.0, 5.0
-                delay_u = 24.8
-                tput = 32.0
-                pwr = 30.0
-                es = 25.0
-                tier = 1
-                confs = 1
-                pareto = 0.42
-                inf_time = 4.5
-            elif 23.0 <= t < 25.0:
-                # 23-25s: Conflict Detected
-                state = 2
-                prb_u, prb_e, prb_m = 98.5, 25.0, 5.0
-                delay_u = 24.8
-                tput = 30.0
-                pwr = 30.0
-                es = 25.0
-                tier = 2
-                confs = 3
-                pareto = 0.45
-                inf_time = 8.6
-            elif 25.0 <= t < 27.0:
-                # 25-27s: RDL Reason (Safe-MAPPO)
-                state = 3
-                prb_u, prb_e, prb_m = 98.5, 25.0, 5.0
-                delay_u = 24.8
-                tput = 30.0
-                pwr = 30.0
-                es = 25.0
-                tier = 3
-                confs = 3
-                pareto = 0.942
-                inf_time = 14.39
-            elif 27.0 <= t < 30.0:
-                # 27-30s: Actuation E2SM-RC Applied
-                state = 4
-                prb_u, prb_e, prb_m = 52.0, 38.0, 10.0
-                delay_u = 1.4
-                tput = 72.0
-                pwr = 37.0
-                es = 17.7
-                tier = 3
-                confs = 0
-                pareto = 0.942
-                inf_time = 14.39
-            else:
-                # 30-60s: Closed Loop Verified / Golden Restored
-                state = 5
-                prb_u, prb_e, prb_m = 52.0, 38.0, 10.0
-                delay_u = 0.82
-                tput = 78.0
-                pwr = 37.0
-                es = 17.7
-                tier = 3
-                confs = 0
-                pareto = 0.942
-                inf_time = 14.39
+        try:
+            while is_infinite or (t_elapsed < duration_s):
+                cycle_t = t_elapsed % 60.0
+                cycle_num = int(t_elapsed // 60.0) + 1
+                
+                # Dynamic realistic RF noise
+                noise_delay = random.uniform(-0.05, 0.05)
+                noise_prb = random.uniform(-0.5, 0.5)
+                noise_tput = random.uniform(-1.2, 1.2)
 
-            success = self.publish_ran_tick(
-                sim_time_s=t,
-                prb_urllc=prb_u,
-                prb_embb=prb_e,
-                prb_mmtc=prb_m,
-                latency_urllc_ms=delay_u,
-                throughput_mbps=tput,
-                tx_power_dbm=pwr,
-                energy_saving_pct=es,
-                state_code=state,
-            )
-            self.publish_decision_event(
-                tier=tier,
-                inference_time_ms=inf_time,
-                pareto_score=pareto,
-                conflicts_count=confs,
-            )
+                # 60-Second Closed-Loop FSM Phase Dynamics
+                if cycle_t < 20.0:
+                    # 0-20s: Golden State (Equilibrium)
+                    state = 0
+                    prb_u = max(20.0, 30.0 + noise_prb)
+                    prb_e = max(40.0, 55.0 + noise_prb)
+                    prb_m = 15.0
+                    delay_u = max(0.5, 0.82 + noise_delay)
+                    tput = max(70.0, 85.0 + noise_tput)
+                    pwr = 43.0
+                    es = 0.0
+                    tier = 1
+                    confs = 0
+                    pareto = 0.95
+                    inf_time = 4.2 + random.uniform(-0.2, 0.2)
 
-            status_lbl = ["GOLDEN", "PERTURBED", "DETECTED", "REASONING", "ACTUATING", "VERIFIED"][state]
-            if step % 4 == 0:
-                logger.info(
-                    f"t={t:4.1f}s | State: {status_lbl:10s} | InfluxDB Write: {'OK' if success else 'RETRYING'} | URLLC Delay={delay_u:.2f}ms | PRB={prb_u:.1f}%"
+                elif 20.0 <= cycle_t < 23.0:
+                    # 20-23s: Perturbation Injected (Traffic surge & Power cut)
+                    state = 1
+                    prb_u = min(100.0, 98.5 + noise_prb)
+                    prb_e = 30.0
+                    prb_m = 5.0
+                    delay_u = max(18.0, 24.8 + random.uniform(-1.0, 2.0))
+                    tput = max(20.0, 32.0 + noise_tput)
+                    pwr = 30.0
+                    es = 25.0
+                    tier = 1
+                    confs = 1
+                    pareto = 0.42
+                    inf_time = 4.5 + random.uniform(-0.3, 0.3)
+
+                elif 23.0 <= cycle_t < 25.0:
+                    # 23-25s: Conflict Formally Detected (C1/C2/C3)
+                    state = 2
+                    prb_u = min(100.0, 98.5 + noise_prb)
+                    prb_e = 25.0
+                    prb_m = 5.0
+                    delay_u = max(18.0, 24.8 + random.uniform(-0.5, 1.5))
+                    tput = max(20.0, 30.0 + noise_tput)
+                    pwr = 30.0
+                    es = 25.0
+                    tier = 2
+                    confs = 3
+                    pareto = 0.45
+                    inf_time = 8.6 + random.uniform(-0.4, 0.4)
+
+                elif 25.0 <= cycle_t < 27.0:
+                    # 25-27s: H-RDL / CA-RDL Cognitive Reasoning (Safe-MAPPO)
+                    state = 3
+                    prb_u = min(100.0, 98.5 + noise_prb)
+                    prb_e = 25.0
+                    prb_m = 5.0
+                    delay_u = max(18.0, 24.8 + random.uniform(-0.5, 1.0))
+                    tput = max(20.0, 30.0 + noise_tput)
+                    pwr = 30.0
+                    es = 25.0
+                    tier = 3
+                    confs = 3
+                    pareto = 0.942
+                    inf_time = 14.39 + random.uniform(-0.5, 0.5)
+
+                elif 27.0 <= cycle_t < 30.0:
+                    # 27-30s: Actuation Dispatched (E2SM-RC Format 1)
+                    state = 4
+                    prb_u = 52.0 + noise_prb
+                    prb_e = 38.0 + noise_prb
+                    prb_m = 10.0
+                    delay_u = max(1.0, 1.40 + noise_delay)
+                    tput = max(65.0, 72.0 + noise_tput)
+                    pwr = 37.0
+                    es = 17.7
+                    tier = 3
+                    confs = 0
+                    pareto = 0.942
+                    inf_time = 14.39
+
+                else:
+                    # 30-60s: Closed-Loop Converged & Physical Recovery Verified
+                    state = 5
+                    prb_u = 52.0 + noise_prb
+                    prb_e = 38.0 + noise_prb
+                    prb_m = 10.0
+                    delay_u = max(0.5, 0.82 + noise_delay)
+                    tput = max(70.0, 78.0 + noise_tput)
+                    pwr = 37.0
+                    es = 17.7
+                    tier = 3
+                    confs = 0
+                    pareto = 0.942
+                    inf_time = 14.39
+
+                success = self.publish_ran_tick(
+                    sim_time_s=t_elapsed,
+                    prb_urllc=prb_u,
+                    prb_embb=prb_e,
+                    prb_mmtc=prb_m,
+                    latency_urllc_ms=delay_u,
+                    throughput_mbps=tput,
+                    tx_power_dbm=pwr,
+                    energy_saving_pct=es,
+                    state_code=state,
+                )
+                self.publish_decision_event(
+                    tier=tier,
+                    inference_time_ms=inf_time,
+                    pareto_score=pareto,
+                    conflicts_count=confs,
                 )
 
-            time.sleep(interval_s)
+                status_lbl = ["GOLDEN", "PERTURBED", "DETECTED", "REASONING", "ACTUATING", "VERIFIED"][state]
+                if step % 4 == 0:
+                    cycle_info = f"[Ciclo {cycle_num}] " if (duration_s > 60 or is_infinite) else ""
+                    logger.info(
+                        f"{cycle_info}t={t_elapsed:5.1f}s | State: {status_lbl:10s} | InfluxDB Write: {'OK' if success else 'RETRYING'} | URLLC Delay={delay_u:.2f}ms | PRB={prb_u:.1f}%"
+                    )
+
+                step += 1
+                t_elapsed += interval_s
+                time.sleep(interval_s)
+
+        except KeyboardInterrupt:
+            logger.info("\n[!] Streaming interrompido pelo usuário via KeyboardInterrupt.")
 
         logger.info("Streaming de telemetria para InfluxDB e Grafana concluído com sucesso!")
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="O-RAN Telemetry InfluxDB Bridge")
+    parser.add_argument("-d", "--duration", type=float, default=60.0, help="Duração em segundos (0 = infinito)")
+    parser.add_argument("-i", "--interval", type=float, default=0.5, help="Intervalo de amostragem em segundos")
+    args = parser.parse_args()
+
     bridge = InfluxTelemetryBridge()
-    bridge.stream_live_closed_loop_demo(duration_s=60.0, interval_s=0.5)
+    bridge.stream_live_closed_loop_demo(duration_s=args.duration, interval_s=args.interval)
+
