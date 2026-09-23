@@ -664,8 +664,30 @@ def start_web_server(port: int = 8080, web_dir: Optional[str] = None) -> None:
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=web_dir, **kwargs)
 
+        def do_GET(self):
+            if self.path.startswith("/api/influx/health"):
+                import urllib.request
+                try:
+                    with urllib.request.urlopen("http://127.0.0.1:8086/health", timeout=1.0) as resp:
+                        data = resp.read()
+                        self.send_response(resp.status)
+                        self.send_header("Content-Type", "application/json")
+                        self.send_header("Access-Control-Allow-Origin", "*")
+                        self.end_headers()
+                        self.wfile.write(data)
+                        return
+                except Exception as e:
+                    self.send_response(502)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Access-Control-Allow-Origin", "*")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "unavailable", "error": str(e)}).encode("utf-8"))
+                    return
+            super().do_GET()
+
         def log_message(self, format, *args):
             logger.info("[HTTP] " + (format % args))
+
 
     socketserver.TCPServer.allow_reuse_address = True
     
