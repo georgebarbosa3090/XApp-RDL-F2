@@ -99,14 +99,15 @@ tmux send-keys -t "$SESSION_NAME:0.1" "'$PYTHON_CMD' experiments/demonstration/r
 # -----------------------------------------------------------------------------
 # PANE 4 (Bottom-Right): 4 — H-RDL (Scientific Dashboard & Loop Certification)
 # -----------------------------------------------------------------------------
-tmux select-pane -t "$SESSION_NAME:0.3" -T "4 — H-RDL Live Dashboard (http://localhost:8080)"
+tmux select-pane -t "$SESSION_NAME:0.3" -T "4 — H-RDL Live Dashboard (Web UI)"
 tmux send-keys -t "$SESSION_NAME:0.3" "cd '$PROJECT_DIR' && clear" C-m
 tmux send-keys -t "$SESSION_NAME:0.3" "echo -e '\033[1;33m================================================================\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.3" "echo -e '\033[1;33m[TERMINAL 4 - H-RDL DASHBOARD] WEB SERVER & METRICS STREAM\033[0m'" C-m
-tmux send-keys -t "$SESSION_NAME:0.3" "echo -e '\033[1;33m* Dashboard Interativo Ativo em: http://localhost:8080\033[0m'" C-m
+tmux send-keys -t "$SESSION_NAME:0.3" "echo -e '\033[1;33m* O Servidor Web auto-detecta porta livre (8080/8081/8082...)\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.3" "echo -e '\033[1;33m* Closed-Loop State Machine + Certificacao 4-Gates O-RAN\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.3" "echo -e '\033[1;33m================================================================\033[0m'" C-m
 tmux send-keys -t "$SESSION_NAME:0.3" "'$PYTHON_CMD' experiments/demonstration/rdl_demonstration_engine.py --serve --port 8080" C-m
+
 
 # Configure tmux pane appearance
 tmux set-option -t "$SESSION_NAME" mouse on

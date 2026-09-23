@@ -656,7 +656,6 @@ class DemonstrationEngine:
 def start_web_server(port: int = 8080, web_dir: Optional[str] = None) -> None:
     import http.server
     import socketserver
-    import webbrowser
 
     if web_dir is None:
         web_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
@@ -665,15 +664,43 @@ def start_web_server(port: int = 8080, web_dir: Optional[str] = None) -> None:
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=web_dir, **kwargs)
 
+        def log_message(self, format, *args):
+            logger.info("[HTTP] " + (format % args))
+
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", port), CustomHandler) as httpd:
-        url = f"http://localhost:{port}/index.html"
-        logger.info(f"Servidor de Demonstração Ativo em: {url}")
-        logger.info("Pressione Ctrl+C para encerrar o servidor.")
+    
+    selected_port = port
+    httpd = None
+    for p in range(port, port + 50):
+        try:
+            httpd = socketserver.TCPServer(("", p), CustomHandler)
+            selected_port = p
+            break
+        except OSError:
+            continue
+
+    if httpd is None:
+        raise RuntimeError(f"Nenhuma porta livre encontrada na faixa {port}-{port+50}")
+
+    url = f"http://localhost:{selected_port}/index.html"
+    print("\n" + "=" * 70, flush=True)
+    print(f" [+] SERVIDOR DE DEMONSTRACAO ATIVO COM SUCESSO!", flush=True)
+    print(f" [+] Abra no Google Chrome / Edge no Windows:", flush=True)
+    print(f"     >>> {url} <<<", flush=True)
+    print("=" * 70 + "\n", flush=True)
+
+    try:
+        url_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "active_url.txt")
+        with open(url_file, "w", encoding="utf-8") as f:
+            f.write(url + "\n")
+    except Exception:
+        pass
+
+    with httpd:
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
-            logger.info("Servidor encerrado pelo usuário.")
+            logger.info("Servidor encerrado pelo usuario.")
 
 
 def main():
