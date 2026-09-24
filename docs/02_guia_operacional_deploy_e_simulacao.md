@@ -138,7 +138,27 @@ python deployments/telemetry/telemetry_influx_bridge.py --duration 300
 - **InfluxDB 2.7 UI:** `http://localhost:8086` (Org: `oran-alliance`, Bucket: `oran_telemetry`)
 - **Grafana Dashboard:** `http://localhost:3000` (Login: `admin` / Senha: `admin`)
 
-### 4.3. Dissecção e Auditoria de Traces PCAP E2 (Python, Windows e WSL2)
+### 4.3. Rich Terminal Inspector (Inspetor Rico de Terminal & Cockpit de Demonstração)
+Para renderizar visualmente em formato de painel rico todos os 8 estágios do ciclo fechado O-RAN, decodificação binária ASN.1 APER, grafos de conhecimento em ASCII e streaming simultâneo de telemetria:
+
+```bash
+# Opção A: Menu Interativo no Terminal
+python3 experiments/demonstration/run_rich_terminal_inspector.py
+
+# Opção B: Execução Direta do Cenário A (Conflict Storm - 3 xApps)
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s a
+
+# Opção C: Execução Direta do Cenário B (Preempção Rápida URLLC & dApp sub-1ms)
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s b
+
+# Opção D: Execução Direta do Cenário C (Eliminação de Flapping Ping-Pong Lockout 5s)
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s c
+
+# Opção E: Sequencial de Todos os Cenários com Validação dos 4 Gates (sem aguardar stream contínuo)
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s all --no-stream
+```
+
+### 4.4. Dissecção e Auditoria de Traces PCAP E2 (Python, Windows e WSL2)
 Após executar a captura protocolar (`python scripts/run_e2_live_socket_capture.py`):
 ```bash
 # Opção A (Python Standalone - Direto no terminal Windows/Linux):

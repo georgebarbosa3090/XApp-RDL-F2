@@ -242,6 +242,9 @@ python scripts/run_live_demonstrations_d1_d5.py
 
 # 3. Executar o benchmark de tempestade de conflitos (Conflict Storm):
 python scripts/run_conflict_storm_benchmark.py
+
+# 4. Executar o Inspetor Rico de Terminal (Cockpit Interativo dos 8 Estágios):
+python experiments/demonstration/run_rich_terminal_inspector.py -s all --no-stream
 ```
 
 ### 4.5. Pipeline de Automação Completa (Execução em Um Comando)
