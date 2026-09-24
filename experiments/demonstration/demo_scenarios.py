@@ -56,13 +56,14 @@ class DemonstrationScenario:
 
 SCENARIO_A_CONFLICT_STORM = DemonstrationScenario(
     scenario_id="scenario_a_conflict_storm",
-    title="Cenário A: Tempestade de Conflitos (Conflict Storm - 3 xApps)",
-    subtitle="Arbitragem Concorrente: QoS Slicing vs. Energy-Saving vs. Traffic-Steering",
+    title="Cenário A: Tempestade de Conflitos (Conflict Storm - 6 xApps)",
+    subtitle="Arbitragem Concorrente: QoS Slicing vs. Energy vs. TS vs. Beamformer vs. ISAC vs. Rogue xApp",
     description=(
-        "Três xApps com objetivos concorrentes solicitam modificações simultâneas no gNB-1: "
-        "a xSlice demanda +35% de PRB para URLLC, a xEnergy demanda corte de 13 dBm na potência "
-        "e redução de PRBs, e a xTS tenta forçar handover de UEs de alta prioridade. "
-        "Demonstra a ativação do Knowledge Graph e a escalada do H-RDL até o Nível 3 (Safe-MAPPO)."
+        "Seis xApps de referência simultâneas solicitam modificações concorrentes no gNB-1: "
+        "a xSlice demanda +35% de PRB para URLLC, a xEnergy demanda corte de 13 dBm na potência, "
+        "a xTS força migração de UEs, a xBeamformer reorienta feixes verticais, a xISAC-Radar aloca "
+        "40% de recursos para sensoriamento 6G, e a Rogue-xApp tenta injetar potência fora dos limites 3GPP. "
+        "Demonstra a ativação do Knowledge Graph, isolamento Zero-Trust e a escalada até o Nível 3 (Safe-MAPPO)."
     ),
     ues=[
         UERegistrationProfile(
@@ -93,6 +94,26 @@ SCENARIO_A_CONFLICT_STORM = DemonstrationScenario(
             service_type="mMTC",
             initial_sinr_db=14.0,
             initial_buffer_kb=80.0,
+            target_gnb="gNB-1",
+        ),
+        UERegistrationProfile(
+            ue_id="UE-104",
+            imsi="001010123456004",
+            rnti=104,
+            slice_id="Slice-ISAC",
+            service_type="ISAC",
+            initial_sinr_db=20.0,
+            initial_buffer_kb=300.0,
+            target_gnb="gNB-1",
+        ),
+        UERegistrationProfile(
+            ue_id="UE-105",
+            imsi="001010123456005",
+            rnti=105,
+            slice_id="Slice-V2X",
+            service_type="V2X",
+            initial_sinr_db=17.5,
+            initial_buffer_kb=550.0,
             target_gnb="gNB-1",
         ),
     ],
@@ -130,10 +151,50 @@ SCENARIO_A_CONFLICT_STORM = DemonstrationScenario(
             priority=2,
             rationale="Balanceamento de carga preventiva; forçar migração de UE-102 para gNB-2 para desobstruir célula local.",
         ),
+        XAppProposal(
+            xapp_id="xApp-Beamformer",
+            intent_type="MIMO_BEAM_OPTIMIZATION",
+            target_slice="Slice-eMBB",
+            target_cell="gNB-1",
+            proposed_rcp="BEAM_DOWNTILT",
+            proposed_value=7.5,
+            unit="deg",
+            priority=4,
+            rationale="Otimização angular de feixe vertical para UEs terrestres com redução de interferência inter-célula.",
+        ),
+        XAppProposal(
+            xapp_id="xApp-ISAC-Radar",
+            intent_type="SENSING_COMM_COEXISTENCE",
+            target_slice="Slice-ISAC",
+            target_cell="gNB-1",
+            proposed_rcp="ISAC_SENSING_RATIO",
+            proposed_value=0.4,
+            unit="ratio",
+            priority=2,
+            rationale="Alocação de 40% dos subframes para varredura e rastreamento de alvos aéreos (UAV/Drones).",
+        ),
+        XAppProposal(
+            xapp_id="xApp-Rogue-Stress",
+            intent_type="ADVERSARIAL_POWER_OVERRIDE",
+            target_slice="Slice-URLLC",
+            target_cell="gNB-1",
+            proposed_rcp="Cell.TxPower",
+            proposed_value=55.0,
+            unit="dBm",
+            priority=1,
+            rationale="Injeção não autorizada de 55 dBm extrapolando teto físico de hardware (Macro 43 dBm) - Teste Zero-Trust.",
+        ),
     ],
     initial_cell_power_dbm=43.0,
-    initial_prb_distribution={"Slice-URLLC": 30.0, "Slice-eMBB": 50.0, "Slice-mMTC": 20.0},
-    expected_conflict_types=["DIRECT_C1_PRB_CONTENTION", "INDIRECT_C2_POWER_VS_QOS", "IMPLICIT_HO_INTERFERENCE"],
+    initial_prb_distribution={"Slice-URLLC": 30.0, "Slice-eMBB": 40.0, "Slice-mMTC": 10.0, "Slice-ISAC": 10.0, "Slice-V2X": 10.0},
+    expected_conflict_types=[
+        "DIRECT_C1_PRB_CONTENTION",
+        "INDIRECT_C2_POWER_VS_QOS",
+        "IMPLICIT_HO_INTERFERENCE",
+        "SPATIAL_BEAM_INTERFERENCE",
+        "ISAC_RADAR_SPECTRAL_CONTENTION",
+        "ZERO_TRUST_BOUNDARY_VIOLATION"
+    ],
     expected_rdl_tier=3,
     dapp_enabled=True,
 )

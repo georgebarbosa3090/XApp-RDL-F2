@@ -327,21 +327,42 @@ class DemonstrationEngine:
         # RCP Nodes
         nodes.append({"id": "RCP-PRB-URLLC", "label": "RRMPolicyRatio.URLLC", "type": "RCP", "color": "#ff0055"})
         nodes.append({"id": "RCP-TxPower", "label": "Cell.TxPower", "type": "RCP", "color": "#ff0055"})
+        nodes.append({"id": "RCP-HO-A3", "label": "HO.A3Offset", "type": "RCP", "color": "#ff0055"})
+        nodes.append({"id": "RCP-BeamDowntilt", "label": "BEAM_DOWNTILT", "type": "RCP", "color": "#ff0055"})
+        nodes.append({"id": "RCP-ISAC-Sensing", "label": "ISAC_SENSING_RATIO", "type": "RCP", "color": "#ff0055"})
 
         edges.append({"source": "xApp-QoS-Slice", "target": "RCP-PRB-URLLC", "relation": "modifies", "weight": 1.0})
         edges.append({"source": "xApp-Energy-Saving", "target": "RCP-TxPower", "relation": "modifies", "weight": 1.0})
+        edges.append({"source": "xApp-Traffic-Steering", "target": "RCP-HO-A3", "relation": "modifies", "weight": 1.0})
+        edges.append({"source": "xApp-Beamformer", "target": "RCP-BeamDowntilt", "relation": "modifies", "weight": 1.0})
+        edges.append({"source": "xApp-ISAC-Radar", "target": "RCP-ISAC-Sensing", "relation": "modifies", "weight": 1.0})
+        edges.append({"source": "xApp-Rogue-Stress", "target": "RCP-TxPower", "relation": "unauthorized_override", "weight": 3.0})
 
         # Conflict Relations
         if len(self.scenario.proposals) >= 2:
             edges.append({
-                "source": self.scenario.proposals[0].xapp_id,
-                "target": self.scenario.proposals[1].xapp_id,
+                "source": "xApp-QoS-Slice",
+                "target": "xApp-Energy-Saving",
                 "relation": "MUTUAL_RESOURCE_CONTENTION",
                 "weight": 2.5,
                 "is_conflict": True,
             })
+            edges.append({
+                "source": "xApp-ISAC-Radar",
+                "target": "xApp-QoS-Slice",
+                "relation": "SPECTRAL_PRB_SHARING_CONTENTION",
+                "weight": 2.0,
+                "is_conflict": True,
+            })
+            edges.append({
+                "source": "xApp-Rogue-Stress",
+                "target": "RCP-TxPower",
+                "relation": "ZERO_TRUST_ISOLATION_ALERT",
+                "weight": 5.0,
+                "is_conflict": True,
+            })
 
-        self.knowledge_graph = {"nodes": nodes, "edges": edges, "graph_density": 0.38}
+        self.knowledge_graph = {"nodes": nodes, "edges": edges, "graph_density": 0.45}
         duration = (time.time() - t0) * 1000.0 + 14.8
 
         rec = StageExecutionRecord(
@@ -392,6 +413,33 @@ class DemonstrationEngine:
                     "rcp": "HO.A3Offset",
                     "description": "Handover forçado de UE-102 causa redistribuição de canal e flutuações de interferência.",
                     "coupling_coefficient": 0.54,
+                },
+                {
+                    "conflict_id": "CONF-004",
+                    "type": "SPATIAL_BEAM_INTERFERENCE",
+                    "severity": "MEDIUM",
+                    "parties": ["xApp-Beamformer", "xApp-Traffic-Steering"],
+                    "rcp": "BEAM_DOWNTILT vs HO.A3Offset",
+                    "description": "Downtilt vertical de 7.5 deg altera cobertura de célula de borda interferindo na decisão de Handover.",
+                    "coupling_coefficient": 0.62,
+                },
+                {
+                    "conflict_id": "CONF-005",
+                    "type": "ISAC_RADAR_SPECTRAL_CONTENTION",
+                    "severity": "HIGH",
+                    "parties": ["xApp-ISAC-Radar", "xApp-QoS-Slice"],
+                    "rcp": "ISAC_SENSING_RATIO vs PRB_URLLC",
+                    "description": "Alocação de 40% de sensoriamento de radar compete com mini-slots de baixa latência URLLC.",
+                    "coupling_coefficient": 0.78,
+                },
+                {
+                    "conflict_id": "CONF-006",
+                    "type": "ZERO_TRUST_BOUNDARY_VIOLATION",
+                    "severity": "CRITICAL",
+                    "parties": ["xApp-Rogue-Stress", "SafetyGuard-Invariants"],
+                    "rcp": "Cell.TxPower (55.0 dBm)",
+                    "description": "Tentativa adversária de injeção de 55 dBm (limite 43 dBm) detectada e colocada em QUARENTENA.",
+                    "coupling_coefficient": 1.00,
                 },
             ]
         elif self.scenario.scenario_id == "scenario_b_urllc_dapp":
@@ -457,7 +505,14 @@ class DemonstrationEngine:
         else:
             tier_name = "NÍVEL 3: Safe-MAPPO (Cooperative Multi-Agent RL com Action Masking)"
             decision_summary = "Convergência de política conjunta Pareto-ótima via CTDE e multiplicadores Lagrangianos para garantia de SLA."
-            weights = {"xApp-QoS-Slice": 0.58, "xApp-Energy-Saving": 0.28, "xApp-Traffic-Steering": 0.14}
+            weights = {
+                "xApp-QoS-Slice": 0.42,
+                "xApp-ISAC-Radar": 0.24,
+                "xApp-Energy-Saving": 0.18,
+                "xApp-Beamformer": 0.10,
+                "xApp-Traffic-Steering": 0.06,
+                "xApp-Rogue-Stress": 0.00,
+            }
 
         self.arbitration_result = {
             "tier_selected": tier,

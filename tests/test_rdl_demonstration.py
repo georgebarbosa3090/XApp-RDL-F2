@@ -41,7 +41,7 @@ def test_scenario_a_conflict_storm_full_run():
     # Stage 1 validation
     s1 = records[0]
     assert s1.stage_id == 1
-    assert s1.details["total_ues_registered"] == 3
+    assert s1.details["total_ues_registered"] == len(SCENARIO_A_CONFLICT_STORM.ues)
     assert s1.details["e2_setup_status"] == "E2_CONNECTED_SUCCESSFUL"
 
     # Stage 2 validation (Gate 1)
@@ -53,7 +53,7 @@ def test_scenario_a_conflict_storm_full_run():
     # Stage 3 validation
     s3 = records[2]
     assert s3.details["aggregation_window_ms"] == 200.0
-    assert s3.details["proposals_count"] == 3
+    assert s3.details["proposals_count"] == len(SCENARIO_A_CONFLICT_STORM.proposals)
 
     # Stage 4 validation (Knowledge Graph)
     s4 = records[3]
