@@ -700,8 +700,9 @@ class MAPPOCoordinator:
                     else:
                         probs = np.array(probs_ret).squeeze()
                         
+                probs = np.atleast_1d(probs)
                 action_idx = int(np.argmax(probs))
-                confidence = float(probs[action_idx])
+                confidence = float(probs[action_idx]) if len(probs) > action_idx else 0.85
             except Exception as e:
                 logger.warning(f"[MAPPO] Fallback em inferencia: {e}")
                 action_idx, log_prob = leader_agent.select_action(obs)

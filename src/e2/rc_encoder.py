@@ -150,6 +150,31 @@ class RCEncoder:
         scale = profile["scale"]
         return float(raw_int) / float(scale)
 
+    def encode(self, control_action: Any) -> bytes:
+        """Codifica uma acao de controle no formato binario ASN.1 APER."""
+        if isinstance(control_action, ControlAction):
+            act_data = control_action.action_data
+            target_node = control_action.target_node
+            if hasattr(act_data, "parameter") and hasattr(act_data, "value"):
+                param = act_data.parameter
+                val = act_data.value
+            elif isinstance(act_data, dict):
+                param = act_data.get("parameter", "PRB_QUOTA")
+                val = act_data.get("value", 50.0)
+            else:
+                param = "PRB_QUOTA"
+                val = 50.0
+            return self.encode_control_parts(target_node, param, val).pdu_aper
+        elif hasattr(control_action, "parameter") and hasattr(control_action, "value"):
+            node_id = getattr(control_action, "node_id", "gnb_01")
+            return self.encode_control_parts(node_id, control_action.parameter, control_action.value).pdu_aper
+        elif isinstance(control_action, dict):
+            node_id = control_action.get("node_id", "gnb_01")
+            param = control_action.get("parameter", "PRB_QUOTA")
+            val = control_action.get("value", 50.0)
+            return self.encode_control_parts(node_id, param, val).pdu_aper
+        return b""
+
 @dataclass
 class ControlAction:
     action_data: Any

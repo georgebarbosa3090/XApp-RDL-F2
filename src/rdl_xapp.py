@@ -501,7 +501,13 @@ class RDLxApp:
             if action:
                 action.t_dispatch_start = t_disp_0
             # Verificação estrita de Dry-Run declarativo
-            dry_run = self.config.get("control", {}).get("dry_run", False) or os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes")
+            if isinstance(self.config, dict):
+                ctrl_cfg = self.config.get("control", {})
+                dry_run = ctrl_cfg.get("dry_run", False) if isinstance(ctrl_cfg, dict) else getattr(ctrl_cfg, "dry_run", False)
+            else:
+                ctrl_cfg = getattr(self.config, "control", None)
+                dry_run = getattr(ctrl_cfg, "dry_run", False) if ctrl_cfg is not None else False
+            dry_run = bool(dry_run or os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes"))
             if dry_run:
                 t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
                 logger.info("ℹ️ Dry-Run ativado: RIC_CONTROL_REQUEST simulado sem despacho via RMR socket", node_id=node_id, param=parameter, val=value, tx_id=tx_id)

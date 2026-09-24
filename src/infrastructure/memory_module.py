@@ -105,12 +105,23 @@ class MemoryModule:
         return self._actions[-n:]
 
     def save_control_request(self, control_id: str, data: dict):
+        if not hasattr(self, "_control_requests"):
+            self._control_requests = {}
+        self._control_requests[control_id] = data
         logger.debug(f"[MEMORY] Salvando Control Request {control_id}: {data}")
 
     def update_control_result(self, control_id: str, result: str):
+        if hasattr(self, "_control_requests") and control_id in self._control_requests:
+            self._control_requests[control_id]["status"] = result
         logger.debug(f"[MEMORY] Atualizando Control Result {control_id} -> {result}")
+
+    def get_pending_requests(self) -> list:
+        if not hasattr(self, "_control_requests"):
+            return []
+        return [req for req in self._control_requests.values() if req.get("status") == "SENT"]
 
     def record_rollback(self, control_id: str):
         logger.warning(f"[MEMORY] Registrando Rollback para {control_id}")
+
 
 
