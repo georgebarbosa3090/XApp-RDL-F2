@@ -107,8 +107,37 @@ bash scripts/verify_3_xapps.sh
   - `rdl_decision_latency_seconds`: Histograma da latência de decisão ($T_{decision}$).
   - `rdl_safety_blocks_total`: Total de comandos inseguros barrados pelos Safety Guards.
 
-### 4.2. Dashboard Rancher e Kiali Service Mesh
-Para habilitar observabilidade gráfica do fluxo de microsserviços:
+### 4.2. Stack de Telemetria e Dashboards em Tempo Real (InfluxDB 2.7 + Grafana)
+Para observabilidade em tempo real com alta taxa de amostragem durante as simulações:
+
+```bash
+# 1. Subir a stack InfluxDB + Grafana (Windows ou WSL2):
+docker compose -f deployments/telemetry/docker-compose.telemetry.yml up -d
+
+# 2. Provisionar dashboards nativos automaticamente:
+python deployments/telemetry/setup_influxdb_dashboard.py
+
+# 3. Iniciar o streaming de telemetria física em tempo real:
+python deployments/telemetry/telemetry_influx_bridge.py --duration 300
+```
+- **InfluxDB 2.7 UI:** `http://localhost:8086` (Org: `oran-alliance`, Bucket: `oran_telemetry`)
+- **Grafana Dashboard:** `http://localhost:3000` (Login: `admin` / Senha: `admin`)
+
+### 4.3. Dissecção e Auditoria de Traces PCAP E2 (Python, Windows e WSL2)
+Após executar a captura protocolar (`python scripts/run_e2_live_socket_capture.py`):
+```bash
+# Opção A (Python Standalone - Direto no terminal Windows/Linux):
+python scripts/inspect_pcap_e2_traces.py
+
+# Opção B (Windows com Wireshark/tshark):
+& "C:\Program Files\Wireshark\tshark.exe" -r experiments/results/traces/live_e2_loopback_capture.pcap -V
+
+# Opção C (Linux / WSL2 com tshark):
+tshark -r experiments/results/traces/live_e2_loopback_capture.pcap -V
+```
+
+### 4.4. Dashboard Rancher e Kiali Service Mesh
+Para habilitar observabilidade gráfica do fluxo de microsserviços no Kubernetes k3d:
 ```bash
 # Instalação do Rancher Manager no k3d
 docker run -d --restart=unless-stopped -p 8443:443 --privileged rancher/rancher:latest

@@ -157,27 +157,99 @@ python scripts/run_e2_live_socket_capture.py
   2. Codifica mensagens reais em ASN.1 APER (E2SM-KPM v03.00, E2SM-RC v01.03 Format 1 e E2AP RICcontrolAcknowledge).
   3. Transmite os fluxos binários através do socket de rede, captura os frames recebidos e serializa em arquivo `.pcap` com encapsulamento Ethernet/IPv4/SCTP.
   4. Executa decodificação em circuito fechado e emite hashes SHA-256 dos vetores binários de referência.
-* **Comando para Inspeção Independente via TShark / Wireshark:**
+
+#### 3.5.1. Como Inspecionar e Dissecar o Arquivo PCAP Gerado
+
+Você dispõe de **3 alternativas homologadas** para auditar os pacotes binários:
+
+* **Opção A: Inspetor Python Nativo (Sem Dependências Externas - Recomendado no Windows):**
+  ```powershell
+  python scripts/inspect_pcap_e2_traces.py
+  ```
+  *Exibe instantaneamente no terminal a dissecção de cabeçalhos Ethernet, IPv4, SCTP e a decodificação estrutural ASN.1 APER de cada frame.*
+
+* **Opção B: Wireshark / TShark no Windows:**
+  ```powershell
+  # 1. Instalar Wireshark via Windows Package Manager:
+  winget install WiresharkFoundation.Wireshark
+
+  # 2. Executar dissecção completa via tshark:
+  & "C:\Program Files\Wireshark\tshark.exe" -r experiments/results/traces/live_e2_loopback_capture.pcap -V
+  ```
+
+* **Opção C: TShark no Linux / WSL2:**
   ```bash
+  # 1. Instalar tshark no Ubuntu / WSL2:
+  sudo apt update && sudo apt install -y tshark wireshark
+
+  # 2. Executar dissecção via WSL:
   tshark -r experiments/results/traces/live_e2_loopback_capture.pcap -V
   ```
+
 * **Artefatos Gerados:**
   * `experiments/results/traces/live_e2_loopback_capture.pcap` (Arquivo PCAP binário capturado).
   * `experiments/results/manifest_gate4_e2_pcap.json` (Manifesto dos vetores de teste e hashes).
 
 ---
 
-## 4. Pipeline de Automação Completa (Execução em Um Comando)
+## 4. Observabilidade em Tempo Real: InfluxDB + Grafana + Execução de Cenários
 
-Para executar a validação integral dos 4 gates e atualizar todas as tabelas e manifestos de uma única vez, execute o script mestre de reprodução:
+Para inspecionar as métricas de rádio, filas MAC, atrasos HOL e decisões de controle **em tempo real em dashboards visuais de alta fidelidade** enquanto executa os testes de validação, siga o fluxo integrado:
 
-```bash
+### 4.1. Inicialização da Stack de Telemetria (Docker Compose)
+
+Suba os containers do InfluxDB 2.7 e Grafana no Docker (Windows ou WSL2):
+
+```powershell
+docker compose -f deployments/telemetry/docker-compose.telemetry.yml up -d
+```
+
+* **InfluxDB 2.7 UI:** `http://localhost:8086` (Org: `oran-alliance`, Bucket: `oran_telemetry`)
+* **Grafana Dashboard:** `http://localhost:3000` (Login: `admin` / Senha: `admin`)
+
+### 4.2. Provisionamento Automático de Dashboards O-RAN
+
+Provisione os painéis nativos de telemetria no InfluxDB e Grafana com um único comando:
+
+```powershell
+python deployments/telemetry/setup_influxdb_dashboard.py
+```
+
+### 4.3. Streaming de Telemetria Concorrente com os Testes
+
+Em um terminal secundário, inicie o streamer de telemetria física para alimentar os gráficos em tempo real:
+
+```powershell
+# Inicia streamer contínuo de métricas físicas para InfluxDB / Grafana
+python deployments/telemetry/telemetry_influx_bridge.py --duration 300
+```
+
+### 4.4. Execução dos Cenários Experimentais (S0 a S15) e Demonstrações (D1 a D5)
+
+No terminal principal, execute os testes enquanto visualiza a transição das métricas no Grafana:
+
+```powershell
+# 1. Validar a matriz completa de 16 cenários S0 a S15:
+python scripts/validate_all_scenarios_s0_s15.py
+
+# 2. Executar as 5 demonstrações científicas ao vivo (D1 a D5):
+python scripts/run_live_demonstrations_d1_d5.py
+
+# 3. Executar o benchmark de tempestade de conflitos (Conflict Storm):
+python scripts/run_conflict_storm_benchmark.py
+```
+
+### 4.5. Pipeline de Automação Completa (Execução em Um Comando)
+
+Para executar a validação integral dos 4 gates e atualizar todas as tabelas e manifestos de uma única vez:
+
+```powershell
 python scripts/reproduce_paper_artifacts.py
 ```
 
 Ou execute a suíte de testes unitários e de integração formal:
 
-```bash
+```powershell
 pytest tests/ -v
 ```
 
