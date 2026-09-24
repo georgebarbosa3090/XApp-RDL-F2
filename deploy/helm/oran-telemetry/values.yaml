@@ -1,0 +1,55 @@
+# Default values for oran-telemetry.
+# This is a YAML-formatted file.
+
+namespace: ricplt
+
+influxdb:
+  enabled: true
+  image:
+    repository: influxdb
+    tag: 2.7-alpine
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: NodePort
+    port: 8086
+    nodePort: 30086
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  adminUser:
+    username: admin
+    password: oran_admin_password_2026
+    org: oran-alliance
+    bucket: oran_telemetry
+    token: oran_rdl_token_secret_key_2026_super_secure
+    retention: 7d
+
+grafana:
+  enabled: true
+  image:
+    repository: grafana/grafana
+    tag: 10.4.1
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: NodePort
+    port: 3000
+    nodePort: 30300
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  adminUser:
+    user: admin
+    password: admin
+  anonymousAuth:
+    enabled: true
+    orgRole: Viewer

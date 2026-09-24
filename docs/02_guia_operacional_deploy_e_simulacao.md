@@ -108,16 +108,31 @@ bash scripts/verify_3_xapps.sh
   - `rdl_safety_blocks_total`: Total de comandos inseguros barrados pelos Safety Guards.
 
 ### 4.2. Stack de Telemetria e Dashboards em Tempo Real (InfluxDB 2.7 + Grafana)
-Para observabilidade em tempo real com alta taxa de amostragem durante as simulações:
+Para observabilidade em tempo real com alta taxa de amostragem durante as simulações, você pode subir via **Helm (Kubernetes / k3d)** ou via **Docker Compose**:
 
+#### Opção A: Deploy Nativo via Helm no Kubernetes (Recomendado para Cluster O-RAN)
 ```bash
-# 1. Subir a stack InfluxDB + Grafana (Windows ou WSL2):
-docker compose -f deployments/telemetry/docker-compose.telemetry.yml up -d
+# 1. Instalar o Helm Chart da Stack de Telemetria no namespace ricplt:
+helm upgrade --install oran-telemetry deploy/helm/oran-telemetry \
+  --namespace ricplt \
+  --create-namespace
 
 # 2. Provisionar dashboards nativos automaticamente:
 python deployments/telemetry/setup_influxdb_dashboard.py
 
 # 3. Iniciar o streaming de telemetria física em tempo real:
+python deployments/telemetry/telemetry_influx_bridge.py --duration 300
+```
+
+#### Opção B: Deploy via Docker Compose (Stand-alone)
+```bash
+# 1. Subir containers no Docker:
+docker compose -f deployments/telemetry/docker-compose.telemetry.yml up -d
+
+# 2. Provisionar dashboards nativos:
+python deployments/telemetry/setup_influxdb_dashboard.py
+
+# 3. Iniciar streaming de telemetria:
 python deployments/telemetry/telemetry_influx_bridge.py --duration 300
 ```
 - **InfluxDB 2.7 UI:** `http://localhost:8086` (Org: `oran-alliance`, Bucket: `oran_telemetry`)

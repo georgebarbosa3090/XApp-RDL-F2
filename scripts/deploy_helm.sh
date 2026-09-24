@@ -97,6 +97,12 @@ kubectl create namespace ${NAMESPACE_XAPP} --dry-run=client -o yaml | kubectl ap
 echo " -> Aplicando manifestos do Near-RT RIC (Redis DBAAS, E2Term, SubMgr)..."
 kubectl apply -f deploy/kubernetes/near-rt-ric.yaml
 
+# Subir Stack de Telemetria InfluxDB + Grafana via Helm no namespace ricplt
+echo " -> Instalando Stack de Telemetria e Observabilidade (InfluxDB 2.7 + Grafana) via Helm..."
+helm upgrade --install oran-telemetry deploy/helm/oran-telemetry \
+  --namespace ${NAMESPACE_RIC} \
+  --create-namespace
+
 # Aguardar Redis DBAAS estar Running
 echo " -> Aguardando Redis DBAAS atingir estado Ready no ricplt..."
 kubectl rollout status deployment/deployment-ricplt-dbaas-redis -n ${NAMESPACE_RIC} --timeout=60s

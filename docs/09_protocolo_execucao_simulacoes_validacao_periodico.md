@@ -196,10 +196,15 @@ Você dispõe de **3 alternativas homologadas** para auditar os pacotes binário
 
 Para inspecionar as métricas de rádio, filas MAC, atrasos HOL e decisões de controle **em tempo real em dashboards visuais de alta fidelidade** enquanto executa os testes de validação, siga o fluxo integrado:
 
-### 4.1. Inicialização da Stack de Telemetria (Docker Compose)
+### 4.1. Inicialização da Stack de Telemetria (Helm ou Docker Compose)
 
-Suba os containers do InfluxDB 2.7 e Grafana no Docker (Windows ou WSL2):
+#### Opção A: Deploy via Helm no Kubernetes k3d (Padrão O-RAN)
+```powershell
+# Instalar a stack InfluxDB 2.7 + Grafana via Helm no namespace ricplt:
+helm upgrade --install oran-telemetry deploy/helm/oran-telemetry --namespace ricplt --create-namespace
+```
 
+#### Opção B: Deploy via Docker Compose (Stand-alone)
 ```powershell
 docker compose -f deployments/telemetry/docker-compose.telemetry.yml up -d
 ```

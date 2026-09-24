@@ -1,0 +1,64 @@
+{{- if .Values.influxdb.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-influxdb
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: oran-telemetry
+    app.kubernetes.io/component: influxdb
+spec:
+  replicas: {{ .Values.influxdb.replicaCount }}
+  selector:
+    matchLabels:
+      app: oran-influxdb
+  template:
+    metadata:
+      labels:
+        app: oran-influxdb
+    spec:
+      containers:
+        - name: influxdb
+          image: "{{ .Values.influxdb.image.repository }}:{{ .Values.influxdb.image.tag }}"
+          imagePullPolicy: {{ .Values.influxdb.image.pullPolicy }}
+          ports:
+            - containerPort: 8086
+              name: http
+          env:
+            - name: DOCKER_INFLUXDB_INIT_MODE
+              value: "setup"
+            - name: DOCKER_INFLUXDB_INIT_USERNAME
+              value: {{ .Values.influxdb.adminUser.username | quote }}
+            - name: DOCKER_INFLUXDB_INIT_PASSWORD
+              value: {{ .Values.influxdb.adminUser.password | quote }}
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: {{ .Values.influxdb.adminUser.org | quote }}
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: {{ .Values.influxdb.adminUser.bucket | quote }}
+            - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+              value: {{ .Values.influxdb.adminUser.token | quote }}
+            - name: DOCKER_INFLUXDB_INIT_RETENTION
+              value: {{ .Values.influxdb.adminUser.retention | quote }}
+          resources:
+            {{- toYaml .Values.influxdb.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-influxdb
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    app: oran-influxdb
+spec:
+  type: {{ .Values.influxdb.service.type }}
+  ports:
+    - port: {{ .Values.influxdb.service.port }}
+      targetPort: 8086
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.influxdb.service.type "NodePort") .Values.influxdb.service.nodePort }}
+      nodePort: {{ .Values.influxdb.service.nodePort }}
+      {{- end }}
+  selector:
+    app: oran-influxdb
+{{- end }}

@@ -1,0 +1,15 @@
+apiVersion: v2
+name: oran-telemetry
+description: Helm Chart para Stack de Telemetria e Observabilidade em Tempo Real O-RAN (InfluxDB 2.7 + Grafana 10.4)
+type: application
+version: 1.0.0
+appVersion: "2.7.0"
+keywords:
+  - o-ran
+  - telemetry
+  - influxdb
+  - grafana
+  - near-rt-ric
+maintainers:
+  - name: George Barbosa
+    email: george.barbosa@itec.ufpa.br

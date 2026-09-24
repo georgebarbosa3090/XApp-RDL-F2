@@ -1,0 +1,89 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-datasources
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: InfluxDB-Flux
+        type: influxdb
+        access: proxy
+        url: http://{{ .Release.Name }}-influxdb:8086
+        jsonData:
+          version: Flux
+          organization: {{ .Values.influxdb.adminUser.org }}
+          defaultBucket: {{ .Values.influxdb.adminUser.bucket }}
+        secureJsonData:
+          token: {{ .Values.influxdb.adminUser.token }}
+        isDefault: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-grafana
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: oran-telemetry
+    app.kubernetes.io/component: grafana
+spec:
+  replicas: {{ .Values.grafana.replicaCount }}
+  selector:
+    matchLabels:
+      app: oran-grafana
+  template:
+    metadata:
+      labels:
+        app: oran-grafana
+    spec:
+      containers:
+        - name: grafana
+          image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
+          imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: {{ .Values.grafana.adminUser.user | quote }}
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: {{ .Values.grafana.adminUser.password | quote }}
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "{{ .Values.grafana.anonymousAuth.enabled }}"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: {{ .Values.grafana.anonymousAuth.orgRole | quote }}
+          volumeMounts:
+            - name: datasources-vol
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+              subPath: datasources.yaml
+          resources:
+            {{- toYaml .Values.grafana.resources | nindent 12 }}
+      volumes:
+        - name: datasources-vol
+          configMap:
+            name: {{ .Release.Name }}-grafana-datasources
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-grafana
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    app: oran-grafana
+spec:
+  type: {{ .Values.grafana.service.type }}
+  ports:
+    - port: {{ .Values.grafana.service.port }}
+      targetPort: 3000
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.grafana.service.type "NodePort") .Values.grafana.service.nodePort }}
+      nodePort: {{ .Values.grafana.service.nodePort }}
+      {{- end }}
+  selector:
+    app: oran-grafana
+{{- end }}
