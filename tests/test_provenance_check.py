@@ -1,7 +1,13 @@
 import pytest
 import os
+import sys
 import shutil
 import tempfile
+
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
 from scripts.package_and_sync_raw_results import (
     calculate_sha256,
     verify_raw_traces_exist,
