@@ -23,6 +23,7 @@ docs/
 +-- 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028, Fase 3 Federada 6G e Testbed UFPA
 +-- 07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md # [Vol 07] Resultados da Simulação, Baselines e Cenários (S0–S15)
 +-- 08_planejamento_estrategico_revistas_publicacao_2026.md   # [Vol 08] Planejamento Estratégico de Publicações e Mapeamento de Revistas (2026-2028)
++-- 09_protocolo_execucao_simulacoes_validacao_periodico.md   # [Vol 09] Protocolo Experimental e Guia de Execução de Simulações para Periódico (IEEE TNSM/TMC)
 +-- assets/                                  # Diagramas de arquitetura e modelos visuais
 +-- compliance/                              # Perfis de compatibilidade O-RAN congelados
 +-- e2/                                      # Definições ASN.1 e matrizes normativas E2AP/E2SM
@@ -36,8 +37,8 @@ docs/
 | Perfil de Interesse | Volumes Recomendados | Objetivo Principal |
 | :--- | :--- | :--- |
 | **Arquiteto de Software / Engenheiro O-RAN** | [Vol 01](01_arquitetura_e_modelagem.md) & [Vol 05](05_auditoria_e_conformidade_oran.md) | Compreender os agentes cognitivos, codecs ASN.1 APER e conformidade normativa E2AP/E2SM. |
-| **Operador de Infraestrutura / DevOps** | [Vol 02](02_guia_operacional_deploy_e_simulacao.md) | Subir clusters k3d, instalar via Helm, monitorar métricas Prometheus e depurar pods. |
-| **Pesquisador Científico / Avaliador** | [Vol 04](04_relatorio_cientifico_mestre_rdl.md), [Vol 03](03_taxonomia_de_conflitos_e_cenarios.md) & [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) | Analisar as evidências causais, tabelas completas de simulação, testes pareados e cenários S0–S15. |
+| **Operador de Infraestrutura / DevOps** | [Vol 02](02_guia_operacional_deploy_e_simulacao.md) & [Vol 09](09_protocolo_execucao_simulacoes_validacao_periodico.md) | Subir clusters k3d, instalar via Helm, monitorar métricas Prometheus e executar os 4 gates de simulação. |
+| **Pesquisador Científico / Autor de Artigo** | [Vol 04](04_relatorio_cientifico_mestre_rdl.md), [Vol 08](08_planejamento_estrategico_revistas_publicacao_2026.md) & [Vol 09](09_protocolo_execucao_simulacoes_validacao_periodico.md) | Analisar as evidências causais, tabelas completas de simulação, testes pareados N=30, ablação e submeter aos periódicos IEEE. |
 | **Pesquisador 6G / Estrategista de IA** | [Vol 06](06_roadmap_e_pesquisa_futura_6g.md) & [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) | Explorar a evolução para Intent-Driven RIC (A1), federação multi-RIC e comparativos Safe-MAPPO. |
 
 ---
@@ -64,6 +65,12 @@ Delineia a evolução do projeto em direção ao 6G Zero-Touch, detalhando a gov
 
 ### [Volume 07: Relatório Exaustivo de Resultados de Simulação (S0 a S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)
 Apresenta o comparativo multidimensional completo cruzando os 7 baselines (B0 a B6) e os 16 cenários experimentais (S0 a S15), detalhando throughput, latência P95, violação de SLA, tempos de estabilização ($t_{\text{settle}}$), eficiência energética (EEVS), decomposição em 11 estágios do loop fechado e matriz de recomendações técnicas de uso H-RDL vs CA-RDL.
+
+### [Volume 08: Planejamento Estratégico de Publicações e Mapeamento de Revistas (2026–2028)](08_planejamento_estrategico_revistas_publicacao_2026.md)
+Mapeia os 3 periódicos-alvo prioritários (IEEE TNSM, IEEE TMC, IEEE TCCN / Computer Networks), estrutura a estratégia de 3 manuscritos desacoplados (Manuscrito 1: H-RDL Determinística; Manuscrito 2: CA-RDL Safe-RL/MAPPO; Manuscrito 3: dApp sub-10ms RT-RIC) e define os gates formais de submissão.
+
+### [Volume 09: Protocolo Experimental e Guia de Execução de Simulações para Periódico (IEEE TNSM/TMC)](09_protocolo_execucao_simulacoes_validacao_periodico.md)
+Manual operacional completo para execução dos 4 Gates de evidência empírica (Gate 1: $N=30$ estocástico; Gate 2: Ablação pareada A0–A5; Gate 3: Microbenchmark medido 2–100 xApps; Gate 4: Transmissão socket E2 e golden vectors APER com TShark), garantindo conformidade anti-sintética total.
 
 ---
 
