@@ -77,7 +77,7 @@ def create_or_update_dashboard(org_id: str):
     # Define cells to create
     cells_spec = [
         {
-            "name": "🟢 Closed-Loop State (FSM)",
+            "name": "[CONFORME] Closed-Loop State (FSM)",
             "x": 0, "y": 0, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "rdl_loop_state" and r["_field"] == "state_code") |> last()',
@@ -85,7 +85,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": "",
         },
         {
-            "name": "⏱️ Near-RT Convergence Latency (Gate 2)",
+            "name": "[TEMPO] Near-RT Convergence Latency (Gate 2)",
             "x": 3, "y": 0, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "rdl_decision" and r["_field"] == "inference_time_ms") |> last()',
@@ -93,7 +93,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": " ms",
         },
         {
-            "name": "🎯 Pareto Optimality Score",
+            "name": " Pareto Optimality Score",
             "x": 6, "y": 0, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "rdl_decision" and r["_field"] == "pareto_optimality_score") |> last()',
@@ -101,7 +101,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": "",
         },
         {
-            "name": "⚔️ Active Cognitive Conflicts",
+            "name": "vs Active Cognitive Conflicts",
             "x": 9, "y": 0, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "rdl_conflicts" and r["_field"] == "conflict_count") |> last()',
@@ -109,7 +109,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": " active",
         },
         {
-            "name": "📡 Latência RLC por Fatia vs SLA URLLC (1.0 ms)",
+            "name": "[RADIO] Latência RLC por Fatia vs SLA URLLC (1.0 ms)",
             "x": 0, "y": 3, "w": 6, "h": 4,
             "type": "xy",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "ran_kpi" and r["_field"] == "rlc_latency_ms") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: "mean")',
@@ -117,7 +117,7 @@ def create_or_update_dashboard(org_id: str):
             "y_suffix": " ms",
         },
         {
-            "name": "📊 Distribuição Dinâmica de PRBs por Slice (%)",
+            "name": "[METRICA] Distribuição Dinâmica de PRBs por Slice (%)",
             "x": 6, "y": 3, "w": 6, "h": 4,
             "type": "xy",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "ran_kpi" and r["_field"] == "prb_usage_pct") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: "mean")',
@@ -125,7 +125,7 @@ def create_or_update_dashboard(org_id: str):
             "y_suffix": "%",
         },
         {
-            "name": "🚀 Vazão de Downlink (Throughput Mbps)",
+            "name": "[EXEC] Vazão de Downlink (Throughput Mbps)",
             "x": 0, "y": 7, "w": 6, "h": 4,
             "type": "xy",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "ran_kpi" and r["_field"] == "throughput_mbps") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: "mean")',
@@ -133,7 +133,7 @@ def create_or_update_dashboard(org_id: str):
             "y_suffix": " Mbps",
         },
         {
-            "name": "⚡ Potência Celular (TxPower dBm) & Economia de Energia (%)",
+            "name": " Potência Celular (TxPower dBm) & Economia de Energia (%)",
             "x": 6, "y": 7, "w": 6, "h": 4,
             "type": "xy",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "ran_kpi" and (r["_field"] == "tx_power_dbm" or r["_field"] == "energy_saving_pct")) |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: "mean")',
@@ -141,7 +141,7 @@ def create_or_update_dashboard(org_id: str):
             "y_suffix": "",
         },
         {
-            "name": "⚡ H-RDL Fase 1: Latência de Decisão (0.103ms)",
+            "name": " H-RDL Fase 1: Latência de Decisão (0.103ms)",
             "x": 0, "y": 11, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "decision_latency_ms") |> last()',
@@ -149,7 +149,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": " ms",
         },
         {
-            "name": "🛡️ H-RDL Fase 1: Violações Safety Guard (3GPP)",
+            "name": "[SEGURANCA] H-RDL Fase 1: Violações Safety Guard (3GPP)",
             "x": 3, "y": 11, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "safety_guard_violations") |> last()',
@@ -157,7 +157,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": "",
         },
         {
-            "name": "⚖️ H-RDL Fase 1: Score TVS vs EEVS",
+            "name": " H-RDL Fase 1: Score TVS vs EEVS",
             "x": 6, "y": 11, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "tvs_priority_score") |> last()',
@@ -165,7 +165,7 @@ def create_or_update_dashboard(org_id: str):
             "suffix": "",
         },
         {
-            "name": "🔄 H-RDL Fase 1: Action Churn & Janela (200ms)",
+            "name": " H-RDL Fase 1: Action Churn & Janela (200ms)",
             "x": 9, "y": 11, "w": 3, "h": 3,
             "type": "single-stat",
             "query": 'from(bucket: "oran_telemetry") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_measurement"] == "hrdl_fase1" and r["_field"] == "action_churn") |> last()',
@@ -244,10 +244,10 @@ def main():
         print("\n" + "=" * 78)
         print("  INFLUXDB CONFIGURADO COM SUCESSO!")
         print("=" * 78)
-        print(f"  • Organization: {ORG_NAME} (ID: {org_id})")
-        print(f"  • Bucket: {BUCKET_NAME}")
-        print(f"  • Dashboard ID: {dash_id}")
-        print(f"  • URL de Acesso: {INFLUX_URL}/orgs/{org_id}/dashboards/{dash_id}")
+        print(f"  * Organization: {ORG_NAME} (ID: {org_id})")
+        print(f"  * Bucket: {BUCKET_NAME}")
+        print(f"  * Dashboard ID: {dash_id}")
+        print(f"  * URL de Acesso: {INFLUX_URL}/orgs/{org_id}/dashboards/{dash_id}")
         print("=" * 78 + "\n")
     except Exception as e:
         logger.error(f"Erro ao configurar InfluxDB: {e}")

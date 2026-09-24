@@ -140,5 +140,5 @@ spec:
 EOF
 done
 
-echo "[✓] Todas as Reference xApps foram enviadas ao cluster. Verificando Pods..."
+echo "[[OK]] Todas as Reference xApps foram enviadas ao cluster. Verificando Pods..."
 kubectl get pods -n "$NAMESPACE" -o wide

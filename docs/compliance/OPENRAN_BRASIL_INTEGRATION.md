@@ -26,12 +26,12 @@ flowchart TD
 
     subgraph RIC_PLT["Plataforma Near-RT RIC (O-RAN SC)"]
         direction TB
-        RIC_COMP["• SubMgr REST Client (:8088)<br/>• E2Term (SCTP :36422 / RMR :38000)"]
+        RIC_COMP["* SubMgr REST Client (:8088)<br/>* E2Term (SCTP :36422 / RMR :38000)"]
     end
 
     subgraph RDL_APP["xApp RDL (H-RDL / CA-RDL)"]
         direction TB
-        RDL_COMP["• SrsRanBackendAdapter<br/>• Perception / Reasoning / Safety Guards"]
+        RDL_COMP["* SrsRanBackendAdapter<br/>* Perception / Reasoning / Safety Guards"]
     end
 
     GNB <==>|"E2 (SCTP / RMR)"| RIC_PLT

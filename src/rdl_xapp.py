@@ -115,7 +115,7 @@ class RDLxApp:
         # 7. Framework Xapp e Modo de Transporte Operacional
         if self.oran_strict:
             self.require_operational_transport = True
-            logger.info("🔒 Modo O_RAN_INTEROP estrito ativado: Transporte operacional real e SDL estrito exigidos (Fail-Closed).")
+            logger.info(" Modo O_RAN_INTEROP estrito ativado: Transporte operacional real e SDL estrito exigidos (Fail-Closed).")
         else:
             self.require_operational_transport = (
                 os.environ.get("REQUIRE_OPERATIONAL_TRANSPORT", "false").lower() == "true"
@@ -123,7 +123,7 @@ class RDLxApp:
             )
 
         if self.require_operational_transport and not HAS_RICXAPPFRAME:
-            logger.error("❌ FALHA DE PRONTIDÃO OPERACIONAL: Transporte nativo RMR_E2_OPERATIONAL exigido, mas ricxappframe não disponível.")
+            logger.error("[FALHA] FALHA DE PRONTIDÃO OPERACIONAL: Transporte nativo RMR_E2_OPERATIONAL exigido, mas ricxappframe não disponível.")
             raise RuntimeError(
                 "TRANSPORTE O-RAN OPERACIONAL OBRIGATÓRIO NÃO DISPONÍVEL: "
                 "O ambiente exige conexão nativa C RMR/E2, mas o socket nativo não foi carregado."
@@ -140,7 +140,7 @@ class RDLxApp:
         self.transport_mode = "RMR_E2_OPERATIONAL" if not self.is_mock_transport else "MOCK_TRANSPORT_SHIM"
         self.is_operational_ready = not self.is_mock_transport
         
-        logger.info(f"📡 Transporte RMR inicializado em modo {self.transport_mode} (Conexão O-RAN ativa)")
+        logger.info(f"[RADIO] Transporte RMR inicializado em modo {self.transport_mode} (Conexão O-RAN ativa)")
             
         self.xapp.register_callback(self._default_handler, 0)
         self.xapp.register_callback(self._kpm_indication_handler, RIC_INDICATION)
@@ -222,7 +222,7 @@ class RDLxApp:
                     
                     # Janela de Decisão Adaptativa: Flush imediato para ações críticas URLLC (prioridade >= 80)
                     if action.priority >= 80:
-                        logger.info("⚡ Fast-Flush disparado para ação URLLC de emergência", xapp=action.xapp_id, prio=action.priority)
+                        logger.info(" Fast-Flush disparado para ação URLLC de emergência", xapp=action.xapp_id, prio=action.priority)
                         self.window_start = 0.0 # Força expiração imediata
                         self.flush_event.set()
             except Exception as e:
@@ -399,7 +399,7 @@ class RDLxApp:
                     t_e2_encode_ms += enc_ms
                     t_e2_dispatch_ms += disp_ms
             elif not resolution.winning_actions:
-                logger.info("ℹ️ Decisão No-Op / Deferida pelo MAPPO (nenhuma ação de controle despachada)")
+                logger.info("ℹ Decisão No-Op / Deferida pelo MAPPO (nenhuma ação de controle despachada)")
             else:
                 logger.warning("Resolução Rejeitada ou Lote Vazio / Quarentena", reason=reason)
 
@@ -407,7 +407,7 @@ class RDLxApp:
             latency_total_s = t_cycle_total_ms / 1000.0
             
             logger.info(
-                f"⏱️ Ciclo Total RDL Concluído em {t_cycle_total_ms:.2f}ms "
+                f"[TEMPO] Ciclo Total RDL Concluído em {t_cycle_total_ms:.2f}ms "
                 f"(Espera Fila: {t_queue_ms:.2f}ms, Processamento: {t_proc_ms:.2f}ms [Percepção: {t_perc_ms:.2f}ms, Raciocínio: {t_reas_ms:.2f}ms, Refinamento: {t_ref_ms:.2f}ms], Codificação E2: {t_e2_encode_ms:.2f}ms, Despacho RMR: {t_e2_dispatch_ms:.2f}ms) [{self.transport_mode}]"
             )
             
@@ -431,7 +431,7 @@ class RDLxApp:
                 _, enc_clean_ms, disp_clean_ms = self._send_control(clean_act.node_id, clean_act.parameter, clean_act.value, action=clean_act)
                 t_clean_total_ms = t_queue_ms + t_ref_clean_ms + enc_clean_ms + disp_clean_ms
                 logger.info(
-                    f"⏱️ Ação Limpa (Pass-Through) Despachada em {t_clean_total_ms:.2f}ms "
+                    f"[TEMPO] Ação Limpa (Pass-Through) Despachada em {t_clean_total_ms:.2f}ms "
                     f"(Espera Fila: {t_queue_ms:.2f}ms, Refinamento: {t_ref_clean_ms:.2f}ms, Codificação: {enc_clean_ms:.2f}ms, Despacho: {disp_clean_ms:.2f}ms)"
                 )
             else:
@@ -510,7 +510,7 @@ class RDLxApp:
             dry_run = bool(dry_run or os.getenv("DRY_RUN", "false").lower() in ("true", "1", "yes"))
             if dry_run:
                 t_encode_ms = (time.perf_counter() - t_enc_0) * 1000.0
-                logger.info("ℹ️ Dry-Run ativado: RIC_CONTROL_REQUEST simulado sem despacho via RMR socket", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
+                logger.info("ℹ Dry-Run ativado: RIC_CONTROL_REQUEST simulado sem despacho via RMR socket", node_id=node_id, param=parameter, val=value, tx_id=tx_id)
                 return True, t_encode_ms, 0.0
 
             ric_req_key = (node_id, ran_fn_id, requestor_id, instance_id)

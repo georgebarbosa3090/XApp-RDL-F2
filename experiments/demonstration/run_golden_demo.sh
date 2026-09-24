@@ -6,10 +6,10 @@
 # Terminal Layout:
 # ┌───────────────────────────────────────┬───────────────────────────────────────┐
 # │ [ 1 — RAN ] ns-3 + 5G-LENA            │ [ 2 — E2/NORI ] E2 Agent / E2SIM      │
-# │ • gNBs, UEs, TTI ticks & Traffic      │ • KPM Indications & RC Controls       │
+# │ * gNBs, UEs, TTI ticks & Traffic      │ * KPM Indications & RC Controls       │
 # ├───────────────────────────────────────┼───────────────────────────────────────┤
 # │ [ 3 — Near-RT RIC ] E2Term / RMR      │ [ 4 — H-RDL ] Live Web Server & Loop  │
-# │ • Subscription, xApp Pool & Safe-MAPPO│ • http://localhost:8080 (Certification)│
+# │ * Subscription, xApp Pool & Safe-MAPPO│ * http://localhost:8080 (Certification)│
 # └───────────────────────────────────────┴───────────────────────────────────────┘
 # =============================================================================
 

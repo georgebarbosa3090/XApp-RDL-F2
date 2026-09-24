@@ -57,14 +57,14 @@ class RefinementAgent:
             if elapsed >= self.config["quarantine_duration_ms"]:
                 data["state"] = XAppLifecycleState.PROBATION
                 data["state_change_ts"] = now_ms
-                logger.info(f"🔄 xApp '{xapp_id}' passou de QUARANTINE para PROBATION.")
+                logger.info(f" xApp '{xapp_id}' passou de QUARANTINE para PROBATION.")
                 return XAppLifecycleState.PROBATION
         elif curr_state == XAppLifecycleState.PROBATION:
             if elapsed >= self.config["probation_duration_ms"]:
                 data["state"] = XAppLifecycleState.ACTIVE
                 data["violations"].clear()
                 data["state_change_ts"] = now_ms
-                logger.info(f"✅ xApp '{xapp_id}' reabilitada: PROBATION -> ACTIVE.")
+                logger.info(f" xApp '{xapp_id}' reabilitada: PROBATION -> ACTIVE.")
                 return XAppLifecycleState.ACTIVE
                 
         return curr_state
@@ -89,7 +89,7 @@ class RefinementAgent:
         if state == XAppLifecycleState.PROBATION:
             data["state"] = XAppLifecycleState.QUARANTINE
             data["state_change_ts"] = now_ms
-            logger.warning(f"🚨 PROBATION FAILURE: xApp '{xapp_id}' retornou para QUARANTINE. Motivo: {reason}")
+            logger.warning(f"[ALERTA] PROBATION FAILURE: xApp '{xapp_id}' retornou para QUARANTINE. Motivo: {reason}")
             return
             
         # Manter violações dentro da janela
@@ -101,10 +101,10 @@ class RefinementAgent:
         if len(data["violations"]) >= limit:
             data["state"] = XAppLifecycleState.QUARANTINE
             data["state_change_ts"] = now_ms
-            logger.warning(f"🚨 ZERO-TRUST ISOLATION: xApp '{xapp_id}' colocada em QUARANTINE por 30s. Motivo: {reason}")
+            logger.warning(f"[ALERTA] ZERO-TRUST ISOLATION: xApp '{xapp_id}' colocada em QUARANTINE por 30s. Motivo: {reason}")
         elif len(data["violations"]) == 1:
             data["state"] = XAppLifecycleState.SUSPECT
-            logger.warning(f"⚠️ xApp '{xapp_id}' em estado SUSPECT (1 violação). Motivo: {reason}")
+            logger.warning(f"[ALERTA] xApp '{xapp_id}' em estado SUSPECT (1 violação). Motivo: {reason}")
 
     def _validate_parameter_bounds(self, parameter: str, value: Any, node_id: str = "gnb_01") -> Tuple[bool, str]:
         """Validação estrita de limites físicos de rádio com perfil de célula (Macro vs Small Cell)."""

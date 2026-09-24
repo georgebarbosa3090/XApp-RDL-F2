@@ -5,8 +5,8 @@ Projeto: xApp RDL (Resource and Decision Layer) - Fase 2 (CA-RDL)
 Orquestrador de Campanha de Treinamento MARL MAPPO (scripts/train_mappo_campaign.py)
 
 Executa campanhas de treinamento multi-semente reproduzíveis com exportação de:
-  ✓ convergence.csv (Recompensa, Custo, Multiplicador de Lagrange)
-  ✓ training_manifest.json (Metadados e hashes de configuração)
+  [OK] convergence.csv (Recompensa, Custo, Multiplicador de Lagrange)
+  [OK] training_manifest.json (Metadados e hashes de configuração)
 ========================================================================================
 """
 

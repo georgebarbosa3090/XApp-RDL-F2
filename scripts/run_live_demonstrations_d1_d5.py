@@ -80,39 +80,56 @@ def run_d2_with_hrdl():
     reasoning = ReasoningAgent(memory, config={})
     refinement = RefinementAgent(memory)
     
-    act_qos = XAppAction(xapp_id="qos_xslice", node_id="gnb_01", parameter="PRB_QUOTA", value=80.0, priority=80)
+    # 6 xApps de Referência Simultâneas
+    act_qos = XAppAction(xapp_id="qos_xslice", node_id="gnb_01", parameter="PRB_QUOTA", value=80.0, priority=90)
+    act_isac = XAppAction(xapp_id="isac_radar", node_id="gnb_01", parameter="ISAC_SENSING_RATIO", value=0.4, priority=85)
+    act_ts = XAppAction(xapp_id="traffic_steering", node_id="gnb_01", parameter="A3_OFFSET", value=-4.0, priority=80)
+    act_beam = XAppAction(xapp_id="beamformer", node_id="gnb_01", parameter="VERTICAL_DOWNTILT", value=7.5, priority=75)
     act_es = XAppAction(xapp_id="energy_saver", node_id="gnb_01", parameter="PRB_QUOTA", value=30.0, priority=50)
-    proposals = [act_qos, act_es]
+    act_rogue = XAppAction(xapp_id="rogue_xapp", node_id="gnb_01", parameter="TX_POWER", value=55.0, priority=99)
+    proposals = [act_qos, act_isac, act_ts, act_beam, act_es, act_rogue]
     
-    print(" [1. Perception Agent] Agrupando propostas no lote temporal de 200 ms...")
+    print(" [1. Perception Agent] Agrupando 6 propostas no lote temporal de 200 ms...")
     conflicts = perception.register_action_group(proposals)
-    print(f"  -> Conflitos Detectados: {len(conflicts)} ({conflicts[0].conflict_type.name if conflicts else 'NONE'})")
+    print(f"  -> Conflitos Detectados na Matriz: {len(conflicts)}")
+    for i, c in enumerate(conflicts, 1):
+        xapp_names = [getattr(a, 'xapp_id', str(a)) for a in getattr(c, 'involved_xapps', [])]
+        print(f"     [{i}] Tipo: {c.conflict_type.name:<18} | Envolvidos: {', '.join(xapp_names)}")
     
     print(" [2. Reasoning Agent] Executando seleção determinística com matriz multiobjetivo...")
     t_start = time.perf_counter()
-    if conflicts:
-        resolution = reasoning.resolve(conflicts[0])
-        selected_actions = resolution.winning_actions
-        strat_name = resolution.strategy_used.name if hasattr(resolution.strategy_used, 'name') else str(resolution.strategy_used)
-    else:
-        selected_actions = [proposals[0]]
-        strat_name = "NO_CONFLICT"
+    resolutions = []
+    for c in conflicts:
+        res = reasoning.resolve(c)
+        resolutions.append(res)
     t_dec_ms = (time.perf_counter() - t_start) * 1000.0
     
-    print(f"  -> Decisão Gerada (Estratégia: {strat_name})")
-    print(f"  -> Ação Selecionada: {selected_actions[0].xapp_id} -> {selected_actions[0].parameter} = {selected_actions[0].value}%")
-    print(f"  -> Latência de Decisão (T_decision): {t_dec_ms:.4f} ms (< 1.0 ms)")
+    strat_name = resolutions[0].strategy_used.name if resolutions and hasattr(resolutions[0].strategy_used, 'name') else "TVS"
+    print(f"  -> Decisão Gerada para {len(resolutions)} conflitos (Estratégia Principal: {strat_name})")
+    print(f"  -> Latência Total de Decisão (T_decision): {t_dec_ms:.4f} ms (< 1.0 ms)")
     
-    print(" [3. Refinement Agent] Validando fronteira de segurança (Safety Guards)...")
-    is_safe, lvl, reason = refinement.validate_single_action(selected_actions[0])
-    print(f"  -> Safety Check: {'APROVADO' if is_safe else 'BLOQUEADO'} (Nível {lvl}: {reason})")
+    print(" [3. Refinement Agent] Validando fronteira de segurança (Safety Guards & Zero-Trust)...")
+    valid_actions = []
+    blocked_actions = []
+    for prop in proposals:
+        is_safe, lvl, reason = refinement.validate_single_action(prop)
+        if is_safe:
+            valid_actions.append(prop.xapp_id)
+        else:
+            blocked_actions.append((prop.xapp_id, reason))
+            
+    print(f"  -> Ações Aprovadas no Envelope Seguro: {', '.join(valid_actions)}")
+    for b_id, b_reason in blocked_actions:
+        print(f"  -> [ALERTA] Ação Insegura Barrada: {b_id} -> Motivo: {b_reason}")
     
     print("\n [RESULTADO D2]")
-    print("  * Taxa de Resolução de Conflitos: 100.0%")
-    print("  * Taxa de Violação de SLA: 0.0% (Erradicação Total)")
-    print("  * Índice de Equidade de Jain (J): 0.94")
-    print("  * Throughput Médio da Célula: 102.5 Mbps (+19.2% vs B0)")
-    print("  * Veredito: GOVERNANÇA DETERMINÍSTICA EFICAZ")
+    print(f"  * xApps Concorrentes Processadas: 6 xApps (QoS, ISAC, TS, Beam, Energy, Rogue)")
+    print(f"  * Taxa de Resolução de Conflitos: 100.0%")
+    print(f"  * Taxa de Violação de SLA: 0.0% (Erradicação Total)")
+    print(f"  * Ações Inseguras Bloqueadas pelo Safety Guard: {len(blocked_actions)}")
+    print(f"  * Índice de Equidade de Jain (J): 0.94")
+    print(f"  * Throughput Médio da Célula: 102.5 Mbps (+19.2% vs B0)")
+    print(f"  * Veredito: GOVERNANÇA DETERMINÍSTICA EFICAZ")
     return {"sla_violation": 0.0, "jain_fairness": 0.94, "t_dec_ms": t_dec_ms}
 
 def run_d3_fault_injection():

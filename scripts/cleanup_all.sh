@@ -36,8 +36,8 @@ kubectl delete namespace ricplt --timeout=30s 2>/dev/null || true
 
 # 4. Status Final
 echo -e "\n${GREEN}[4/4] Verificando se restou algum pod...${NC}"
-kubectl get pods -A | grep -E "ricxapp|ricplt" || echo -e "${GREEN}[✓] Nenhum recurso O-RAN restante no cluster.${NC}"
+kubectl get pods -A | grep -E "ricxapp|ricplt" || echo -e "${GREEN}[[OK]] Nenhum recurso O-RAN restante no cluster.${NC}"
 
 echo -e "\n${GREEN}======================================================================${NC}"
-echo -e "${GREEN}   [✓] Limpeza concluida com SUCESSO! O cluster esta limpo.           ${NC}"
+echo -e "${GREEN}   [[OK]] Limpeza concluida com SUCESSO! O cluster esta limpo.           ${NC}"
 echo -e "${GREEN}======================================================================${NC}"

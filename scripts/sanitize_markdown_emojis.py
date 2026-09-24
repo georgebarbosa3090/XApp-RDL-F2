@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Scientific Documentation Emoji & Icon Sanitizer
+Scientific Repository Emoji & Icon Sanitizer
 Permanently strips all decorative emojis, icons, and non-academic unicode pictographs
-from all Markdown (.md) documentation files across Phase 1 and Phase 2.
+from all Markdown (.md), Python (.py), Shell (.sh), JSON (.json), and YAML (.yaml)
+files across Phase 1 and Phase 2.
 """
 
 import os
@@ -12,19 +13,39 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# Semantic replacements for status indicators in tables
+# Semantic replacements for status indicators and icons
 STATUS_REPLACEMENTS = {
-    "🟢": "[CONFORME]",
-    "🟡": "[EM VALIDACAO]",
-    "🔴": "[NAO CONFORME]",
-    "✓": "[OK]",
-    "✔": "[OK]",
-    "❌": "[FALHA]",
-    "⚠️": "[ALERTA]",
+    "[CONFORME]": "[CONFORME]",
+    "[EM VALIDACAO]": "[EM VALIDACAO]",
+    "[NAO CONFORME]": "[NAO CONFORME]",
+    "[OK]": "[OK]",
+    "[OK]": "[OK]",
+    "[FALHA]": "[FALHA]",
+    "[ALERTA]": "[ALERTA]",
+    "[ALERTA]": "[ALERTA]",
+    "[METRICA]": "[METRICA]",
+    "[SEGURANCA]": "[SEGURANCA]",
+    "[SEGURANCA]": "[SEGURANCA]",
+    "vs": "vs",
+    "vs": "vs",
+    "[INSPECAO]": "[INSPECAO]",
+    "[COGNITIVO]": "[COGNITIVO]",
+    "[RADIO]": "[RADIO]",
+    "[CONFIG]": "[CONFIG]",
+    "[CONFIG]": "[CONFIG]",
+    "[TESTE]": "[TESTE]",
+    "[EXEC]": "[EXEC]",
+    "[INFO]": "[INFO]",
+    "[TEMPO]": "[TEMPO]",
+    "[TEMPO]": "[TEMPO]",
+    "[GRAFICO]": "[GRAFICO]",
+    "[GRAFICO]": "[GRAFICO]",
+    "[CRITICO]": "[CRITICO]",
+    "*": "*",
+    "*": "*",
 }
 
 # Regex pattern matching emoji / pictograph unicode blocks
-# Emoticons, Misc Symbols, Dingbats, Transport/Map, Supplemental, Symbols & Pictographs
 EMOJI_PATTERN = re.compile(
     r"[\U00010000-\U0010ffff"
     r"\u2600-\u26ff"
@@ -38,29 +59,15 @@ EMOJI_PATTERN = re.compile(
     flags=re.UNICODE,
 )
 
-
-def sanitize_markdown_text(content: str) -> str:
-    # First, handle semantic replacements if any
-    for sym, repl in STATUS_REPLACEMENTS.items():
-        content = content.replace(sym, repl)
-    
-    # Remove all other emojis
-    cleaned = EMOJI_PATTERN.sub("", content)
-    
-    # Clean up awkward whitespace left behind, like "###  Titulo" -> "### Titulo"
-    cleaned = re.sub(r"^(#+\s+)\s+", r"\1", cleaned, flags=re.MULTILINE)
-    # Clean up double spaces in bullet points like "*  **Text**" -> "* **Text**"
-    cleaned = re.sub(r"^(\s*[\*\-]\s+)\s+", r"\1", cleaned, flags=re.MULTILINE)
-    # Clean up "  " -> " " inside headings or text where an emoji was removed
-    cleaned = re.sub(r"[ \t]+", " ", cleaned)
-    # Restore newlines properly
-    # But note: re.sub above might collapse newlines if not careful with spaces. Let's do line by line.
-    return cleaned
+TARGET_EXTENSIONS = {".md", ".py", ".sh", ".json", ".yaml", ".yml", ".txt", ".rst"}
 
 
 def process_file(filepath: Path) -> int:
-    with open(filepath, "r", encoding="utf-8", errors="ignore") as fp:
-        original = fp.read()
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as fp:
+            original = fp.read()
+    except Exception:
+        return 0
 
     lines = original.splitlines(keepends=True)
     new_lines = []
@@ -78,10 +85,10 @@ def process_file(filepath: Path) -> int:
             emojis_removed += len(matches)
             mod_line = EMOJI_PATTERN.sub("", mod_line)
 
-        # Fix headings spacing: e.g. "###  Navegação" -> "### Navegação"
-        mod_line = re.sub(r"^(#+\s+)\s+", r"\1", mod_line)
-        # Fix list item spacing: e.g. "*  **Grafana**" -> "* **Grafana**"
-        mod_line = re.sub(r"^(\s*[\*\-]\s+)\s+", r"\1", mod_line)
+        # Fix markdown headings spacing if applicable
+        if filepath.suffix == ".md":
+            mod_line = re.sub(r"^(#+\s+)\s+", r"\1", mod_line)
+            mod_line = re.sub(r"^(\s*[\*\-]\s+)\s+", r"\1", mod_line)
 
         new_lines.append(mod_line)
 
@@ -98,25 +105,40 @@ def main():
     total_emojis = 0
 
     for root, dirs, files in os.walk(PROJECT_ROOT):
-        # Ignore git, venv, node_modules
-        dirs[:] = [d for d in dirs if d not in (".git", ".venv", "venv", ".venv-rdl", "node_modules", ".pytest_cache", ".idea", ".vscode")]
+        dirs[:] = [
+            d
+            for d in dirs
+            if d
+            not in (
+                ".git",
+                ".venv",
+                "venv",
+                ".venv-rdl",
+                "node_modules",
+                ".pytest_cache",
+                ".idea",
+                ".vscode",
+                ".system_generated",
+            )
+        ]
         for f in files:
-            if f.endswith(".md"):
-                filepath = Path(root) / f
+            filepath = Path(root) / f
+            if filepath.suffix in TARGET_EXTENSIONS:
                 total_files += 1
                 cnt = process_file(filepath)
                 if cnt > 0:
                     modified_files += 1
                     total_emojis += cnt
-                    print(f"[REMOVED {cnt:>2} ICONS] {filepath.relative_to(PROJECT_ROOT)}")
+                    print(f"[REMOVIDO {cnt:>2} ICONES] {filepath.relative_to(PROJECT_ROOT)}")
 
     print("=" * 70)
-    print(f"Sanitização Concluída:")
-    print(f"  • Total de arquivos .md examinados: {total_files}")
-    print(f"  • Arquivos .md modificados: {modified_files}")
-    print(f"  • Total de ícones/emojis removidos: {total_emojis}")
+    print("Sanitizacao Concluida:")
+    print(f"  * Total de arquivos examinados: {total_files}")
+    print(f"  * Total de arquivos modificados: {modified_files}")
+    print(f"  * Total de icones/emojis removidos: {total_emojis}")
     print("=" * 70)
 
 
 if __name__ == "__main__":
     main()
+

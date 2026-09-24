@@ -101,7 +101,7 @@ flowchart TD
     PA["PerceptionAgent (Janela 200 ms)"]
     RA_F1["ReasoningAgent (F1)<br/>TVS/EEVS Determinístico"]
     CE_F2["ContextEngine (F2)<br/>MAPPO / GNN Context"]
-    REF["RefinementAgent (Safety Guards F1)<br/>• Budget Max PRB<br/>• Limites em dBm (TxPower)<br/>• Cooldown Anti-Ping-Pong"]
+    REF["RefinementAgent (Safety Guards F1)<br/>* Budget Max PRB<br/>* Limites em dBm (TxPower)<br/>* Cooldown Anti-Ping-Pong"]
     RC["E2SM-RC Control Request"]
 
     KPM --> PA

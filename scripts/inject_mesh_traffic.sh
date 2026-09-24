@@ -32,7 +32,7 @@ if [ -z "$XAPP_PODS" ]; then
     exit 1
 fi
 
-echo "[✓] Pods ativos detectados: $(echo "$XAPP_PODS" | tr '\n' ' ')"
+echo "[[OK]] Pods ativos detectados: $(echo "$XAPP_PODS" | tr '\n' ' ')"
 
 END_TIME=$((SECONDS + DURATION))
 COUNT=0
@@ -58,5 +58,5 @@ for p in [8080, 8081, 8082, 8083, 8084, 8085, 8086, 8087, 8088, 8089, 8090, 8091
 done
 
 echo "=============================================================================="
-echo " [✓] Injeção de tráfego concluída. Verifique a aba 'Graph' no Kiali."
+echo " [[OK]] Injeção de tráfego concluída. Verifique a aba 'Graph' no Kiali."
 echo "=============================================================================="

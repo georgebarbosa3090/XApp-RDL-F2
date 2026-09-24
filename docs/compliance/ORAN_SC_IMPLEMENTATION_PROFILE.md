@@ -20,7 +20,7 @@ flowchart TD
 
     subgraph RDL_APP["xApp RDL (H-RDL / CA-RDL)"]
         direction TB
-        RDL_CORE["• SubMgr REST Client (:8088)<br/>• RMR Dispatcher (:4560 / :38000)<br/>• E2AP APER Codec Engine"]
+        RDL_CORE["* SubMgr REST Client (:8088)<br/>* RMR Dispatcher (:4560 / :38000)<br/>* E2AP APER Codec Engine"]
     end
 
     SUBMGR -->|"REST (HTTP/JSON)"| RDL_APP

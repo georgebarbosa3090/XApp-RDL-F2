@@ -56,7 +56,7 @@ for ENTRY in "${SCENARIOS[@]}"; do
             echo "  [!] Aviso: Execução concluída com código de retorno específico no log."
         }
     done
-    echo "  [✓] $SCENARIO_DESC finalizado com sucesso para todas as seeds."
+    echo "  [[OK]] $SCENARIO_DESC finalizado com sucesso para todas as seeds."
 done
 
 echo "=============================================================================="

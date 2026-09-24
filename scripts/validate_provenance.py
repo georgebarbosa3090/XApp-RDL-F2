@@ -5,13 +5,13 @@ Projeto: xApp RDL (Resource and Decision Layer) - Fase 1 (H-RDL)
 Auditor de Providência e Integridade Científica (scripts/validate_provenance.py)
 
 Valida estritamente a rastreabilidade de evidências reais extraídas do ns-3 / 5G-LENA / NORI:
-  ✓ execution_manifest.json com meta-informações completas
-  ✓ Hashes SHA256 do executável ns-3 e do cenário .cc
-  ✓ Versão do ns-3 (3.48), commit do 5G-LENA (v5.1), commit do NORI (9b64c12)
-  ✓ Semente de simulação (seed) e parâmetros CLI
-  ✓ FlowMonitor XML bruto gerado pelo ns-3
-  ✓ Artefatos brutos E2 KPM (.raw) capturados do socket/RMR
-  ✓ Timestamps de alta resolução e logs stdout/stderr
+  [OK] execution_manifest.json com meta-informações completas
+  [OK] Hashes SHA256 do executável ns-3 e do cenário .cc
+  [OK] Versão do ns-3 (3.48), commit do 5G-LENA (v5.1), commit do NORI (9b64c12)
+  [OK] Semente de simulação (seed) e parâmetros CLI
+  [OK] FlowMonitor XML bruto gerado pelo ns-3
+  [OK] Artefatos brutos E2 KPM (.raw) capturados do socket/RMR
+  [OK] Timestamps de alta resolução e logs stdout/stderr
 ========================================================================================
 """
 

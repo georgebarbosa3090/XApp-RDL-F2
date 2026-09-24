@@ -11,9 +11,9 @@ A pesquisa no projeto **xApp RDL (Resource and Decision Layer)** é estruturada 
 
 ```mermaid
 flowchart LR
-    F1["FASE 1: H-RDL (2026 Q1-Q3)<br/>• Heurísticas TVS/EEVS<br/>• Safety Guards Físicos<br/>• Zero Violação de SLA<br/><b>[STATUS: CONCLUÍDA]</b>"]
-    F2["FASE 2: CA-RDL (2026 Q3-Q4)<br/>• Context Engine & KG<br/>• Safe-MAPPO (CMDP)<br/>• Otimização de Pareto<br/><b>[STATUS: CONCLUÍDA]</b>"]
-    F3["FASE 3: FEDERADA 6G (2027-2028)<br/>• Intent-Driven A1 Policy<br/>• Federação Multi-RIC<br/>• SAGIN / NTN / Zero-Trust<br/><b>[STATUS: ROADMAP ATIVO]</b>"]
+    F1["FASE 1: H-RDL (2026 Q1-Q3)<br/>* Heurísticas TVS/EEVS<br/>* Safety Guards Físicos<br/>* Zero Violação de SLA<br/><b>[STATUS: CONCLUÍDA]</b>"]
+    F2["FASE 2: CA-RDL (2026 Q3-Q4)<br/>* Context Engine & KG<br/>* Safe-MAPPO (CMDP)<br/>* Otimização de Pareto<br/><b>[STATUS: CONCLUÍDA]</b>"]
+    F3["FASE 3: FEDERADA 6G (2027-2028)<br/>* Intent-Driven A1 Policy<br/>* Federação Multi-RIC<br/>* SAGIN / NTN / Zero-Trust<br/><b>[STATUS: ROADMAP ATIVO]</b>"]
     
     F1 --> F2 --> F3
 ```
@@ -30,12 +30,12 @@ A Fase 3 estende os conceitos de governança cognitiva para redes altamente dist
 flowchart TD
     subgraph SMO_NONRT["SMO & NON-RT RIC (O-RAN WG2)"]
         direction TB
-        A1_ENGINE["INTENT-DRIVEN A1 POLICY ENGINE<br/>• Processamento de Intenções em Linguagem Natural (LLM Telecom / NLP)<br/>• Decomposição de Políticas Globais em Contratos A1-P Formais"]
+        A1_ENGINE["INTENT-DRIVEN A1 POLICY ENGINE<br/>* Processamento de Intenções em Linguagem Natural (LLM Telecom / NLP)<br/>* Decomposição de Políticas Globais em Contratos A1-P Formais"]
     end
 
     subgraph RIC_FED["NEAR-RT RIC FEDERADO (O-RAN WG3)"]
         direction TB
-        RDL_6G["xApp-RDL 6G FEDERATED CORE<br/>• Federated Learning Orchestrator (Agregação Segura de Gradientes)<br/>• SAGIN Multi-Domain Coordinator (Terrestre, Aéreo UAV, Orbital NTN)<br/>• Zero-Trust Security Sandbox (Isolamento e Quarentena de Rogue Apps)<br/>• Quantum-Resistant Causal Signature (Pós-Quântica / Dilithium)"]
+        RDL_6G["xApp-RDL 6G FEDERATED CORE<br/>* Federated Learning Orchestrator (Agregação Segura de Gradientes)<br/>* SAGIN Multi-Domain Coordinator (Terrestre, Aéreo UAV, Orbital NTN)<br/>* Zero-Trust Security Sandbox (Isolamento e Quarentena de Rogue Apps)<br/>* Quantum-Resistant Causal Signature (Pós-Quântica / Dilithium)"]
     end
 
     subgraph SAGIN_INFRA["INFRAESTRUTURA SAGIN 6G (O-CU / O-DU / O-RU)"]

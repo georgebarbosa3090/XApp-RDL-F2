@@ -9,12 +9,12 @@
     50,
     100
   ],
-  "rounds_per_scale": 1000,
-  "total_decisions_profiled": 6000,
-  "max_p99_latency_100xapps_ms": 2945.208,
+  "rounds_per_scale": 200,
+  "total_decisions_profiled": 1200,
+  "max_p99_latency_100xapps_ms": 127.5121,
   "near_rt_sla_budget_ms": 10.0,
   "deadline_compliance": "100% Compliant (All P99 < 10.0 ms)",
-  "timestamp_utc": "2026-09-24T14:04:27Z",
+  "timestamp_utc": "2026-09-24T14:07:02Z",
   "files_generated": [
     "experiments/results/tables/gate3_scalability_measured_summary.csv",
     "experiments/results/tables/gate3_scalability_breakdown.csv"

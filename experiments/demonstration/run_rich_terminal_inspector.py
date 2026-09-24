@@ -58,13 +58,13 @@ def print_stage_1(rec):
     print(f"{CYAN}┌──────────────────────────────────────────────────────────────────────────────┐")
     print(f"│ [STAGE 1] REGISTRO DE UEs & SETUP 3GPP (PRACH -> RRC -> NAS -> PDU -> E2)    │")
     print(f"└──────────────────────────────────────────────────────────────────────────────┘{RESET}")
-    print(f"  {GRAY}Tempo de Execução:{RESET} {rec.duration_ms:.2f} ms | {GRAY}Status:{RESET} {GREEN}{rec.status} ✓{RESET}")
+    print(f"  {GRAY}Tempo de Execução:{RESET} {rec.duration_ms:.2f} ms | {GRAY}Status:{RESET} {GREEN}{rec.status} [OK]{RESET}")
     print(f"\n  {BOLD}Tabela de UEs Registrados na Célula gNB-1:{RESET}")
     print(f"  {GRAY}{'UE ID':<10} {'IMSI':<18} {'RNTI':<8} {'Slice':<14} {'SINR':<10} {'Buffer':<12} {'SLA Status'}{RESET}")
     print(f"  {'-'*78}")
     for ue in rec.details["ues"]:
-        print(f"  {WHITE}{ue['ue_id']:<10}{RESET} {GRAY}{ue['imsi']:<18}{RESET} {ue['rnti']:<8} {CYAN}{ue['slice_id']:<14}{RESET} {ue['sinr_db']:>4.1f} dB    {ue['buffer_kb']:>6.1f} KB    {GREEN}CONNECTED ✓{RESET}")
-    print(f"\n  {GREEN}● Associação E2 Agent gNB-1 -> Near-RT RIC (SCTP: 36421): E2_SETUP_SUCCESSFUL ✓{RESET}\n")
+        print(f"  {WHITE}{ue['ue_id']:<10}{RESET} {GRAY}{ue['imsi']:<18}{RESET} {ue['rnti']:<8} {CYAN}{ue['slice_id']:<14}{RESET} {ue['sinr_db']:>4.1f} dB    {ue['buffer_kb']:>6.1f} KB    {GREEN}CONNECTED [OK]{RESET}")
+    print(f"\n  {GREEN}* Associação E2 Agent gNB-1 -> Near-RT RIC (SCTP: 36421): E2_SETUP_SUCCESSFUL [OK]{RESET}\n")
 
 
 def print_stage_2(rec):
@@ -82,7 +82,7 @@ def print_stage_2(rec):
     for m in kpm["measurements"]:
         color = RED if m["slice_id"] == "Slice-URLLC" and m["rlc_latency_ms"] > 1.0 else WHITE
         print(f"  {color}{m['slice_id']:<16} {m['prb_usage_pct']:>5.1f}%       {m['dl_throughput_mbps']:>6.1f} Mbps      {m['rlc_latency_ms']:>6.2f} ms        {m['packet_drop_rate']:.5f}{RESET}")
-    print(f"\n  {GREEN}● Gate 1 Validation: REAL_ASN1_APER_VALID (APER Decoder OK) ✓{RESET}\n")
+    print(f"\n  {GREEN}* Gate 1 Validation: REAL_ASN1_APER_VALID (APER Decoder OK) [OK]{RESET}\n")
 
 
 def print_stage_3(rec):
@@ -97,7 +97,7 @@ def print_stage_3(rec):
         pcol = PURPLE if "QoS" in p["xapp_id"] else (GREEN if "Energy" in p["xapp_id"] else (YELLOW if "Coverage" in p["xapp_id"] else BLUE))
         print(f"  {pcol}{p['xapp_id']:<22}{RESET} {p['intent_type']:<22} {CYAN}{p['proposed_rcp']:<24}{RESET} {BOLD}{p['proposed_value']:>4.1f} {p['unit']:<4}{RESET} Pri {p['priority']}")
         print(f"    {GRAY}↳ Rationale: {p['rationale']}{RESET}")
-    print(f"\n  {YELLOW}● Buffer Temporal: {len(rec.details['proposals'])} propostas agregadas em 200ms -> Pronto para Detecção de Conflitos.{RESET}\n")
+    print(f"\n  {YELLOW}* Buffer Temporal: {len(rec.details['proposals'])} propostas agregadas em 200ms -> Pronto para Detecção de Conflitos.{RESET}\n")
 
 
 def print_stage_4(rec, scenario):
@@ -136,7 +136,7 @@ def print_stage_4(rec, scenario):
    {RED}│ (Cota MAC de PRBs)   │{RESET}                      {RED}│ (Potência da Célula) │{RESET}
    {RED}└──────────────────────┘{RESET}                      {RED}└──────────────────────┘{RESET}
         """)
-        print(f"  {PURPLE}● Aresta de Conflito Mútuo de Recursos Ativada (Peso: 2.50, Acoplamento: 0.89){RESET}\n")
+        print(f"  {PURPLE}* Aresta de Conflito Mútuo de Recursos Ativada (Peso: 2.50, Acoplamento: 0.89){RESET}\n")
 
     elif scenario.scenario_id == "scenario_b_urllc_dapp":
         print(f"""
@@ -161,7 +161,7 @@ def print_stage_4(rec, scenario):
    {GREEN}│ Slice-URLLC (Guaranteed QFI)  │{RESET}           {GREEN}│ Instant Slot Puncturing (TTI) │{RESET}
    {GREEN}└───────────────────────────────┘{RESET}           {GREEN}└───────────────────────────────┘{RESET}
         """)
-        print(f"  {PURPLE}● Aresta Multi-Tier Cross-Layer C5 Ativada (Near-RT xApp <-> Real-Time dApp, Acoplamento: 0.82){RESET}\n")
+        print(f"  {PURPLE}* Aresta Multi-Tier Cross-Layer C5 Ativada (Near-RT xApp <-> Real-Time dApp, Acoplamento: 0.82){RESET}\n")
 
     elif scenario.scenario_id == "scenario_c_temporal_flapping":
         print(f"""
@@ -186,8 +186,8 @@ def print_stage_4(rec, scenario):
    {RED}│ Ping-Pong Handover Loop       │{RESET}◄═════►{RED}│ Inter-Cell Signal Distortion  │{RESET}
    {RED}└───────────────────────────────┘{RESET}       {RED}└───────────────────────────────┘{RESET}
         """)
-        print(f"  {RED}● Aresta Temporal de Flapping C3 Ativada (Ciclo Ping-Pong Detectado: T_flapping = 150ms){RESET}")
-        print(f"  {GREEN}● Lockout Temporal de 5.0s Imposto pelo Knowledge Graph para Restaurar Regime Permanente ✓{RESET}\n")
+        print(f"  {RED}* Aresta Temporal de Flapping C3 Ativada (Ciclo Ping-Pong Detectado: T_flapping = 150ms){RESET}")
+        print(f"  {GREEN}* Lockout Temporal de 5.0s Imposto pelo Knowledge Graph para Restaurar Regime Permanente [OK]{RESET}\n")
 
 
 def print_stage_5(rec):
@@ -197,8 +197,8 @@ def print_stage_5(rec):
     print(f"  {GRAY}Conflitos Identificados:{RESET} {BOLD}{rec.details['conflicts_detected_count']}{RESET} | {GRAY}Severidade Máxima:{RESET} {RED}{rec.details['max_severity']}{RESET}")
     print(f"\n  {BOLD}Matriz de Conflitos Formalmente Classificados:{RESET}")
     for c in rec.details["conflicts"]:
-        print(f"  {RED}● [{c['conflict_id']}] {c['type']}{RESET} (Severidade: {BOLD}{c['severity']}{RESET}, kappa={c['coupling_coefficient']})")
-        print(f"    {GRAY}Partes:{RESET} {c['parties'][0]} ⚔️ {c['parties'][1]}")
+        print(f"  {RED}* [{c['conflict_id']}] {c['type']}{RESET} (Severidade: {BOLD}{c['severity']}{RESET}, kappa={c['coupling_coefficient']})")
+        print(f"    {GRAY}Partes:{RESET} {c['parties'][0]} vs {c['parties'][1]}")
         print(f"    {GRAY}Parâmetro Disputado:{RESET} {CYAN}{c['rcp']}{RESET}")
         print(f"    {GRAY}Impacto:{RESET} {c['description']}")
         print()
@@ -212,17 +212,17 @@ def print_stage_6(rec):
     print(f"  {BOLD}Mecanismo Selecionado:{RESET} {CYAN}{arb['tier_name']}{RESET}")
     print(f"  {BOLD}Resumo da Decisão:{RESET} {arb['decision_summary']}")
     print(f"\n  {BOLD}Métricas de Desempenho e Convergência (Gate 2):{RESET}")
-    print(f"  • {BOLD}Tempo de Convergência (Inference Time):{RESET} {GREEN}{arb['convergence_time_ms']:.2f} ms{RESET} {GRAY}(Limite Gate 2: < 50.0 ms) -> {GREEN}PASS ✓{RESET}")
-    print(f"  • {BOLD}Pareto Optimality Joint Score:{RESET} {GREEN}{arb['pareto_optimality_score']:.4f}{RESET} (Fronteira Ótima Multiobjetivo)")
-    print(f"  • {BOLD}Probabilidade de Violação de SLA:{RESET} {GREEN}{arb['sla_violation_probability'] * 100:.4f}%{RESET} (Restrição Lagrangeana)")
-    print(f"  • {BOLD}Distribuição de Pesos de Arbitragem:{RESET}")
+    print(f"  * {BOLD}Tempo de Convergência (Inference Time):{RESET} {GREEN}{arb['convergence_time_ms']:.2f} ms{RESET} {GRAY}(Limite Gate 2: < 50.0 ms) -> {GREEN}PASS [OK]{RESET}")
+    print(f"  * {BOLD}Pareto Optimality Joint Score:{RESET} {GREEN}{arb['pareto_optimality_score']:.4f}{RESET} (Fronteira Ótima Multiobjetivo)")
+    print(f"  * {BOLD}Probabilidade de Violação de SLA:{RESET} {GREEN}{arb['sla_violation_probability'] * 100:.4f}%{RESET} (Restrição Lagrangeana)")
+    print(f"  * {BOLD}Distribuição de Pesos de Arbitragem:{RESET}")
     for xapp, w in arb["weight_distribution"].items():
         print(f"    - {xapp}: {BOLD}{w * 100:.1f}%{RESET}")
     print(f"\n  {BOLD}Telemetria H-RDL Fase 1 (Heurística Determinística):{RESET}")
-    print(f"    • {BOLD}Latência de Decisão Determinística:{RESET} {GREEN}0.103 ms{RESET} {GRAY}(Sub-milissegundo vs < 50ms SLA){RESET}")
-    print(f"    • {BOLD}Prioridade Relativa TVS vs EEVS:{RESET} {CYAN}0.90 / 0.65{RESET} {GRAY}(Preempção estrita URLLC){RESET}")
-    print(f"    • {BOLD}Violações de Safety Guard (3GPP):{RESET} {GREEN}0 violações{RESET} {GRAY}(Hard Boundary Clipping){RESET}")
-    print(f"    • {BOLD}Janela de Sincronização:{RESET} {YELLOW}200.0 ms{RESET} | {BOLD}Action Churn:{RESET} {GREEN}0.042{RESET}")
+    print(f"    * {BOLD}Latência de Decisão Determinística:{RESET} {GREEN}0.103 ms{RESET} {GRAY}(Sub-milissegundo vs < 50ms SLA){RESET}")
+    print(f"    * {BOLD}Prioridade Relativa TVS vs EEVS:{RESET} {CYAN}0.90 / 0.65{RESET} {GRAY}(Preempção estrita URLLC){RESET}")
+    print(f"    * {BOLD}Violações de Safety Guard (3GPP):{RESET} {GREEN}0 violações{RESET} {GRAY}(Hard Boundary Clipping){RESET}")
+    print(f"    * {BOLD}Janela de Sincronização:{RESET} {YELLOW}200.0 ms{RESET} | {BOLD}Action Churn:{RESET} {GREEN}0.042{RESET}")
     print()
 
 
@@ -233,10 +233,10 @@ def print_stage_7(rec, scenario):
     dapp = rec.details["dapp_realtime_envelope"]
     print(f"  {BOLD}Nó Alvo dApp:{RESET} {dapp['target_node']} | {BOLD}Tier de Execução:{RESET} {CYAN}{dapp['execution_tier']}{RESET}")
     print(f"  {BOLD}Safety Envelope Bounds (Omega_dApp):{RESET}")
-    print(f"    • PRB URLLC Bounds: Min {dapp['safety_envelope_omega']['prb_urllc_bounds']['min_pct']}% | Max {dapp['safety_envelope_omega']['prb_urllc_bounds']['max_pct']}% | Nominal {dapp['safety_envelope_omega']['prb_urllc_bounds']['nominal_pct']}%")
-    print(f"    • TxPower Bounds: Min {dapp['safety_envelope_omega']['tx_power_bounds_dbm']['min_dbm']} dBm | Max {dapp['safety_envelope_omega']['tx_power_bounds_dbm']['max_dbm']} dBm | Nominal {dapp['safety_envelope_omega']['tx_power_bounds_dbm']['nominal_dbm']} dBm")
-    print(f"    • Preempção Sub-1ms Máxima: {dapp['safety_envelope_omega']['max_preemption_slots']} slots TTI")
-    print(f"\n  {GREEN}● Safety Guard Certification: SAFETY_VERIFIED_AND_BOUNDED ✓{RESET}\n")
+    print(f"    * PRB URLLC Bounds: Min {dapp['safety_envelope_omega']['prb_urllc_bounds']['min_pct']}% | Max {dapp['safety_envelope_omega']['prb_urllc_bounds']['max_pct']}% | Nominal {dapp['safety_envelope_omega']['prb_urllc_bounds']['nominal_pct']}%")
+    print(f"    * TxPower Bounds: Min {dapp['safety_envelope_omega']['tx_power_bounds_dbm']['min_dbm']} dBm | Max {dapp['safety_envelope_omega']['tx_power_bounds_dbm']['max_dbm']} dBm | Nominal {dapp['safety_envelope_omega']['tx_power_bounds_dbm']['nominal_dbm']} dBm")
+    print(f"    * Preempção Sub-1ms Máxima: {dapp['safety_envelope_omega']['max_preemption_slots']} slots TTI")
+    print(f"\n  {GREEN}* Safety Guard Certification: SAFETY_VERIFIED_AND_BOUNDED [OK]{RESET}\n")
 
 
 def print_stage_8(rec):
@@ -251,14 +251,14 @@ def print_stage_8(rec):
     print(f"  {GRAY}{req['asn1_aper_hex']}{RESET}")
     print(f"  {BOLD}Ações Reconfiguradas na RAN:{RESET}")
     for act in req["actuation_parameters"]:
-        print(f"    • {act['name']} = {BOLD}{act['value']} {act['unit']}{RESET}")
-    print(f"\n  {GREEN}● Resposta da RAN: {ack['name']} (mtype: {ack['mtype']}) -> Status: {ack['status']} ✓{RESET}")
+        print(f"    * {act['name']} = {BOLD}{act['value']} {act['unit']}{RESET}")
+    print(f"\n  {GREEN}* Resposta da RAN: {ack['name']} (mtype: {ack['mtype']}) -> Status: {ack['status']} [OK]{RESET}")
     print(f"\n  {BOLD}Telemetria Pós-Atuação (Validação de Recuperação Gate 4):{RESET}")
     ran = rec.details["final_ran_state"]
     if "Slice-URLLC" in ran["slice_kpis"]:
-        print(f"    • Latência URLLC Recuperada: {GREEN}{ran['slice_kpis']['Slice-URLLC']['rlc_latency_ms']:.2f} ms{RESET} (SLA <= 1.0 ms) -> {GREEN}CONVERGED ✓{RESET}")
-        print(f"    • Throughput URLLC: {GREEN}{ran['slice_kpis']['Slice-URLLC']['throughput_mbps']:.1f} Mbps{RESET}")
-    print(f"    • Potência da Célula: {CYAN}{ran['tx_power_dbm']:.1f} dBm{RESET} | Consumo: {GREEN}{ran['energy_consumption_w']:.1f} W (-17.7% economia){RESET}")
+        print(f"    * Latência URLLC Recuperada: {GREEN}{ran['slice_kpis']['Slice-URLLC']['rlc_latency_ms']:.2f} ms{RESET} (SLA <= 1.0 ms) -> {GREEN}CONVERGED [OK]{RESET}")
+        print(f"    * Throughput URLLC: {GREEN}{ran['slice_kpis']['Slice-URLLC']['throughput_mbps']:.1f} Mbps{RESET}")
+    print(f"    * Potência da Célula: {CYAN}{ran['tx_power_dbm']:.1f} dBm{RESET} | Consumo: {GREEN}{ran['energy_consumption_w']:.1f} W (-17.7% economia){RESET}")
     print()
 
 
@@ -270,14 +270,14 @@ def print_certification(scenario):
     print(f"║  Cenário: {scenario.title:<66} ║")
     print(f"║  Nível Cognitivo Selecionado: {tier_str:<46} ║")
     print(f"║                                                                              ║")
-    print(f"║  1. E2 Association (SCTP/RIC)                           PASS ✓               ║")
-    print(f"║  2. KPM Telemetry Ingestion (Gate 1 - APER)             PASS ✓               ║")
-    print(f"║  3. Near-RT Decision Latency (Gate 2: < 50ms)           PASS ✓               ║")
-    print(f"║  4. Conflict Resolution & Pareto Alignment              PASS ✓               ║")
-    print(f"║  5. E2SM-RC Control Message ACK (Gate 3)                PASS ✓               ║")
-    print(f"║  6. Physical Closed-Loop Recovery (Gate 4)              PASS ✓               ║")
+    print(f"║  1. E2 Association (SCTP/RIC)                           PASS [OK]               ║")
+    print(f"║  2. KPM Telemetry Ingestion (Gate 1 - APER)             PASS [OK]               ║")
+    print(f"║  3. Near-RT Decision Latency (Gate 2: < 50ms)           PASS [OK]               ║")
+    print(f"║  4. Conflict Resolution & Pareto Alignment              PASS [OK]               ║")
+    print(f"║  5. E2SM-RC Control Message ACK (Gate 3)                PASS [OK]               ║")
+    print(f"║  6. Physical Closed-Loop Recovery (Gate 4)              PASS [OK]               ║")
     print(f"║                                                                              ║")
-    print(f"║  CLOSED-LOOP STATUS:                                    CERTIFIED ✓          ║")
+    print(f"║  CLOSED-LOOP STATUS:                                    CERTIFIED [OK]          ║")
     print(f"╚══════════════════════════════════════════════════════════════════════════════╝{RESET}\n")
 
 
@@ -334,8 +334,8 @@ def run_scenario(scenario, stream_telemetry=True, duration_s=30.0, interval_s=0.
         print(f" [STREAMING] Iniciando Transmissão em Tempo Real para InfluxDB (8086) e Grafana (3000)")
         print(f" Duração: {dur_str} | Cenário: {scenario.scenario_id}")
         print(f" Acesse no Navegador:")
-        print(f"   • Grafana:  http://localhost:3000/d/oran-rdl-closed-loop")
-        print(f"   • InfluxDB: http://localhost:8086")
+        print(f"   * Grafana:  http://localhost:3000/d/oran-rdl-closed-loop")
+        print(f"   * InfluxDB: http://localhost:8086")
         print(f"{'='*80}{RESET}\n")
 
         bridge = InfluxTelemetryBridge()

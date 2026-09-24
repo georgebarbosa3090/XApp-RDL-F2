@@ -22,7 +22,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "🟢 O-RAN Closed-Loop State & 4-Gates Compliance",
+      "title": "[CONFORME] O-RAN Closed-Loop State & 4-Gates Compliance",
       "type": "row"
     },
     {
@@ -31,7 +31,7 @@
         "defaults": {
           "color": { "mode": "thresholds" },
           "mappings": [
-            { "options": { "0": { "color": "green", "text": "GOLDEN" }, "1": { "color": "red", "text": "PERTURBATION" }, "2": { "color": "orange", "text": "DETECT" }, "3": { "color": "yellow", "text": "REASON" }, "4": { "color": "blue", "text": "ACT (RC)" }, "5": { "color": "green", "text": "CLOSED LOOP ✓" } }, "type": "value" }
+            { "options": { "0": { "color": "green", "text": "GOLDEN" }, "1": { "color": "red", "text": "PERTURBATION" }, "2": { "color": "orange", "text": "DETECT" }, "3": { "color": "yellow", "text": "REASON" }, "4": { "color": "blue", "text": "ACT (RC)" }, "5": { "color": "green", "text": "CLOSED LOOP [OK]" } }, "type": "value" }
           ],
           "thresholds": {
             "mode": "absolute",
@@ -176,7 +176,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 101,
-      "title": "📡 Radio Access Network (5G-LENA & E2SM-KPM Telemetry)",
+      "title": "[RADIO] Radio Access Network (5G-LENA & E2SM-KPM Telemetry)",
       "type": "row"
     },
     {
@@ -276,7 +276,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
       "id": 102,
-      "title": "🧠 Cognitive Conflict Detection, Safe-MAPPO & E2SM-RC Actuation",
+      "title": "[COGNITIVO] Cognitive Conflict Detection, Safe-MAPPO & E2SM-RC Actuation",
       "type": "row"
     },
     {
@@ -394,7 +394,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 23 },
       "id": 103,
-      "title": "⚡ Fase 1: H-RDL Determinística (Heurísticas TVS/EEVS & Decisão 0.103ms)",
+      "title": " Fase 1: H-RDL Determinística (Heurísticas TVS/EEVS & Decisão 0.103ms)",
       "type": "row"
     },
     {
@@ -432,7 +432,7 @@
           "refId": "A"
         }
       ],
-      "title": "⚡ H-RDL Decision Latency (0.103ms Target)",
+      "title": " H-RDL Decision Latency (0.103ms Target)",
       "type": "stat"
     },
     {
@@ -469,7 +469,7 @@
           "refId": "A"
         }
       ],
-      "title": "🛡️ H-RDL Safety Violations (Strict 0)",
+      "title": "[SEGURANCA] H-RDL Safety Violations (Strict 0)",
       "type": "stat"
     },
     {
@@ -505,7 +505,7 @@
           "refId": "A"
         }
       ],
-      "title": "⚖️ H-RDL TVS Priority & Action Churn",
+      "title": " H-RDL TVS Priority & Action Churn",
       "type": "timeseries"
     },
     {
@@ -541,7 +541,7 @@
           "refId": "A"
         }
       ],
-      "title": "🔋 H-RDL EEVS Power Reduction (dB)",
+      "title": " H-RDL EEVS Power Reduction (dB)",
       "type": "timeseries"
     }
   ],
