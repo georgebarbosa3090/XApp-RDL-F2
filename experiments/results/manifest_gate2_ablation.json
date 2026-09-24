@@ -1,0 +1,17 @@
+{
+  "gate": "Gate 2 - Systematic Ablation Study A0 to A5",
+  "protocol": "Isolated Component Disablement over Identical 30 Seeds",
+  "sample_size_per_variant": 30,
+  "total_simulations": 180,
+  "seed_range": [
+    1001,
+    1030
+  ],
+  "metrics_source": "100% Emergent from DiscreteEventRANSimulator MAC Queues & Fading (Zero Synthetic RNG)",
+  "timestamp_utc": "2026-09-24T13:44:01.264475+00:00",
+  "sha256_raw_data": "5009c9724754a1d363eac966050bcd18aa0a7a41cf94e07539ccd0af0e4dd0ed",
+  "files_generated": [
+    "experiments/results/tables/gate2_ablation_study_hrdl_raw.csv",
+    "experiments/results/tables/gate2_ablation_study_hrdl_summary.csv"
+  ]
+}

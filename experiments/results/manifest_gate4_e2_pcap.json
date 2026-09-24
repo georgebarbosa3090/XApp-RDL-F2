@@ -1,0 +1,24 @@
+{
+  "gate": "Gate 4 - E2AP v02.03 / E2SM-RC v01.03 / E2SM-KPM v03.00 Protocol Harness",
+  "transport_verified": "Live Network Socket Loopback (127.0.0.1:36422)",
+  "frames_captured": 3,
+  "golden_vectors": {
+    "E2SM_KPM_IndicationMessage": {
+      "hex": "030b4452422e5545546870446c01650d5252552e50726255736564446c014b0d516f532e466c6f7744656c6179010306676e625f30310575655f3031",
+      "size_bytes": 60,
+      "sha256": "11987a186d60e21af2c76716930739c4ae1de3b0fb75b5cde711a8e5d3b74884"
+    },
+    "E2SM_RC_ControlPDU": {
+      "hex": "01010101010101095052425f51554f5441014b",
+      "size_bytes": 19,
+      "sha256": "6a046010cce223c4cc01c601b541883c82b3726229b186885c50264f3a780344"
+    },
+    "E2AP_RICcontrolAcknowledge": {
+      "hex": "2004001a000003001d0004000100010005000200030014000100",
+      "size_bytes": 26,
+      "sha256": "3095eb419877ab11a70ee016d9326932d33d973334bd9c5d4294dec14555c205"
+    }
+  },
+  "independent_verification_command": "tshark -r experiments/results/traces/live_e2_loopback_capture.pcap -V",
+  "timestamp_utc": "2026-09-24T13:50:24Z"
+}

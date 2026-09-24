@@ -1,0 +1,17 @@
+{
+  "gate": "Gate 1 - Multi-Seed Stochastic Campaign N=30",
+  "protocol": "3GPP TR 38.901 UMi + Poisson Queue Arrivals + O-RAN Near-RT Closed-Loop",
+  "sample_size_per_baseline": 30,
+  "total_simulations": 120,
+  "seed_range": [
+    1001,
+    1030
+  ],
+  "metrics_source": "100% Emergent from DiscreteEventRANSimulator MAC Queues & Fading (Zero Synthetic RNG)",
+  "timestamp_utc": "2026-09-24T13:43:15.868568+00:00",
+  "sha256_raw_data": "101017ab9096fb7fdac63c08fdfbdd875fe864a5398f47cabb87c139694cd98e",
+  "files_generated": [
+    "experiments/results/tables/gate1_stochastic_campaign_n30_raw.csv",
+    "experiments/results/tables/gate1_stochastic_campaign_n30_summary.csv"
+  ]
+}

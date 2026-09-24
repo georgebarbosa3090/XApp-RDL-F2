@@ -19,11 +19,13 @@ class MemoryModule:
 
     def add_causal_relation(self, source: str, relation: str, target: str):
         """
-        Adiciona uma aresta ao grafo causal (ex: xApp_A -> MUTATES -> parameter_tx_power).
+        Adiciona uma aresta única ao grafo causal (ex: xApp_A -> MUTATES -> parameter_tx_power).
         """
         if source not in self._causal_graph:
             self._causal_graph[source] = []
-        self._causal_graph[source].append({"target": target, "relation": relation})
+        rel_entry = {"target": target, "relation": relation}
+        if rel_entry not in self._causal_graph[source]:
+            self._causal_graph[source].append(rel_entry)
         logger.debug(f"[MEMORY-KG] Relação Causal Registrada: ({source}) --[{relation}]--> ({target})")
 
     def find_indirect_conflict_path(self, node_a: str, node_b: str, max_depth: int = 4) -> List[List[str]]:
