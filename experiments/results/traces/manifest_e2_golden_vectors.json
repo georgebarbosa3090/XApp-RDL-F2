@@ -1,0 +1,26 @@
+{
+  "E2SM_KPM_IndicationMessage_APER": {
+    "hex": "030b4452422e5545546870446c01650d5252552e50726255736564446c014b0d516f532e466c6f7744656c6179010306676e625f30310575655f3031",
+    "size_bytes": 60,
+    "sha256": "11987a186d60e21af2c76716930739c4ae1de3b0fb75b5cde711a8e5d3b74884",
+    "payload_description": "DRB.UEThpDl=101Mbps, RRU.PrbUsedDl=75PRBs, QoS.FlowDelay=3ms"
+  },
+  "E2AP_RICindication_APER": {
+    "hex": "0001010101010201010165010004010203043c030b4452422e5545546870446c01650d5252552e50726255736564446c014b0d516f532e466c6f7744656c6179010306676e625f30310575655f3031",
+    "size_bytes": 79,
+    "sha256": "6ebbb290a3fa074a97654761d00122ad2e218a41b75e0b96bb224bc6dbf31da5",
+    "procedure": "RICindication (Report Telemetry)"
+  },
+  "E2SM_RC_ControlPDU_APER": {
+    "hex": "01010101010101095052425f51554f5441014b",
+    "size_bytes": 19,
+    "sha256": "6a046010cce223c4cc01c601b541883c82b3726229b186885c50264f3a780344",
+    "payload_description": "Target Parameter PRB_QUOTA = 75 PRBs"
+  },
+  "E2AP_RICcontrolAcknowledge_APER": {
+    "hex": "2004001a000003001d000800010001000500010000",
+    "size_bytes": 21,
+    "sha256": "00749e86560d98d188fe38cd6df9937a5ea2af6379c1ed43588fec02b0c30740",
+    "procedure": "RICcontrolAcknowledge (Successful Outcome)"
+  }
+}

@@ -12,6 +12,7 @@ Calcula genuinamente:
 import math
 import time
 from typing import Dict, List, Any, Optional, Tuple
+import numpy as np
 
 class UENode:
     def __init__(self, ue_id: str, slice_type: str, x: float, y: float, gnb_id: str = "gnb_01"):
@@ -26,6 +27,7 @@ class UENode:
         self.packet_size = 256 if slice_type == "URLLC" else 1400
         self.sinr_db = 15.0
         self.spectral_efficiency = 2.5
+        self.shadow_fading_db = 0.0 # Sombreamento log-normal 3GPP TR 38.901
         self.allocated_prbs = 10
         self.achieved_throughput_mbps = 0.0
         self.packet_delays_ms: List[float] = []
@@ -64,6 +66,7 @@ class DiscreteEventRANSimulator:
         demo_mode: str = "experiment"
     ):
         self.seed = seed
+        self.rng = np.random.RandomState(seed) # Gerador estocástico determinístico por semente
         self.carrier_freq_ghz = carrier_freq_ghz
         self.bandwidth_mhz = bandwidth_mhz
         self.duration_s = duration_s
@@ -72,8 +75,6 @@ class DiscreteEventRANSimulator:
         self.num_ues = num_ues
         
         # Modo de Demonstração em Tempo Real (Equivalente ao ns3::RealtimeSimulatorImpl)
-        # Nota: Por padrão, o simulador executa em tempo virtual (o mais rápido possível).
-        # Ativar `realtime=True` ou `demo_mode='realtime'` realiza o pacing wall-clock relógio-a-relógio (1s simulado ≈ 1s real).
         self.realtime = realtime
         self.demo_mode = demo_mode
         if self.demo_mode == "fast":
@@ -99,7 +100,13 @@ class DiscreteEventRANSimulator:
         self.gnbs[gnb_id] = GNodeB(gnb_id, x, y, tx_power_dbm)
 
     def add_ue(self, ue_id: str, slice_type: str, x: float, y: float, gnb_id: str = "gnb_01"):
-        self.ues[ue_id] = UENode(ue_id, slice_type, x, y, gnb_id)
+        # Perturbação espacial estocástica leve (±1.5m)
+        jitter_x = float(self.rng.uniform(-1.5, 1.5))
+        jitter_y = float(self.rng.uniform(-1.5, 1.5))
+        ue = UENode(ue_id, slice_type, x + jitter_x, y + jitter_y, gnb_id)
+        # Sombreamento Log-Normal 3GPP TR 38.901 UMi (sigma = 4.0 dB)
+        ue.shadow_fading_db = float(self.rng.normal(0.0, 4.0))
+        self.ues[ue_id] = ue
 
     def calculate_pathloss_3gpp(self, dist_m: float) -> float:
         """Modelo 3GPP TR 38.901 Urban Micro UMi Line-of-Sight."""
@@ -108,7 +115,7 @@ class DiscreteEventRANSimulator:
         return pl
 
     def update_radio_links(self):
-        """Calcula fisicamente SINR e Eficiência Espectral para cada UE."""
+        """Calcula fisicamente SINR e Eficiência Espectral para cada UE com desvanecimento e sombreamento."""
         for ue in self.ues.values():
             serving_gnb = self.gnbs[ue.gnb_id]
             if serving_gnb.is_sleep_mode:
@@ -117,19 +124,22 @@ class DiscreteEventRANSimulator:
                 continue
                 
             dist = math.sqrt((ue.x - serving_gnb.x)**2 + (ue.y - serving_gnb.y)**2)
-            pl = self.calculate_pathloss_3gpp(dist)
+            pl_base = self.calculate_pathloss_3gpp(dist)
+            # Desvanecimento rápido Gaussiano por slot (std = 0.3 dB)
+            fast_fading = float(self.rng.normal(0.0, 0.3))
+            pl = pl_base + ue.shadow_fading_db + fast_fading
             
             # Perda de tilt vertical
             tilt_loss = max(0.0, (serving_gnb.vertical_downtilt_deg - 6.0) * 0.5)
             rx_power_dbm = serving_gnb.tx_power_dbm - pl - tilt_loss
             rx_power_mw = 10.0 ** (rx_power_dbm / 10.0)
             
-            # Interferência cumulativa das gNodeBs vizinhas
+            # Interferência cumulativa das gNodeBs vizinhas com ruído de canal
             interf_mw = 0.0
             for neighbor_id, neighbor_gnb in self.gnbs.items():
                 if neighbor_id != ue.gnb_id and not neighbor_gnb.is_sleep_mode:
                     d_n = math.sqrt((ue.x - neighbor_gnb.x)**2 + (ue.y - neighbor_gnb.y)**2)
-                    pl_n = self.calculate_pathloss_3gpp(d_n)
+                    pl_n = self.calculate_pathloss_3gpp(d_n) + float(self.rng.normal(0.0, 2.0))
                     rx_n_dbm = neighbor_gnb.tx_power_dbm - pl_n
                     interf_mw += 10.0 ** (rx_n_dbm / 10.0)
             
@@ -145,8 +155,8 @@ class DiscreteEventRANSimulator:
     def step_slot(self, slot_duration_s: float = 0.010):
         """
         Executa 1 slot temporal discreto (10 ms):
-        1. Atualiza canal e SINR.
-        2. Injeta chegadas de pacotes nos buffers.
+        1. Atualiza canal e SINR com ruído estocástico.
+        2. Injeta chegadas de pacotes nos buffers seguindo processo de Poisson Pois(lambda).
         3. Escalonador MAC serve pacotes e calcula latência real de fila.
         """
         self.update_radio_links()
@@ -170,16 +180,19 @@ class DiscreteEventRANSimulator:
                 for ue in slice_ues:
                     ue.allocated_prbs = prbs_per_ue
                     
-                    # Chegada de pacotes no slot
+                    # Chegada estocástica de pacotes no slot (Poisson process)
                     if ue.slice_type == "URLLC":
-                        # Carga crítica intermitente
-                        incoming_bytes = 2 * ue.packet_size
+                        # Carga crítica intermitente Poisson(lambda = 2.0)
+                        pkts = int(max(1, self.rng.poisson(2.0)))
+                        incoming_bytes = pkts * ue.packet_size
                     elif ue.slice_type == "eMBB":
-                        # Fluxo contínuo de alta vazão
-                        incoming_bytes = 15 * ue.packet_size
+                        # Fluxo contínuo de alta vazão Poisson(lambda = 15.0)
+                        pkts = int(max(5, self.rng.poisson(15.0)))
+                        incoming_bytes = pkts * ue.packet_size
                     else:
-                        # Sensoriamento ISAC / mMTC
-                        incoming_bytes = 4 * ue.packet_size
+                        # Sensoriamento ISAC / mMTC Poisson(lambda = 4.0)
+                        pkts = int(max(1, self.rng.poisson(4.0)))
+                        incoming_bytes = pkts * ue.packet_size
                         
                     ue.queue_bytes += incoming_bytes
                     
@@ -191,12 +204,12 @@ class DiscreteEventRANSimulator:
                     ue.queue_bytes -= bytes_served
                     ue.total_bytes_transmitted += bytes_served
                     
-                    # Cálculo de latência real de transmissão e fila
+                    # Cálculo de latência real de transmissão e fila (TTI 1ms 5G NR + fila)
                     if bytes_served > 0:
                         pkts_served = max(1, bytes_served // ue.packet_size)
                         ue.packets_transmitted += pkts_served
                         queue_delay_ms = (ue.queue_bytes / max(100.0, channel_rate_bps / 8.0)) * 1000.0
-                        slot_delay_ms = (slot_duration_s * 1000.0) + queue_delay_ms
+                        slot_delay_ms = 1.0 + queue_delay_ms
                         ue.packet_delays_ms.append(slot_delay_ms)
                     else:
                         if ue.queue_bytes > 50000:
