@@ -22,6 +22,7 @@ docs/
 +-- 05_auditoria_e_conformidade_oran.md      # [Vol 05] Auditoria Causal, Rastreabilidade SHA-256 e Normas O-RAN
 +-- 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028, Fase 3 Federada 6G e Testbed UFPA
 +-- 07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md # [Vol 07] Resultados da Simulação, Baselines e Cenários (S0–S15)
++-- 08_planejamento_estrategico_revistas_publicacao_2026.md   # [Vol 08] Planejamento Estratégico de Publicações e Mapeamento de Revistas (2026-2028)
 +-- assets/                                  # Diagramas de arquitetura e modelos visuais
 +-- compliance/                              # Perfis de compatibilidade O-RAN congelados
 +-- e2/                                      # Definições ASN.1 e matrizes normativas E2AP/E2SM
