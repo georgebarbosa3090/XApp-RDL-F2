@@ -384,6 +384,7 @@ def trigger_automatic_artifacts_update():
         ("Reconciliar SSOT & Relatórios", Path(PROJECT_DIR) / "scripts" / "reconcile_all_tables_and_docs.py"),
         ("Gerar 25 Figuras Científicas", Path(PROJECT_DIR) / "analysis" / "generate_plots.py"),
         ("Gerar Figuras Cross-Layer & Dashboard", Path(PROJECT_DIR) / "analysis" / "generate_crosslayer_modular_plots.py"),
+        ("Gerar Gráficos da Demonstração Rica & Simulações (Fig 31-37)", Path(PROJECT_DIR) / "analysis" / "generate_demonstration_and_latest_sim_plots.py"),
         ("Gerar Figuras Estendidas (Fig 26-30)", Path(PROJECT_DIR) / "scripts" / "generate_extended_figures_and_tables.py"),
         ("Gerar Figuras de Publicação", Path(PROJECT_DIR) / "scripts" / "generate_publication_report_figures.py"),
         ("Compilar Relatório FlowMonitor XML", Path(PROJECT_DIR) / "scripts" / "generate_ns3_flowmonitor_markdown_report.py"),
