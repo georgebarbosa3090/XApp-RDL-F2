@@ -8,7 +8,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "================================================================================"
-echo "  INICIALIZANDO DEPLOY AUTÔNOMO: K8s (k3s) + Near-RT RIC + Reference xApps + H-RDL"
+echo " ☸️ INICIALIZANDO DEPLOY AUTÔNOMO: K8s (k3s) + Near-RT RIC + Reference xApps + H-RDL"
 echo "================================================================================"
 
 # 1. Configurar KUBECONFIG
@@ -40,7 +40,7 @@ kubectl apply -f deploy/kubernetes/deployment.yaml
 
 # 6. Status e Healthcheck dos Pods
 echo "================================================================================"
-echo " [INSPECAO] STATUS DOS PODS NO CLUSTER O-RAN:"
+echo " 🔍 STATUS DOS PODS NO CLUSTER O-RAN:"
 echo "================================================================================"
 echo "--- [Namespace: ricplt (Near-RT RIC Platform)] ---"
 kubectl get pods -n ricplt -o wide

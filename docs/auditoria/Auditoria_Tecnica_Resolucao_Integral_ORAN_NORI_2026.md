@@ -16,15 +16,15 @@ Todos os 6 itens críticos P0 e os pontos complementares foram integralmente res
 
 | Área Auditada | Status Anterior | Novo Status | Ação Técnica Executada |
 | :--- | :---: | :---: | :--- |
-| **Perfil de Versões O-RAN** | [EM VALIDACAO] Divergência WG3 | [CONFORME] Formalizado | Perfil alvo fixado como **O-RAN SC Release I/J + NORI** (KPM v3, RC v1.03); WG3 2026 definido no roadmap da Fase 3. |
-| **Especificações ASN.1** | [EM VALIDACAO] Manual / Simplificado | [CONFORME] Canônico | Gramáticas ASN.1 canônicas adicionadas em `specs/oran/` (`e2ap-v02.03`, `e2sm-kpm-v03.00`, `e2sm-rc-v01.03`). |
-| **E2AP-PDU CHOICE** | [NAO CONFORME]/[EM VALIDACAO] SEQUENCE de opcionais | [CONFORME] CHOICE Canônico | Implementado `E2AP_PDU` como ASN.1 `CHOICE` canônico (`initiatingMessage`, `successfulOutcome`, `unsuccessfulOutcome`). |
-| **ProtocolIE-Container** | [NAO CONFORME] Ausente / Achatado | [CONFORME] Canônico | Modelado `ProtocolIE_Container` (SEQUENCE OF `ProtocolIE_Field` contendo `id`, `criticality`, `value`) em `RICcontrolRequest`, `RICcontrolAcknowledge` e `RICcontrolFailure`. |
-| **RMR Message Types** | [NAO CONFORME] 12010/11/12 (Subscription) | [CONFORME] 12040/41/42 (Control) | Corrigido em `constants.py` e rotas RMR: `RIC_CONTROL_REQ = 12040`, `RIC_CONTROL_ACK = 12041`, `RIC_CONTROL_FAILURE = 12042`. |
-| **Procedure Codes E2AP** | [EM VALIDACAO] Manuais | [CONFORME] Normativo | `id-RICcontrol = 4` (`ID_RIC_CONTROL = 4`), `id-RICsubscription = 201`. |
-| **E2SM-RC Capability Registry** | [EM VALIDACAO] Defaults permissivos | [CONFORME] Descoberta Estrita | Suporte ao modo estrito `O_RAN_INTEROP`, lançando `CapabilityNotDiscoveredError` quando o nó não foi descoberto via `RANFunctionDefinition`. |
-| **Testes de Interoperabilidade** | [EM VALIDACAO] Codec local | [CONFORME] 19/19 PASS | Suíte com 19 testes automatizados cobrindo roundtrips APER, ProtocolIEs e malha fechada. |
-| **3 Simulações Consecutivas** | [EM VALIDACAO] Pendente | [CONFORME] Executado | `@08-ns3-oran-simulation-specialist` executou as 3 simulações consecutivas no WSL (TVS Conflict, Energy vs QoS, Closed-Loop N=30). |
+| **Perfil de Versões O-RAN** | 🟡 Divergência WG3 | 🟢 Formalizado | Perfil alvo fixado como **O-RAN SC Release I/J + NORI** (KPM v3, RC v1.03); WG3 2026 definido no roadmap da Fase 3. |
+| **Especificações ASN.1** | 🟡 Manual / Simplificado | 🟢 Canônico | Gramáticas ASN.1 canônicas adicionadas em `specs/oran/` (`e2ap-v02.03`, `e2sm-kpm-v03.00`, `e2sm-rc-v01.03`). |
+| **E2AP-PDU CHOICE** | 🔴/🟡 SEQUENCE de opcionais | 🟢 CHOICE Canônico | Implementado `E2AP_PDU` como ASN.1 `CHOICE` canônico (`initiatingMessage`, `successfulOutcome`, `unsuccessfulOutcome`). |
+| **ProtocolIE-Container** | 🔴 Ausente / Achatado | 🟢 Canônico | Modelado `ProtocolIE_Container` (SEQUENCE OF `ProtocolIE_Field` contendo `id`, `criticality`, `value`) em `RICcontrolRequest`, `RICcontrolAcknowledge` e `RICcontrolFailure`. |
+| **RMR Message Types** | 🔴 12010/11/12 (Subscription) | 🟢 12040/41/42 (Control) | Corrigido em `constants.py` e rotas RMR: `RIC_CONTROL_REQ = 12040`, `RIC_CONTROL_ACK = 12041`, `RIC_CONTROL_FAILURE = 12042`. |
+| **Procedure Codes E2AP** | 🟡 Manuais | 🟢 Normativo | `id-RICcontrol = 4` (`ID_RIC_CONTROL = 4`), `id-RICsubscription = 201`. |
+| **E2SM-RC Capability Registry** | 🟡 Defaults permissivos | 🟢 Descoberta Estrita | Suporte ao modo estrito `O_RAN_INTEROP`, lançando `CapabilityNotDiscoveredError` quando o nó não foi descoberto via `RANFunctionDefinition`. |
+| **Testes de Interoperabilidade** | 🟡 Codec local | 🟢 19/19 PASS | Suíte com 19 testes automatizados cobrindo roundtrips APER, ProtocolIEs e malha fechada. |
+| **3 Simulações Consecutivas** | 🟡 Pendente | 🟢 Executado | `@08-ns3-oran-simulation-specialist` executou as 3 simulações consecutivas no WSL (TVS Conflict, Energy vs QoS, Closed-Loop N=30). |
 
 ---
 
@@ -125,10 +125,10 @@ Todos os 6 itens críticos P0 e os pontos complementares foram integralmente res
 
 ## 4. Status Final dos Gates de Interoperabilidade O-RAN
 
-* **Gate 1 — E2SM-KPM:** [CONFORME] **FECHADO** (Event Trigger 200ms, Action Definition 3GPP 28.552, decodificação ASN.1 APER validada).
-* **Gate 2 — H-RDL:** [CONFORME] **FECHADO** (Governança determinística, Shannon/Utility e Clean Architecture).
-* **Gate 3 — E2SM-RC & E2AP Control:** [CONFORME] **FECHADO** (RMR 12040/41/42, E2AP-PDU CHOICE, ProtocolIE-Container, ProcedureCode 4, Discovery estrito).
-* **Gate 4 — Closed-Loop Integrado:** [CONFORME] **FECHADO** (Transição de telemetria $T_0 \to \text{RDL} \to \text{RC} \to \text{ACK} \to T_1$ comprovada estatisticamente em $N=30$ runs).
+* **Gate 1 — E2SM-KPM:** 🟢 **FECHADO** (Event Trigger 200ms, Action Definition 3GPP 28.552, decodificação ASN.1 APER validada).
+* **Gate 2 — H-RDL:** 🟢 **FECHADO** (Governança determinística, Shannon/Utility e Clean Architecture).
+* **Gate 3 — E2SM-RC & E2AP Control:** 🟢 **FECHADO** (RMR 12040/41/42, E2AP-PDU CHOICE, ProtocolIE-Container, ProcedureCode 4, Discovery estrito).
+* **Gate 4 — Closed-Loop Integrado:** 🟢 **FECHADO** (Transição de telemetria $T_0 \to \text{RDL} \to \text{RC} \to \text{ACK} \to T_1$ comprovada estatisticamente em $N=30$ runs).
 
 ---
 

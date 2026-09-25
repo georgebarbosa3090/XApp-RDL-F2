@@ -9,7 +9,7 @@
 
 ---
 
-## Estrutura Consolidada da Documentação
+## 📚 Estrutura Consolidada da Documentação
 
 A documentação do projeto foi consolidada em **7 volumes canônicos**, eliminando redundâncias e estabelecendo uma fonte única e autoritativa de verdade técnica e científica:
 
@@ -22,9 +22,6 @@ docs/
 +-- 05_auditoria_e_conformidade_oran.md      # [Vol 05] Auditoria Causal, Rastreabilidade SHA-256 e Normas O-RAN
 +-- 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028, Fase 3 Federada 6G e Testbed UFPA
 +-- 07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md # [Vol 07] Resultados da Simulação, Baselines e Cenários (S0–S15)
-+-- 08_planejamento_estrategico_revistas_publicacao_2026.md   # [Vol 08] Planejamento Estratégico de Publicações e Mapeamento de Revistas (2026-2028)
-+-- 09_protocolo_execucao_simulacoes_validacao_periodico.md   # [Vol 09] Protocolo Experimental e Guia de Execução de Simulações para Periódico (IEEE TNSM/TMC)
-+-- 10_analise_profunda_e_plano_de_melhorias_estrategicas.md  # [Vol 10] Análise Profunda, Diagnóstico e Plano de Melhorias Estratégicas
 +-- assets/                                  # Diagramas de arquitetura e modelos visuais
 +-- compliance/                              # Perfis de compatibilidade O-RAN congelados
 +-- e2/                                      # Definições ASN.1 e matrizes normativas E2AP/E2SM
@@ -33,18 +30,18 @@ docs/
 
 ---
 
-## Guia de Leitura por Perfil de Atuação
+## 🧭 Guia de Leitura por Perfil de Atuação
 
 | Perfil de Interesse | Volumes Recomendados | Objetivo Principal |
 | :--- | :--- | :--- |
-| **Arquiteto de Software / Engenheiro O-RAN** | [Vol 01](01_arquitetura_e_modelagem.md), [Vol 05](05_auditoria_e_conformidade_oran.md) & [Vol 10](10_analise_profunda_e_plano_de_melhorias_estrategicas.md) | Compreender os agentes cognitivos, codecs ASN.1 APER, conformidade normativa e plano de evolução. |
-| **Operador de Infraestrutura / DevOps** | [Vol 02](02_guia_operacional_deploy_e_simulacao.md) & [Vol 09](09_protocolo_execucao_simulacoes_validacao_periodico.md) | Subir clusters k3d, instalar via Helm, monitorar métricas Prometheus e executar os 4 gates de simulação. |
-| **Pesquisador Científico / Autor de Artigo** | [Vol 04](04_relatorio_cientifico_mestre_rdl.md), [Vol 08](08_planejamento_estrategico_revistas_publicacao_2026.md), [Vol 09](09_protocolo_execucao_simulacoes_validacao_periodico.md) & [Vol 10](10_analise_profunda_e_plano_de_melhorias_estrategicas.md) | Analisar as evidências causais, tabelas completas de simulação, testes pareados N=30, ablação, melhorias e submeter aos periódicos IEEE. |
-| **Pesquisador 6G / Estrategista de IA** | [Vol 06](06_roadmap_e_pesquisa_futura_6g.md), [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) & [Vol 10](10_analise_profunda_e_plano_de_melhorias_estrategicas.md) | Explorar a evolução para Intent-Driven RIC (A1), federação multi-RIC, canais 3D/RIS e comparativos Safe-MAPPO. |
+| **Arquiteto de Software / Engenheiro O-RAN** | [Vol 01](01_arquitetura_e_modelagem.md) & [Vol 05](05_auditoria_e_conformidade_oran.md) | Compreender os agentes cognitivos, codecs ASN.1 APER e conformidade normativa E2AP/E2SM. |
+| **Operador de Infraestrutura / DevOps** | [Vol 02](02_guia_operacional_deploy_e_simulacao.md) | Subir clusters k3d, instalar via Helm, monitorar métricas Prometheus e depurar pods. |
+| **Pesquisador Científico / Avaliador** | [Vol 04](04_relatorio_cientifico_mestre_rdl.md), [Vol 03](03_taxonomia_de_conflitos_e_cenarios.md) & [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) | Analisar as evidências causais, tabelas completas de simulação, testes pareados e cenários S0–S15. |
+| **Pesquisador 6G / Estrategista de IA** | [Vol 06](06_roadmap_e_pesquisa_futura_6g.md) & [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) | Explorar a evolução para Intent-Driven RIC (A1), federação multi-RIC e comparativos Safe-MAPPO. |
 
 ---
 
-## Resumo Executivo dos Volumes
+## 🚀 Resumo Executivo dos Volumes
 
 ### [Volume 01: Arquitetura, Módulos Core e Modelagem Matemática](01_arquitetura_e_modelagem.md)
 Apresenta o design da xApp RDL sob Clean Architecture / DDD, os agentes especialistas (`PerceptionAgent`, `ReasoningAgent`, `RefinementAgent`), modelos analíticos físicos de rádio (Shannon com calibração 3GPP, filas $M/G/1$, consumo Earth Project) e formulação CMDP / Safe-MAPPO com *Safety Guards* invariantes.
@@ -66,15 +63,6 @@ Delineia a evolução do projeto em direção ao 6G Zero-Touch, detalhando a gov
 
 ### [Volume 07: Relatório Exaustivo de Resultados de Simulação (S0 a S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)
 Apresenta o comparativo multidimensional completo cruzando os 7 baselines (B0 a B6) e os 16 cenários experimentais (S0 a S15), detalhando throughput, latência P95, violação de SLA, tempos de estabilização ($t_{\text{settle}}$), eficiência energética (EEVS), decomposição em 11 estágios do loop fechado e matriz de recomendações técnicas de uso H-RDL vs CA-RDL.
-
-### [Volume 08: Planejamento Estratégico de Publicações e Mapeamento de Revistas (2026–2028)](08_planejamento_estrategico_revistas_publicacao_2026.md)
-Mapeia os 3 periódicos-alvo prioritários (IEEE TNSM, IEEE TMC, IEEE TCCN / Computer Networks), estrutura a estratégia de 3 manuscritos desacoplados (Manuscrito 1: H-RDL Determinística; Manuscrito 2: CA-RDL Safe-RL/MAPPO; Manuscrito 3: dApp sub-10ms RT-RIC) e define os gates formais de submissão.
-
-### [Volume 09: Protocolo Experimental e Guia de Execução de Simulações para Periódico (IEEE TNSM/TMC)](09_protocolo_execucao_simulacoes_validacao_periodico.md)
-Manual operacional completo para execução dos 4 Gates de evidência empírica (Gate 1: $N=30$ estocástico; Gate 2: Ablação pareada A0–A5; Gate 3: Microbenchmark medido 2–100 xApps; Gate 4: Transmissão socket E2 e golden vectors APER com TShark), garantindo conformidade anti-sintética total.
-
-### [Volume 10: Análise Profunda e Plano de Melhorias Estratégicas do Projeto xApp-RDL](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)
-Diagnóstico arquitetural exaustivo estruturado em 6 eixos estratégicos (Engenharia de Desempenho e SHM, Rigor MARL e NOTEARS, Física de Rádio 5G-Adv/6G com Grid Hexagonal de 7 células e RIS 3D, Interface A1-P REST no SMO, Fuzzing com Hypothesis e Observabilidade OpenTelemetry) com matriz de priorização e prazos de execução.
 
 ---
 

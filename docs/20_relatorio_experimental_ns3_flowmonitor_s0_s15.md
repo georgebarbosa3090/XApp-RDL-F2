@@ -2,7 +2,7 @@
 
 > **Documento Oficial:** Parecer Técnico e Análise Experimental Exaustiva  
 > **Projeto:** xApp RDL (Resource and Decision Layer) — Fases 1 (H-RDL) e 2 (CA-RDL)  
-> **Data de Consolidação:** 2026-09-23 12:28:06 UTC  
+> **Data de Consolidação:** 2026-09-25 16:55:55 UTC  
 > **Ambiente:** ns-3.48 / 5G-LENA v5.1 / NORI E2Sim / GCC 11 / CMake 3.28 / Linux x86_64  
 > **Diretriz de Conformidade:** *Zero Dados Sintéticos — 100% dos Dados Derivados do Módulo Físico FlowMonitor*
 
@@ -16,7 +16,7 @@ Este relatório constitui o registro oficial e exaustivo de desempenho físico d
 2. **Extração Fim-a-Fim do ns-3 FlowMonitor:** Cada ponto de dado é extraído diretamente dos traces de pacotes `FlowMonitor` gerados em tempo de simulação pela pilha 3GPP NR e protocolos de rede.
 3. **Rastreabilidade Criptográfica:** Todos os arquivos de entrada brutos possuem seus hashes SHA-256 documentados na Seção de Proveniência deste documento para garantir reprodutibilidade auditável.
 
-* **Diretório de Traces Brutos:** `experiments/results/s0_s15_simulations`
+* **Diretório de Traces Brutos:** `C:\Users\george.barbosa\.gemini\antigravity\scratch\iqos-xapp-rdl-phase2\experiments\results\s0_s15_simulations`
 * **Total de Arquivos XML do FlowMonitor:** 10
 * **Total de Arquivos CSV / Logs Identificados:** 16
 

@@ -137,7 +137,7 @@ def plot_master_crosslayer_dashboard(df: pd.DataFrame):
     rect = patches.Rectangle((100, 9.0), 10, 2.7, linewidth=1.5, edgecolor="#27AE60", 
                              facecolor="#E8F8F5", alpha=0.5, linestyle=":", zorder=1)
     ax0.add_patch(rect)
-    ax0.text(105.0, 11.1, "Região Ótima SLA\n* Latência < 11.5 ms\n* Vazão > 100 Mbps", 
+    ax0.text(105.0, 11.1, "Região Ótima SLA\n• Latência < 11.5 ms\n• Vazão > 100 Mbps", 
              fontsize=8.5, color="#196F3D", fontweight="bold")
 
     for base, grp in df.groupby("baseline"):
@@ -239,7 +239,7 @@ def plot_sep_fig19a_pareto(df: pd.DataFrame):
     rect = patches.Rectangle((100, 9.0), 10, 2.8, linewidth=1.8, edgecolor="#27AE60", 
                              facecolor="#E8F8F5", alpha=0.55, linestyle="--", zorder=1)
     ax.add_patch(rect)
-    ax.text(105.0, 11.2, "Zona Ótima SLA\n* Latência < 11.5 ms\n* Vazão > 100 Mbps", 
+    ax.text(105.0, 11.2, "Zona Ótima SLA\n• Latência < 11.5 ms\n• Vazão > 100 Mbps", 
             fontsize=9.0, color="#196F3D", fontweight="bold")
 
     for base, grp in df.groupby("baseline"):

@@ -234,13 +234,21 @@ Para executar a demonstração interativa dos 8 estágios canônicos com inspeç
 
 ```bash
 # Execução do Inspetor Rico no Terminal (Menu interativo ou flags -s a, -s b, -s c, -s all):
-python3 experiments/demonstration/run_rich_terminal_inspector.py -s a
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s all
 ```
 
 **Painéis de Observabilidade Disponíveis:**
 * **Grafana Live Closed-Loop**: [http://localhost:3000/d/oran-rdl-closed-loop](http://localhost:3000/d/oran-rdl-closed-loop) *(User: `admin` / Pass: `admin`)*
 * **InfluxDB Dashboard Nativo**: [http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000](http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000) *(User: `admin` / Pass: `oran_admin_password_2026`, Org: `oran-alliance`, Bucket: `oran_telemetry`)*
 * **Guia Completo de Demonstração**: [`experiments/demonstration/README.md`](experiments/demonstration/README.md)
+
+### 6.4 Pipeline Automático de Atualização de Artefatos, Figuras e Relatórios
+Sempre que dados forem gerados via demonstração rica ou simulações ns-3/NORI, o pipeline mestre atualiza atomicamente todas as 16 tabelas CSV, 37 figuras científicas (300 DPI) e relatórios em `docs/`:
+
+```bash
+# Execução do pipeline de sincronização automática:
+python3 scripts/auto_update_simulation_figures_and_github.py
+```
 
 ---
 

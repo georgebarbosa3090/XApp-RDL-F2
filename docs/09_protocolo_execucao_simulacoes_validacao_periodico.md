@@ -244,12 +244,20 @@ python scripts/run_live_demonstrations_d1_d5.py
 python scripts/run_conflict_storm_benchmark.py
 
 # 4. Executar o Inspetor Rico de Terminal (Cockpit Interativo dos 8 Estágios):
+# Nota: Ao término, o script regenera automaticamente todas as tabelas CSV, 37 figuras e reconcilia os relatórios.
 python experiments/demonstration/run_rich_terminal_inspector.py -s all --no-stream
 ```
 
-### 4.5. Pipeline de Automação Completa (Execução em Um Comando)
+### 4.5. Pipeline de Automação Completa e Atualização Contínua de Artefatos
 
-Para executar a validação integral dos 4 gates e atualizar todas as tabelas e manifestos de uma única vez:
+Sempre que novas simulações ou demonstrações ricas forem executadas, todas as tabelas, figuras e relatórios são sincronizados de forma atômica e determinística pelo pipeline:
+
+```powershell
+# Executa o pipeline mestre de regeneração de todas as 16 tabelas CSV, 37 figuras 300 DPI e relatórios:
+python scripts/auto_update_simulation_figures_and_github.py
+```
+
+Para executar a validação integral dos 4 gates e atualizar todos os manifestos de uma única vez:
 
 ```powershell
 python scripts/reproduce_paper_artifacts.py

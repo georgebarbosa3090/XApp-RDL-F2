@@ -7,7 +7,7 @@ set -euo pipefail
 export KUBECONFIG="/etc/rancher/k3s/k3s.yaml"
 
 echo "================================================================================"
-echo "  DIAGNÓSTICO INTEGRAL DO CLUSTER O-RAN K8S (k3s / Near-RT RIC / H-RDL)"
+echo " ☸️ DIAGNÓSTICO INTEGRAL DO CLUSTER O-RAN K8S (k3s / Near-RT RIC / H-RDL)"
 echo "================================================================================"
 
 echo -e "\n[1] NÓS DO CLUSTER:"

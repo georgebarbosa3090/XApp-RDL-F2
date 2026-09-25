@@ -228,3 +228,30 @@ pytest -q
 - **Gate 2 (Deterministic Decision):** Latência de arbitragem computacional delimitada ($0.103\text{ ms}$ na Fase 1 / $14.39\text{ ms}$ na Fase 2 $< 50\text{ ms}$).
 - **Gate 3 (Real Control & ACK):** Handshake de `RIC_CONTROL_REQUEST` (12040) e `RIC_CONTROL_ACK` (12041) com status de sucesso.
 - **Gate 4 (Closed-Loop Response):** Variação causal comprovada nos KPIs físicos da RAN (queda de latência URLLC $\le 1.0\text{ ms}$ e redução de consumo energético).
+
+---
+
+## 8. Automação e Atualização Contínua de Tabelas, Figuras e Relatórios
+
+Sempre que dados forem gerados através da demonstração rica ou simulações contínuas, o pipeline de sincronização é acionado automaticamente para atualizar todos os relatórios, tabelas e figuras:
+
+```bash
+# Execução direta com atualização automática de artefatos integrada:
+python3 experiments/demonstration/run_rich_terminal_inspector.py -s all
+
+# Ou execução dedicada do pipeline mestre de atualização:
+python3 scripts/auto_update_simulation_figures_and_github.py
+```
+
+### Artefatos Atualizados Automaticamente:
+1. **Resultados da Demonstração:**
+   - [`experiments/results/dataset_demonstration_summary.json`](../../experiments/results/dataset_demonstration_summary.json)
+   - [`experiments/results/tables/demonstration_scenarios_summary.csv`](../../experiments/results/tables/demonstration_scenarios_summary.csv)
+2. **16 Tabelas Científicas CSV:** em [`experiments/results/tables/`](../../experiments/results/tables/)
+3. **37 Figuras Científicas (300 DPI):** em [`reports/figures/`](../../reports/figures/) e [`docs/figures/`](../../docs/figures/)
+4. **Relatórios Científicos e Técnicos Reconciliados:**
+   - [`docs/04_relatorio_cientifico_mestre_rdl.md`](../../docs/04_relatorio_cientifico_mestre_rdl.md)
+   - [`docs/07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md`](../../docs/07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)
+   - [`docs/09_protocolo_execucao_simulacoes_validacao_periodico.md`](../../docs/09_protocolo_execucao_simulacoes_validacao_periodico.md)
+   - [`docs/12_relatorio_experimental_ns3_flowmonitor_s0_s15.md`](../../docs/12_relatorio_experimental_ns3_flowmonitor_s0_s15.md)
+

@@ -15,7 +15,7 @@ NC='\033[0m'
 
 clear
 echo -e "${CYAN}================================================================================${NC}"
-echo -e "${GREEN}  MONITOR LIVE: O-RAN NEAR-RT RIC & H-RDL CLUSTER (WSL2 / k3s)${NC}"
+echo -e "${GREEN} ☸️ MONITOR LIVE: O-RAN NEAR-RT RIC & H-RDL CLUSTER (WSL2 / k3s)${NC}"
 echo -e "${CYAN}================================================================================${NC}"
 
 while true; do
