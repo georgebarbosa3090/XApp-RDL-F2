@@ -1,61 +1,19 @@
-# Catálogo Oficial de Figuras e Arquitetura XApp-RDL
+# Figuras faltantes da dissertação H-RDL
 
-Este diretório mantém os artefatos visuais de arquitetura, topologia e modelos conceituais do projeto **XApp-RDL-F1**.
+Geradas em Matplotlib a partir das legendas, tabelas e descrições presentes na versão de 25/09/2026 da dissertação.
 
----
+## Arquivos recriados
 
-## 1. Diretrizes de Governança Visual e Firewall Epistemológico
+- Figura 5.22 — `scenario_10_uav_swarm_coverage` (variante escura)
+- Figura 5.23 — `scenario_10_uav_swarm_coverage_light` (variante clara)
+- Figura 5.24 — `scenario_11_v2x_highway_platoon`
+- Figura 5.25 — `scenario_12_iiot_factory_tsn`
+- Figura 5.26 — `scenario_13_emergency_sagin_multidomain`
+- Figura 6.1 — `comparacao_multissemente_b0_b3`
+- Figura 6.6 — `pareamento_b1_b3`
+- Figura 6.9 — `fig_03_latency_ecdf`
 
-De acordo com o **Firewall de Evidência e Classificação Epistemológica**:
-- **Resultados Empíricos Puros (Fig. 01 a 25)**: Armazenados exclusivamente em `reports/figures/` (e espelhados em `docs/figures/03_resultados_e_benchmarks/`). São originados estritamente dos logs brutos de simulação ns-3.48 / FlowMonitor para as 30 sementes estocásticas canônicas.
-- **Modelos Analíticos e Conceituais (Fig. 26 a 30)**: Armazenados exclusivamente em `docs/figures/01_modelos_analiticos_e_conceituais/`. Representam modelos matemáticos contínuos, trade-offs analíticos e diagramas de envelopes temporais, explicitamente rotulados como `[MODELO ANALÍTICO CONCEITUAL]`.
-- **Topologias e Cenários (S0 a S15)**: Armazenados em `docs/figures/02_cenarios_e_topologias/` como coordenadas espaciais 2D exatas da topologia de simulação.
-- **Arquitetura de Governança**: Armazenada em `docs/figures/01_arquitetura_e_modelagem/`.
+Cada figura é exportada em **PDF vetorial**, **SVG** e **PNG 300 dpi**.
 
----
-
-## 2. Estrutura de Diretórios
-
-```text
-docs/figures/
-├── README.md                                       # Catálogo de rastreabilidade e governança visual
-├── 01_arquitetura_e_modelagem/                     # Diagramas de fluxo e arquitetura de sistema O-RAN
-├── 01_modelos_analiticos_e_conceituais/             # Figuras analíticas/conceituais de suporte (Fig. 26-30)
-│   ├── fig_26_jain_fairness_dynamics.png           # Dinâmica de Jain Fairness [MODELO ANALÍTICO]
-│   ├── fig_27_energy_vs_qos_tradeoff_eevs.png      # Superfície 3D de Eficiência Energética [MODELO ANALÍTICO]
-│   ├── fig_28_cross_tier_governance_latency_envelope.png # Envelopes temporais rApp/xApp/dApp [MODELO CONCEITUAL]
-│   ├── fig_29_resilience_e2_timeout_recovery.png   # Tolerância a falhas E2 e timeout SCTP [MODELO CONCEITUAL]
-│   └── fig_30_sbrc_multidimensional_radar.png      # Radar de desempenho consolidado [MODELO ANALÍTICO]
-├── 02_cenarios_e_topologias/                       # Topologias espaciais e cenários experimentais S0-S15
-└── 03_resultados_e_benchmarks/                     # Figuras empíricas geradas pelo ns-3 (Fig. 01 a 25)
-```
-
----
-
-## 3. Catálogo Oficial de Modelos Analíticos e Conceituais (Fig. 26 a 30)
-
-| Figura | Título / Descrição | Classificação Epistemológica | Arquivo Imagem |
-| :--- | :--- | :--- | :--- |
-| **Fig 26** | Dinâmica Temporal do Índice de Jain ($J \ge 0,94$) | Modelo Analítico | `01_modelos_analiticos_e_conceituais/fig_26_jain_fairness_dynamics.png` |
-| **Fig 27** | Superfície 3D de Eficiência Energética vs Potência | Modelo Analítico | `01_modelos_analiticos_e_conceituais/fig_27_energy_vs_qos_tradeoff_eevs.png` |
-| **Fig 28** | Envelope de Latência e Escalas Temporais O-RAN | Modelo Conceitual | `01_modelos_analiticos_e_conceituais/fig_28_cross_tier_governance_latency_envelope.png` |
-| **Fig 29** | Resiliência e Recuperação sob Injeção de Falhas E2 | Modelo Conceitual | `01_modelos_analiticos_e_conceituais/fig_29_resilience_e2_timeout_recovery.png` |
-| **Fig 30** | Radar Multidimensional de Desempenho (8 Dimensões) | Modelo Analítico | `01_modelos_analiticos_e_conceituais/fig_30_sbrc_multidimensional_radar.png` |
-
----
-
-## 4. Catálogo Oficial de Cenários e Topologias 2D (S0–S15)
-
-| Cenário | Descrição da Topologia Espacial 2D | Arquivo Imagem |
-| :--- | :--- | :--- |
-| **S0** | Topologia Base sem Conflito no ns-3 (2 gNodeBs, 30 UEs Fatiados) | `02_cenarios_e_topologias/s0_topologia_espacial_plano_2d.png` |
-| **S1** | Topologia Espacial Parametrizada & Zona de Contenção de PRBs (200m x 120m) | `02_cenarios_e_topologias/s1_topologia_espacial_plano_2d.png` |
-| **S2** | Trade-off Energy Saving vs. QoS & Modo Sleep Pendente | `02_cenarios_e_topologias/s2_topologia_espacial_plano_2d.png` |
-| **S3** | Corredor de Mobilidade Veicular & Janela de Handover no ns-3 | `02_cenarios_e_topologias/s3_topologia_espacial_plano_2d.png` |
-| **S4** | Controle Temporal Anti Ping-Pong & Janela de Histerese | `02_cenarios_e_topologias/s4_topologia_espacial_plano_2d.png` |
-| **S5** | Tempestade de Conflitos Multi-Slice & Hotspots de Sobrecarga | `02_cenarios_e_topologias/s5_topologia_espacial_plano_2d.png` |
-| **S6** | Protection Active, Safety Guard & Mitigação de Ação Indevida | `02_cenarios_e_topologias/s6_topologia_espacial_plano_2d.png` |
-| **S7** | Malha Fechada NORI + Interface E2 (SCTP 36422) Closed-Loop | `02_cenarios_e_topologias/s7_topologia_espacial_plano_2d.png` |
-| **S8** | Extensão Integrada NTN (Satélite LEO) + UAV + Corredor V2X | `02_cenarios_e_topologias/s8_topologia_espacial_plano_2d.png` |
-
-
+### Observação de rastreabilidade
+As topologias 5.22–5.26 são diagramas conceituais reconstruídos diretamente das descrições do texto; não introduzem resultados experimentais novos. A Figura 6.1 usa as médias e desvios da Tabela 6.1. A Figura 6.9 usa as latências decisórias B1–B6 declaradas na base integrada. Na Figura 6.6, a vazão por semente é reconstruída a partir dos valores B3 descritos e do delta B1–B3 constante; os demais painéis preservam os agregados/contrastes declarados, sem pretender substituir o CSV original por semente.
