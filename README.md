@@ -211,7 +211,8 @@ O arcabouço científico do projeto consolida **21 tabelas normativas e comparat
 | **T18** | Índices de Eficiência Energética e Redução de Carbono | [`docs/04_relatorio_cientifico_mestre_rdl.md`](docs/04_relatorio_cientifico_mestre_rdl.md) | Ganhos em Joules por Megabit transferido sem degradação do índice de satisfação. |
 | **T19** | Auditoria de Segurança e Action Masking | [`docs/05_auditoria_e_conformidade_oran.md`](docs/05_auditoria_e_conformidade_oran.md) | Taxa de violação zero de limites físicos 3GPP através do Action Masking. |
 | **T20** | Roadmap Tecnológico e Evolução para o 6G | [`docs/06_roadmap_e_pesquisa_futura_6g.md`](docs/06_roadmap_e_pesquisa_futura_6g.md) | Marcos de transição de Fase 1 (H-RDL) a Fase 3 (Federated Zero-Touch SAGIN). |
-| **T21** | Índice Mestre de Relatórios de Simulação | [`docs/README.md`](docs/README.md) | Índice canônico de todos os 7 volumes técnicos e relatórios de evidências. |
+| **T21** | Índice Mestre de Relatórios de Simulação | [`docs/README.md`](docs/README.md) | Índice canônico de todos os 8 volumes técnicos e relatórios de evidências. |
+| **T22** | Relatório de Demonstração Rica Closed-Loop | [`docs/21_relatorio_demonstracao_rica_closed_loop.md`](docs/21_relatorio_demonstracao_rica_closed_loop.md) | Demonstração rica em circuito fechado, inspeção dos 8 estágios, D1–D5 e Cenários A–C. |
 
 ---
 
