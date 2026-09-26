@@ -22,6 +22,7 @@ docs/
 ├── 05_auditoria_e_conformidade_oran.md      # [Vol 05] Auditoria Causal, Rastreabilidade SHA-256 e Normas O-RAN
 ├── 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028, Fase 3 Federada 6G e Testbed UFPA
 ├── 07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md # [Vol 07] Resultados da Simulação, Baselines e Cenários (S0–S15)
+├── 20_relatorio_experimental_ns3_flowmonitor_s0_s15.md       # [Vol 20] Relatório Técnico Experimental ns-3 FlowMonitor (S0–S15)
 ├── assets/                                  # Diagramas de arquitetura e modelos visuais
 ├── compliance/                              # Perfis de compatibilidade O-RAN congelados
 ├── e2/                                      # Definições ASN.1 e matrizes normativas E2AP/E2SM
@@ -36,8 +37,8 @@ docs/
 | :--- | :--- | :--- |
 | **Arquiteto de Software / Engenheiro O-RAN** | [Vol 01](01_arquitetura_e_modelagem.md) & [Vol 05](05_auditoria_e_conformidade_oran.md) | Compreender os agentes cognitivos, codecs ASN.1 APER e conformidade normativa E2AP/E2SM. |
 | **Operador de Infraestrutura / DevOps** | [Vol 02](02_guia_operacional_deploy_e_simulacao.md) | Subir clusters k3d, instalar via Helm, monitorar métricas Prometheus e depurar pods. |
-| **Pesquisador Científico / Avaliador** | [Vol 04](04_relatorio_cientifico_mestre_rdl.md), [Vol 03](03_taxonomia_de_conflitos_e_cenarios.md) & [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) | Analisar as evidências causais, tabelas completas de simulação, testes pareados e cenários S0–S15. |
-| **Pesquisador 6G / Estrategista de IA** | [Vol 06](06_roadmap_e_pesquisa_futura_6g.md) & [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) | Explorar a evolução para Intent-Driven RIC (A1), federação multi-RIC e comparativos Safe-MAPPO. |
+| **Pesquisador Científico / Avaliador** | [Vol 04](04_relatorio_cientifico_mestre_rdl.md), [Vol 07](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md) & [Vol 20](20_relatorio_experimental_ns3_flowmonitor_s0_s15.md) | Analisar as evidências causais, tabelas completas de simulação, testes pareados e telemetria FlowMonitor. |
+| **Pesquisador 6G / Estrategista de IA** | [Vol 06](06_roadmap_e_pesquisa_futura_6g.md) & [Vol 20](20_relatorio_experimental_ns3_flowmonitor_s0_s15.md) | Explorar a evolução para Intent-Driven RIC (A1), federação multi-RIC e métricas de enlaces 6G. |
 
 ---
 
@@ -63,6 +64,10 @@ Delineia a evolução do projeto em direção ao 6G Zero-Touch, detalhando a gov
 
 ### [Volume 07: Relatório Exaustivo de Resultados de Simulação (S0 a S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)
 Apresenta o comparativo multidimensional completo cruzando os 7 baselines (B0 a B6) e os 16 cenários experimentais (S0 a S15), detalhando throughput, latência P95, violação de SLA, tempos de estabilização ($t_{\text{settle}}$), eficiência energética (EEVS), decomposição em 11 estágios do loop fechado e matriz de recomendações técnicas de uso H-RDL vs CA-RDL.
+
+### [Volume 20: Relatório Técnico Experimental e Rastreabilidade ns-3 FlowMonitor](20_relatorio_experimental_ns3_flowmonitor_s0_s15.md)
+Registro oficial exaustivo de nível de pacote extraído diretamente dos traces FlowMonitor XML gerados pelo simulador ns-3.48 / 5G-LENA / NORI, cobrindo os 16 cenários (S0 a S15) ordenados cronologicamente, matrizes de RF, dispersão de pacotes, jitter e governança determinística.
+
 
 
 ---
