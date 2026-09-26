@@ -178,9 +178,9 @@ int main (int argc, char *argv[])
     }
 
     serverApps.Start (Seconds (0.5));
-    serverApps.Stop (Seconds (simTime));
-    clientApps.Start (Seconds (1.0));
-    clientApps.Stop (Seconds (simTime));
+    serverApps.Stop (Seconds (simTime - 0.2));
+    clientApps.Start (Seconds (0.5));
+    clientApps.Stop (Seconds (simTime - 0.2));
 
     FlowMonitorHelper flowmon;
     Ptr<FlowMonitor> monitor = flowmon.InstallAll ();
