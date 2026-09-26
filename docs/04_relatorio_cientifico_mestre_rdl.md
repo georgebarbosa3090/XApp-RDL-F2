@@ -728,6 +728,16 @@ Como etapas imediatas de evolução (Fase 3):
 
 ## Apêndice: Índice Completo de Figuras e Tabelas
 
+### Figuras Recriadas e Reconstruídas da Dissertação (PDF Vetorial, SVG e PNG 300 DPI)
+- **`scenario_10_uav_swarm_coverage.png` / `.pdf`**: Figura 5.22 — Cobertura dinâmica por enxame de UAVs (Cenário S10 / Variante Escura).
+- **`scenario_10_uav_swarm_coverage_light.png` / `.pdf`**: Figura 5.23 — Cobertura dinâmica por enxame de UAVs (Cenário S10 / Variante Clara).
+- **`scenario_11_v2x_highway_platoon.png` / `.pdf`**: Figura 5.24 — Pelotão V2X em rodovia e prevenção de ping-pong de handover (Cenário S11).
+- **`scenario_12_iiot_factory_tsn.png` / `.pdf`**: Figura 5.25 — Fábrica IIoT com fatiamento TSN e classes de serviço (Cenário S12).
+- **`scenario_13_emergency_sagin_multidomain.png` / `.pdf`**: Figura 5.26 — Rede SAGIN para emergência e resgate em catástrofes (Cenário S13).
+- **`comparacao_multissemente_b0_b3.png` / `.pdf`**: Figura 6.1 — Comparação multissemente em S1: políticas determinísticas B0–B3 (média e IC de 95%).
+- **`pareamento_b1_b3.png` / `.pdf`**: Figura 6.6 — Pareamento canônico B1–B3 nas sementes 1001–1005 (Wilcoxon $p = 0,0625$).
+- **`fig_03_latency_ecdf.png` / `.pdf`**: Figura 6.9 — ECDF dos resumos de latência decisória B1–B6 em relação ao envelope de 10 ms.
+
 ### Figuras Científicas de Alta Densidade (300 DPI) em `reports/figures/` e `docs/figures/`
 - **`fig_01_causal_timeline.png`**: Timeline de Intervenção Causal com badges de KPM, Conflito, Decisão H-RDL, Controle E2SM-RC, ACK e Mudança de RAN.
 - **`fig_02_throughput_timeseries.png`**: Séries Temporais de Vazão por Slice com gradiente contínuo e anotações de corte.

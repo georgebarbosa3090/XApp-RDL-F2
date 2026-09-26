@@ -169,7 +169,8 @@ A suíte experimental engloba 16 cenários modelados no simulador ns-3.48 / 5G-L
 - **Dinâmica:** Restrições severas de bateria dos UAVs em conflito com a demanda explosiva de tráfego de vídeo dos espectadores.
 - **Resolução H-RDL:** Balanceamento ótimo entre potência de rádio e consumo energético para maximizar o tempo de voo e manter SLAs de vídeo.
 
-![Topologia do Cenário S10 - Enxame de VANTs e Cobertura Aérea Dinâmica](figures/02_cenarios_e_topologias/s10_uav_swarm_stadium_coverage.png)
+![Figura 5.22 - Cenário S10: Cobertura dinâmica por enxame de UAVs (Variante Escura)](figures/02_cenarios_e_topologias/scenario_10_uav_swarm_coverage.png)
+![Figura 5.23 - Cenário S10: Cobertura dinâmica por enxame de UAVs (Variante Clara)](figures/02_cenarios_e_topologias/scenario_10_uav_swarm_coverage_light.png)
 
 ---
 
@@ -178,7 +179,7 @@ A suíte experimental engloba 16 cenários modelados no simulador ns-3.48 / 5G-L
 - **Dinâmica:** Tempestades de handover e disputa de espectro Sidelink para mensagens críticas de segurança CAM/DENM ($< 5\text{ ms}$).
 - **Resolução H-RDL:** Priorização estrita de pacotes de controle veicular com reserva instantânea de recursos em nós de borda.
 
-![Topologia do Cenário S11 - Pelotão Veicular V2X e Prevenção de Tempestade de Handover](figures/02_cenarios_e_topologias/s11_v2x_highway_pingpong_storm.png)
+![Figura 5.24 - Cenário S11: Pelotão V2X em rodovia e prevenção de ping-pong de handover](figures/02_cenarios_e_topologias/scenario_11_v2x_highway_platoon.png)
 
 ---
 
@@ -187,7 +188,7 @@ A suíte experimental engloba 16 cenários modelados no simulador ns-3.48 / 5G-L
 - **Dinâmica:** Requisito intransigente de jitter nulo ($\sigma_{\text{delay}} < 0,1\text{ ms}$) em coexistência com tráfego de telemetria industrial.
 - **Resolução H-RDL:** Escalonamento determinístico de slots de tempo (mini-slots NR) com isolamento estrito de fatias.
 
-![Topologia do Cenário S12 - Indústria 4.0 e Slicing TSN com Jitter Zero](figures/02_cenarios_e_topologias/s12_iiot_zero_jitter_robotic_slicing.png)
+![Figura 5.25 - Cenário S12: Fábrica IIoT com fatiamento TSN e classes de serviço](figures/02_cenarios_e_topologias/scenario_12_iiot_factory_tsn.png)
 
 ---
 
@@ -196,7 +197,7 @@ A suíte experimental engloba 16 cenários modelados no simulador ns-3.48 / 5G-L
 - **Dinâmica:** Roteamento heterogêneo entre satélites LEO, drones de resgate e equipes em solo disputando canais de emergência.
 - **Resolução H-RDL:** Arbitragem multi-domínio que assegura vazão para comunicações críticas de salvamento.
 
-![Topologia do Cenário S13 - Resgate em Catástrofes e Federação SAGIN Multi-Domínio](figures/02_cenarios_e_topologias/s13_disaster_rescue_heterogeneous_mesh.png)
+![Figura 5.26 - Cenário S13: Rede SAGIN para emergência e resgate em catástrofes](figures/02_cenarios_e_topologias/scenario_13_emergency_sagin_multidomain.png)
 
 ---
 

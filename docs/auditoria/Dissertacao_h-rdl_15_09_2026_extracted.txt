@@ -1,0 +1,4054 @@
+=== PAGE 1 ===
+UNIVERSIDADE FEDERAL DO PARÁ
+Programa de Pós-Graduação em Ciência da Computação
+George Alexandro Ferreira Barbosa
+H-RDL: Governança Determinística e Segura para
+Mitigação de Conflitos entre xApps no Near-RT RIC
+Dissertação de mestrado — primeira versão
+Belém – PA
+2026
+
+
+=== PAGE 2 ===
+George Alexandro Ferreira Barbosa
+H-RDL: Governança Determinística e Segura para
+Mitigação de Conflitos entre xApps no Near-RT RIC
+Primeira versão da dissertação de mestrado vinculada ao
+Programa de Pós-Graduação em Ciência da Computação
+da Universidade Federal do Pará. O trabalho apresenta
+a arquitetura H-RDL, a metodologia de avaliação e a
+análise integrada dos resultados disponíveis da Fase 1
+do projeto XApp-RDL.
+Orientador(a): a confirmar.
+Belém – PA
+2026
+
+
+=== PAGE 3 ===
+Resumo
+A execução concorrente de xApps no controlador inteligente da rede de acesso rádio em
+tempo quase real (Near-RT RIC) pode produzir comandos incompatíveis e efeitos indiretos
+sobre serviços compartilhados. Esta dissertação investiga a H-RDL, camada determinística
+de governança entre propostas de controle e atuação na rede.
+O trabalho formaliza
+percepção, detecção de conflitos, arbitragem e refinamento independente por barreiras de
+segurança, distinguindo decisão lógica de aplicação externa. A avaliação integra 35 registros
+S1, com cinco sementes para cada política B0–B6; o recorte determinístico B0–B3 contém
+20 registros. Frente à prioridade fixa B2, a H-RDL B3 apresenta média de vazão de 102,50
+contra 92,90 Mbps, diferença de 9,60 Mbps (10,33%), e atraso de 11,23 contra 13,43 ms,
+redução de 2,20 ms (16,38%). A reconfiguração cai de 0,40 para 0,05 ações/s, com custo
+decisório de 0,12 ms. Frente a B0, a taxa agregada de violações passa de 36,7% para zero e
+o índice de Jain de 0,52 para 0,94. Resumos adicionais abrangem S0–S15, energia e falhas
+E2, mas não identificam novas replicações pareadas. A comparação bilateral disponível
+com cinco pares resulta em p = 0,0625 e diverge de tabelas que declaram p < 0,001; por
+isso, os efeitos são tratados como evidência descritiva, ainda condicionada à conciliação de
+versões, denominadores por serviço e traces externos. A contribuição reúne arquitetura
+auditável, método explícito e análise quantitativa de desempenho, estabilidade, segurança
+e custo.
+Palavras-chave: O-RAN; Near-RT RIC; xApps; mitigação de conflitos; governança
+determinística; segurança operacional; reprodutibilidade.
+i
+
+
+=== PAGE 4 ===
+Abstract
+Concurrent xApps in the Near-Real-Time RAN Intelligent Controller may issue incompati-
+ble commands and indirectly affect shared services. This dissertation investigates H-RDL,
+a deterministic governance layer between control proposals and network actuation. It
+formalizes perception, conflict detection, arbitration, and independent safety refinement,
+distinguishing logical decisions from externally observed application. The evaluation
+integrates 35 S1 records, with five seeds for each B0–B6 policy; the deterministic B0–B3
+subset contains 20 records. Compared with static priority B2, H-RDL B3 reports mean
+throughput of 102.50 versus 92.90 Mbps, a 9.60 Mbps increase (10.33%), and mean delay
+of 11.23 versus 13.43 ms, a 2.20 ms reduction (16.38%). Reconfiguration decreases from
+0.40 to 0.05 actions/s, with a 0.12 ms decision cost. Compared with B0, the aggregate SLA
+violation rate decreases from 36.7% to zero and Jain fairness increases from 0.52 to 0.94.
+Additional summaries cover S0–S15, energy, and E2 faults, but do not identify further
+paired replications. The available bilateral comparison with five pairs yields p = 0.0625
+and conflicts with tables claiming p < 0.001; therefore, the effects are treated as descriptive
+evidence, still conditioned on version reconciliation, service-specific denominators, and
+external traces. The contribution combines an auditable architecture, an explicit method,
+and a quantitative analysis of performance, stability, safety, and cost.
+Keywords: O-RAN; Near-RT RIC; xApps; conflict mitigation; deterministic governance;
+operational safety; reproducibility.
+ii
+
+
+=== PAGE 5 ===
+Sumário
+Resumo
+i
+Abstract
+ii
+1
+Introdução
+1
+1.1
+Contexto e motivação . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1
+1.2
+Problema e lacuna de pesquisa . . . . . . . . . . . . . . . . . . . . . . . . .
+2
+1.3
+Justificativa e delimitação
+. . . . . . . . . . . . . . . . . . . . . . . . . . .
+2
+1.4
+Objetivo geral e objetivos específicos
+. . . . . . . . . . . . . . . . . . . . .
+2
+1.5
+Hipóteses e critérios de decisão
+. . . . . . . . . . . . . . . . . . . . . . . .
+3
+1.6
+Contribuições e organização da dissertação . . . . . . . . . . . . . . . . . .
+3
+2
+Fundamentação e Trabalhos Relacionados
+5
+2.1
+RIC, transporte e modelos de serviço . . . . . . . . . . . . . . . . . . . . .
+5
+2.2
+Detecção, arbitragem e segurança . . . . . . . . . . . . . . . . . . . . . . .
+5
+2.3
+Organização das fontes e procedimento de revisão . . . . . . . . . . . . . .
+6
+2.4
+Síntese crítica da literatura . . . . . . . . . . . . . . . . . . . . . . . . . . .
+6
+3
+Modelo e Arquitetura Proposta
+9
+3.1
+Arquitetura Geral da H-RDL
+. . . . . . . . . . . . . . . . . . . . . . . . .
+9
+3.2
+Contratos de entrada e estado . . . . . . . . . . . . . . . . . . . . . . . . .
+11
+3.3
+Agrupamento e detecção . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+11
+3.4
+Arbitragem determinística e admissibilidade
+. . . . . . . . . . . . . . . . .
+12
+3.5
+Fluxo operacional e observabilidade . . . . . . . . . . . . . . . . . . . . . .
+13
+3.6
+Estados da ação e responsabilidade por confirmação . . . . . . . . . . . . .
+15
+3.7
+Falhas e limites de segurança . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+4
+Base Experimental e Organização das Evidências
+17
+4.1
+Escopo da avaliação . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+4.2
+Rastreabilidade dos artefatos . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+4.3
+Condições para interpretação dos resultados . . . . . . . . . . . . . . . . .
+18
+4.4
+Procedimento de validação dos dados . . . . . . . . . . . . . . . . . . . . .
+18
+iii
+
+
+=== PAGE 6 ===
+5
+Metodologia Experimental e Validação
+19
+5.1
+Estratégia de pesquisa
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.2
+Da configuração do cenário à decisão observável . . . . . . . . . . . . . . .
+19
+5.3
+Organização experimental em seis camadas . . . . . . . . . . . . . . . . . .
+20
+5.4
+Portfólio Completo de Cenários Experimentais (S0 a S15) . . . . . . . . . .
+22
+5.5
+Galeria de cenários e topologias do acervo
+. . . . . . . . . . . . . . . . . .
+30
+5.6
+Condições de comparação e ablação . . . . . . . . . . . . . . . . . . . . . .
+47
+5.7
+Quatro gates de aceitação
+. . . . . . . . . . . . . . . . . . . . . . . . . . .
+47
+5.8
+Contrato de métricas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+48
+5.9
+Latência de controle e escalabilidade
+. . . . . . . . . . . . . . . . . . . . .
+49
+5.10 Idade da telemetria e custo de percepção . . . . . . . . . . . . . . . . . . .
+49
+5.11 Tratamento estatístico dos resultados . . . . . . . . . . . . . . . . . . . . .
+50
+6
+Resultados e Discussão
+52
+6.1
+Base integrada e leitura das métricas . . . . . . . . . . . . . . . . . . . . .
+52
+6.2
+Estudo por execução e desempenho frente aos comparadores . . . . . . . .
+52
+6.3
+Dispersão entre registros da H-RDL . . . . . . . . . . . . . . . . . . . . . .
+56
+6.4
+Latência decisória e componentes do ciclo . . . . . . . . . . . . . . . . . . .
+57
+6.5
+Painéis da base experimental integrada . . . . . . . . . . . . . . . . . . . .
+57
+6.6
+Resultados consolidados e discussão do relatório científico . . . . . . . . . .
+61
+6.7
+Consolidação complementar: equidade, energia e resiliência . . . . . . . . .
+73
+6.8
+Consistência, segurança e alcance dos resultados . . . . . . . . . . . . . . .
+80
+6.9
+Síntese dos achados e das hipóteses . . . . . . . . . . . . . . . . . . . . . .
+81
+7
+Reprodutibilidade e Validade dos Resultados
+82
+7.1
+Cadeia de evidências . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+82
+7.2
+Ameaças à validade . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+83
+7.3
+Limitações de consolidação e alternativas . . . . . . . . . . . . . . . . . . .
+83
+8
+Perspectivas de Consolidação
+84
+8.1
+Evidência experimental e comparadores . . . . . . . . . . . . . . . . . . . .
+84
+8.2
+Extensões de cenário e produtos científicos . . . . . . . . . . . . . . . . . .
+84
+9
+Conclusão
+85
+Referências
+86
+A Resultados preliminares de MAPPO e generalização
+88
+A.1 Aprendizado e evolução da recompensa . . . . . . . . . . . . . . . . . . . .
+88
+A.2 Generalização e novas condições de avaliação . . . . . . . . . . . . . . . . .
+88
+A.3 Expansão futura e aspectos de validação
+. . . . . . . . . . . . . . . . . . .
+90
+iv
+
+
+=== PAGE 7 ===
+B Registro mínimo por execução
+91
+C Fontes e organização do material de apoio
+92
+D Classificação do material de apoio
+93
+v
+
+
+=== PAGE 8 ===
+Lista de Tabelas
+1.1
+Objetivos específicos e evidências de atendimento. . . . . . . . . . . . . . .
+3
+2.1
+Posicionamento da pesquisa em relação às referências selecionadas. . . . . .
+8
+4.1
+Requisitos de rastreabilidade dos artefatos experimentais. . . . . . . . . . .
+18
+5.1
+Camadas de avaliação e registros necessários à interpretação. . . . . . . . .
+21
+5.2
+Perfil experimental terrestre de referência.
+. . . . . . . . . . . . . . . . . .
+21
+5.3
+Portfólio completo de cenários experimentais S0–S15 e fatores de controle.
+22
+5.4
+Leitura dos rótulos originais das topologias.
+. . . . . . . . . . . . . . . . .
+30
+5.5
+Condições de comparação do protocolo. . . . . . . . . . . . . . . . . . . . .
+47
+5.6
+Critérios de aceitação do ciclo de controle. . . . . . . . . . . . . . . . . . .
+48
+6.1
+Métricas reportadas por execução em S1, semente 1001. . . . . . . . . . . .
+53
+6.2
+Estatística descritiva recalculada dos cinco registros B3 de S1. . . . . . . .
+56
+6.3
+Médias recalculadas dos cinco registros de cada política da Fase 1. . . . . .
+60
+6.4
+Indicadores consolidados por política na base integrada. . . . . . . . . . . .
+62
+6.5
+Síntese reportada de desempenho B3 nos cenários S0–S15.
+. . . . . . . . .
+63
+6.6
+Indicadores de governança declarados no relatório científico.
+. . . . . . . .
+66
+6.7
+Tempos reportados de acomodação e recuperação, em milissegundos. . . . .
+68
+6.8
+Sensibilidade à janela de decisão: indicadores reportados. . . . . . . . . . .
+68
+6.9
+Decomposição temporal detalhada reportada no pipeline integrado.
+. . . .
+70
+6.10 Procedimentos de preparação do atendimento e ativação da telemetria.
+. .
+71
+6.11 Potência, vazão e eficiência energética; EE em Mbit/J.
+. . . . . . . . . . .
+77
+6.12 Resumo de resiliência E2 em S7. . . . . . . . . . . . . . . . . . . . . . . . .
+78
+6.13 Declarações de integração e evidências necessárias à sua confirmação.
+. . .
+80
+7.1
+Riscos e respostas planejadas. . . . . . . . . . . . . . . . . . . . . . . . . .
+83
+vi
+
+
+=== PAGE 9 ===
+Lista de Figuras
+3.1
+Arquitetura Geral da H-RDL
+. . . . . . . . . . . . . . . . . . . . . . . . .
+10
+3.2
+Fluxo proposto para a H-RDL . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+3.3
+Estados de uma ação e evidências correspondentes . . . . . . . . . . . . . .
+15
+5.1
+Pipeline metodológico da H-RDL
+. . . . . . . . . . . . . . . . . . . . . . .
+20
+5.2
+Cenários S0–S2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+5.3
+Ilustração conceitual de energia e QoS
+. . . . . . . . . . . . . . . . . . . .
+24
+5.4
+Cenários S3–S5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+25
+5.5
+Ilustração conceitual de mobilidade e fatiamento . . . . . . . . . . . . . . .
+26
+5.6
+Cenários S6–S8 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+27
+5.7
+Variante S1 com dois gNBs . . . . . . . . . . . . . . . . . . . . . . . . . . .
+31
+5.8
+Energia e QoS no plano espacial . . . . . . . . . . . . . . . . . . . . . . . .
+32
+5.9
+Direcionamento de tráfego e fatiamento . . . . . . . . . . . . . . . . . . . .
+33
+5.10 Mobilidade veicular e handover
+. . . . . . . . . . . . . . . . . . . . . . . .
+34
+5.11 Histerese e estabilidade de associação . . . . . . . . . . . . . . . . . . . . .
+35
+5.12 Sobrecarga de propostas em topologia multi-slice
+. . . . . . . . . . . . . .
+36
+5.13 Barreiras contra comandos anômalos
+. . . . . . . . . . . . . . . . . . . . .
+37
+5.14 Representação espacial do ciclo NORI . . . . . . . . . . . . . . . . . . . . .
+38
+5.15 Múltiplas portadoras e MIMO . . . . . . . . . . . . . . . . . . . . . . . . .
+39
+5.16 Sobreposição de canais e coordenação de feixes . . . . . . . . . . . . . . . .
+40
+5.17 Comunicação e sensoriamento integrados . . . . . . . . . . . . . . . . . . .
+40
+5.18 Sensoriamento urbano e ambiental integrado . . . . . . . . . . . . . . . . .
+41
+5.19 Monitoramento ambiental urbano . . . . . . . . . . . . . . . . . . . . . . .
+41
+5.20 Integração espacial NTN, UAV e V2X . . . . . . . . . . . . . . . . . . . . .
+42
+5.21 Handover orbital e atendimento heterogêneo . . . . . . . . . . . . . . . . .
+43
+5.22 Cobertura por enxame de UAVs . . . . . . . . . . . . . . . . . . . . . . . .
+44
+5.23 Mobilidade de pelotões e estabilidade . . . . . . . . . . . . . . . . . . . . .
+44
+5.24 Fatiamento e automação industrial
+. . . . . . . . . . . . . . . . . . . . . .
+45
+5.25 Rede heterogênea para resgate . . . . . . . . . . . . . . . . . . . . . . . . .
+45
+5.26 Sensoriamento rural e agricultura conectada . . . . . . . . . . . . . . . . .
+46
+5.27 Cidade densa e propostas concorrentes
+. . . . . . . . . . . . . . . . . . . .
+46
+vii
+
+
+=== PAGE 10 ===
+5.28 Idade do contexto e espera da proposta . . . . . . . . . . . . . . . . . . . .
+50
+6.1
+Desempenho e reconfiguração em S1 . . . . . . . . . . . . . . . . . . . . . .
+53
+6.2
+Alocação temporal de PRBs . . . . . . . . . . . . . . . . . . . . . . . . . .
+54
+6.3
+Associação entre SINR e vazão . . . . . . . . . . . . . . . . . . . . . . . . .
+55
+6.4
+Associação entre MCS e BLER
+. . . . . . . . . . . . . . . . . . . . . . . .
+55
+6.5
+Variação dos registros B3 . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+56
+6.6
+Contrastes e intervalos do painel original . . . . . . . . . . . . . . . . . . .
+57
+6.7
+Componentes declarados da latência do ciclo . . . . . . . . . . . . . . . . .
+58
+6.8
+Vazão por política na base integrada
+. . . . . . . . . . . . . . . . . . . . .
+59
+6.9
+Violações de SLA por política . . . . . . . . . . . . . . . . . . . . . . . . .
+59
+6.10 Comparação pareada da vazão . . . . . . . . . . . . . . . . . . . . . . . . .
+60
+6.11 Janela de decisão e compromisso de desempenho . . . . . . . . . . . . . . .
+61
+6.12 Preparação do atendimento e inicialização da telemetria . . . . . . . . . . .
+62
+6.13 Mapa de vazão por cenário e política . . . . . . . . . . . . . . . . . . . . .
+64
+6.14 Linha temporal de intervenção . . . . . . . . . . . . . . . . . . . . . . . . .
+64
+6.15 Vazão temporal por fatia . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+65
+6.16 Frequência temporal de conflitos . . . . . . . . . . . . . . . . . . . . . . . .
+65
+6.17 Reconfiguração temporal no painel S5 . . . . . . . . . . . . . . . . . . . . .
+66
+6.18 Contagens de ações inseguras no painel original
+. . . . . . . . . . . . . . .
+67
+6.19 Janela, carga e recuperação
+. . . . . . . . . . . . . . . . . . . . . . . . . .
+69
+6.20 Duração dos estágios cognitivos . . . . . . . . . . . . . . . . . . . . . . . .
+70
+6.21 Decomposição detalhada de latência . . . . . . . . . . . . . . . . . . . . . .
+71
+6.22 Relações conjuntas entre indicadores
+. . . . . . . . . . . . . . . . . . . . .
+72
+6.23 Vazão e violações de SLA em duas dimensões
+. . . . . . . . . . . . . . . .
+73
+6.24 Vazão, atraso e SLA em três dimensões . . . . . . . . . . . . . . . . . . . .
+74
+6.25 Matriz de classificação de conflitos . . . . . . . . . . . . . . . . . . . . . . .
+75
+6.26 Equidade por serviço e no agregado. Painéis de pontos com a mesma
+escala de 0 a 1, valores explícitos e destaque para B3; não há interpolação
+entre políticas. Fonte dos valores: dados/consolidado_jain.csv. Fonte:
+elaboração própria a partir dos valores reportados [2]. . . . . . . . . . . . .
+76
+6.27 Pontos reportados de potência e vazão. Não se infere uma superfície 3D a
+partir dos cinco agregados nem se incluem cotas de PRBs não identificadas
+na tabela. Fonte: elaboração própria a partir dos valores reportados [2]. . .
+77
+6.28 Orçamento declarado, duração nominal e custo algorítmico em escalas
+distintas. Os eixos horizontais são logarítmicos e apresentam os valores
+de cada componente em ms. Os valores representam o perfil de projeto,
+não limites normativos universais. Fonte: elaboração própria a partir dos
+valores reportados [2]. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+78
+viii
+
+
+=== PAGE 11 ===
+6.29 Recuperação pós-restauração reportada no resumo S7. A escala logarítmica
+permite comparar 8200, 180 e 175 ms sem ocultar os menores valores. Fonte:
+elaboração própria a partir dos valores reportados [2]. . . . . . . . . . . . .
+79
+6.30 Matriz dos oito escores reportados, em escala de 0 a 1. A transformação em
+matriz preserva os números sem atribuir à área de um radar o significado
+de superioridade global. Fonte: elaboração própria a partir dos valores
+reportados [2]. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+80
+A.1 Convergência MAPPO como continuidade
+. . . . . . . . . . . . . . . . . .
+89
+A.2 Painel de generalização para novas sementes . . . . . . . . . . . . . . . . .
+89
+ix
+
+
+=== PAGE 12 ===
+Capítulo 1
+Introdução
+1.1
+Contexto e motivação
+A programabilidade da rede de acesso rádio permite que aplicações especializadas propo-
+nham ajustes de recursos, potência e mobilidade. No contexto O-RAN, essa abertura torna
+a coordenação entre xApps uma questão de projeto: decisões individualmente justificáveis
+podem ser incompatíveis quando incidem sobre recursos ou indicadores compartilhados.
+Estudos sobre detecção e mitigação de conflitos mostram a relevância de representar essas
+interações explicitamente, incluindo conflitos diretos, indiretos e implícitos [1, 10].
+Considere uma aplicação que solicita mais recursos para preservar a qualidade de um
+serviço, outra que reduz potência para economizar energia e uma terceira que redistribui
+usuários. A divergência não se limita à disputa pelo mesmo campo de configuração. Uma
+redução de potência pode modificar as condições sob as quais uma alocação de recursos foi
+escolhida; uma mudança de associação pode invalidar o contexto de uma decisão anterior.
+O problema inclui, portanto, compatibilidade entre ações, atualidade da informação e
+ordem de aplicação.
+A pesquisa parte da H-RDL, Fase 1 do projeto XApp-RDL, cuja arquitetura
+determinística e segura é descrita por Barbosa [2]. A investigação desta dissertação
+organiza-se em dois problemas concretos: a disputa por recursos entre direcionamento de
+tráfego e fatiamento (TVS), e o compromisso entre economia de energia e qualidade de
+serviço (EEVS). A dissertação amplia essa base com comparadores simples, contratos de
+medição e critérios de aceitação do controle externo.
+O trabalho técnico de referência organiza a mediação em percepção, raciocínio e
+refinamento, com agrupamento temporal e barreiras de segurança [2]. Nesta dissertação, a
+sigla H-RDL identifica essa camada determinística; a hierarquia corresponde à organização
+de responsabilidades, não à adoção de aprendizado hierárquico. O escopo não inclui
+implementar CA-RDL/MAPPO, que permanece como continuidade possível.
+1
+
+
+=== PAGE 13 ===
+1.2
+Problema e lacuna de pesquisa
+A questão central é: em quais condições uma camada determinística de mediação entre
+xApps reduz violações de serviço e oscilações de controle, frente a políticas mais simples,
+sem ultrapassar o orçamento de resposta definido para a aplicação?
+A lacuna investigada não consiste em afirmar que inexiste mitigação na literatura.
+O problema específico é demonstrar, em um artefato reproduzível, a ligação entre decisão
+lógica, admissibilidade da ação, aplicação externa e efeito observado. Uma taxa elevada de
+resoluções internas não informa, sozinha, se o comando chegou ao nó, foi aceito ou melhorou
+o serviço. O estudo buscará explicar essa cadeia e identificar o benefício incremental de
+cada mecanismo.
+O orquestrador MLO já emprega interceptação, utilidade multiobjetivo e agru-
+pamento em 200 ms [6].
+Assim, nenhuma dessas características, isoladamente, será
+apresentada como novidade da H-RDL. A contribuição é a análise dessa combinação
+determinística com barreiras independentes, relacionando seus mecanismos aos resultados
+disponíveis e delimitando custo, benefício e evidência de aplicação externa.
+1.3
+Justificativa e delimitação
+Uma política determinística é útil como referência porque permite repetir decisões sob
+entradas, configuração, histórico e critérios de desempate iguais. Isso favorece testes de
+regressão e inspeção de falhas. Determinismo decisório não implica duração constante,
+ausência de incerteza na rede ou superioridade frente a políticas adaptativas.
+O recorte principal compreende fatiamento/QoS, economia de energia e direciona-
+mento de tráfego, em ambiente de simulação integrado ao RIC. O estudo não pretende
+demonstrar conformidade de toda a arquitetura O-RAN, segurança contra qualquer ataque,
+eficácia em hardware comercial ou ganhos universais para 6G. A comparação por sementes
+concentra-se em S1, complementada pelos resumos de S0–S15 e pelas análises de equidade,
+energia e resiliência. Esses agregados não são tratados como replicações adicionais da
+comparação S1.
+1.4
+Objetivo geral e objetivos específicos
+O objetivo geral é consolidar e avaliar a H-RDL como camada determinística de governança
+de decisões de múltiplas xApps, estabelecendo suas condições de segurança, custo e benefício
+em um ciclo de controle reproduzível.
+Os objetivos específicos e seus critérios de atendimento são apresentados na Ta-
+bela 1.1. A correspondência evita encerrar um objetivo apenas pela existência de um
+módulo com o nome esperado.
+2
+
+
+=== PAGE 14 ===
+Tabela 1.1: Objetivos específicos e evidências de atendimento.
+ID
+Objetivo
+Critério de atendimento
+O1
+Formalizar propostas, contexto, conflitos e
+restrições.
+Contratos de dados, casos rotulados e
+testes de invariantes.
+O2
+Consolidar arbitragem determinística e
+refinamento independente.
+Reexecução das decisões e testes de limites,
+empates e falhas.
+O3
+Validar a passagem entre decisão e
+interfaces E2.
+Payloads externos, perfil versionado e
+correlação de controle/resposta.
+O4
+Quantificar benefício e custo frente a
+alternativas simples.
+Comparação pareada, incertezas, ablação e
+teste sob carga.
+O5
+Tornar os resultados rastreáveis e
+reproduzíveis.
+Manifesto, traces, extração de métricas e
+reprodução em ambiente limpo.
+1.5
+Hipóteses e critérios de decisão
+A hipótese de benefício, H1, estabelece que a H-RDL reduz a proporção de pacotes URLLC
+entregues fora do prazo frente à prioridade fixa, nos cenários com contenção definidos no
+protocolo. A comparação com ausência de mediação será complementar; o uso de prioridade
+fixa como referência principal permite investigar valor além da simples introdução de um
+árbitro.
+A hipótese de estabilidade, H2, estabelece que a memória temporal e as barreiras
+reduzem reversões de controle frente à variante sem esse mecanismo, preservando a
+disponibilidade de serviço. A hipótese de viabilidade, H3, estabelece que a latência de
+chegada até despacho atende ao orçamento previamente definido, inclusive na cauda da
+distribuição e sob a carga escolhida.
+A avaliação dessas hipóteses distingue indícios descritivos de confirmação expe-
+rimental. A comparação principal utiliza as cinco sementes correspondentes de B0–B3;
+a semente 1001 permanece como estudo detalhado de rastreabilidade por execução. O
+Capítulo 6 apresenta o alcance atual de cada hipótese e as divergências entre os arquivos
+estatísticos; efeitos mínimos e orçamento temporal deverão permanecer congelados na
+ampliação confirmatória, sem ajuste retrospectivo para favorecer os resultados.
+1.6
+Contribuições e organização da dissertação
+Esta versão reúne a formalização da governança determinística, os diagramas de arquitetura
+e rastreamento, o protocolo de avaliação e uma análise quantitativa reproduzível dos
+registros S1. A contribuição experimental é descritiva: compara o caso disponível entre
+políticas, caracteriza a dispersão dos registros da H-RDL e discute consistência e limites
+dos indicadores. A confirmação causal por ablação e a reprodução completa do ciclo
+externo permanecem como etapas de consolidação.
+Após a fundamentação, são apresentados a arquitetura, a base experimental e o
+3
+
+
+=== PAGE 15 ===
+método. O capítulo de resultados reúne tabelas, gráficos e interpretação das métricas. A
+discussão de validade e as perspectivas de consolidação antecedem a conclusão, separando
+o que já é analisado das extensões necessárias.
+4
+
+
+=== PAGE 16 ===
+Capítulo 2
+Fundamentação e Trabalhos
+Relacionados
+2.1
+RIC, transporte e modelos de serviço
+O Near-RT RIC oferece o contexto de execução das xApps, enquanto o RMR realiza
+roteamento de mensagens na plataforma. A documentação do RMR descreve uma biblioteca
+de comunicação e sua interface de envio e recepção [7]. Neste trabalho, o êxito de uma
+chamada de transporte não será confundido com a aplicação de uma ação na rede. Cada
+fronteira terá seu próprio registro e critério de aceitação.
+O E2AP organiza procedimentos e mensagens da interface E2. Sua PDU superior
+admite mensagens iniciadoras e resultados bem ou malsucedidos. Modelos de serviço, como
+KPM e RC, dão significado ao conteúdo transportado. Identificadores de procedimento,
+tipos RMR e identificadores de função de rádio pertencem a níveis diferentes e não devem
+ser tratados como constantes intercambiáveis [5].
+A referência normativa deverá ser congelada junto da implementação. O perfil
+descrito na documentação técnica compreende E2AP v02.03, KPM v03.00 e RC v01.03,
+em uma integração cuja documentação menciona ns-3.48, 5G-LENA v5.1 e O-RAN SC [2].
+São versões declaradas pelo projeto; a combinação efetivamente executada e os commits
+das dependências serão registrados no experimento. Não se inferirá compatibilidade apenas
+a partir de números de versão ou de estruturas locais com nomes normativos.
+2.2
+Detecção, arbitragem e segurança
+Detecção identifica uma incompatibilidade segundo um modelo; arbitragem escolhe uma
+alternativa; refinamento verifica se a alternativa é admissível. A separação é importante
+porque uma ação pode ser permitida e ainda produzir resultado ruim, ou ser útil segundo
+um modelo aproximado e violar um limite operacional.
+A segurança estudada será
+5
+
+
+=== PAGE 17 ===
+a manutenção das restrições verificáveis no ponto de atuação, sujeita à atualidade da
+telemetria e à semântica correta do comando.
+Para a avaliação, conflitos diretos correspondem a propostas incompatíveis para
+o mesmo alvo e parâmetro.
+Conflitos indiretos correspondem a ações distintas com
+dependências relevantes sobre indicadores compartilhados. Eventos temporais e violações
+de segurança serão registrados separadamente, evitando inflar a contagem de conflitos
+entre aplicações com toda rejeição do refinamento. A relação indireta será tratada como
+risco de interação até ser confrontada com observações.
+2.3
+Organização das fontes e procedimento de revisão
+O acervo reúne publicações externas, dissertação, manuscritos do próprio projeto, apresen-
+tações, relatórios numéricos e ilustrações. A revisão separa quatro funções: fundamentação
+do problema; referência de engenharia; evidência preliminar; e comunicação visual. Uma
+apresentação e o JSON que alimenta seus números não serão contados como duas validações
+independentes. A versão em português do trabalho sobre MLO será material de apoio; a
+referência bibliográfica será a publicação original da ITU.
+Na continuidade da pesquisa, a revisão será atualizada com combinações de termos
+como xApp conflict mitigation, Near-RT RIC, deterministic arbitration, utility optimization,
+E2 telemetry e adaptive monitoring. Serão registrados data da busca, bases, critérios de
+inclusão, versão do texto e motivo de exclusão. Serão priorizadas fontes com método,
+ambiente e evidências identificáveis. Esta revisão do acervo é uma síntese dirigida ao
+projeto, não uma revisão sistemática já concluída.
+Para cada estudo serão extraídos: classe de conflito; informação disponível; decisão
+individual ou conjunta; uso de regras, modelos ou aprendizado; plataforma; baseline;
+unidade experimental; custo temporal; e evidência de atuação externa. A comparação
+qualitativa não converterá percentuais de ambientes diferentes em ranking de desempenho.
+2.4
+Síntese crítica da literatura
+Adamczyk e Kliks descrevem um framework de mitigação integrado à arquitetura O-RAN,
+com métodos de detecção e fluxos entre componentes. O estudo relaciona a coordenação
+à melhora de desempenho, mas também reconhece compromissos com confiabilidade [1].
+Essa perspectiva orienta a presente proposta a avaliar custos e efeitos adversos, não apenas
+resoluções favoráveis.
+Wadud, Golpayegani e Afraz analisam conflitos diretos, indiretos e implícitos e
+comparam estratégias em um cenário com mobilidade e economia de energia [10]. A
+proximidade temática justifica incluir esse compromisso no desenho experimental da
+6
+
+
+=== PAGE 18 ===
+H-RDL, sem assumir equivalência entre ambientes ou reproduzir percentuais de outro
+trabalho.
+PACIFISTA combina caracterização de aplicações em ambiente controlado, grafos
+hierárquicos e modelos estatísticos para detectar e avaliar conflitos. Sua avaliação usa
+Colosseum e OpenRAN Gym [3]. O contraste relevante é entre caracterização prévia e me-
+diação durante o processamento de propostas; são funções potencialmente complementares.
+A proposta não reivindica substituir a avaliação prévia de aplicações.
+O trabalho sobre NORI apresenta integração entre ns-3, 5G-LENA e Near-RT
+RIC para avaliação e reporte de métricas em cenários simulados [8]. A disponibilidade
+dessa infraestrutura é uma base de implementação, mas o fechamento do ciclo de controle
+específico da H-RDL deverá ser demonstrado pelos experimentos desta pesquisa.
+2.4.1
+Engenharia de xApps e custo de monitoramento
+O tutorial de Santos et al. aborda arquitetura, ciclo de vida, configuração, interfaces e
+depuração de xApps, com exemplos de integração na plataforma O-RAN SC [9]. Sua
+contribuição para este projeto é estabelecer que a lógica de decisão depende de condições
+operacionais verificáveis: descoberta do nó, subscrição, roteamento, tratamento de respostas
+e diagnóstico. A H-RDL deverá registrar essas condições separadamente do desempenho da
+heurística; uma falha de subscrição não poderá ser interpretada como ausência de conflito.
+A dissertação de Dória investiga monitoramento adaptativo de KPIs com FlexRIC,
+OpenAirInterface, SDR e usuário COTS. O estudo ajusta a frequência de coleta segundo a
+variabilidade observada e discute o compromisso entre economia computacional e acurácia
+das decisões baseadas nas métricas [4]. A relação com a H-RDL é complementar: decidir
+com menos mensagens pode reduzir custo, mas também deixar o contexto antigo. Por isso,
+frequência de reporte, idade da informação e qualidade da arbitragem passarão a integrar
+o protocolo de sensibilidade, sem exigir a implementação de uma nova xApp adaptativa
+nesta dissertação.
+2.4.2
+Orquestração preditiva e fronteira da contribuição
+Kurtulan et al. descrevem um MLO que usa preditores XGBoost e avaliação de combina-
+ções de ações em uma janela de 200 ms, com interface REST e tradução para controle
+E2. O estudo adota ns-3/FlexRIC e compara a operação com e sem orquestração [6].
+Diferentemente dessa estratégia preditiva, esta proposta investigará modelos determinísti-
+cos explicitados e verificará se seu custo menor de construção e inspeção compensa uma
+possível perda de qualidade decisória. Isso é uma pergunta experimental, não superioridade
+presumida.
+A continuidade considerada nesta dissertação compreende a evolução de regras
+determinísticas para utilidade contextual e aprendizado multiagente. Essa continuidade
+7
+
+
+=== PAGE 19 ===
+orienta a escolha de interfaces extensíveis, mas não transforma MAPPO, LLMs ou grafos
+aprendidos em entregas da Fase 1. Um benchmark supervisionado de classificação de
+conflitos também não demonstra que uma política de controle aprendeu a melhorar a rede.
+2.4.3
+Síntese comparativa
+Tabela 2.1: Posicionamento da pesquisa em relação às referências selecionadas.
+Referência
+Ênfase da contribuição consultada
+Relação com a proposta
+CMF [1]
+Organização da detecção e
+mitigação no RIC.
+Fundamenta a separação de
+responsabilidades.
+Wadud et al. [10]
+Conflitos e estratégias em
+mobilidade/energia.
+Orienta cenários e comparação de
+políticas.
+PACIFISTA [3]
+Caracterização e avaliação de
+conflitos entre aplicações.
+Complementa a mediação em
+execução.
+NORI [8]
+Integração de simulação e RIC para
+reporte de métricas.
+Fornece infraestrutura a validar no
+ciclo proposto.
+Santos et al. [9]
+Desenvolvimento, interfaces e
+depuração de xApps.
+Orienta testes de plataforma e
+diagnóstico.
+Dória [4]
+Monitoramento adaptativo e
+compromisso custo/acurácia.
+Motiva avaliar idade e frequência da
+telemetria.
+MLO [6]
+Predição e avaliação conjunta das
+ações.
+Referência para delimitar o valor da
+opção determinística.
+H-RDL, neste pro-
+jeto
+Governança determinística e cadeia
+de evidências.
+Investiga benefício incremental,
+custo e aplicação externa.
+8
+
+
+=== PAGE 20 ===
+Capítulo 3
+Modelo e Arquitetura Proposta
+3.1
+Arquitetura Geral da H-RDL
+A Figura 3.1 apresenta a organização geral da H-RDL, desde as propostas das xApps e a
+recepção de telemetria até o refinamento e o controle da RAN. A visão adapta o esquema
+operacional do acervo, mantendo a separação entre aplicações, núcleo determinístico,
+interfaces, contexto e observabilidade.
+O núcleo reúne agrupamento temporal, percepção, raciocínio e Safety Guards. A
+decisão validada é encaminhada ao adaptador E2; propostas bloqueadas são registradas
+sem despacho. Memória e capacidades apoiam a arbitragem, enquanto KPM e respostas
+de controle retornam do ambiente externo. O esquema não fixa tipos de mensagem ou
+identificadores normativos: estes permanecem vinculados ao perfil de integração adotado.
+As conexões de comunicação são representadas por linhas sem pontas quando não
+se especifica uma mensagem. Nas rotas de processamento e de mensagens, as pontas
+das setas indicam o destino da informação: propostas seguem das xApps para a H-RDL;
+comandos seguem do adaptador para o nó E2; KPM retorna do nó para a percepção;
+ACK/Failure retorna para a correlação de controle. Timeout é detectado localmente e não
+representa uma resposta emitida pelo nó.
+9
+
+
+=== PAGE 21 ===
+Arquitetura Geral da H-RDL · Fase 1
+xSlice
+QoS e slicing
+Energy Saving
+Economia de energia
+Traffic Steering
+Mobilidade
+RMR Bus
+Propostas: identidade, alvo, valor, prioridade e prazo
+Núcleo determinístico
+Decision Window
+Janela nominal de 200 ms
+Perception Agent
+Estado e conflitos
+Reasoning Agent
+Regras e prioridade
+Utilidade TVS / EEVS
+Refinement Agent
+Safety Guards
+Limites físicos e temporais
+RDLDecision
+Ações validadas
+decision_id / action_id
+E2SM-KPM
+Telemetria e validade
+Memória e capacidades
+Histórico e perfil do nó
+Ações bloqueadas
+Motivo registrado
+Sem despacho
+Observabilidade
+Decisões, tempos e falhas
+Prometheus ·
+Health / Ready
+Despacho de controle
+E2SM-RC / E2AP
+Correlação e timeout local
+Respostas E2
+ACK / Failure recebido
+Identificação da requisição
+Nó E2 / RAN simulada
+NORI · ns-3 · 5G-LENA
+Aplicação e medições posteriores
+Controle RC
+Telemetria KPM: nó para percepção
+Roxo: propostas · Verde: núcleo determinístico · Azul: interfaces · Cinza: contexto · Laranja: registros
+Linhas sem pontas: conexão ao RMR / acesso ao contexto
+Setas: processamento, controle, KPM, respostas ou registro de eventos
+ACK não comprova aplicação nem benefício; timeout é um evento local.
+Figura 3.1: Arquitetura Geral da H-RDL: xApps, barramento RMR, núcleo determinístico,
+decisão, interfaces E2, RAN simulada e observabilidade. Fonte: elaboração própria, adaptada
+de fig_arquitetura_operacional_hrdl.tex. Representação conceitual. Linhas sem pontas
+indicam conexão ao RMR ou acesso ao contexto; setas distinguem processamento, controle, KPM,
+respostas e registros. Confirmação de controle não comprova, por si, aplicação ou benefício
+observado.
+10
+
+
+=== PAGE 22 ===
+A Figura 3.2 detalha o fluxo de processamento dessa arquitetura; a Figura 3.3
+distingue os estados de uma ação. Os três diagramas compartilham cores e convenções
+gráficas, mas representam, respectivamente, componentes, processamento e rastreamento.
+Os pictogramas indicam funções, não logotipos dos agentes ou estados. As marcas ns-3 e
+5G-LENA, reutilizadas do acervo local, identificam as tecnologias no bloco de simulação;
+sua presença não indica certificação ou validação experimental.
+3.2
+Contratos de entrada e estado
+Propõe-se representar cada ação por
+ai = (idi, xi, ni, pi, vi, πi, ti, di),
+(3.1)
+onde os campos identificam ação, xApp, nó, parâmetro, valor com unidade, prioridade,
+chegada e prazo de validade. O estado st reúne telemetria, instante de coleta, origem,
+histórico de comandos confirmados e capacidades do nó. Unidades, escopos e versões do
+esquema fazem parte do contrato: porcentagem de PRBs e número absoluto de PRBs não
+são intercambiáveis.
+A formulação deste capítulo especifica o comportamento pretendido para a pesquisa;
+não constitui transcrição exata de todas as rotinas atuais. Sua correspondência com o código
+deverá ser coberta por testes. Propostas duplicadas serão identificadas, propostas expiradas
+não serão reaplicadas e a ausência de telemetria não será substituída silenciosamente por
+valores demonstrativos.
+3.3
+Agrupamento e detecção
+O protótipo documenta uma janela de 200 ms e heurísticas TVS/EEVS [2]. A proposta
+manterá esse valor como ponto inicial de avaliação, não como requisito universal. Serão
+agrupadas ações com escopo e validade compatíveis. A espera de agrupamento será
+registrada separadamente do tempo necessário para decidir.
+Para cada lote, um grafo Gt = (At, Et) representará as propostas e suas incom-
+patibilidades. Uma aresta direta exige coincidência de alvo e parâmetro com valores
+incompatíveis; a regra indireta exige uma dependência registrada no modelo e uma con-
+dição contextual verificável. A comparação por pares constitui uma implementação de
+referência, com m(m −1)/2 pares para m propostas. A escalabilidade será medida em
+função de propostas por lote, além do número de xApps.
+11
+
+
+=== PAGE 23 ===
+3.4
+Arbitragem determinística e admissibilidade
+Uma formalização genérica da utilidade é
+U(a | s) = wT eT(a, s)−wL eL(a, s)−wE eE(a, s)−wV eV (a, s),
+X
+k
+wk = 1,
+wk ≥0. (3.2)
+As grandezas normalizadas representam estimativas de vazão, atraso, consumo e violação.
+Intervalos de normalização e pesos serão fixados no piloto. Esta expressão organiza a
+comparação multiobjetivo, mas não atribui precisão física ou otimalidade aos modelos
+analíticos do protótipo. TVS e EEVS serão documentadas por suas funções efetivamente
+executadas, parâmetros e condições de aplicação [2].
+A arbitragem produzirá um conjunto compatível St ⊆At. O trabalho técnico da
+H-RDL inclui seleção de subconjuntos, além de escolha de uma ação [2]. Por coerência
+com essa organização, a referência B3 avaliará o conjunto de candidatos admissíveis dentro
+de um limite de cardinalidade estabelecido no piloto. A aproximação gulosa será uma
+variante identificada, B3g, e não uma substituição silenciosa da busca conjunta. Se o limite
+de busca for ultrapassado, o caminho usado e sua frequência deverão ser registrados.
+3.4.1
+TVS, EEVS e interpretação das utilidades
+A parametrização de referência apresentada nesta dissertação utiliza as seguintes pondera-
+ções:
+UTVS(a) = 0,35ϕSLA + 0,25ϕT + 0,20ϕE + 0,10ϕSt + 0,10ϕPr,
+(3.3)
+UEEVS(S) = 0,30ϕQoS + 0,20ϕE + 0,20ϕJ −0,30ϕV .
+(3.4)
+Na primeira expressão, os termos representam satisfação de SLA, vazão, energia, estabili-
+dade e prioridade; na segunda, qualidade de serviço, energia, equidade e penalidade por
+violação. As dependências em a, S e st foram omitidas apenas para legibilidade. Esses
+pesos explicitam a parametrização aqui discutida, não certificam que toda revisão do
+software utiliza a mesma configuração. As funções e os pesos efetivamente executados
+deverão constar do manifesto.
+Os escores serão tratados como aproximações ordenadoras, não como previsões
+físicas calibradas. Uma ação com maior utilidade estimada pode produzir pior resultado
+observado. O protocolo deve, portanto, medir tanto a ordenação das alternativas quanto o
+efeito após a atuação. A energia receberá o sinal coerente com sua definição: um escore de
+eficiência aumenta a utilidade; consumo normalizado a reduz.
+12
+
+
+=== PAGE 24 ===
+3.4.2
+Seleção conjunta, memória e limite computacional
+Para um componente com m propostas, existem 2m −1 subconjuntos não vazios antes
+da filtragem. Dez propostas permitem até 1023 alternativas; vinte, 1.048.575. O limite
+computacional não depende apenas do número de xApps, mas da quantidade de propostas
+que chegam juntas e do custo de cada avaliação. Restrições agregadas serão testadas
+durante a construção dos candidatos, permitindo descartar combinações incompatíveis.
+A referência matemática será S∗= arg maxS∈Ft U(S | st), onde Ft contém apenas
+conjuntos compatíveis; o não envio será sempre uma alternativa admissível no algoritmo.
+A maximização é relativa ao modelo e ao conjunto explorado, não prova um ótimo da
+RAN. Em B3g, a ordenação estável por prioridade, utilidade e identificador acrescentará
+ações enquanto houver compatibilidade. A comparação B3–B3g medirá custo e perda de
+qualidade da aproximação.
+A consulta à memória deverá usar assinatura do conflito, versão da política, capaci-
+dades e validade do contexto. O trabalho técnico descreve reutilização por similaridade
+[2]; aqui, qualquer escore de confiança será interpretado como critério interno, não como
+probabilidade calibrada de sucesso. Uma decisão histórica continuará sujeita à validação
+da configuração resultante e às barreiras atuais.
+O refinamento verificará um conjunto admissível Aseg(st), incluindo limites de
+potência, orçamento agregado de recursos, capacidade do nó, validade temporal e bloqueio
+de reversões. A restrição agregada será verificada sobre a configuração resultante, e não
+apenas sobre cada proposta isolada. Caso haja ajuste de valor, a ação ajustada será
+novamente validada e registrada com motivo. Sem alternativa admissível, será registrado
+não envio; isso não implica ausência de risco no estado que já existe na rede.
+3.5
+Fluxo operacional e observabilidade
+A Figura 3.2 explicita os caminhos de proposta, atuação e retorno. A telemetria subsequente
+não é gerada pelo mediador: deverá vir do nó ou simulador após a aplicação do comando.
+O ciclo deverá validar a entrada, verificar atualidade, detectar incompatibilidades,
+selecionar ações, refinar, mapear capacidades, codificar e despachar. Ações sem conflito
+também passarão pelo refinamento. O histórico distinguirá seleção, envio, aceitação e
+observação do efeito; uma tentativa de envio não será registrada automaticamente como
+sucesso de controle.
+13
+
+
+=== PAGE 25 ===
+H-RDL · fluxo de processamento e retorno
+Propostas das xApps
+Identidade, alvo e prazo
+Estado e capacidades
+KPM, origem e validade
+Agrupamento e percepção
+Detecção de conflitos
+Raciocínio determinístico
+Prioridade e utilidade
+Mapeamento RC / E2AP
+Despacho e correlação
+Refinamento independente
+Validar, ajustar ou não enviar
+Nó E2 / RAN simulada
+NORI · ns-3 · 5G-LENA
+Aplicação e retorno externo
+Propostas
+Contexto
+Aprovadas
+Controle RC
+Telemetria KPM
+ACK / Failure
+Rastreabilidade em todas as etapas
+Entrada, seleção, intervenção das barreiras, envio, resposta e efeito observado
+Roxo: propostas · Verde: núcleo determinístico · Azul: interfaces · Cinza: contexto · Laranja: registros
+Escuro: processamento / controle · Azul: KPM / respostas · Tracejado: contexto
+Ações sem conflito também passam pelo refinamento; ações bloqueadas não seguem ao despacho.
+Figura 3.2: Fluxo proposto para a H-RDL, no mesmo padrão visual da Arquitetura Geral.
+Setas escuras representam processamento e atuação; azuis, retorno externo; tracejadas, suporte
+de contexto. Apenas ações aprovadas seguem ao despacho. Fonte: elaboração própria.
+14
+
+
+=== PAGE 26 ===
+3.6
+Estados da ação e responsabilidade por confirma-
+ção
+A Figura 3.3 reorganiza o encadeamento de decisão e despacho descrito no trabalho técnico
+local [2]. Ela explicita estados que não devem ser condensados em um único contador de
+sucesso. As setas dessa figura representam transições de rastreamento, não o sentido de
+mensagens entre componentes. Cada avanço exige a evidência indicada; um ACK isolado
+não autoriza declarar aplicação observada. O conjunto de evidências para declarar uma
+ação aplicada será diferente daquele usado para declarar seu efeito benéfico.
+H-RDL · ciclo de vida de uma ação
+1 · Recebida
+Origem e prazo
+2 · Validada
+Esquema e contexto
+3 · Selecionada
+Compatibilidade e guardas
+4 · Enviada
+Registro de envio local
+5 · Aceita pelo nó
+ACK externo correlacionado
+6 · Aplicação observada
+Evidência do estado do nó
+7 · Efeito avaliado
+KPM posterior e comparação controlada
+Saídas alternativas registradas
+Rejeição · expiração · não seleção · falha de envio · Failure · timeout
+Roxo: propostas · Verde: núcleo determinístico · Azul: interfaces · Cinza: contexto · Laranja: registros
+Setas: transições de rastreamento condicionadas a evidências, não mensagens de rede.
+ACK não comprova aplicação; ausência de resposta não comprova rejeição.
+A sequência representa estados de rastreamento, não uma ordem universal de eventos físicos.
+Figura 3.3: Estados propostos para rastrear uma ação, com o padrão visual da Arquitetura
+Geral. Cores distinguem proposta, governança, atuação externa e registros. As setas indicam
+transições condicionadas a evidências, não comunicação de rede. Fonte: elaboração própria a
+partir das responsabilidades descritas no acervo técnico H-RDL; não representa uma execução
+observada.
+Uma retransmissão manterá vínculo com a ação original, mas terá identificador
+de tentativa próprio. ACK tardio, Failure e timeout não apagarão o histórico anterior.
+A detecção de reversão de controle deverá consultar ações efetivamente aplicadas ou
+explicitamente pendentes, conforme a regra do experimento, evitando confundir repetição
+de proposta com oscilação da rede.
+15
+
+
+=== PAGE 27 ===
+3.7
+Falhas e limites de segurança
+Serão exercitados mensagens inválidas, ausência de capacidade, proposta expirada, teleme-
+tria antiga, transporte indisponível, ACK ausente ou tardio e duplicação de mensagens. A
+retransmissão exigirá política de idempotência e prazo, pois reenviar um comando não
+é sempre equivalente a repetir uma consulta. A liberação de bloqueios temporais e o
+tratamento de falhas deverão ser especificados antes dos testes de integração.
+O modo de teste admitirá substitutos de transporte explicitamente identificados.
+O modo experimental exigirá dependências e receptores reais do perfil escolhido; não
+poderá declarar aplicação bem-sucedida usando um substituto que apenas retorna sucesso.
+Segurança significará atendimento das restrições modeladas e testadas, não garantia de
+SLA para qualquer canal ou carga.
+16
+
+
+=== PAGE 28 ===
+Capítulo 4
+Base Experimental e Organização das
+Evidências
+4.1
+Escopo da avaliação
+A avaliação da H-RDL relaciona decisões de governança ao comportamento da rede.
+O trabalho técnico de referência fundamenta a discussão da arquitetura e do plano de
+avaliação, enquanto a demonstração experimental exige dados vinculados às condições
+efetivamente executadas [2].
+Diagramas arquiteturais descrevem responsabilidades e
+interfaces; não substituem medições de desempenho.
+A base integrada reúne 35 registros S1 identificados por política e semente, cinco
+para cada política B0–B6. O recorte determinístico da Fase 1 utiliza os 20 registros
+B0–B3. Um subconjunto de sete registros, formado por B0, B2 e B3 na semente 1001 e
+por quatro sementes adicionais de B3, é mantido para a leitura detalhada por execução.
+Separadamente, há 16 resumos B3 de S0–S15 e tabelas agregadas de energia, janela e
+resiliência. Esses níveis apoiam análises distintas e não são combinados como replicações
+equivalentes.
+4.2
+Rastreabilidade dos artefatos
+Os valores reportados por execução foram organizados em uma base tabular comum. O
+processamento recalcula diferenças, médias e desvios amostrais e produz as tabelas e
+figuras do Capítulo 6. O manifesto deve permitir ligar esses produtos aos dados originais;
+lacunas nessa correspondência são limitações da evidência, não motivo para suprimir a
+análise descritiva.
+17
+
+
+=== PAGE 29 ===
+Tabela 4.1: Requisitos de rastreabilidade dos artefatos experimentais.
+Artefato
+Conteúdo necessário
+Finalidade
+Manifesto
+Identificação, configuração,
+semente, versões e registros
+temporais.
+Reconstruir as condições da
+execução.
+Dados de medição
+Origem, unidades, relógios e
+janelas de coleta.
+Distinguir observações válidas,
+ausentes e pendentes.
+Tabela consolidada
+Execuções incluídas, métrica e
+regra de agregação.
+Recalcular as estimativas
+apresentadas.
+Figura
+Dados de origem, procedimento de
+geração e identificação da amostra.
+Relacionar cada painel às medições
+correspondentes.
+4.3
+Condições para interpretação dos resultados
+São apresentados resultados quantitativos a partir dos resumos por execução. Sua inter-
+pretação separa três níveis: valor reportado no registro, cálculo reproduzido sobre esse
+valor e inferência sobre o comportamento da rede. Os dois primeiros sustentam tabelas
+e gráficos; o terceiro permanece condicionado à qualidade da medição, ao controle das
+condições e à evidência causal.
+A interpretação distingue envio, confirmação, aplicação e efeito observado. Uma
+resposta positiva ao controle não demonstra, isoladamente, melhora do serviço. Da mesma
+forma, ausência de violações em uma amostra não constitui garantia de segurança para
+qualquer condição de rede.
+4.4
+Procedimento de validação dos dados
+A validação começa pela correspondência entre execução, configuração, política e semente.
+Em seguida, confere unidades, janelas de medição, balanço de pacotes e registros pendentes.
+As métricas por execução precedem a agregação estatística; fluxos de uma mesma simulação
+não serão tratados como replicações independentes.
+A comprovação do ciclo externo requer mensagens, respostas correlacionadas e
+observação do estado do nó, além dos registros internos da H-RDL. Valores ausentes não
+serão substituídos por constantes, sorteios ou estimativas extraídas de imagens. Falhas e
+exclusões acompanharão o conjunto de resultados, com suas justificativas.
+18
+
+
+=== PAGE 30 ===
+Capítulo 5
+Metodologia Experimental e
+Validação
+5.1
+Estratégia de pesquisa
+A pesquisa é aplicada, com desenvolvimento de artefato e análise quantitativa. Nesta
+versão, o procedimento executado sobre os dados compreende a organização dos 35 registros
+S1, a comparação das cinco sementes correspondentes de B0–B3, o estudo detalhado da
+semente 1001, a estatística descritiva das políticas e a leitura separada dos resumos S0–
+S15, de energia e de resiliência. Não houve reexecução do simulador como parte desse
+processamento; a reprodução analítica das tabelas não é apresentada como nova execução
+experimental.
+O método mais amplo compreende testes determinísticos, aceitação das interfaces
+e comparação de desempenho. As seções de ablação, carga e sensibilidade especificam o
+protocolo de extensão, não experimentos concluídos. Essa distinção preserva o método de
+validação sem apresentar atividades planejadas como evidências existentes.
+5.2
+Da configuração do cenário à decisão observável
+O procedimento adota uma abstração comum de controle: topologias e objetivos diferentes
+chegam à H-RDL como propostas de controle e KPIs. No TVS, a questão é como conciliar
+recursos, prioridades e mobilidade; no EEVS, como reduzir consumo sem degradar o serviço
+além do limite definido. Essa distinção orienta a escolha das métricas, mas não cria dois
+motores de governança independentes [2].
+(cenário, carga, política, semente) −→(Bt, Mt) −→Ct −→Aexec,t,
+(5.1)
+em que Bt reúne propostas, Mt representa o contexto medido e Ct contém os conflitos.
+O conjunto Aexec,t contém somente ações refinadas e admissíveis. A avaliação precisa
+19
+
+
+=== PAGE 31 ===
+observar tanto o caminho com conflitos quanto o despacho de propostas independentes;
+um histórico reutilizado também passa pelas barreiras atuais.
+A Figura 5.1 adapta o pipeline do artigo ao vocabulário da dissertação.
+Ela
+apresenta as ligações de comunicação sem pontas de seta; os sentidos de proposta, controle
+e retorno são descritos na legenda, sem tratar os identificadores internos como tipos
+padronizados de mensagem.
+Integração experimental · H-RDL
+RAN simulada
+NORI · ns-3
+5G-LENA
+Terminação E2
+Telemetria
+Controle e respostas
+RMR
+Transporte interno
+H-RDL
+Arbitragem e guardas
+Correlação E2
+xApps
+QoS · energia
+· mobilidade
+Canal das xApps
+E2
+Linhas sem pontas: ligações de comunicação, não fluxos unidirecionais.
+Controle: H-RDL para RAN; KPM e respostas: RAN para H-RDL.
+Propostas: xApps para H-RDL via RMR. Timeout: evento local, não resposta do nó.
+Figura 5.1: Integração conceitual entre simulador, terminação E2, RMR e H-RDL. Linhas
+sem pontas representam conexões de comunicação que suportam trocas nos dois sentidos, não
+uma única mensagem. Propostas chegam das xApps; controles seguem para a RAN; telemetria
+e respostas retornam para recepção e correlação. Elaboração própria a partir da organização
+de propostas, decisões e interfaces descrita para a H-RDL [2]. O desenho não comprova uma
+execução externa.
+Cada execução seguirá quatro passos: (i) carregar a configuração versionada e
+verificar capacidades; (ii) registrar aquecimento, tráfego, propostas e contexto; (iii) rastrear
+seleção, refinamento, envio, resposta e aplicação; e (iv) encerrar aplicações, drenar pacotes
+e extrair métricas. A ausência de resposta, o bloqueio por segurança e a falha de aplicação
+serão contabilizados separadamente. Um caminho alternativo de decisão não poderá
+despachar uma ação que não passou pela validação final.
+A análise será organizada por configuração, rádio, serviço, integração E2, gover-
+nança e estatística, em correspondência com as seis camadas de avaliação descritas na
+documentação técnica. Essa estrutura funciona como contrato de coleta: cada camada
+deve indicar arquivo de origem, unidade, relógio e nível de agregação. Não se pressupõe
+que todas já tenham medições válidas [2].
+5.3
+Organização experimental em seis camadas
+O relatório científico do projeto organiza a análise desde a configuração até o pós-
+processamento estatístico [2]. Essa organização é incorporada na Tabela 5.1: as medições
+20
+
+
+=== PAGE 32 ===
+de tráfego, a instrumentação de rádio, os eventos E2 e os registros de governança pertencem
+à mesma base, mas não são produzidos pelo mesmo coletor. A associação entre eles exige
+identificação de cenário, política, execução e intervalo de observação.
+Tabela 5.1: Camadas de avaliação e registros necessários à interpretação.
+Camada
+Conteúdo
+Registro de origem
+1. Configuração
+Nós, tráfego, canal, duração e
+sementes
+Configuração e manifesto.
+2. Rádio
+SINR, MCS, BLER, HARQ e
+buffers
+Instrumentação PHY/MAC/RLC.
+3. Rede e serviço
+Bytes, pacotes, atraso, vazão e SLA
+FlowMonitor e contratos por
+serviço.
+4. Interface E2
+Envio, resposta e latência de
+transporte
+Mensagens, capturas e correlação
+E2.
+5. Governança
+Conflitos, decisões, bloqueios e
+reversões
+Logs de propostas e ações.
+6. Estatística
+Agregados, diferenças e incertezas
+Observações identificadas e
+extração.
+Fonte: adaptação do protocolo de avaliação de Barbosa [2].
+O perfil tabulado não é imposto a todos os cenários do portfólio. Ele caracteriza
+o caso terrestre de referência e permite explicitar as condições de leitura de S1. Os
+parâmetros suplementares de tráfego e requisitos de serviço são declarados no relatório;
+sua associação a cada execução depende da configuração correspondente.
+Tabela 5.2: Perfil experimental terrestre de referência.
+Grupo
+Configuração declarada
+Simulação
+ns-3.48, 5G-LENA 5.1 e agente E2 NORI.
+Topologia
+Um gNB; 30 UEs, sendo 10 URLLC e 20 eMBB.
+Espectro e numerologia
+3,5 GHz; 100 MHz; um CC/BWP; µ = 1.
+Potência e canal
+43 dBm; modelo 3GPP 38.901 UMi.
+Escalonamento e enlace
+NrMacSchedulerOfdmaPF; modulação adaptativa; HARQ-IR.
+RLC
+AM para eMBB; UM para URLLC; buffer declarado de 10 MB.
+Tráfego no relatório
+UDP, Poisson e CBR; pacotes de 1024 bytes; oferta agregada de 120
+Mbps.
+Requisitos no relatório
+URLLC: 30 Mbps e 5 ms; eMBB: 60 Mbps e 25 ms.
+Término e drenagem
+Aplicações até 58 s; simulador até 60 s.
+Observação e decisão
+Período KPM de 100 ms; janela de decisão de 200 ms.
+Fonte: configuration.csv e perfil experimental descrito por Barbosa [2]. Valores declarados, não uma
+certificação do ambiente.
+Para correlacionar intervenção e efeito, a coleta associa telemetria anterior, proposta,
+conflito, decisão, requisição de controle, resposta e telemetria posterior. A Figura 6.14
+apresenta o painel de linha temporal, cuja execução deve ser identificada antes de relacioná-
+lo ao perfil S1. A descoberta das capacidades do nó precede o mapeamento do controle:
+21
+
+
+=== PAGE 33 ===
+os identificadores de função e parâmetros devem provir das capacidades anunciadas, não
+apenas de constantes do desenho de arquitetura.
+A integridade dos arquivos e a validade da medição são verificações distintas.
+Um checksum permite conferir se um artefato mudou em relação à referência, mas não
+demonstra, sozinho, causalidade, conformidade de protocolo ou correção de uma estatística.
+A cadeia experimental conserva os registros que permitem realizar essas verificações.
+5.4
+Portfólio Completo de Cenários Experimentais
+(S0 a S15)
+O portfólio reúne 16 cenários, organizados em três grupos: conflitos de recursos e de
+serviço (S0–S4), estabilidade e integração (S5–S8) e aplicações em domínios heterogêneos
+(S9–S15). A Tabela 5.3 sintetiza o objeto de controle e a finalidade de cada ensaio. A
+nomenclatura acompanha scenario_summary.csv e os nomes dos executáveis registrados
+nos logs. A comparação pareada por política permanece centrada em S1; os resumos dos
+demais cenários e seus registros de execução são identificados separadamente, sem atribuir
+a todo o portfólio as cinco sementes disponíveis para S1.
+S1 designa conflito direto de cotas de PRBs; S2, potência versus QoS; S3, acopla-
+mento entre fatias. As designações MIMO em S7 e ISAC em S8 aparecem como contextos
+complementares no material, enquanto seus ensaios operacionais focalizam falhas E2 e
+ciclo NORI. As figuras já reunidas na Seção 5.5 ilustram o portfólio, com as diferenças de
+rotulagem explicitadas na Tabela 5.4.
+Tabela 5.3: Portfólio completo de cenários experimentais S0–S15 e fatores de controle.
+ID
+Cenário
+Variável ou fronteira
+Foco da avaliação
+S0
+Pass-through
+Proposta única
+Custo sem disputa.
+S1
+Colisão direta
+Cota de PRBs
+Arbitragem de recursos.
+S2
+Energia/QoS
+Potência e MCS
+Compromisso de rádio.
+S3
+Multi-slice
+BWP compartilhado
+Interferência entre serviços.
+S4
+Mobilidade/energia
+Handover e suspensão
+Compatibilidade no destino.
+S5
+Alternância temporal
+Cota de PRBs
+Estabilidade.
+S6
+Sobrecarga
+Fila de propostas
+Escalabilidade.
+S7
+Falhas E2
+Transporte e
+confirmação
+Resiliência.
+S8
+Ciclo NORI
+KPM/RC
+Aplicação e observação.
+Aplicações em domínios heterogêneos
+S9
+NTN
+Handover orbital
+Mobilidade não terrestre.
+S10
+UAVs
+Potência/bateria
+Cobertura aérea.
+S11
+Pelotão V2X em
+rodovia
+Mobilidade e associação
+Continuidade do serviço veicular.
+22
+
+
+=== PAGE 34 ===
+Tabela 5.3 — continuação
+ID
+Cenário
+Variável ou fronteira
+Foco da avaliação
+S12
+IIoT/TSN
+Escalonamento
+Sincronismo industrial.
+S13
+SAGIN
+Recursos heterogêneos
+Integração espaço-ar-terra.
+S14
+ISAC
+Espectro compartilhado
+Comunicação/sensoriamento.
+S15
+Rogue NTN /
+quarentena
+Controle do enlace
+alimentador
+Isolamento de comandos
+anômalos.
+5.4.1
+S0–S2: referência e conflitos diretos
+S0 estabelece o caminho sem disputa. S1 reúne propostas incompatíveis de xSlice e
+economia de energia sobre recursos compartilhados. S2 desloca o conflito para potência
+e qualidade do enlace. A Figura 5.2 distingue os objetos de atuação; os indicadores de
+serviço devem ser observados depois do controle, não confundidos com o valor solicitado
+pela xApp [2].
+S0 · Operação sem conflito
+Uma xApp
+Proposta única
+H-RDL
+Pass-through
+Nó RAN
+Referência de serviço
+proposta
+controle
+telemetria
+S1 · Colisão direta de PRB
+xSlice + energia
+Cotas incompatíveis
+H-RDL
+Arbitragem
+PRBs com-
+partilhados
+Serviços
+URLLC/eMBB
+proposta
+controle
+telemetria
+S2 · Potência versus QoS
+Energia + QoS
+Potência / MCS
+H-RDL
+Safety Guards
+Célula e UEs
+Condição de rádio
+proposta
+controle
+telemetria
+Roxo: xApps; verde: H-RDL; azul: RAN.
+Setas escuras: proposta e controle; azuis: retorno de telemetria.
+Figura 5.2: Esquemas funcionais de S0, S1 e S2. Elaboração própria adaptada da descrição dos
+cenários [2]. Não representam posições de nós, resultados nem capturas de mensagens.
+O perfil S1 usado na análise identifica um gNB, 30 UEs e largura de banda de
+100 MHz. A imagem conceitual de energia/QoS, por sua vez, mostra macro e microcélula.
+Essas configurações não são intercambiáveis: o esquema da Figura 5.3 apenas situa
+23
+
+
+=== PAGE 35 ===
+visualmente a interação entre cobertura e serviço, sem acrescentar um segundo nó ao
+experimento S1 [2].
+Figura 5.3: Contexto visual de cobertura macro/micro e atendimento de usuários. Imagem
+integral do acervo XApp-RDL, com títulos, conexões e painel lateral preservados. Os valores e
+as curvas no desenho são ilustrativos, não resultados incorporados à campanha S1. As setas não
+definem sentidos normativos de interfaces; o fluxo operacional está na Figura 5.2.
+S0 — operação nominal sem conflito.
+Estabelece a referência de passagem de
+propostas compatíveis, sem disputa a resolver. O objetivo é medir o custo introduzido
+pela mediação em operação nominal. A avaliação considera latência de processamento,
+vazão, atraso e intervenções desnecessárias. S0 é um cenário, não a política B0: esta última
+representa ausência de coordenação e pode ser aplicada a diferentes cenários.
+S1 — conflito direto de cotas de PRBs.
+Reúne propostas concorrentes sobre o
+mesmo orçamento de recursos. A arbitragem seleciona ações compatíveis com as cotas e
+restrições adotadas. Vazão, atraso, violações de SLA, equidade e custo decisório permitem
+comparar B0–B3 nas sementes comuns. Este é o cenário identificado nos 35 registros de
+per_seed_detailed_metrics.csv, dos quais 20 pertencem às quatro políticas da Fase 1.
+S2 — compromisso entre potência e QoS.
+Contrapõe a redução de potência ao
+atendimento dos requisitos de serviço. O objeto principal é a admissibilidade da alteração
+de potência diante do contexto de rádio e de tráfego. Atraso, entrega de pacotes e vazão
+caracterizam o efeito no serviço; eventual ganho energético exige a medida de consumo ou
+um modelo documentado, não apenas a redução de potência configurada.
+24
+
+
+=== PAGE 36 ===
+5.4.2
+S3–S5: acoplamento, mobilidade e estabilidade
+S3 trata da concorrência entre fatias; S4, da incompatibilidade entre transferir usuários e
+suspender a célula receptora; S5, de decisões opostas ao longo do tempo [2]. A Figura 5.4
+organiza essas dependências.
+Para interpretá-las, a análise deve separar associação,
+ocupação de recursos e histórico de ações; menos carga na origem não demonstra benefício
+no destino.
+S3 · Acoplamento entre fatias
+xSlice
+URLLC/eMBB
+Recursos concorrentes
+H-RDL
+Arbitragem
+BWP compartilhado
+Filas e serviço
+proposta
+controle
+telemetria
+S4 · Mobilidade versus energia
+Steering + energia
+Migrar / suspender
+H-RDL
+Compatibilidade
+Célula de destino
+Admissão e carga
+proposta
+controle
+telemetria
+S5 · Alternância temporal
+xSlice + energia
+Comandos opostos
+H-RDL
+Memória e guardas
+Parâmetro
+controlado
+Reversões de ação
+proposta
+controle
+telemetria
+Roxo: xApps; verde: H-RDL; azul: RAN.
+Setas escuras: proposta e controle; azuis: retorno de telemetria.
+Figura 5.4: Esquemas funcionais de S3, S4 e S5. Elaboração própria adaptada da taxonomia
+[2]; os blocos representam responsabilidades, não topologias físicas reproduzidas.
+S3 — acoplamento entre múltiplas fatias.
+Investiga como o compartilhamento de
+recursos entre serviços produz efeitos indiretos: uma ação favorável a uma fatia pode
+degradar outra. As cotas, prioridades e restrições devem ser avaliadas por serviço, com
+vazão, atraso, perdas e equidade. Uma taxa agregada de SLA não substitui a verificação
+do prazo específico de URLLC. A Figura 5.9 situa visualmente essa concorrência.
+S4 — direcionamento de tráfego versus economia de energia.
+Combina redistri-
+buição de usuários e redução da atividade de células. O conflito ocorre quando a decisão
+de mobilidade depende de um destino que outra aplicação pretende suspender ou restringir.
+A avaliação relaciona admissibilidade do destino, interrupções de atendimento, atraso e
+25
+
+
+=== PAGE 37 ===
+Figura 5.5: Contexto visual de serviços e células para discussão de mobilidade e fatiamento.
+Imagem integral do acervo XApp-RDL, preservando título, painel superior e identificação dos
+serviços. A indicação de ausência de ping-pong pertence à ilustração e não comprova esse
+resultado experimental. As áreas coloridas não são coberturas medidas nem fixam a configuração
+de S3 ou S4.
+entrega de pacotes, distinguindo redução de carga na origem de benefício efetivo para o
+usuário.
+S5 — alternância temporal e reconfigurações.
+Exercita propostas opostas ao longo
+do tempo para avaliar reversões e frequência de mudanças. Memória temporal e histerese
+são mecanismos de interesse; as métricas incluem reconfigurações por segundo, tempo de
+acomodação e degradação do serviço. A redução dessas métricas descreve estabilidade
+observada, enquanto o isolamento da contribuição de cada mecanismo exige variantes de
+ablação equivalentes.
+5.4.3
+S6–S8: sobrecarga e integração
+A Figura 5.6 separa estresse da fila, falhas de transporte e observação do ciclo. S6 focaliza
+propostas concorrentes; S7 exige distinguir timeout de resposta negativa; S8 relaciona
+controle e telemetria por meio de NORI [2]. Um esquema de malha fechada não comprova
+que todos os passos foram executados: cada fronteira precisa do registro correspondente.
+S6 — tempestade de conflitos e sobrecarga.
+Submete a mediação a propostas
+concorrentes para caracterizar capacidade de processamento e acúmulo na fila. Os fatores
+de controle são a taxa de chegada, a quantidade de propostas, a janela de decisão e os
+prazos. Latência de chegada até despacho, ocupação da fila, expirações e taxa de decisões
+26
+
+
+=== PAGE 38 ===
+S6 · Sobrecarga de propostas
+Cinco xApps
+Propostas
+concorrentes
+H-RDL
+Lotes e arbitragem
+Nó RAN
+Ações admissíveis
+propostas
+controle
+Observar fila, prazo e custo decisório
+S7 · Falhas da interface E2
+H-RDL / RIC
+Correlação e prazo
+Enlace E2
+Perturbação
+de transporte
+Agente E2
+Nó controlado
+requisição
+requisição
+ACK/Failure, quando recebido
+S8 · Ciclo fechado NORI
+H-RDL / RIC
+Decisão e correlação
+NORI / agente E2
+Controle e indicação
+ns-3 / 5G-LENA
+Estado da RAN
+E2SM-RC
+aplicação
+medições
+E2SM-KPM
+Setas: fluxos funcionais, sem escala temporal.
+Confirmação do controle e efeito na RAN são evidências distintas.
+Timeout é registrado no RIC; não é mensagem enviada pelo nó.
+Figura 5.6: Esquemas de sobrecarga, falhas E2 e ciclo NORI. Elaboração própria adaptada do
+portfólio e da cadeia de controle [2]. No S8, controle segue do RIC à RAN; medições retornam
+pelo agente E2.
+27
+
+
+=== PAGE 39 ===
+concluídas complementam as métricas de serviço; não se confunde custo de uma decisão
+isolada com capacidade sob carga.
+S7 — injeção de falhas na interface E2.
+Avalia o comportamento do controlador
+diante de perturbações na comunicação e na confirmação de comandos. O registro precisa
+distinguir envio, resposta negativa, ausência de resposta e recuperação. As métricas de
+interesse são timeouts, correlação de respostas, disponibilidade e tempo de recuperação.
+O contexto MIMO das ilustrações não constitui, por si só, uma validação adicional da
+camada física.
+S8 — ciclo fechado com NORI.
+Exercita a ligação entre indicação de telemetria,
+decisão, envio de controle e observação posterior do nó simulado. A direção funcional
+do controle é RIC–agente E2–RAN; as medições retornam da RAN ao controlador. A
+avaliação separa custo decisório, transporte, confirmação e aplicação observada. ACK não
+equivale automaticamente a aplicação ou melhoria de serviço, e a referência ilustrativa a
+ISAC não altera esse objeto de integração.
+5.4.4
+S9–S15: aplicações em domínios heterogêneos
+S9 — handover orbital NTN LEO.
+O cenário de rede não terrestre considera
+transições de atendimento associadas ao domínio orbital. Seu objetivo de avaliação é
+a continuidade do serviço durante a mudança de associação. Interrupções, entrega de
+pacotes, atraso e recuperação devem ser relacionados ao modelo de mobilidade adotado.
+A Figura 5.21 apresenta o contexto orbital, sem fixar trajetórias medidas.
+S10 — enxame de UAVs com restrição de bateria.
+Relaciona a disponibilidade
+energética de veículos aéreos não tripulados à manutenção do atendimento. A governança
+deve conciliar demandas de cobertura com restrições de bateria e potência. A avaliação
+requer tanto métricas de serviço quanto a evolução da energia disponível; vazão elevada
+não demonstra autonomia energética. A Figura 5.22 ilustra o contexto de cobertura aérea.
+S11 — pelotão V2X em rodovia.
+Aborda atendimento de veículos em mobilidade
+elevada e o risco de decisões repetidas de associação. Continuidade, atraso, perdas e
+reversões são os indicadores de interesse para o serviço do pelotão. A presença de V2X
+no título não especifica automaticamente a implementação de sidelink; essa capacidade
+depende da configuração executada. A Figura 5.23 contextualiza a mobilidade rodoviária.
+S12 — fatiamento industrial IIoT/TSN.
+Investiga concorrência por recursos em
+serviços industriais sensíveis à variação de atraso. A avaliação deve observar jitter, atraso
+de cauda e entregas dentro do prazo por classe de serviço, além das cotas de recursos.
+28
+
+
+=== PAGE 40 ===
+A expressão zero jitter designa o objetivo do cenário, não um resultado presumido. A
+Figura 5.24 apresenta a interação entre aplicações industriais.
+S13 — resgate em rede SAGIN.
+Considera um contexto de emergência com recur-
+sos espaciais, aéreos e terrestres. O problema é preservar atendimento prioritário sob
+heterogeneidade de enlaces e disponibilidade. Entrega de pacotes, atraso, interrupções e
+recuperação devem ser interpretados por caminho e serviço, sem transferir parâmetros do
+cenário terrestre S1. A Figura 5.25 ilustra o arranjo de resgate.
+S14 — coexistência ISAC entre radar e comunicação.
+Trata da concorrência
+entre funções de sensoriamento e comunicação, identificada no executável como ISAC
+Radar-Comm Beamforming. A avaliação exige relacionar a escolha de recursos ou feixes
+ao desempenho de ambas as funções. Métricas de tráfego, isoladamente, não medem
+qualidade de sensoriamento. A imagem rural da Figura 5.26 tem relação temática com
+sensoriamento, mas não representa necessariamente a configuração radar/comunicação
+desse ensaio.
+S15 — comandos anômalos em enlace alimentador NTN.
+O executável
+scenario_rdl_s15_rogue_ntn_feeder_hijacking delimita o caso de controle anômalo
+do enlace alimentador; a tabela de síntese o identifica como quarentena zero-trust. O
+objetivo é avaliar contenção de ações indevidas com preservação do tráfego legítimo.
+Bloqueios, ações efetivamente aplicadas e continuidade do serviço são métricas distintas.
+A cidade densa da Figura 5.27 é um contexto ilustrativo mais amplo, não a definição desse
+ensaio de segurança.
+5.4.5
+Cobertura dos registros e condições de comparação
+A tabela scenario_summary.csv contém resumos B3 para todos os cenários S0–S15. Ela
+não identifica sementes nem fornece, por linha, a correspondência com uma execução
+original. Seu alcance difere do CSV por semente de S1: a existência de 16 resumos não
+estabelece uma comparação pareada completa para todos os cenários.
+Os logs enviados permitem qualificar essa cobertura. O registro de S0 termina em
+erro de compilação; S5, S6 e S7 interrompem a inicialização por um atributo inválido
+de posicionamento; S8 aborta pela ausência do módulo NORI E2 exigido em modo
+experimental. Esses arquivos não comprovam execuções concluídas dos respectivos cenários.
+Os logs de S1–S4 registram compilação e ligação do executável, sem mensagem explícita
+de conclusão. Já S9–S15 registram término bem-sucedido e dispõem de arquivos XML
+FlowMonitor com o mesmo nome de cenário. Essa associação nominal permite organizar
+o material, mas ainda requer a correlação de configuração e execução para validar cada
+agregado.
+29
+
+
+=== PAGE 41 ===
+Assim, falha em um log não elimina automaticamente resultados de outra execução,
+e uma linha de síntese não comprova o sucesso da execução que falhou. A apresentação do
+portfólio preserva ambos os registros e evita atribuir aos cenários um estado único sem
+identificar a execução correspondente.
+A configuração de cada execução deve registrar nós, UEs, tráfego, espectro, canal,
+associação inicial, mobilidade, aquecimento e drenagem. As comparações entre políticas
+exigem equivalência dessas condições e identificação das sementes. Os parâmetros de
+configuration.csv descrevem um perfil com um gNB e 30 UEs; não são estendidos
+automaticamente aos domínios NTN, aéreo ou industrial. Quantidades e capacidades
+ilustradas nas figuras também não substituem a configuração executada.
+5.5
+Galeria de cenários e topologias do acervo
+As imagens a seguir apresentam configurações espaciais e contextos de aplicação associados
+à governança multi-xApp. São ilustrações do acervo, não novas execuções ou resultados
+de desempenho. Rótulos como “zero jitter”, “proteção ativa” e “oscilações reduzidas”
+expressam objetivos dos desenhos e não garantias demonstradas. As setas são lidas conforme
+a função ilustrada (controle, medição, associação ou ligação física); não substituem a
+especificação de mensagens da arquitetura operacional.
+Os prefixos dos arquivos não são uniformes com a Tabela 5.3. A correspondência
+abaixo evita transferir automaticamente configurações para a análise quantitativa S1.
+Tabela 5.4: Leitura dos rótulos originais das topologias.
+Rótulo do
+acervo
+Conteúdo
+Relação com a dissertação
+S1 2D
+Dois gNBs e MAPPO/Fase 2
+Variante; não corresponde ao S1
+quantitativo de um gNB.
+S2 2D
+Energia versus QoS
+Ilustração do tema S2.
+S3
+Multi-slice ou mobilidade
+São dois arquivos diferentes;
+mobilidade apoia o tema S4.
+S4 2D
+Histerese de handover
+Variante temporal relacionada a S5,
+com objeto de controle distinto das
+cotas de PRBs.
+S5/S6 2D
+Sobrecarga / proteção
+Temas de S6 e barreiras, não
+equivalência automática dos ensaios.
+S7
+Ciclo NORI ou MIMO
+Ciclo relaciona-se ao tema S8; MIMO
+é extensão física.
+S8
+NTN/UAV/V2X ou sensoriamento
+Extensões; não designam o ensaio
+NORI S8 da tabela.
+S9–S15
+Domínios ampliados
+Contextos próprios; associação
+depende da configuração efetivamente
+executada.
+30
+
+
+=== PAGE 42 ===
+5.5.1
+Topologias espaciais e conflitos entre controladores
+Figura 5.7: Topologia intitulada S1, com referência explícita a MAPPO/Fase 2. As regiões de
+contenção e os dois gNBs pertencem a esta variante, não à configuração determinística S1 das
+tabelas de resultados. Fonte: acervo experimental do projeto; arquivo s1_topologia_espacia
+l_plano_2d.png.
+31
+
+
+=== PAGE 43 ===
+Figura 5.8: Topologia S2 de duas estações e grupos de serviço, com sobreposição de atendimento
+e suspensão pendente. A área colorida situa o compromisso de cobertura, sem representar uma
+cobertura medida ou energia consumida.
+Fonte: acervo experimental do projeto; arquivo
+s2_topologia_espacial_plano_2d.png.
+32
+
+
+=== PAGE 44 ===
+Figura 5.9: Ilustração multi-slice S3 com xApps de tráfego e QoS/slicing e grupos URLLC, eMBB
+e mMTC. As demandas compartilham recursos; cores e conexões representam relações conceituais.
+Fonte: acervo experimental do projeto; arquivo s3_multi_slice_traffic_steering.png.
+33
+
+
+=== PAGE 45 ===
+Figura 5.10: O título S3 desta topologia se refere à mobilidade, não ao ensaio multi-slice
+S3 da tabela. O corredor e a faixa de transição apoiam a discussão de associação em S4, sem
+demonstrar o componente energético desse ensaio. Fonte: acervo experimental do projeto; arquivo
+s3_topologia_espacial_plano_2d.png.
+34
+
+
+=== PAGE 46 ===
+Figura 5.11: A topologia intitulada S4 representa histerese de handover. As setas curvas indicam
+reversões conceituais de associação, não mensagens de rede. O tema temporal aproxima-se de S5,
+mas o parâmetro controlado difere da cota de PRBs tabulada. Fonte: acervo experimental do
+projeto; arquivo s4_topologia_espacial_plano_2d.png.
+35
+
+
+=== PAGE 47 ===
+Figura 5.12:
+O arquivo S5 representa tempestade de conflitos e grupos de usuários sob
+propostas simultâneas. Corresponde tematicamente à sobrecarga discutida em S6; o desenho
+não informa frequência medida de propostas. Fonte: acervo experimental do projeto; arquivo
+s5_topologia_espacial_plano_2d.png.
+36
+
+
+=== PAGE 48 ===
+Figura 5.13: O arquivo S6 ilustra um comando bloqueado por Safety Guard. O símbolo
+de proteção descreve a função da barreira; não comprova taxa de detecção, ausência de falsos
+positivos ou contagem de ações inseguras. Fonte: acervo experimental do projeto; arquivo
+s6_topologia_espacial_plano_2d.png.
+37
+
+
+=== PAGE 49 ===
+Figura 5.14: Topologia intitulada S7 para malha fechada NORI. As rotas rotuladas distinguem
+medições em direção ao controlador e decisões em direção à RAN. Relaciona-se ao tema S8 da
+tabela, sem demonstrar troca de mensagens efetivamente capturada. Fonte: acervo experimental
+do projeto; arquivo s7_topologia_espacial_plano_2d.png.
+38
+
+
+=== PAGE 50 ===
+5.5.2
+Variantes físicas de múltiplas portadoras e sensoriamento
+As variantes desta subseção contêm frequências, arranjos de antenas e políticas próprios.
+Elas não alteram os parâmetros do recorte de 3,5 GHz e 100 MHz nem comprovam
+portabilidade da H-RDL para todos os domínios desenhados.
+As indicações de fase
+adaptativa são preservadas como contexto de continuidade.
+Figura 5.15: O arquivo com prefixo S7 tem título interno de cenário 3 e mostra FR1/FR3,
+MIMO e referência a MAPPO. É uma variante física e adaptativa, não o ensaio de falhas E2
+designado S7 nesta dissertação. Fonte: acervo experimental do projeto; arquivo s7_5ga_multi
+carrier_mimo_light.png.
+39
+
+
+=== PAGE 51 ===
+Figura 5.16: Ilustração de regiões espectrais sobrepostas e xApps de coordenação, feixes e
+tráfego. Os diagramas de espectro e SINR são esquemáticos; não são resultados medidos do
+cenário S7 de falha de transporte. Fonte: acervo experimental do projeto; arquivo s7_5ga_cha
+nnel_overlap_mimo.png.
+Figura 5.17: Variante ISAC cujo título interno utiliza cenário 4, apesar do prefixo S8. Feixes de
+comunicação e sensoriamento representam funções distintas; os rótulos de resolução e desempenho
+não são adotados como resultados desta dissertação. Fonte: acervo experimental do projeto;
+arquivo s8_6g_isac_sensing_light.png.
+40
+
+
+=== PAGE 52 ===
+Figura 5.18: Ilustração de serviços de comunicação e sensoriamento urbano com arbitragem
+adaptativa indicada no desenho.
+Não corresponde ao ensaio determinístico NORI S8 nem
+valida os sensores ou modelos mostrados.
+Fonte: acervo experimental do projeto; arquivo
+s8_6g_isac_urban_green_sensing.png.
+Figura 5.19: Contexto urbano com sensores, usuários e xApps de monitoramento e comunicação.
+Linhas rotuladas E2 representam o vínculo funcional com o controlador, sem fixar uma sequência
+normativa de mensagens. Fonte: acervo experimental do projeto; arquivo s8_urban_environme
+ntal_sensing.png.
+41
+
+
+=== PAGE 53 ===
+Figura 5.20: A própria imagem identifica uma extensão para pesquisa futura. As ligações
+aéreas, terrestres e veiculares ampliam o contexto de topologia, sem acrescentar modelos ou
+execuções ao ensaio NORI S8. Fonte: acervo experimental do projeto; arquivo s8_topologia_e
+spacial_plano_2d.png.
+42
+
+
+=== PAGE 54 ===
+5.5.3
+Domínios de aplicação ampliados
+Os cenários ilustrados a seguir situam conflitos de mobilidade, energia, qualidade de serviço
+e recursos heterogêneos. Cada domínio requer sua própria configuração e métricas. A
+presença de satélites, robôs, sensores ou drones numa imagem não significa que todos esses
+componentes foram exercitados na avaliação quantitativa S1.
+Figura 5.21: Contexto S9 com satélites LEO, estações terrestres e usuários aéreos. As rotas
+destacam transição de atendimento e funções de steering, slicing e compensação indicadas no
+controlador; não representam trajetória orbital ou handover medido. Fonte: acervo experimental
+do projeto; arquivo s9_ntn_orbital_handover.png.
+43
+
+
+=== PAGE 55 ===
+Figura 5.22: Contexto S10 com cobertura de estádio, enlaces em malha e alerta de bateria
+em um UAV. O conflito ilustrado relaciona disponibilidade energética e atendimento, sem
+quantificar energia ou área de cobertura medida. Fonte: acervo experimental do projeto; arquivo
+s10_uav_swarm_stadium_coverage.png.
+Figura 5.23: Contexto S11 com macro e microcélulas, pelotão conectado e funções de tráfego,
+balanceamento e QoS. O bloqueio de handover é uma função ilustrada, não evidência de supressão
+medida de ping-pong. Fonte: acervo experimental do projeto; arquivo s11_v2x_highway_ping
+pong_storm.png.
+44
+
+
+=== PAGE 56 ===
+Figura 5.24: Contexto S12 com robôs, veículos industriais e câmeras compartilhando aten-
+dimento.
+A expressão zero jitter do título original identifica uma meta do cenário, não
+um resultado quantitativo demonstrado.
+Fonte: acervo experimental do projeto; arquivo
+s12_iiot_zero_jitter_robotic_slicing.png.
+Figura 5.25: Contexto S13 com estação móvel, malha de UAVs e enlace satelital de emergência.
+As ligações descrevem possibilidades de conectividade entre recursos heterogêneos; sua dispo-
+nibilidade precisa ser avaliada na configuração correspondente. Fonte: acervo experimental do
+projeto; arquivo s13_disaster_rescue_heterogeneous_mesh.png.
+45
+
+
+=== PAGE 57 ===
+Figura 5.26:
+O arquivo S14 ilustra sensores ambientais e aplicações agrícolas.
+Sua cor-
+respondência é temática com sensoriamento; não equivale automaticamente ao compartilha-
+mento radar/comunicação do S14 tabulado. Fonte: acervo experimental do projeto; arquivo
+s14_rural_agriculture_sensing.png.
+Figura 5.27: Contexto S15 com múltiplos serviços, xApps e domínios de acesso. A tempestade
+de propostas aproxima-se do tema de sobrecarga S6; os componentes avançados são extensões,
+não uma configuração integral comprovada pela avaliação S1. Fonte: acervo experimental do
+projeto; arquivo s15_6g_dense_city_conflict_storm.png.
+46
+
+
+=== PAGE 58 ===
+5.6
+Condições de comparação e ablação
+Tabela 5.5: Condições de comparação do protocolo.
+ID
+Política
+Regra experimental
+B0
+Sem mediação
+Mesmo tráfego e propostas, com regra de aplicação concorrente
+explicitada e registrada.
+B1
+Ordem de
+chegada (FIFO)
+Mesma infraestrutura de B3; seleção pela ordem registrada de
+chegada.
+B2
+Prioridade fixa
+Mesma janela, refinamento e interfaces de B3; prioridade e
+desempate estável.
+B3
+H-RDL completa
+Detecção, utilidade determinística, memória e refinamento conforme
+contrato.
+A numeração B0–B3 identifica os comparadores do protocolo. As condições de
+agrupamento, refinamento e transporte serão controladas para que as diferenças observadas
+possam ser relacionadas à política de decisão. A política por limiares será identificada
+separadamente como BL, sem reutilizar o código B2.
+As condições B1–B3 compartilharão agrupamento, restrições e transporte para isolar
+o efeito da arbitragem. B0 avaliará o efeito total da mediação e será interpretado com
+essa diferença explícita. A ordem de execução será randomizada em blocos por semente.
+Streams aleatórios de canal, tráfego e mobilidade deverão ser controlados separadamente
+para que chamadas adicionais em uma política não alterem silenciosamente o ambiente.
+As ablações de B3 retirarão, uma por vez, memória temporal, detecção indireta e
+utilidade contextual, preservando os demais componentes. A variante B3g substituirá a
+busca conjunta pela aproximação gulosa. A avaliação sem barreiras, se necessária, ficará
+restrita a simulação isolada e identificada. A janela de decisão será estudada em ensaio
+próprio, evitando atribuir à arbitragem o efeito de esperas diferentes.
+Como extensão condicionada a recursos, poderá ser incluída uma alternativa predi-
+tiva inspirada na literatura. Ela somente será comparador experimental se operar sobre
+o mesmo contrato, com treinamento e custo contabilizados separadamente e dados de
+avaliação não utilizados no ajuste. A descrição de um método publicado não autoriza
+afirmar que ele foi reproduzido. Essa extensão não é requisito para concluir os contrastes
+B0–B3.
+5.7
+Quatro gates de aceitação
+Os gates são etapas de aceitação propostas para esta pesquisa, não um esquema de
+certificação da O-RAN Alliance. A Tabela 5.6 define a evidência mínima para cada um.
+G1 deve incluir mensagens inválidas, incompletas e antigas. G2 deve exercitar
+empates, ações sem conflito e configuração resultante de várias ações. G3 deve cobrir ACK,
+47
+
+
+=== PAGE 59 ===
+Tabela 5.6: Critérios de aceitação do ciclo de controle.
+Gate
+Objeto
+Evidência requerida
+G1
+Telemetria
+externa
+Payload KPM recebido do nó, decodificação, unidade, origem,
+instante e perfil de serviço.
+G2
+Decisão
+Entrada e estado preservados, regras versionadas, saída repetível e
+teste de limites.
+G3
+Atuação
+Controle aceito por receptor externo, resposta correlacionada e
+verificação da configuração aplicada.
+G4
+Resposta da
+rede
+KPM posterior e registros do simulador vinculados à atuação, com
+comparação controlada sem a intervenção.
+Failure, ausência de resposta e valores não suportados. Um ACK informa o resultado do
+procedimento conforme o perfil, mas não comprova sozinho melhora do serviço.
+G4 exigirá observação do estado antes e depois da aplicação, com identificadores
+de correlação e tempo do simulador. A mera ordem KPM–controle–KPM não prova
+causalidade: a mesma evolução pode ocorrer por mobilidade ou variação de carga. O
+efeito será estimado mediante execuções comparáveis com e sem intervenção. Relógios
+monotônicos locais e tempo simulado serão registrados sem subtração direta entre domínios
+não sincronizados.
+5.8
+Contrato de métricas
+Para pacotes recebidos, o atraso individual será dj = trx
+j −ttx
+j , usando o mesmo domínio
+temporal. Média, mediana, P95 e P99 serão extraídos de observações individuais ou
+histogramas com resolução declarada. O limiar de 5 ms para URLLC será um requisito do
+cenário, não uma afirmação de atendimento a qualquer aplicação URLLC.
+A proporção de atrasos acima do prazo será calculada entre pacotes entregues e
+acompanhada da perda, para impedir que descartar pacotes lentos aparente melhorar QoS.
+Será também reportada a fração de pacotes gerados que não chegaram dentro do prazo,
+unificando atraso e não entrega. Pacotes ainda em trânsito ao fim da execução serão
+identificados; a duração de drenagem será igual entre condições.
+PDR = Nrx
+Ntx
+,
+T = 8Brx
+∆t ,
+(5.2)
+J = (Pn
+i=1 xi)2
+n Pn
+i=1 x2
+i
+,
+ηE =
+8Brx
+R Pel(t) dt.
+(5.3)
+Aqui, Brx representa bytes úteis entregues, ∆t o intervalo medido e xi a vazão de usuários
+comparáveis. Jain será calculado por classe de serviço, além do agregado quando pertinente;
+com todas as vazões nulas será indefinido, não equidade perfeita. A eficiência energética
+requer potência elétrica ou modelo explicitado: redução em dBm de transmissão não
+48
+
+
+=== PAGE 60 ===
+equivale diretamente a redução percentual de energia consumida.
+Precisão e sensibilidade do detector serão calculadas contra casos rotulados indepen-
+dentemente da saída do próprio detector. Serão distinguidos conflitos detectados, decisões
+selecionadas, comandos enviados, aceitos e aplicados. A taxa de resolução lógica terá
+denominador de conflitos detectados e será indefinida quando esse número for zero. O
+rótulo de mitigação efetiva exigirá o critério de efeito definido para cada cenário.
+Ping-pong será definido como retorno do mesmo UE à célula de origem dentro de
+intervalo previamente fixado, com regra para não duplicar contagens. Intervenções das
+barreiras, tempo de recuperação, comandos expirados, filas e rejeições serão reportados
+separadamente. Toda razão terá unidade, denominador e tratamento de dados ausentes
+documentados.
+5.9
+Latência de controle e escalabilidade
+A janela de agrupamento e a latência de processamento não serão confundidas com atraso
+de pacote. Para cada ação serão medidos
+Ldespacho = tfim do envio −tchegada,
+(5.4)
+LACK = tresposta −tinicio do envio.
+(5.5)
+O processamento será decomposto em percepção, detecção, raciocínio, refinamento, co-
+dificação e transporte. A soma das parcelas será confrontada com o intervalo observado,
+incluindo filas. Uma janela de 200 ms pode dominar o atraso de chegada até despacho
+mesmo que a computação leve poucos milissegundos.
+A escalabilidade será avaliada por propostas por segundo, propostas por lote, xApps
+ativas e nós controlados. Serão medidos CPU, memória, profundidade da fila, percentis e
+perdas de prazo. O ensaio crescerá progressivamente até atingir o limite de recursos ou
+de aceitação, que será reportado. O número de xApps, isoladamente, não caracteriza o
+trabalho computacional.
+5.10
+Idade da telemetria e custo de percepção
+O trabalho de monitoramento adaptativo motiva medir a qualidade da informação além da
+quantidade de mensagens [4]. Para uma observação coletada em tK e usada na decisão em
+td, define-se a idade operacional AK = td −tK, quando ambos pertencem a um domínio
+temporal compatível. Serão registrados também intervalo de reporte, perdas de indicação
+e intervalo entre chegada da proposta e decisão. Essas grandezas não são intercambiáveis.
+Será realizado um estudo de sensibilidade em duas etapas: primeiro, variar a janela
+mantendo a frequência KPM fixa; depois, variar a frequência mantendo a janela fixa. A
+49
+
+
+=== PAGE 61 ===
+tK
+ta
+tc
+td
+te
+coleta
+de KPM
+chegada da
+proposta
+fechamento
+do lote
+decisão
+fim do envio
+idade do contexto na decisão: td −tK
+espera no lote
+processamento e envio
+Representação conceitual em um domínio temporal comum. Se coleta e decisão
+usarem relógios diferentes, é necessário registrar sua correspondência ou incer-
+teza; não se subtraem diretamente timestamps sem sincronização.
+Figura 5.28: Distinção entre idade da telemetria, espera no lote e processamento. Esquema
+conceitual elaborado para o protocolo, motivado pelo acervo sobre janela de decisão e monitora-
+mento.
+combinação conjunta será reservada aos pontos mais informativos do piloto. O custo
+incluirá mensagens por segundo, bytes recebidos, CPU de coleta/decodificação, idade
+do contexto, falsos negativos de detecção e violações de serviço. O objetivo não será
+maximizar a coleta, mas identificar o compromisso entre informação útil e custo.
+O limiar de validade será específico por indicador e cenário. Uma amostra atrasada
+não deve permanecer válida indefinidamente apenas porque foi a última disponível. Diante
+de ausência de informação, a política deverá registrar a razão de rejeição ou a regra
+conservadora usada, sem fabricar um KPI. Na avaliação de dados assíncronos, o instante
+de chegada ao mediador não substituirá silenciosamente o instante de coleta.
+5.11
+Tratamento estatístico dos resultados
+A unidade de análise é o registro identificado por cenário, política e semente. Para B0–B3,
+as sementes 1001–1005 permitem contrastes pareados e o cálculo de média, mínimo, máximo
+e desvio amostral com denominador n −1. A semente 1001 permanece como estudo por
+execução, enquanto as médias das cinco sementes sustentam a comparação principal. A
+identificação de sementes distintas não demonstra, por si só, independência experimental,
+e os fluxos internos de uma simulação não são tratados como novas replicações.
+A diferença absoluta entre políticas é ∆M = MB3 −MBi e sua variação relativa é
+100∆M/MBi, para denominador não nulo. Taxas de violação são comparadas também em
+pontos percentuais. A rotina não calcula ganho percentual para um custo de referência nulo.
+O código de geração das figuras e tabelas está em gerar_resultados_dissertacao.py;
+a entrada comum é dados/resultados_s1_execucoes.csv.
+O teste bilateral exato disponível para cinco pares com diferenças no mesmo
+sentido resulta em p = 0,0625, não atingindo o limiar de 5%. Esse resultado diverge
+50
+
+
+=== PAGE 62 ===
+de hypothesis_tests.csv, que declara p < 0,001, e os tamanhos de efeito publicados
+incluem casos degenerados por variância nula. Portanto, não são transferidas conclusões
+confirmatórias desses arquivos. Médias de percentis por execução não são interpretadas
+como percentis dos pacotes reunidos, e não são geradas CDFs sem observações que as
+sustentem. A etapa confirmatória demanda protocolo congelado, mais pares independentes,
+efeito mínimo definido previamente e tratamento de múltiplas comparações.
+51
+
+
+=== PAGE 63 ===
+Capítulo 6
+Resultados e Discussão
+6.1
+Base integrada e leitura das métricas
+A análise principal utiliza os 35 registros de per_seed_detailed_metrics.csv: cinco
+sementes para cada política B0–B6 no cenário S1. O recorte determinístico B0–B3 contém
+20 registros e permite comparar as mesmas sementes entre ausência de mediação, FIFO,
+prioridade fixa e H-RDL. B4–B6 permanecem referências contextuais e adaptativas, sem
+serem incorporadas à contribuição determinística. Os registros declaram git_sha=f99483a;
+a correspondência com outros identificadores publicados ainda precisa ser consolidada [2].
+Os arquivos identificam o nó gnb_01, frequência de 3,5 GHz, largura de banda
+de 100 MHz, numerologia 1 e potência de 43 dBm. O encerramento das aplicações em
+58 s e da simulação em 60 s delimita uma margem nominal de drenagem, não a janela
+efetiva de medição de cada indicador. Os dados de rede, governança e pós-processamento
+pertencem à mesma base, mas possuem unidades amostrais diferentes: resumos por
+execução não substituem amostras individuais de pacotes, e fluxos internos não constituem
+novas replicações.
+6.2
+Estudo por execução e desempenho frente aos
+comparadores
+Na semente 1001, B3 supera B2 em 9,60 Mbps (10,42%) e reduz o atraso em 2,20 ms
+(16,30%). Nas cinco sementes, as mesmas diferenças absolutas médias são 9,60 Mbps
+e −2, 20 ms, correspondendo a 10,33% e −16, 38% quando as médias de B2 são usadas
+como denominador. A decisão acrescenta 0,04 ms e a taxa de reconfiguração cai 87,5%. A
+repetição do efeito nas sementes disponíveis fortalece a descrição, mas não isola memória
+ou barreiras sem ablação.
+A taxa reportada de violações de SLA não permite concluir que todo pacote URLLC
+cumpre um prazo específico: faltam seu denominador e a separação por serviço. Da mesma
+52
+
+
+=== PAGE 64 ===
+Tabela 6.1: Métricas reportadas por execução em S1, semente 1001.
+Métrica
+B0
+B2
+B3
+Vazão DL (Mbps)
+85,20
+92,10
+101,70
+Atraso reportado (ms)
+17,80
+13,50
+11,30
+P95 do atraso (ms)
+24,50
+18,20
+13,80
+Violação de SLA (%)
+36,70
+12,50
+0,00
+Índice de Jain
+0,52
+0,78
+0,94
+Decisão (ms)
+0,00
+0,08
+0,12
+Reconfiguração (ações/s)
+1,00
+0,40
+0,05
+Reversões registradas
+30,00
+30,00
+0,00
+Fonte: registros de métricas de B0, B2 e B3 [2]. Zero em decisão de B0 representa ausência do árbitro
+H-RDL, não custo nulo de todo o controle.
+(a) Vazão DL
+Mbps
+0,00
+33,05
+66,11
+99,16
+132,21
+85,20
+B0
+Sem mediação
+92,10
+B2
+Prioridade fixa
+101,70
+B3
+H-RDL
+(b) Atraso reportado
+ms
+0,00
+5,79
+11,57
+17,36
+23,14
+17,80
+B0
+Sem mediação
+13,50
+B2
+Prioridade fixa
+11,30
+B3
+H-RDL
+(c) P95 do atraso
+ms
+0,00
+7,96
+15,93
+23,89
+31,85
+24,50
+B0
+Sem mediação
+18,20
+B2
+Prioridade fixa
+13,80
+B3
+H-RDL
+(d) Reconfiguração
+ações/s
+0,00
+0,33
+0,65
+0,98
+1,30
+1,00
+B0
+Sem mediação
+0,40
+B2
+Prioridade fixa
+0,05
+B3
+H-RDL
+Figura 6.1: Comparação dos registros de S1, semente 1001: vazão, atraso, P95 e taxa de
+reconfiguração.
+Barras representam valores por execução, sem barras de erro ou amostras
+artificiais. Fonte: mesma base da Tabela 6.1.
+53
+
+
+=== PAGE 65 ===
+forma, o P95 reportado não substitui a distribuição de atrasos. A leitura conjunta dos
+indicadores é favorável à H-RDL neste recorte, mas não demonstra superioridade universal.
+6.2.1
+Interpretação das métricas de rádio
+O registro B0 associa ocupação de PRBs de 94% a BLER de 14,2% e MCS 16. Em B2, os
+valores são 85%, 4,2% e MCS 20; em B3, 80%, 1,1% e MCS 22 [2]. A associação entre
+menor ocupação e maior vazão sugere que quantidade de recursos, sozinha, não explica o
+desempenho. Trata-se de uma interpretação compatível com os agregados, não de prova de
+causalidade: a atribuição a retransmissões ou ao escalonamento exige traces temporais de
+rádio e carga equivalente. Também não se infere economia de energia a partir da ocupação
+de PRBs; a análise complementar de potência encontra-se na Seção 6.7, sem derivá-la
+desses valores de PRBs.
+Distribuição de recursos e condições do enlace
+As Figuras 6.2, 6.3 e 6.4 complementam a leitura dos agregados de rádio. O painel de
+PRBs distingue redistribuição de recursos de aumento da capacidade: cotas que somam
+100% podem mudar sem que a capacidade total cresça. A relação com vazão depende
+também do canal, da eficiência espectral e das retransmissões. Os painéis de SINR e
+MCS/BLER permitem discutir essas associações, sem atribuir a um único fator o ganho
+de serviço.
+Figura 6.2: O painel mostra redistribuição de cotas entre duas fatias, mantendo soma de 100%.
+A curva descreve alocação representada, não vazão entregue. A associação ao controle aplicado
+requer o histórico de ações e os instantes da execução. Fonte: acervo experimental do projeto;
+arquivo fig_09_prb_slice_area.png.
+54
+
+
+=== PAGE 66 ===
+Figura 6.3: Vários pontos estão acima da curva rotulada como limite teórico. Sem a definição
+dos parâmetros e da normalização dessa curva, ela não é usada como limite físico validado. O
+CSV completo por semente não contém SINR para reconstruir o painel conjunto. Fonte: acervo
+experimental do projeto; arquivo fig_10_sinr_throughput_hexbin.png.
+Figura 6.4: Dispersão de índices MCS e BLER. Os pontos não estabelecem que elevar MCS cause
+redução de erros; é necessário identificar políticas, carga, condições de canal e agregação para
+interpretar a associação. Fonte: acervo experimental do projeto; arquivo fig_11_mcs_bler.png.
+55
+
+
+=== PAGE 67 ===
+6.3
+Dispersão entre registros da H-RDL
+Tabela 6.2: Estatística descritiva recalculada dos cinco registros B3 de S1.
+Métrica
+Média
+Desvio amostral
+Mínimo
+Máximo
+Vazão DL (Mbps)
+102,500
+0,632
+101,700
+103,300
+Atraso reportado (ms)
+11,230
+0,130
+11,100
+11,400
+P95 do atraso (ms)
+13,730
+0,130
+13,600
+13,900
+Fontes: sementes 1001–1005 [2]. O desvio usa denominador n −1 e descreve os arquivos disponíveis, sem
+demonstrar independência entre execuções.
+A média dos atrasos agregados é 11,230 ms. A média dos cinco P95 é 13,730 ms, não
+o P95 de todos os pacotes reunidos. Essa diferença de unidade amostral impede reconstruir
+uma CDF de pacotes usando apenas cinco resumos. A média de vazão, 102,500 Mbps,
+também não deve ser substituída pelo valor de uma única semente.
+(a) Vazão DL
+Mbps
+101,14
+101,82
+102,50
+103,18
+103,86
+1001
+1002
+1003
+1004
+1005
+Linha tracejada: média = 102,500 Mbps
+(b) Atraso reportado
+ms
+10,99
+11,12
+11,25
+11,38
+11,51
+1001
+1002
+1003
+1004
+1005
+Linha tracejada: média = 11,230 ms
+Figura 6.5: Vazão e atraso reportados nos cinco registros B3 de S1. Cada ponto corresponde
+a uma semente identificada; linhas tracejadas indicam médias descritivas. As sementes não
+constituem um eixo de tempo e não há interpolação entre elas. Fontes: Tabela 6.2.
+Os valores de vazão avançam em incrementos regulares de 0,4 Mbps, enquanto
+diversos campos de governança permanecem constantes. Essa regularidade não basta para
+inferir geração artificial, mas tampouco prova variabilidade estocástica independente. A
+ampliação da evidência deve ligar cada registro ao respectivo trace e aos streams aleatórios;
+até lá, o gráfico descreve os resumos, sem sustentar generalização para condições não
+observadas.
+6.3.1
+Contrastes estatísticos e limites dos intervalos apresentados
+A Figura 6.6 reúne contrastes de métricas distintas. Sua leitura deve ocorrer por linha,
+considerando a unidade e a política de referência; a posição relativa de efeitos medidos
+em Mbps e em ms não constitui um ranking único. Os ganhos descritivos já discutidos
+56
+
+
+=== PAGE 68 ===
+são preservados, mas os intervalos e rótulos de significância do painel não substituem o
+recálculo a partir dos pares identificados. As comparações envolvendo B6 contextualizam
+a continuidade adaptativa, sem demonstrar eficácia adicional da H-RDL determinística.
+Figura 6.6: O título original usa a expressão efeito causal. O CSV correspondente apresenta
+intervalos de largura nula e p=0,0625 marcado como significativo. Esses rótulos exigem revisão;
+unidades diferentes por linha e a presença de MAPPO também limitam a comparação visual das
+magnitudes. Fonte: acervo experimental do projeto; arquivo fig_07_effect_forest.png.
+6.4
+Latência decisória e componentes do ciclo
+A Figura 6.7 apresenta a decomposição declarada no registro B3. A soma dos componentes
+é 200 ms. O cálculo da razão entre decisão e total resulta em 0,06%; o componente
+de observação representa 97,605% [2]. São proporções da decomposição reportada, não
+medições independentes de utilização de CPU.
+A principal implicação para a engenharia é que reduzir apenas o processamento
+decisório tem efeito limitado sobre esse total. O orçamento precisa distinguir espera por
+telemetria, janela de decisão, transmissão e observação posterior. A hipótese de viabilidade
+exige ainda a cauda da latência de chegada até despacho sob carga; o valor do núcleo
+decisório não responde sozinho a essa questão.
+6.5
+Painéis da base experimental integrada
+As medições de rede coletadas pelo FlowMonitor, os registros de governança H-RDL e
+as estatísticas derivadas integram a mesma base experimental. O arquivo per_seed_d
+etailed_metrics.csv contém 35 registros S1: cinco sementes por política, de B0 a
+57
+
+
+=== PAGE 69 ===
+(a) Composição declarada: 200 ms
+ms
+0,00
+63,44
+126,89
+190,33
+253,77
+195,21
+Observação
+4,79
+Demais
+componentes
+(b) Detalhe sem a observação
+ms
+0,00
+0,65
+1,30
+1,95
+2,60
+2,00
+Detec-
+ção
+0,12
+Deci-
+são
+0,15
+Codifi-
+cação
+0,20
+Des-
+pacho
+1,82
+RTT
+E2
+0,50
+Apli-
+cação
+Figura 6.7: Composição da latência reportada em S1/B3, semente 1001, e detalhe dos com-
+ponentes sem a observação. Os painéis usam escalas distintas explicitadas nos eixos. A soma
+aritmética não comprova ausência de sobreposição entre intervalos. Fonte: registro de métricas
+[2].
+B6. O subconjunto B0–B3 corresponde a 20 registros da Fase 1. B4–B6 são referências
+contextuais e adaptativas; sua presença nas imagens não altera o escopo determinístico da
+dissertação. Os painéis originais conservam os títulos F4, F5 e F6, enquanto as legendas
+seguem a numeração deste documento.
+6.5.1
+Vazão, serviço e pareamento
+As Figuras 6.8 e 6.9 ampliam a comparação para as políticas disponíveis. As médias de
+vazão de B0, B1, B2 e B3 são, respectivamente, 86,00, 89,20, 92,90 e 102,50 Mbps. As
+taxas de violação de SLA correspondentes são 36,7%, 24,0%, 12,5% e zero; essas taxas são
+constantes nas cinco sementes de cada política. A concentração dos pontos não deve ser
+confundida com uma distribuição contínua de atrasos de pacotes.
+A Figura 6.10 conecta as observações da mesma semente em B0, B3 e B6. As linhas
+representam correspondência entre políticas, não evolução temporal. O contraste B0–B3
+apresenta diferença de 16,50 Mbps nas cinco sementes. B6 aparece na imagem original
+para comparação adaptativa, não como componente da H-RDL determinística.
+O contraste principal B3–B2, calculado da mesma base, apresenta médias de 102,50
+contra 92,90 Mbps e de 11,23 contra 13,43 ms. As diferenças médias são +9,60 Mbps
+e −2, 20 ms, ou +10,33% e −16, 38% usando a média de B2 como denominador. No
+estudo detalhado da semente 1001, os percentuais correspondentes são 10,42% e 16,30%; a
+diferença decorre do denominador, não dos valores absolutos.
+6.5.2
+Janela de decisão e preparação do atendimento
+Na Figura 6.11, passar de 50 para 200 ms aumenta a vazão de 100,2 para 101,7 Mbps
+e reduz a reconfiguração de 0,42 para 0,05 ações/s.
+Em 1000 ms, o valor cai para
+58
+
+
+=== PAGE 70 ===
+Figura 6.8: Distribuição de vazão dos cinco registros de cada política em S1, correspondente
+aos valores do CSV por semente. B0–B3 delimitam a comparação da Fase 1; B4–B6 permanecem
+referências de continuidade. Fonte: acervo experimental do projeto; arquivo fig_04_throughpu
+t_boxplot.png.
+Figura 6.9: Taxas de violação de SLA por política. Valores coincidentes se sobrepõem; zero
+em uma taxa agregada não demonstra cumprimento de todos os prazos individuais. O nome do
+arquivo menciona violino, mas não se infere uma distribuição contínua a partir desses valores
+constantes. Fonte: acervo experimental do projeto; arquivo fig_05_sla_violation_violin.pn
+g.
+59
+
+
+=== PAGE 71 ===
+Figura 6.10: Vazão por semente em B0, B3 e B6. Os cinco pares B0–B3 pertencem à leitura
+da Fase 1; a extensão B3–B6 é preservada como referência contextual. A figura isolada não
+estabelece causalidade ou significância estatística. Fonte: acervo experimental do projeto; arquivo
+fig_06_paired_seed_plot.png.
+Tabela 6.3: Médias recalculadas dos cinco registros de cada política da Fase 1.
+Política
+Vazão (Mbps)
+Atraso (ms)
+SLA (%)
+Decisão (ms)
+B0: sem mediação
+86,00
+17,73
+36,70
+0,00
+B1: FIFO
+89,20
+15,13
+24,00
+0,04
+B2: prioridade fixa
+92,90
+13,43
+12,50
+0,08
+B3: H-RDL
+102,50
+11,23
+0,00
+0,12
+Fonte: 20 registros B0–B3 de per_seed_detailed_metrics.csv.
+60
+
+
+=== PAGE 72 ===
+94,1 Mbps, embora a reconfiguração diminua para 0,01 ações/s. Os pontos correspondem
+a decision_windows_analysis.csv; a leitura evidencia um compromisso entre as duas
+métricas, não uma janela universalmente ótima.
+Figura 6.11: Vazão no eixo esquerdo, em azul, e reconfiguração no direito, em vermelho. A linha
+verde marca 200 ms. As linhas ligam configurações da tabela, não instantes de uma série temporal.
+O CSV não identifica sementes por configuração; sua coluna P95 não é usada neste painel. Fonte:
+acervo experimental do projeto; arquivo fig_23_decision_windows_tradeoff.png.
+A Figura 6.12 representa cinco durações que somam 45,8 ms, de acordo com
+ue_registration_breakdown.csv. Os tempos acumulados são 4,2; 12,7; 29,1; 40,3 e
+45,8 ms. Esses procedimentos de preparação não são somados automaticamente aos 200 ms
+do ciclo decisório: os dois conjuntos descrevem limites temporais distintos.
+Os painéis de rádio, evolução temporal, segurança e relações entre indicadores são
+discutidos neste capítulo, junto às diferenças de cenário, janela e agregação. O Apêndice A
+reúne apenas os resultados preliminares de MAPPO e generalização e os aspectos de sua
+validação futura. A inclusão preserva o material original, mas não transforma títulos como
+“efeito causal”, “fronteira ótima” ou “garantia de segurança” em conclusões confirmadas.
+Em particular, o valor p = 0,0625 marcado como significativo no CSV de comparações
+não satisfaz o limiar de 5%.
+6.6
+Resultados consolidados e discussão do relatório
+científico
+Esta seção amplia a leitura dos dados com as sínteses de governança, sensibilidade temporal
+e desempenho por cenário organizadas no relatório científico [2]. As tabelas extraídas dos
+CSVs mantêm seus valores e unidades; a comparação entre políticas da Fase 1 continua
+61
+
+
+=== PAGE 73 ===
+Figura 6.12: Durações acumuladas conforme a tabela fornecida. A quinta etapa identifica
+subscrição e telemetria E2, distinta das etapas anteriores de preparação do atendimento. A
+soma aritmética não substitui os registros de início e fim de cada procedimento. Fonte: acervo
+experimental do projeto; arquivo fig_25_ue_registration_breakdown.png.
+sendo B0–B3. B4 (heurística contextual), B5 (grafo de conhecimento) e B6 (Safe-MAPPO)
+são apresentados como referências de continuidade, não como módulos obrigatórios da
+H-RDL.
+6.6.1
+Desempenho consolidado, equidade e níveis de agregação
+Tabela 6.4: Indicadores consolidados por política na base integrada.
+Política
+Mbps
+Atraso (ms)
+P95 (ms)
+SLA (%)
+Jain
+Decisão (ms)
+B0
+86,00
+17,73
+24,43
+36,7
+0,52
+0,00
+B1
+89,20
+15,13
+20,93
+24,0
+0,65
+0,04
+B2
+92,90
+13,43
+18,13
+12,5
+0,78
+0,08
+B3
+102,50
+11,23
+13,73
+0,0
+0,94
+0,12
+B4
+100,00
+12,03
+15,13
+2,5
+0,91
+0,45
+B5
+104,30
+10,73
+12,83
+0,0
+0,95
+0,85
+B6
+106,60
+9,63
+11,13
+0,0
+0,97
+1,84
+Fonte: baseline_summary.csv, base experimental de Barbosa [2].
+A equidade tabulada passa de 0,52 em B0 para 0,94 em B3. O ganho de vazão
+deve ser interpretado junto com atraso, SLA e custo de decisão, pois a escolha de uma
+política envolve mais de uma métrica. As Figuras 6.8–6.10 apresentam as distribuições e o
+pareamento disponíveis, sem criar replicações além das linhas identificadas.
+O relatório descreve também um contraste B0–B3 de 85,2 para 101,7 Mbps e de
+18,0 para 11,3 ms. Esses números são preservados como valores reportados, distintos das
+médias por semente de 86,00 e 102,50 Mbps e de 17,73 e 11,23 ms da Tabela 6.4. Não se
+substitui uma agregação pela outra sem identificar a janela e as execuções que a compõem
+62
+
+
+=== PAGE 74 ===
+[2].
+6.6.2
+Visão quantitativa dos 16 cenários
+Tabela 6.5: Síntese reportada de desempenho B3 nos cenários S0–S15.
+Cenário
+Vazão (Mbps)
+P95 (ms)
+SLA (%)
+Resolução
+S0
+100,0
+10,0
+0,0
+100,0%
+S1
+101,7
+13,8
+0,0
+100,0%
+S2
+98,5
+14,2
+0,0
+100,0%
+S3
+102,4
+12,5
+0,0
+100,0%
+S4
+96,0
+15,1
+0,0
+100,0%
+S5
+101,2
+13,2
+0,0
+100,0%
+S6
+99,8
+14,8
+0,0
+100,0%
+S7
+94,2
+18,5
+0,0
+100,0%
+S8
+103,1
+11,8
+0,0
+100,0%
+S9
+88,4
+24,0
+0,0
+100,0%
+S10
+92,7
+19,2
+0,0
+100,0%
+S11
+97,3
+8,4
+0,0
+100,0%
+S12
+95,0
+6,2
+0,0
+100,0%
+S13
+89,1
+21,5
+0,0
+100,0%
+S14
+94,8
+14,0
+0,0
+100,0%
+S15
+91,5
+16,3
+0,0
+100,0%
+Fonte: scenario_summary.csv, base experimental de Barbosa [2].
+Na síntese B3, as vazões variam de 88,4 a 103,1 Mbps e os P95 de 6,2 a 24,0 ms.
+As diferenças entre cenários descrevem condições distintas; não constituem um ranking de
+políticas sob a mesma carga. Os valores zero de SLA e 100% de resolução são campos do
+resumo: dependem da definição de violação e do universo de conflitos. Em S0, sem disputa,
+é especialmente importante distinguir sucesso de passagem de propostas de resolução de
+conflitos.
+A coluna B3 da Figura 6.13 corresponde à tabela de cenários; as colunas B0 e B6 do
+painel original não são reconstruídas a partir dela. A cobertura dos logs e suas falhas está
+descrita na Seção 5.4. A existência de um resumo numérico não substitui a identificação
+de uma execução concluída.
+6.6.3
+Evolução temporal de serviço e conflitos
+As Figuras 6.14, 6.15 e 6.16 acrescentam a dimensão temporal aos resumos de desempenho.
+A linha de intervenção organiza eventos; a vazão por fatia explicita que serviços distintos
+podem responder de modo diferente; a frequência de conflitos descreve a atividade de
+governança. A interpretação conjunta exige, porém, um mesmo relógio e uma execução
+identificada: o evento próximo de 100 s não pertence automaticamente ao recorte de 60 s,
+e a série S3 não deve ser incorporada às médias de S1.
+63
+
+
+=== PAGE 75 ===
+Figura 6.13: Mapa S0–S15 com B0, B3 e B6. A coluna B3 corresponde à síntese por cenário;
+as demais colunas exigem identificação dos registros que as sustentam. A linha S1 não deve ser
+confundida com médias de cinco sementes sem especificar a agregação. Fonte: acervo experimental
+do projeto; arquivo fig_08_scenario_baseline_heatmap.png.
+Figura 6.14: O eixo temporal situa a intervenção em torno de 100 s, enquanto o recorte S1
+descrito no texto termina em 60 s. É necessário identificar a execução desta linha temporal
+antes de associá-la às tabelas S1. As setas e marcas do painel não substituem timestamps
+correlacionados de controle, resposta e aplicação. Fonte: acervo experimental do projeto; arquivo
+fig_01_causal_timeline.png.
+64
+
+
+=== PAGE 76 ===
+Figura 6.15: Curvas identificadas como S3, com metas de serviço por fatia. O CSV por semente
+contém S1 e agregados por execução; não fornece a série temporal deste painel. A imagem não
+é usada como replicação adicional da comparação S1. Fonte: acervo experimental do projeto;
+arquivo fig_02_throughput_timeseries.png.
+Figura 6.16: Frequências de conflitos para B0 e B3. Um resumo de taxa não permite reconstruir
+esta sequência temporal; as observações por janela e a definição do denominador são necessárias
+para atribuir a queda à atuação da H-RDL. Fonte: acervo experimental do projeto; arquivo
+fig_14_conflict_timeline.png.
+65
+
+
+=== PAGE 77 ===
+A redução de conflitos após uma intervenção é compatível com coordenação, mas
+a comparação causal requer carga equivalente, definição dos eventos e referência sem
+mediação na mesma configuração. Essa distinção permite discutir os resultados mostrados
+sem transformar proximidade temporal em prova de causa.
+6.6.4
+Governança, reversões e segurança
+Tabela 6.6: Indicadores de governança declarados no relatório científico.
+Indicador
+B0
+B1
+B2
+B3
+Conflitos (eventos/s)
+4,2
+3,8
+2,1
+0,05
+Resolução (%)
+0
+35
+72
+100
+Reconfiguração (ações/s)
+1,00
+0,85
+0,40
+0,05
+Reversões em S5
+30
+22
+8
+0
+Acomodação (ms)
+∞
+12400
+3200
+190
+Ações inseguras aplicadas
+12
+8
+3
+0
+Fonte: seção de governança de Barbosa [2]. Valores reportados; a tabela original reúne métricas com
+escopos distintos e não identifica sementes por linha.
+Figura 6.17: Série identificada como S5, distinta do CSV agregado S1. A redução desenhada
+não é usada como prova de supressão de reversões sem histórico de ações e definição dos eventos
+contados. Fonte: acervo experimental do projeto; arquivo fig_15_action_churn.png.
+A queda tabulada de 1,00 para 0,05 ações/s corresponde a 95% de redução de recon-
+figuração. Essa métrica não equivale à contagem de reversões: uma ação legítima também
+altera a configuração. O histórico de ações é necessário para distinguir estabilização,
+bloqueio e perda de disponibilidade.
+Há uma diferença relevante de segurança: a tabela do relatório atribui 12, 8 e
+3 ações inseguras a B0, B1 e B2, enquanto baseline_summary.csv registra zero nas
+66
+
+
+=== PAGE 78 ===
+mesmas políticas. O painel da Figura 6.18 acompanha a primeira representação. As duas
+contagens não são combinadas como se fossem observações da mesma execução.
+Figura 6.18: O gráfico apresenta 12, 8 e 3 ações inseguras em B0, B1 e B2, enquanto a base
+integrada por semente registra zero para todas as políticas. As contagens não são adotadas como
+prova de eficácia até conciliar a execução e o critério de contagem. Fonte: acervo experimental
+do projeto; arquivo fig_17_safety_cost.png.
+O painel de segurança torna visível a diferença entre as duas contagens reportadas.
+Zero deve ser interpretado em relação às ações efetivamente propostas, bloqueadas e
+aplicadas; sem esse denominador, não é possível concluir que a ausência de ações inseguras
+tenha sido obtida sob a mesma exposição ao risco.
+6.6.5
+Acomodação, recuperação e escolha da janela
+Na coluna B3, os tempos de acomodação vão de 180 ms em S5 a 350 ms em S13. O campo
+de recuperação não identifica a política em seu cabeçalho; por isso, é mantido separado dos
+tempos de acomodação por baseline. Em S5, 180 ms é o valor específico de acomodação e
+190 ms o valor de recuperação. O valor de 190 ms da síntese geral de governança não deve
+ser aplicado indistintamente a todos os cenários.
+A Figura 6.19 amplia a discussão para janela e carga. Por conter três variáveis
+simultâneas, sua leitura precisa distinguir uma associação entre configurações de uma
+resposta temporal da mesma execução; não se deduz uma superfície de recuperação a
+partir da tabela por cenário.
+A Tabela 6.8 complementa a Figura 6.11 com SLA, P95 e CPU. A janela nominal
+de 200 ms equilibra as métricas entre as configurações tabuladas, mas não define um ótimo
+universal. O P95 de 11,3 ms desta tabela difere dos 13,8 ms da síntese S1: são campos de
+tabelas diferentes, cuja equivalência experimental não está demonstrada. Alongar a janela
+67
+
+
+=== PAGE 79 ===
+Tabela 6.7: Tempos reportados de acomodação e recuperação, em milissegundos.
+Cenário
+tsettle B0
+tsettle B3
+tsettle B6
+trecover
+S1
+∞
+190
+180
+210
+S2
+∞
+205
+195
+225
+S3
+1450
+195
+185
+215
+S4
+2200
+210
+190
+230
+S5
+∞
+180
+175
+190
+S6
+3500
+220
+205
+240
+S7
+∞
+310
+290
+320
+S8
+∞
+190
+180
+210
+S9
+4800
+340
+310
+360
+S10
+3200
+280
+260
+295
+S11
+2100
+230
+215
+245
+S12
+1800
+200
+190
+210
+S13
+5200
+350
+320
+380
+S14
+2600
+240
+225
+260
+S15
+∞
+260
+240
+275
+Fonte: recovery_and_settling_times.csv, base experimental de Barbosa [2].
+Tabela 6.8: Sensibilidade à janela de decisão: indicadores reportados.
+Janela (ms)
+Mbps
+P95 (ms)
+SLA (%)
+Ações/s
+CPU (%)
+50
+100,2
+14,2
+1,2
+0,42
+6,8
+100
+101,4
+12,0
+0,4
+0,18
+3,2
+200
+101,7
+11,3
+0,0
+0,05
+1,4
+500
+98,6
+16,5
+2,8
+0,02
+0,6
+1000
+94,1
+22,1
+7,5
+0,01
+0,3
+Fonte: decision_windows_analysis.csv, base experimental de Barbosa [2].
+68
+
+
+=== PAGE 80 ===
+Figura 6.19: Dispersão de janela de decisão, carga e tempo de recuperação. A tabela de
+recuperação é organizada por cenário e não fornece a combinação dos três eixos; a associação
+conjunta deve ser explicitada antes de interpretar gradientes ou causalidade. Fonte: acervo
+experimental do projeto; arquivo fig_21_3d_gradient_scatter_latency_recovery.png.
+69
+
+
+=== PAGE 81 ===
+reduz reconfigurações, mas pode elevar atraso e violações; minimizar apenas churn não
+basta.
+6.6.6
+Estágios de processamento e preparação do atendimento
+Tabela 6.9: Decomposição temporal detalhada reportada no pipeline integrado.
+Etapa
+Operação
+B3 (ms)
+B6 (ms)
+1
+Ingestão de telemetria
+0,45
+0,45
+2
+Extração de KPIs
+0,38
+0,38
+3
+Atualização de grafo
+0,62
+0,62
+4
+Raciocínio e decisão
+0,12
+1,84
+5
+Refinamento e barreiras
+0,28
+0,28
+6
+Codificação E2SM-RC
+0,52
+0,52
+7
+Despacho RMR/SCTP
+0,31
+0,31
+8
+Resposta ACK
+1,82
+1,82
+9
+Aplicação no escalonador
+0,50
+0,50
+10
+Observação posterior
+194,98
+193,26
+11
+Total nominal
+200,00
+200,00
+Fonte: cognitive_stages_breakdown.csv, base experimental de Barbosa [2].
+Figura 6.20: A tabela de origem soma 199,98 ms nas dez etapas, com total nominal de
+200 ms.
+As barras mostram durações por etapa; não comprovam eventos sequenciais sem
+sobreposição. A definição dos estágios e a presença de componentes contextuais devem ser
+conciliadas com o recorte determinístico.
+Fonte: acervo experimental do projeto; arquivo
+fig_22_cognitive_stages_waterfall.png.
+Os sete primeiros estágios B3 somam 2,68 ms; as dez durações somam 199,98 ms,
+enquanto a linha de total declara 200 ms. A diferença de 0,02 ms é mantida explícita, sem
+alterar uma etapa para fechar o total. A atualização de grafo pertence à decomposição
+70
+
+
+=== PAGE 82 ===
+integrada declarada; sua presença na tabela não comprova que seja necessária em toda
+variante determinística.
+O resumo em sete componentes e a decomposição em dez estágios usam fronteiras
+diferentes: codificação, despacho e observação não podem ser trocados entre elas. A
+soma aritmética não substitui timestamps nem comprova intervalos sem sobreposição. A
+Figura 6.21 preserva a visualização complementar dessa decomposição.
+Figura 6.21: Etapas correspondentes à tabela cognitiva, incluindo atualização de grafo e
+referência a actor-critic. A decomposição não coincide integralmente com o resumo de ciclo
+do recorte inicial; não se substituem componentes entre as duas definições. Fonte: acervo
+experimental do projeto; arquivo fig_12_latency_breakdown.png.
+Tabela 6.10: Procedimentos de preparação do atendimento e ativação da telemetria.
+Etapa
+Procedimento
+Duração (ms)
+Acumulado (ms)
+1
+Acesso aleatório PRACH/RAR
+4,2
+4,2
+2
+Estabelecimento RRC
+8,5
+12,7
+3
+Registro NAS e autenticação
+16,4
+29,1
+4
+Sessão PDU e caminho de dados
+11,2
+40,3
+5
+Subscrição e inicialização KPM
+5,5
+45,8
+Fonte: ue_registration_breakdown.csv, base experimental de Barbosa [2].
+As durações de preparação totalizam 45,8 ms e correspondem à Figura 6.12. A
+etapa de subscrição E2 é distinta do registro do UE. Esses tempos não são adicionados
+automaticamente ao ciclo de controle, pois representam procedimentos e limites temporais
+diferentes.
+6.6.7
+Relações entre indicadores e compromissos de desempenho
+A Figura 6.22 permite examinar conjuntamente recursos, serviço e reconfiguração. As
+relações entre pares ajudam a formular explicações para os ganhos, mas não isolam o
+71
+
+
+=== PAGE 83 ===
+efeito da política: configurações de canal, carga e janela podem influenciar várias métricas
+ao mesmo tempo. A análise quantitativa dessas relações requer linhas com medições
+conjuntas, não a combinação de médias de origens distintas.
+Figura 6.22: Associações entre vazão, atraso, SINR, PRBs e reconfiguração. A reprodução requer
+registros conjuntos com todos os campos; não se compõem observações de execuções distintas
+apenas porque pertencem à mesma base. Curvas de densidade são estimativas gráficas, não novas
+medições. Fonte: acervo experimental do projeto; arquivo fig_19_crosslayer_pairplot.png.
+As Figuras 6.23 e 6.24 apresentam compromissos entre vazão, atraso e SLA. A
+projeção em dois eixos facilita comparar o serviço; o terceiro eixo permite distinguir
+políticas que aparentam desempenho semelhante no plano. Os painéis são interpretados
+como comparações de pontos observados, não como demonstração de uma fronteira ótima.
+B4–B6 aparecem como referências contextuais; seus custos e mecanismos não são atribuídos
+ao núcleo determinístico.
+72
+
+
+=== PAGE 84 ===
+Figura 6.23: O traço original é chamado de fronteira ótima. Nos dois eixos mostrados, B5 e B6
+têm maior vazão que B3 com a mesma taxa zero de violações; ligar esses pontos não comprova
+uma fronteira de pontos não dominados. Outros custos não estão representados neste plano.
+Fonte: acervo experimental do projeto; arquivo fig_13_pareto.png.
+6.6.8
+Classificação dos conflitos e alcance da validação
+A Figura 6.25 concentra os valores na diagonal, indicando concordância elevada na
+classificação representada. Contudo, as diferenças em relação aos recalls tabulados impedem
+tratar as duas representações como a mesma avaliação sem identificar classes, amostras e
+denominadores. Acertar a classe do conflito é uma etapa distinta de escolher uma ação
+admissível e melhorar o serviço após sua aplicação.
+Os testes do relatório apresentam significância e intervalos que diferem de pair
+ed_comparisons.csv, no qual o contraste B0–B3 registra p = 0,0625. Por isso, as
+conclusões estatísticas do relatório não são transferidas automaticamente às cinco sementes
+disponíveis. A dissertação mantém as diferenças observadas, os painéis originais e as
+condições necessárias para reconciliar cada inferência com seus dados [2]. Os resultados
+preliminares de treinamento MAPPO e de generalização permanecem no Apêndice A,
+junto ao plano de ampliação e validação.
+6.7
+Consolidação complementar: equidade, energia e
+resiliência
+A avaliação combina a comparação identificada por sementes com os resumos complemen-
+tares de equidade, energia, escalas temporais e resiliência [2]. A distinção é importante:
+73
+
+
+=== PAGE 85 ===
+Figura 6.24: Representação de pontos de políticas em três eixos. O título menciona superfície
+de Pareto, mas o desenho de pontos discretos não demonstra uma superfície contínua ou uma
+solução globalmente ótima. As políticas adaptativas permanecem referências de continuidade.
+Fonte: acervo experimental do projeto; arquivo fig_20_3d_pareto_surface.png.
+74
+
+
+=== PAGE 86 ===
+Figura 6.25: A diagonal exibida (99,6; 98,9; 98,0; 98,7; 99,8%) difere dos recalls da tabela
+de classificação (99,8; 99,1; 97,9; 98,5; 100%). Faltam contagens por classe para reconciliar os
+valores. Classificação e predição de conflitos não comprovam, isoladamente, sucesso do controle.
+Fonte: acervo experimental do projeto; arquivo fig_24_implicit_explicit_conflict_confus
+ion.png.
+75
+
+
+=== PAGE 87 ===
+a base por semente contém 35 registros S1, enquanto os novos agregados não informam
+observações independentes adicionais. Para evitar repetição, equidade, escalas temporais e
+escores são apresentados apenas em gráficos com valores explícitos; as tabelas de energia e
+resiliência preservam campos adicionais necessários à discussão. As tabelas e figuras desta
+seção compartilham os arquivos dados/consolidado_*.csv. Os desenhos são adaptações
+estáticas dos números reportados, não reconstruções de séries temporais ou superfícies
+contínuas.
+6.7.1
+Equidade por serviço e no agregado
+0
+0.5
+1
+B6
+B3
+B2
+B1
+B0
+0,48
+0,62
+0,74
+0,98
+0,95
+Índice de Jain
+URLLC
+0
+0.5
+1
+B6
+B3
+B2
+B1
+B0
+0,56
+0,74
+0,82
+0,96
+0,93
+Índice de Jain
+eMBB
+0
+0.5
+1
+B6
+B3
+B2
+B1
+B0
+0,52
+0,68
+0,78
+0,97
+0,94
+Índice de Jain
+Agregado
+Figura 6.26: Equidade por serviço e no agregado. Painéis de pontos com a mesma escala de 0
+a 1, valores explícitos e destaque para B3; não há interpolação entre políticas. Fonte dos valores:
+dados/consolidado_jain.csv. Fonte: elaboração própria a partir dos valores reportados [2].
+O índice agregado passa de 0,52 em B0 a 0,94 em B3. A interpretação por serviço
+exige identificar o conjunto de usuários e o denominador empregado; o índice de um
+conjunto reunido não equivale necessariamente à média de índices de seus subconjuntos.
+Além disso, B1 aparece com 0,68 neste resumo e com 0,65 no CSV por semente. Não se
+substituem esses valores sem identificar a população e a janela. Os agregados não bastam
+para reproduzir a trajetória de J(t) ou provar estabilidade longitudinal.
+6.7.2
+Potência e desempenho no compromisso EEVS
+O modelo de potência declarado é Ptotal = NTRX(P0 + αPtx). Sua reprodução exige
+parâmetros, unidades e tratamento da suspensão. A razão entre vazão em Mbps e potência
+em watts fornece Mbit/J; não equivale à energia consumida em uma execução sem o
+intervalo de integração.
+76
+
+
+=== PAGE 88 ===
+Tabela 6.11: Potência, vazão e eficiência energética; EE em Mbit/J.
+Política
+W
+Mbps
+EE reportada
+EE calculada
+SLA (%)
+B0
+223,5
+85,2
+0,381
+0,381
+36,7
+B1
+215,2
+89,4
+0,415
+0,415
+28,0
+B2
+198,0
+94,1
+0,475
+0,475
+15,0
+B3
+154,2
+101,7
+0,659
+0,660
+0,0
+B6
+148,6
+105,8
+0,712
+0,712
+0,0
+Fonte: transcrição dos valores reportados por Barbosa [2]; dados em dados/consolidado_energia.csv.
+140
+150
+160
+170
+180
+190
+200
+210
+220
+230
+80
+90
+100
+110
+B0
+B1
+B2
+B3
+B6
+Potência reportada (W)
+Vazão reportada (Mbps)
+Figura 6.27: Pontos reportados de potência e vazão. Não se infere uma superfície 3D a partir
+dos cinco agregados nem se incluem cotas de PRBs não identificadas na tabela. Fonte: elaboração
+própria a partir dos valores reportados [2].
+77
+
+
+=== PAGE 89 ===
+A passagem de 223,5 para 154,2 W corresponde a redução de 69,3 W, ou 31,01%.
+Para B3, a razão 101, 7/154, 2 resulta em 0,659533 Mbit/J, arredondada a 0,660; o valor
+reportado é 0,659. Essa diferença fica explícita na tabela. As vazões e taxas de SLA deste
+resumo energético não substituem os agregados por semente de S1.
+6.7.3
+Escalas temporais de controle
+10−1
+101
+103
+105
+Algoritmo
+Nominal
+Orçamento
+60000
+5000
+10
+Tempo (ms)
+Non-RT
+10−1
+101
+103
+105
+Algoritmo
+Nominal
+Orçamento
+1000
+200
+0,12
+Tempo (ms)
+Near-RT
+10−1
+101
+103
+105
+Algoritmo
+Nominal
+Orçamento
+5
+1
+0,1
+Tempo (ms)
+RAN local
+Figura 6.28: Orçamento declarado, duração nominal e custo algorítmico em escalas distintas.
+Os eixos horizontais são logarítmicos e apresentam os valores de cada componente em ms. Os
+valores representam o perfil de projeto, não limites normativos universais. Fonte: elaboração
+própria a partir dos valores reportados [2].
+O custo decisório de 0,12 ms corresponde a 0,06% do ciclo nominal de 200 ms. A
+razão não inclui automaticamente fila, janela de agrupamento, transporte e aplicação. As
+camadas Non-RT e RAN local contextualizam a organização temporal, sem demonstrar
+implementação de rApps e dApps pela avaliação determinística apresentada.
+6.7.4
+Falhas E2: detecção, fallback e recuperação
+Tabela 6.12: Resumo de resiliência E2 em S7.
+Indicador
+B0
+B3
+B6
+Timeout (ms)
+5000
+1000
+1000
+Fallback (ms)
+—
+310
+290
+Retransmissão (%)
+45,2
+0,0
+0,0
+Vazão na falha (Mbps)
+52,4
+96,0
+97,5
+Recuperação (ms)
+8200
+180
+175
+Ações inseguras
+12
+0
+0
+Fonte: transcrição dos valores reportados por Barbosa [2]; dados em
+dados/consolidado_resiliencia.csv.
+78
+
+
+=== PAGE 90 ===
+B0
+B3
+B6
+102
+103
+104
+8200
+180
+175
+Recuperação (ms; escala logarítmica)
+Figura 6.29: Recuperação pós-restauração reportada no resumo S7. A escala logarítmica
+permite comparar 8200, 180 e 175 ms sem ocultar os menores valores. Fonte: elaboração própria
+a partir dos valores reportados [2].
+O arquivo e2_fault_resilience_metrics.csv identifica a recuperação como
+posterior à restauração do enlace. Ela deve ser distinguida da detecção de timeout e do
+acionamento de fallback. O valor B3 de 180 ms difere dos 320 ms do campo de recuperação
+na síntese por cenário, e 310 ms designa fallback neste resumo. A associação entre essas
+medidas depende de sua execução e de seus eventos de referência.
+O relatório situa a interrupção entre 10 e 15 s, mas o log S7 enviado contém uma
+falha de inicialização. A tabela adicional não torna esse log uma execução bem-sucedida:
+os registros da intervenção e da restauração ainda precisam ser associados ao resumo. A
+descrição de timeout TCP em um ensaio apresentado como SCTP também exige conciliação
+do transporte.
+A queda de 85,2 para 52,4 Mbps é 38,50%, não 45%, usando aquele valor nominal
+como denominador. Para B3, a passagem de 101,7 a 96,0 Mbps corresponde a 5,60%. As
+contagens de ações inseguras desse ensaio não são combinadas com os zeros do CSV S1
+como se descrevessem a mesma execução.
+6.7.5
+Comparação multidimensional
+Os escores são apresentados por dimensão, sem somá-los em uma nota global. Faltam a
+regra de normalização e os pesos para uma agregação reproduzível. O escore energético
+de 0,92 de B3 não é sua eficiência em Mbit/J; o escore de segurança igual a 1 não é uma
+probabilidade estimada de ausência de falhas. B6 permanece comparação adaptativa de
+continuidade, fora do núcleo determinístico da Fase 1.
+79
+
+
+=== PAGE 91 ===
+Vazão normalizada
+0,65
+0,72
+0,82
+0,96
+1,00
+Redução de atraso
+0,40
+0,52
+0,68
+0,86
+0,95
+Conformidade SLA
+0,63
+0,70
+0,85
+1,00
+1,00
+Jain
+0,52
+0,68
+0,78
+0,94
+0,97
+Supressão de churn
+0,05
+0,20
+0,60
+0,95
+0,90
+Segurança
+0,10
+0,40
+0,75
+1,00
+1,00
+Eficiência energética
+0,55
+0,62
+0,70
+0,92
+0,96
+Baixo custo decisório
+1,00
+0,99
+0,98
+0,99
+0,82
+B0
+B1
+B2
+B3
+B6
+Figura 6.30: Matriz dos oito escores reportados, em escala de 0 a 1. A transformação em
+matriz preserva os números sem atribuir à área de um radar o significado de superioridade global.
+Fonte: elaboração própria a partir dos valores reportados [2].
+6.7.6
+Consolidação das evidências de integração
+O documento de auditoria do projeto declara aprovação de interfaces, causalidade, segu-
+rança e reprodução [2]. Essas declarações são distinguidas das verificações realizadas sobre
+os artefatos disponíveis, conforme a Tabela 6.13. A presença de hashes não é, isoladamente,
+Tabela 6.13: Declarações de integração e evidências necessárias à sua confirmação.
+Objeto
+Declaração do projeto
+Verificação correspondente
+Interface E2
+Perfil E2AP/KPM/RC e descoberta
+dinâmica
+PDUs, capacidades anunciadas e
+respostas correlacionadas.
+Ciclo de controle
+Ligação de KPM anterior e
+posterior
+Instantes de decisão, envio,
+aplicação e observação.
+Segurança
+Ausência de ações inseguras
+Eventos, denominadores, falhas
+exercitadas e limites do envelope.
+Reprodutibilidade
+Manifestos e checksums
+Integridade dos arquivos e
+reprodução da análise identificada.
+Estatística
+Significância e efeito elevados
+Pares por cenário, método, amostra
+e recálculo dos testes.
+certificação de conformidade ou prova causal. A base de cinco pares continua exigindo
+cautela: a comparação bilateral disponível resulta em p = 0, 0625. Não se transfere a ela a
+afirmação genérica de p < 0, 001 do relatório de auditoria.
+6.8
+Consistência, segurança e alcance dos resultados
+A tabela integrada de baselines apresenta médias de B2 de 13,43 ms de atraso, 12,5% de
+violações e 0,08 ms de decisão, em concordância com o CSV de cinco sementes. O registro
+80
+
+
+=== PAGE 92 ===
+individual 1001 apresenta 13,5 ms, 12,5% e 0,08 ms. Por isso, cada figura identifica se
+representa uma execução ou uma agregação; essas unidades não são intercambiáveis.
+O exportador calcula parte das estatísticas a partir dos resumos por execução e
+mantém valores declarados em outras tabelas, incluindo hipóteses e cenários [2]. Não
+são transferidos seus valores de significância para esta análise. Além disso, o manifesto
+e o registro de métricas de uma mesma execução apresentam identificadores de versão
+diferentes, o que limita a reprodução do ambiente [2].
+Para segurança, o CSV integrado por semente e a tabela de baselines registram zero
+ações inseguras em todas as políticas. A Figura 6.18, discutida neste capítulo, apresenta
+contagens diferentes para B0–B2. A origem dessa diferença deve ser conciliada antes de usar
+o painel para demonstrar eficácia das barreiras. A presença de um campo de verificação do
+ciclo também não substitui correlação de mensagens, confirmação de aplicação e observação
+externa.
+6.9
+Síntese dos achados e das hipóteses
+A base integrada permite discutir três achados descritivos: benefício adicional frente à
+prioridade fixa nas cinco sementes; associação entre melhor desempenho e menor recon-
+figuração; e participação reduzida da decisão no total declarado do ciclo. Os limites de
+inferência são distintos para cada hipótese:
+H1 — benefício: indício favorável nas cinco comparações pareadas, mas ainda incon-
+clusivo para pacotes URLLC pela ausência de denominador por serviço e porque o
+teste bilateral exato resulta em p = 0,0625.
+H2 — estabilidade: redução reportada de reconfigurações, sem ablação que isole me-
+mória e barreiras; a atribuição causal permanece em aberto.
+H3 — viabilidade: custo decisório reportado reduzido, mas sem distribuição da latência
+completa sob carga; o atendimento do orçamento de chegada até despacho não está
+demonstrado.
+Assim, os resultados integram a dissertação como análise quantitativa da base publicada,
+com cálculos e figuras reproduzíveis a partir dos resumos. A confirmação depende de
+conciliar versões, traces, denominadores e tabelas estatísticas antes da campanha canônica.
+81
+
+
+=== PAGE 93 ===
+Capítulo 7
+Reprodutibilidade e Validade dos
+Resultados
+7.1
+Cadeia de evidências
+Cada execução deverá ligar código e configuração a traces, métricas e figuras. O manifesto
+incluirá commit do projeto e dependências, versões E2AP/KPM/RC, imagem de container,
+semente e streams, cenário, política, hardware, horários, código de saída e origem dos
+dados. Hashes verificarão integridade; não serão usados como prova autônoma de que
+houve uma simulação.
+Dados demonstrativos e experimentais terão diretórios, marcadores e caminhos
+de análise distintos. Uma medição ausente será ausente: não receberá valor sorteado,
+constante favorável ou zero por conveniência. As figuras confirmatórias serão produzidas
+somente a partir dos dados da campanha identificada. A rotina de consolidação deverá
+falhar diante de mistura de versões ou de campos obrigatórios ausentes.
+Os testes incluirão pequenos conjuntos conhecidos, com bytes, atrasos e contagens
+calculáveis manualmente. A rotina que verifica a extração não deverá gerar a mesma
+evidência que pretende autenticar. Parte da campanha será repetida em ambiente limpo,
+registrando divergências e tolerâncias numéricas.
+O repositório disponibiliza pontos de entrada para essa sequência:
+make
+verify-provenance verifica a origem declarada dos artefatos;
+make gate1-check
+inspeciona a estrutura mínima; make reproduce-paper prepara a reprodução com 30
+sementes; e make run-campaign-s0-s8 executa a campanha confirmatória dos cenários
+nucleares.
+Esses alvos são interfaces operacionais, não resultados adicionais desta
+dissertação. Sua execução deverá produzir uma árvore identificada de manifestos, logs,
+métricas e hashes antes que as novas observações sejam combinadas às análises existentes
+[2].
+82
+
+
+=== PAGE 94 ===
+7.2
+Ameaças à validade
+A validade interna depende de não alterar simultaneamente coordenação, carga e recur-
+sos. Baselines deliberadamente patológicos serão distinguidos de condições usuais. A
+ordem randomizada e os streams controlados reduzirão confundimentos, mas diferenças de
+plataforma e assincronismo ainda precisarão de inspeção.
+A validade de construção exige definir conflito, resolução, segurança e benefício
+com denominadores e critérios distintos. Um modelo que prevê degradação pode errar; por
+isso haverá avaliação de falsos positivos e falsos negativos. A validade estatística depende
+de replicações independentes, controle de múltiplas comparações e divulgação de falhas,
+não apenas de valores de significância.
+A validade externa ficará restrita aos cenários e perfis testados. Simulação, trans-
+porte em containers e rádio físico apresentam condições diferentes. A reprodução em outra
+distribuição de RIC será uma extensão condicionada à disponibilidade, sem comprometer
+o objetivo mínimo de demonstrar um perfil completo e documentado.
+7.3
+Limitações de consolidação e alternativas
+Tabela 7.1: Riscos e respostas planejadas.
+Risco
+Resposta e limite da conclusão
+Incompatibilidade entre codecs e nó E2
+Congelar perfil, validar bytes externos e
+registrar gates não atendidos. Não substituir
+integração por mock sem identificação.
+Custo excessivo da campanha
+Usar piloto, cenário principal e expansão por
+etapas; preservar replicações e declarar
+redução de escopo.
+Ganho inexistente frente à prioridade
+Reportar o resultado e delimitar condições em
+que a solução simples é suficiente.
+Dados insuficientes para cauda ou energia
+Instrumentar a coleta ou retirar a afirmação
+correspondente; não estimar silenciosamente.
+Mudança de dependências
+Fixar commits e imagens; revalidar antes de
+combinar campanhas.
+O uso inicial será de tráfego e usuários simulados. Eventual emprego de traces
+operacionais exigirá autorização, minimização de dados e avaliação dos procedimentos
+institucionais aplicáveis. Essa expansão não faz parte da execução mínima aqui proposta.
+83
+
+
+=== PAGE 95 ===
+Capítulo 8
+Perspectivas de Consolidação
+8.1
+Evidência experimental e comparadores
+A prioridade é completar a ligação entre os resumos analisados e os traces que lhes dão
+origem. Isso inclui conciliar versões, definir janelas de medição, identificar os denominadores
+de SLA e segurança e verificar as etapas de envio, resposta, aplicação e observação. A
+reprodução da análise tabular já está separada da reprodução do simulador, evitando
+confundir as duas atividades.
+A ampliação dos comparadores exige novas observações pareadas sob condições
+equivalentes. FIFO e política por limiares permanecem relevantes, mas não recebem valores
+inferidos de B0 ou B2. Ablações de memória, detecção indireta e utilidade permitem
+distinguir benefícios da arbitragem daqueles produzidos por barreiras ou agrupamento
+temporal. Ensaios de sobrecarga e falha devem acompanhar essa expansão.
+8.2
+Extensões de cenário e produtos científicos
+TVS, EEVS e mobilidade ampliam a análise para conflitos indiretos e temporais. A análise
+energética dispõe de agregados de potência e de uma forma de modelo declarada; sua
+reprodução requer parâmetros, escopo e duração. Vazão e ocupação de PRBs, isoladamente,
+não substituem consumo. Também são necessários resultados por serviço para discutir
+URLLC sem transferir conclusões de indicadores agregados.
+Os produtos desta versão incluem a dissertação, os diagramas, a base extraída
+de métricas por execução e a rotina de geração dos resultados. O pacote experimental
+completo, com configuração, traces e reprodução em ambiente limpo, permanece um
+produto a consolidar. A evolução CA-RDL/MAPPO e um testbed físico são continuidades
+possíveis, não evidências adicionais da Fase 1.
+84
+
+
+=== PAGE 96 ===
+Capítulo 9
+Conclusão
+A H-RDL organiza a coordenação multi-xApp por percepção, arbitragem determinística e
+validação independente antes do despacho. Esta dissertação relaciona essa arquitetura à
+base integrada S1 e aos resumos complementares, preservando a diferença entre escolher
+uma ação, aplicá-la e observar seu efeito.
+Nas cinco sementes correspondentes, a H-RDL apresenta maior vazão e menor
+atraso que prioridade fixa, com maior custo decisório e redução de 87,5% na taxa de
+reconfiguração. A decomposição temporal indica que o processamento decisório é uma
+pequena parcela do ciclo declarado. Essas observações sustentam a discussão de benefício,
+estabilidade e custo, mas ainda não isolam causalmente memória, arbitragem e barreiras
+sem ablações identificadas.
+A análise complementar relaciona os ganhos de serviço aos resumos de equidade,
+energia e recuperação. A redução reportada de potência de 223,5 para 154,2 W equi-
+vale a 31,01%, sem constituir medição em hardware ou ganho generalizável a todas as
+configurações.
+A principal limitação é a correspondência ainda incompleta entre resumos, versões
+e evidência externa.
+A base por semente declara o SHA f99483a, enquanto outros
+documentos citam identificadores distintos; as tabelas estatísticas também divergem
+quanto à significância. A confirmação das hipóteses depende de uma campanha canônica,
+denominadores por serviço, mais contrastes pareados e ablações.
+A primeira versão
+apresenta resultados quantitativos delimitados, sem confundir ausência reportada de
+violações com garantia universal de segurança.
+85
+
+
+=== PAGE 97 ===
+Referências Bibliográficas
+[1] Cezary Adamczyk and Adrian Kliks. Conflict mitigation framework and conflict
+detection in o-ran near-rt ric. arXiv preprint arXiv:2305.07117, 2023. doi: 10.48550
+/arXiv.2305.07117.
+[2] George Barbosa. XApp-RDL-F1: Arquitetura determinística e segura para mitigação
+de conflitos entre xApps no O-RAN Near-RT RIC. https://github.com/georgeb
+arbosa3090/XApp-RDL-F1/, 2026.
+[3] Pietro Brach del Prever, Salvatore D’Oro, Leonardo Bonati, Michele Polese, Maria
+Tsampazi, Heiko Lehmann, and Tommaso Melodia. PACIFISTA: Conflict evaluation
+and management in open RAN. IEEE Transactions on Mobile Computing, 24(10):
+10590–10605, 2025. doi: 10.1109/TMC.2025.3570632. URL https://arxiv.org/ab
+s/2405.04395.
+[4] Matheus Fagundes de Souza Dória. Solução para monitoramento adaptativo de
+métricas de redes open RAN. Dissertação de mestrado em engenharia elétrica e de
+computação, Universidade Federal do Rio Grande do Norte, Natal, 2025. Agosto de
+2025. PDF enviado ao Prisma: Solucaomonitoramentoadaptativo_Doria_2025.pdf.
+[5] ETSI. Etsi ts 104 039 v4.0.0: E2 interface: Application protocol (o-ran.wg3.e2ap-
+r003-v04.00). Technical report, European Telecommunications Standards Institute,
+2024. URL https://www.etsi.org/deliver/etsi_ts/104000_104099/104039/04
+.00.00_60/ts_104039v040000p.pdf.
+[6] Can Kurtulan, Onur Kalinagac, Erdinc Ozdemir, Burak Gorkemli, Gokhan Karakus,
+Semih Aktas, and Mehmet Basaran. ML-driven network orchestrator for 6G O-RAN:
+Resolving multi-xapp conflicts in near-RT RIC. ITU Journal on Future and Evolving
+Technologies, 7(2):145–159, 2026. URL https://www.itu.int/dms_pub/itu-s/o
+pb/jnl/S-JNL-VOL7.ISSUE2-2026-A11-PDF-E.pdf. Junho de 2026. Publicação
+original correspondente ao PDF enviado ao Prisma.
+[7] O-RAN Software Community. Ric message router – rmr: User’s guide. https:
+//docs.o-ran-sc.org/projects/o-ran-sc-ric-plt-lib-rmr/en/stable/use
+r-guide.html, 2026. Acesso em: 10 set. 2026.
+86
+
+
+=== PAGE 98 ===
+[8] Andrey A. Miranda de Oliveira, Joao Pedro Albuquerque, Cleverson Veloso Nahum,
+Daniel Campos, Kleber V. Cardoso, Aldebaro Klautau, and Jose F. de Rezende.
+Enabling ns-3 simulations integrated with latest versions of open ran near-rt rics. In
+XLIII Simposio Brasileiro de Telecomunicacoes e Processamento de Sinais (SBrT
+2025), 2025. doi: 10.14209/sbrt.2025.1571157244.
+[9] Joao F. Santos, Alexandre Huff, Daniel Campos, Kleber V. Cardoso, Cristiano B.
+Both, and Luiz A. DaSilva. Managing O-RAN networks: xapp development from zero
+to hero. https://arxiv.org/abs/2407.09619, 2025. Versão do tutorial enviada ao
+Prisma: Dev x App zero to hero.pdf; manuscrito com revisão e aceitação indicadas
+em 2025.
+[10] Abdul Wadud, Fatemeh Golpayegani, and Nima Afraz. xapp-level conflict mitigation
+in o-ran, a mobility driven energy saving case. arXiv preprint arXiv:2411.03326, 2025.
+doi: 10.48550/arXiv.2411.03326.
+87
+
+
+=== PAGE 99 ===
+Apêndice A
+Resultados preliminares de MAPPO
+e generalização
+A continuidade adaptativa do projeto já dispõe de resultados preliminares, representados
+pelos painéis de treinamento MAPPO e de avaliação em novas sementes apresentados neste
+apêndice. Esses resultados ampliam as questões investigadas na Fase 1, mas não integram
+a contribuição determinística da H-RDL. As curvas são preservadas como resultados
+reportados; sua validação será expandida com os registros e comparadores específicos de
+aprendizado.
+A.1
+Aprendizado e evolução da recompensa
+A Figura A.1 apresenta a evolução da recompensa durante o treinamento. A trajetória
+permite discutir a adaptação da política, mas estabilização visual da recompensa não
+equivale, isoladamente, a convergência garantida, segurança ou atendimento de SLA. A
+interpretação deve considerar a função de recompensa, o protocolo de avaliação e as
+repetições que originam a faixa de dispersão.
+A.2
+Generalização e novas condições de avaliação
+A Figura A.2 apresenta resultados preliminares de generalização para sementes adicionais.
+Esse conjunto será ampliado para cenários, cargas e condições de canal não utilizados no
+treinamento. As sementes do painel não são contadas como novas replicações da base S1
+analisada no corpo do trabalho enquanto seus registros não estiverem associados à mesma
+extração de métricas.
+88
+
+
+=== PAGE 100 ===
+Figura A.1: Curva de recompensa por episódio e faixa rotulada como desvio-padrão. Pertence
+ao aprendizado adaptativo, fora da contribuição obrigatória da Fase 1; logs de treinamento
+e repetições são necessários para reconstruir a faixa e avaliar convergência. Fonte: acervo
+experimental do projeto; arquivo fig_16_mappo_convergence.png.
+Figura A.2: O eixo identifica sementes 1006–1015, ausentes no CSV por semente utilizado nesta
+versão, que contém 1001–1005. A definição do desvio e o limite desenhado de 1 Mbps exigem
+os respectivos dados e critério experimental. Fonte: acervo experimental do projeto; arquivo
+fig_18_generalization_gap.png.
+89
+
+
+=== PAGE 101 ===
+A.3
+Expansão futura e aspectos de validação
+A próxima etapa aprofundará quatro aspectos complementares:
+Reprodução do treinamento: associar curvas aos logs, sementes, configurações, check-
+points, função de recompensa e critérios de parada; distinguir episódios de treina-
+mento de repetições independentes.
+Avaliação fora do treinamento: separar os conjuntos de treinamento, seleção e teste;
+avaliar novas cargas, topologias e perturbações sem ajustar a política aos resultados
+do teste.
+Benefício incremental: comparar a política adaptativa com B3 sob condições equiva-
+lentes, utilizando pares identificados e ablações que separem aprendizado, memória e
+barreiras de segurança.
+Segurança e custo operacional: medir ações propostas, bloqueadas e aplicadas, vio-
+lações por serviço, custo de inferência e latência até despacho; verificar também a
+recuperação após falhas e os efeitos observados na RAN.
+Essa expansão permitirá avaliar se os benefícios preliminares persistem fora das condições
+de treinamento e se compensam o custo adicional de adaptação. Os resultados deste
+apêndice não alteram o alcance das conclusões sobre a H-RDL determinística.
+90
+
+
+=== PAGE 102 ===
+Apêndice B
+Registro mínimo por execução
+Grupo
+Conteúdo mínimo
+Identificação
+Experimento, cenário, política, semente e streams, repetição,
+origem experimental, início e término com data, hora e fuso.
+Versões
+Projeto, ns-3, 5G-LENA, NORI/E2Sim, RIC, bibliotecas,
+codecs e imagens de container.
+Configuração
+Canal, numerologia, PRBs, potência e escopo, mobilidade,
+carga e duração de medição.
+Entrada
+Propostas, prazos, identificação das xApps e telemetria
+externa bruta e decodificada.
+Decisão
+Estado, regras e pesos, conflitos, escolha, intervenção das
+barreiras e motivo de não envio.
+Atuação
+Payloads de controle, identificadores, envio, ACK/Failure,
+configuração aplicada e timeouts.
+Tempo
+Domínio de relógio e instantes de chegada, seleção, envio,
+aplicação e observação posterior.
+Resultados
+Pacotes, bytes, atrasos individuais/histogramas, ener-
+gia/modelo, extração e figuras.
+Integridade
+Hashes, logs, comando, dependências, término, falhas e
+justificativas de exclusão.
+91
+
+
+=== PAGE 103 ===
+Apêndice C
+Fontes e organização do material de
+apoio
+O artigo H-RDL e a literatura fundamentam a arquitetura e a metodologia. As figuras de
+cenário e os diagramas descrevem conceitos e responsabilidades. Os resultados quantitativos
+utilizam os registros S1 e a rotina de cálculo descritos no Capítulo 6. A base extraída, suas
+fontes e os limites de agregação estão documentados em dados/LEIA-ME_resultados.md.
+O manifesto e os logs deverão registrar a versão completa do código, as dependências,
+a configuração e os instantes relevantes.
+A documentação de apoio será organizada
+por função: fundamentação, referência de implementação, configuração experimental e
+evidência de medição.
+92
+
+
+=== PAGE 104 ===
+Apêndice D
+Classificação do material de apoio
+Família de material
+Arquivos representativos
+Incorporação e limite
+Publicações de
+infraestrutura
+DevxAppzerotohero.pdf; artigo NORI
+enviado.
+Engenharia de xApps e integração; não
+demonstram o ciclo específico da
+H-RDL.
+Monitoramento
+Solucaomonitoramentoadaptativo_D
+oria_2025.pdf.
+Custo da coleta, idade do contexto e
+sensibilidade; resultados energéticos não
+transferidos.
+Orquestração MLO
+PDF original ITU e versão em
+português enviada.
+Delimitação da novidade e contraste
+com predição; tratados como o mesmo
+trabalho, não duas evidências.
+Núcleo H-RDL
+sbrc_rdl_phase1.tex;
+trabalho_xapp_rdl_f1.tex;
+XappRDLF1_v1.1.tex.
+TVS/EEVS, memória, busca conjunta e
+limites; versões preservadas.
+Sínteses e
+arquitetura
+main.tex; Arquitetura.tex; trabal
+hos_relacionados_xapp_rdl.tex.
+Mapeamento conceitual e continuidade
+de fases; sem atribuir toda a
+arquitetura híbrida à Fase 1.
+Projetos anteriores
+PROJETODEDISSERTAÃĞÃČO-V3.pdf;
+projeto CA-RDL.
+Organização entre problema, método e
+evidências; sem importar LLM/MARL
+para o escopo obrigatório.
+Relatórios e dados
+Registros identificados da campanha
+experimental.
+Base dos resultados após conferência de
+origem, unidades e agregação.
+Apresentações
+Resultados F1/F2 e prism-uploads/A
+presentaÃğÃčov1.tex.
+Organização visual e vocabulário; não
+contam como novas replicações.
+Imagens e
+esquemas
+Pastas de figuras H-RDL, CA-RDL,
+uploads e figuras_cenarios/.
+Topologia reutilizada; diagramas
+operacionais redesenhados; painéis
+numéricos condicionados a dados de
+origem.
+Bibliografias
+Bases .bib do projeto e dos artigos.
+Pistas de busca e identificação; somente
+referências citadas integram a
+bibliografia final.
+Os esquemas de arquitetura e cenário têm função ilustrativa. A evidência experi-
+mental exige registros de medição associados às execuções. Ilustrações de FR3, RIS, ISAC
+e arquiteturas de Fase 3 foram mantidas como material de continuidade, sem inserção na
+configuração experimental obrigatória. Algumas imagens incluem limites ou afirmações
+normativas próprios de sua versão; esses rótulos não foram adotados automaticamente.
+O aproveitamento do acervo foi orientado pela função de cada fonte no argumento
+93
+
+
+=== PAGE 105 ===
+científico, não pela inclusão indiscriminada de todas as páginas e figuras. Para a versão
+final, cada painel de resultado deverá indicar a campanha que o sustenta; para esquemas
+conceituais, a legenda deverá continuar distinguindo desenho proposto de medição.
+94
+
+

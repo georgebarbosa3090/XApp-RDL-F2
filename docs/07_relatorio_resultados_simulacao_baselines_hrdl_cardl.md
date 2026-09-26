@@ -74,6 +74,8 @@ A tabela a seguir consolida as métricas empíricas extraídas das 35 rodadas mu
 | **B5** | Context Knowledge Graph | 104,3 | 10,73 | 12,83 | 0,0% | 0,95 | 0,85 ms | 0,06 | 151,8 W | 0,687 | 0 |
 | **B6** | **CA-RDL (Fase 2 Safe-MAPPO)** | **106,6** | **9,63** | **11,13** | **0,0%** | **0,97** | **1,84 ms** | **0,10** | **148,0 W** | **0,717** | **0** |
 
+![Figura 6.1 - Comparação multissemente em S1: políticas determinísticas B0-B3 com IC de 95%](figures/03_resultados_e_benchmarks/comparacao_multissemente_b0_b3.png)
+
 ---
 
 ## 3. Matriz Comparativa Exhaustiva de Todos os Cenários (S0 a S15)
@@ -198,6 +200,10 @@ Os testes pareados com 5 sementes comprovam significância estatística na evolu
 | **B3 $\to$ B6 (CA-RDL)** | Sobrecarga de Decisão | +1,72 ms | +1433,33% | [1,72 ; 1,72] | $p = 0,0625$ | **Significativo** |
 
 > **Nota Metodológica:** O tamanho de efeito pareado de Cohen entre B0 e B3 atinge **$d = 49,85$**, indicando magnitude extrema de separação experimental sem qualquer sobreposição de caudas entre a condição de colisão e a condição governada.
+
+![Figura 6.6 - Pareamento canônico B1-B3 nas sementes 1001-1005 (Wilcoxon p = 0.0625)](figures/03_resultados_e_benchmarks/pareamento_b1_b3.png)
+
+![Figura 6.9 - ECDF dos resumos de latência decisória B1-B6 em relação ao envelope de 10 ms](figures/03_resultados_e_benchmarks/fig_03_latency_ecdf.png)
 
 ---
 
