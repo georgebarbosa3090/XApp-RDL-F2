@@ -49,8 +49,11 @@
   #align(right)[
     #block(width: 60%, inset: 10pt)[
       #set text(size: 10.5pt)
-      #set par(first-line-indent: 0cm, justify: true)
-      Dissertação de Mestrado apresentada ao Programa de Pós-Graduação em Ciência da Computação (PPGCOMP) do Instituto de Tecnologia da Universidade Federal do Pará (UFPA), como requisito parcial para obtenção do grau de Mestre em Ciência da Computação.            *Área de Concentração:* Sistemas de Computação e Redes de Comunicação      *Orientador:* Prof. Dr. Carlos Renato Lisboa Francês      *Release Homologada no GitHub:* `v1.2.0-certified` (Commit `6569c7b` / `f1caed7`)
+      Dissertação de Mestrado apresentada ao Programa de Pós-Graduação em Ciência da Computação (PPGCOMP) do Instituto de Tecnologia da Universidade Federal do Pará (UFPA), como requisito parcial para obtenção do grau de Mestre em Ciência da Computação.\
+      \
+      *Área de Concentração:* Sistemas de Computação e Redes de Comunicação\
+      *Orientador:* Prof. Dr. André Riker\
+      *Release Homologada no GitHub:* `v1.2.0-certified` (Commit `6569c7b` / `f1caed7`)
     ]
   ]
   #v(4.5cm)

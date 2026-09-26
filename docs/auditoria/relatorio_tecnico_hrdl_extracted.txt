@@ -1,0 +1,1811 @@
+=== PAGE 1 ===
+Relatório Técnico Detalhado da Fase 1
+H-RDL
+Governança determinística de conflitos multi-xApp, cenários, parâmetros,
+métricas, avaliação e caminho para testbed srsRAN/Open5GS
+George Alexandro Ferreira Barbosa
+PPGCOMP/UFPA
+17 de setembro de 2026
+
+
+=== PAGE 2 ===
+Sumário
+1
+Visão Geral do Projeto
+6
+1.1
+Objetivo do relatório . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+6
+1.2
+Problema que a H-RDL resolve
+. . . . . . . . . . . . . . . . . . . . . . . .
+6
+1.3
+Estado atual consolidado . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+6
+1.4
+Atualização documental e verificação dos artefatos . . . . . . . . . . . . . .
+7
+1.5
+Método de consolidação e validação . . . . . . . . . . . . . . . . . . . . . .
+8
+1.6
+Contribuição científica esperada . . . . . . . . . . . . . . . . . . . . . . . .
+9
+2
+Arquitetura Geral
+10
+2.1
+Camadas da solução
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2
+Componentes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2.1
+Perception Agent . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2.2
+Conflict Detector . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2.3
+Reasoning Agent
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.2.4
+Refinement Agent . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+2.2.5
+RCMapper e Dispatcher . . . . . . . . . . . . . . . . . . . . . . . .
+12
+2.2.6
+Observabilidade . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+3
+Protocolos, Interfaces e Modelos de Serviço
+13
+3.1
+E2AP
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+13
+3.2
+E2SM-KPM . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+13
+3.3
+E2SM-RC . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+13
+3.4
+Capability Discovery . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+13
+3.5
+Diferença entre ACK e efeito . . . . . . . . . . . . . . . . . . . . . . . . . .
+14
+4
+Motor Determinístico e Modelagem Matemática
+15
+4.1
+Representação da proposta . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15
+4.2
+Estado . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15
+4.3
+Janela de decisão . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15
+1
+
+
+=== PAGE 3 ===
+4.4
+Conflito direto . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15
+4.5
+Conflito indireto . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+4.6
+Conflito temporal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+4.7
+Função de utilidade . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+4.8
+Seleção conjunta
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+4.9
+Safety
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+4.10 Interpretação discursiva
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+17
+5
+Cenários Experimentais
+18
+5.1
+Visão geral dos cenários
+. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+5.2
+Fluxo do S0 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+18
+5.3
+Fluxo do S1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.4
+Fluxo do S2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.5
+Fluxo do S3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.6
+Fluxo do S4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.7
+Fluxo do S5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.8
+Fluxo do S6 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+19
+5.9
+Fluxo do S7 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+20
+5.10 Fluxo do S8 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+20
+6
+Parâmetros, Métricas e Por que Elas Importam
+21
+6.1
+Parâmetros de configuração
+. . . . . . . . . . . . . . . . . . . . . . . . . .
+21
+6.2
+Métricas PHY/MAC . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+21
+6.3
+Métricas de governança . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+22
+6.4
+Métricas de controle
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+22
+6.5
+Idade da telemetria . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+22
+7
+Resultados, Gráficos e Insights
+23
+7.1
+Observação metodológica . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+7.2
+Vazão e latência . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+23
+7.3
+Violações de SLA e equidade . . . . . . . . . . . . . . . . . . . . . . . . . .
+25
+7.4
+Estabilidade e custo de decisão
+. . . . . . . . . . . . . . . . . . . . . . . .
+25
+7.5
+Tabela de insights . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+25
+8
+Rastreabilidade por Execução e Campanha Confirmatória
+27
+8.1
+Golden Run publicada e nível de evidência . . . . . . . . . . . . . . . . . .
+27
+8.2
+Matriz entre alegação e evidência . . . . . . . . . . . . . . . . . . . . . . .
+28
+2
+
+
+=== PAGE 4 ===
+8.3
+Campanha confirmatória de 30 sementes por condição . . . . . . . . . . . .
+29
+8.4
+Gates de publicação . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+29
+9
+Avaliação do Próprio Projeto
+30
+9.1
+Pontos fortes
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+30
+9.2
+Riscos tratados e limites residuais . . . . . . . . . . . . . . . . . . . . . . .
+30
+9.3
+Recomendações . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+31
+10 Próxima Etapa: srsRAN, Open5GS e Testbed UFPA
+32
+10.1 Objetivo da próxima etapa . . . . . . . . . . . . . . . . . . . . . . . . . . .
+32
+10.2 Sequência de validação do testbed . . . . . . . . . . . . . . . . . . . . . . .
+32
+10.3 Fase A: ambiente virtual ZeroMQ . . . . . . . . . . . . . . . . . . . . . . .
+32
+10.4 Fase B: integração E2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+33
+10.5 Fase C: SDR/USRP
+. . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+33
+10.6 Fase D: integração Kubernetes . . . . . . . . . . . . . . . . . . . . . . . . .
+33
+10.7 Entregáveis para a próxima etapa . . . . . . . . . . . . . . . . . . . . . . .
+33
+11 Demonstrações ao Vivo para Equipe
+35
+11.1 Método de demonstração e preparação comum . . . . . . . . . . . . . . . .
+35
+11.2 Demonstração do conflito direto de PRB . . . . . . . . . . . . . . . . . . .
+35
+11.3 Demonstração da supressão de ping-pong . . . . . . . . . . . . . . . . . . .
+36
+11.4 Demonstração de falha E2 e fallback seguro
+. . . . . . . . . . . . . . . . .
+36
+11.5 Demonstração de observabilidade e auditoria . . . . . . . . . . . . . . . . .
+37
+11.6 Demonstração incremental com srsRAN e Open5GS . . . . . . . . . . . . .
+38
+12 Conclusão
+40
+A Gates operacionais por execução
+42
+B Modelo de manifesto
+43
+3
+
+
+=== PAGE 5 ===
+Lista de Figuras
+2.1
+Arquitetura operacional da H-RDL . . . . . . . . . . . . . . . . . . . . . .
+11
+7.1
+Desempenho de rede por baseline . . . . . . . . . . . . . . . . . . . . . . .
+24
+7.2
+SLA e equidade por baseline . . . . . . . . . . . . . . . . . . . . . . . . . .
+24
+7.3
+Estabilidade e custo decisório
+. . . . . . . . . . . . . . . . . . . . . . . . .
+25
+4
+
+
+=== PAGE 6 ===
+Lista de Tabelas
+1.1
+Conciliação entre a auditoria atualizada e os artefatos publicados. . . . . .
+7
+5.1
+Cenários F1 e função científica.
+. . . . . . . . . . . . . . . . . . . . . . . .
+18
+6.1
+Parâmetros relevantes para a Fase 1.
+. . . . . . . . . . . . . . . . . . . . .
+21
+7.1
+Insights derivados dos resultados reportados. . . . . . . . . . . . . . . . . .
+25
+8.1
+Pacote mínimo de evidência da Golden Run. . . . . . . . . . . . . . . . . .
+27
+8.2
+Matriz mínima entre alegações e evidência por execução. . . . . . . . . . .
+28
+10.1 Entregáveis para a implantação srsRAN/Open5GS. . . . . . . . . . . . . .
+33
+A.1 Gates de aceite aplicados a cada diretório de execução. . . . . . . . . . . .
+42
+5
+
+
+=== PAGE 7 ===
+Capítulo 1
+Visão Geral do Projeto
+1.1
+Objetivo do relatório
+Este relatório consolida a Fase 1 do projeto XApp-RDL, denominada H-RDL, com
+foco em governança determinística de conflitos entre múltiplas xApps no Near-RT RIC. O
+documento organiza o que foi discutido e planejado até o momento, descreve a arquitetura,
+os cenários, os parâmetros, as métricas, os pontos fortes e fracos do projeto e estabelece
+um roteiro para a etapa seguinte: aproximação com implementação real usando srsRAN e
+Open5GS em um testbed vinculado ao ambiente de pesquisa da UFPA.
+O relatório não trata a CA-RDL/MAPPO como contribuição principal. Esses
+componentes são continuidade futura. A prioridade aqui é fechar a Fase 1 com evidência
+sólida.
+1.2
+Problema que a H-RDL resolve
+Em O-RAN, múltiplas xApps podem atuar simultaneamente sobre a RAN. Essa
+programabilidade é positiva, mas gera um problema de governança: uma xApp pode
+solicitar mais PRBs para uma fatia URLLC, outra pode reduzir potência para economizar
+energia e outra pode deslocar UEs para outra célula. Se essas ações forem aplicadas sem
+coordenação, a rede pode apresentar oscilação, degradação de SLA, perda de fairness e
+comportamento instável.
+A H-RDL propõe uma solução intermediária: as xApps deixam de atuar diretamente
+e passam a emitir propostas. A H-RDL recebe essas propostas, agrupa em uma janela
+temporal, detecta conflitos, arbitra de forma determinística, aplica Safety Guards e somente
+depois envia uma decisão controlável ao caminho E2.
+1.3
+Estado atual consolidado
+A versão atual do repositório XApp-RDL-F1 inclui documentação de arquitetura,
+deploy, cenários, auditoria, resultados, reprodutibilidade, scripts de análise, simulações
+ns-3 e artefatos de evidência [Barbosa, 2026]. A configuração canônica publicada para a
+Fase 1 usa ns-3.48, 5G-LENA v5.1, NORI e Near-RT RIC. O perfil S1 reporta 30 UEs, 3,5
+6
+
+
+=== PAGE 8 ===
+GHz, 100 MHz, numerologia 1, canal 3GPP 38.901 UMi, scheduler OFDMA-PF, KPM a
+cada 100 ms e janela de decisão de 200 ms [Barbosa, 2026].
+Os resultados consolidados reportam melhora importante da H-RDL em relação
+a baselines simples.
+Contudo, o relatório adota postura metodológica conservadora:
+resultados em tabelas consolidadas e figuras devem ser rastreáveis até dados por execução,
+arquivos raw, manifests, hashes e scripts de processamento.
+O inventário publicado contém 35 registros por semente para S1, formados por
+cinco sementes em cada uma das políticas B0–B6. As políticas determinísticas B0–B3
+correspondem a 20 registros. Separadamente, scenario_summary.csv apresenta um
+resumo B3 para cada cenário S0–S15 e a tabela de resiliência E2 compara B0, B3 e B6.
+Esses três níveis não são amostras intercambiáveis: somente o primeiro identifica política e
+semente em cada linha. O relatório científico também declara um inventário de 167 fluxos
+FlowMonitor, 15 tabelas e 25 figuras; essas contagens descrevem o acervo publicado, mas
+não transformam fluxos da mesma execução em replicações independentes [Barbosa, 2026].
+Os 35 registros de per_seed_detailed_metrics.csv, a tabela configuration.cs
+v e o manifesto de S1_B3_seed1001 declaram git_sha=f99483a. A auditoria atualizada
+identifica esse valor como o commit canônico da Fase 1. Este relatório passa, portanto,
+a adotá-lo como referência da campanha publicada; qualquer artefato legado com outro
+identificador deve ser mantido separado e não pode ser combinado silenciosamente com
+essa base.
+1.4
+Atualização documental e verificação dos artefatos
+O relatório científico mestre e a auditoria publicados em 17 de setembro de 2026
+elevaram o status declarado da Fase 1 para Golden Closed Loop, informando 81 testes
+aprovados, ausência de geradores aleatórios proibidos, 35 manifestos com hashes, uma
+Golden Run fechada e resultados inferenciais de 30 sementes. A incorporação desses
+itens exige distinguir o veredito do documento da natureza do artefato que o sustenta. A
+Tabela 1.1 registra essa leitura.
+Tabela 1.1: Conciliação entre a auditoria atualizada e os artefatos publicados.
+Dimensão
+Declaração atualizada
+Tratamento neste relatório
+Versão canônica
+f99483a associado aos 35
+manifestos
+confirmado em configuração,
+tabela por semente e manifesto
+inspecionado; adotado como
+referência F1
+Testes de
+software
+81/81 testes aprovados
+registrado como resultado
+declarado da suíte; não equivale,
+isoladamente, a uma campanha de
+rede
+Integridade
+estática
+zero ocorrências de geradores
+aleatórios proibidos
+incorporado como gate de código;
+curvas obtidas por equações
+continuam sendo modelos
+analíticos
+7
+
+
+=== PAGE 9 ===
+Dimensão
+Declaração atualizada
+Tratamento neste relatório
+Golden Run
+cadeia KPM–decisão–RC–
+ACK–estado–KPM e
+inventário SHA-256
+diretório, manifesto, cadeia causal
+e hashes estão publicados; a
+validação binária das PDUs
+permanece um gate próprio
+Campanha
+N = 30
+Wilcoxon p = 1,86 × 10−9 e
+intervalos Student-t
+tabela inferencial publicada,
+porém o script gera os pares por
+fórmulas; classificada como
+validação analítica até existirem
+runs observados
+Validação física
+conformidade funcional no
+ambiente de co-simulação
+srsRAN/Open5GS/USRP
+permanece etapa futura e não é
+inferida dos testes locais
+Essa classificação não invalida os testes nem os documentos atualizados. Ela define
+qual conclusão cada artefato pode sustentar: teste automatizado valida software; hash
+valida integridade do arquivo; modelo analítico valida o pós-processamento; e somente
+uma execução identificada mede o comportamento da rede [Barbosa, 2026].
+1.5
+Método de consolidação e validação
+O método adotado organiza a avaliação em três níveis que não devem ser confun-
+didos. No primeiro nível, cada execução constitui a unidade básica de evidência e deve
+possuir cenário, política, semente, configuração, intervalo de medição e identificador de
+versão. No segundo, as métricas de rede do FlowMonitor são relacionadas aos registros de
+governança da H-RDL, como propostas recebidas, conflitos detectados, ações bloqueadas,
+decisões despachadas e respostas E2. No terceiro, o pós-processamento calcula resumos,
+comparações e figuras sem alterar a unidade amostral original.
+A técnica de validação é uma comparação controlada e, quando houver sementes
+correspondentes, pareada. Uma política de referência e a H-RDL devem operar sob a
+mesma topologia, tráfego, canal e semente. O efeito atribuído à governança somente é aceito
+quando a decisão interna pode ser ligada ao comando externo e ao estado posteriormente
+observado. Essa abordagem evita tratar uma melhoria temporalmente próxima à decisão
+como evidência causal sem que os identificadores e os relógios tenham sido conciliados.
+O procedimento também distingue repetição analítica de repetição experimental.
+Regenerar uma tabela ou figura comprova que o pós-processamento é reproduzível; repetir
+o simulador ou o testbed sob o mesmo manifesto verifica a execução. A conclusão científica
+exige as duas formas de reprodução e deve registrar inclusive falhas, timeouts e resultados
+negativos.
+O repositório passou a expor alvos específicos para essa disciplina. A verificação
+de proveniência e do primeiro gate pode ser executada antes da campanha, enquanto
+a reprodução do artigo e a campanha S0–S8 permanecem operações deliberadamente
+separadas da demonstração ao vivo:
+make verify-provenance
+8
+
+
+=== PAGE 10 ===
+make gate1-check
+uv run python scripts/check_no_synthetic_results.py
+make reproduce-paper
+# pos-processamento; nao cria novas execucoes
+make run-campaign-s0-s8
+# campanha confirmatoria S0--S8
+Esses comandos representam a interface operacional atual, mas seu sucesso não
+autentica automaticamente a origem dos valores. Em particular, make reproduce-paper
+demonstra repetição analítica; a campanha exige diretórios de execução produzidos pelo
+simulador. A árvore resultante deve ser inspecionada quanto a manifestos, versões, códigos
+de saída e hashes.
+1.6
+Contribuição científica esperada
+A contribuição principal não é apenas obter maior throughput. A contribuição é
+demonstrar uma cadeia causal de governança:
+KPM(t0) →Conflict →RDLDecision →E2SM-RC
+→ACK/Failure →AppliedState →KPM(t1).
+(1.1)
+Essa cadeia mostra que a decisão foi calculada, enviada, reconhecida, aplicada e
+posteriormente refletida em uma métrica observável da rede.
+9
+
+
+=== PAGE 11 ===
+Capítulo 2
+Arquitetura Geral
+2.1
+Camadas da solução
+A arquitetura da H-RDL é organizada em camadas. A primeira camada é formada
+pelas xApps produtoras de propostas. A segunda camada recebe telemetria e capabilities
+da RAN. A terceira corresponde ao núcleo H-RDL. A quarta aplica safety e refinamento.
+A quinta traduz a decisão para E2SM-RC. A sexta representa a RAN simulada ou real.
+A Figura 2.1 evidencia duas fronteiras metodológicas. A primeira separa a proposta
+produzida pela xApp da decisão efetivamente despachada, permitindo que a H-RDL ajuste
+ou bloqueie uma solicitação. A segunda separa o recebimento de ACK/Failure do efeito
+medido na RAN. Essa organização evita que uma resposta de protocolo seja interpretada
+como prova de melhoria de desempenho e torna explícitos os pontos em que logs, hashes e
+timestamps precisam ser capturados.
+2.2
+Componentes
+2.2.1
+Perception Agent
+O Perception Agent é responsável por transformar eventos brutos em estado ope-
+racional. Ele recebe telemetria KPM, propostas de xApps, informações de capability e
+histórico recente. Sua principal função é preparar o lote de decisão.
+2.2.2
+Conflict Detector
+O detector identifica conflitos diretos, indiretos, temporais, implícitos e storms. Ele
+não deve misturar detecção com resolução. Detectar um conflito significa reconhecer risco
+de incompatibilidade; resolver o conflito exige decisão e posterior validação.
+2.2.3
+Reasoning Agent
+O Reasoning Agent executa a política determinística da H-RDL. Ele usa hierarquia,
+pesos, prioridade, SLA e memória. O resultado é uma decisão candidata.
+10
+
+
+=== PAGE 12 ===
+xApps produtoras
+xSlice, Energy Saving, QoS e Traffic Steering
+Contrato de proposta
+alvo, parâmetro, valor, prioridade, prazo e action-id
+Perception Agent
+KPM, validade temporal, lote, estado e conflitos
+Reasoning Agent
+TVS/EEVS, utilidade, memória e seleção determinística
+Refinement Agent
+Safety Guards, capabilities, anti-ping-
+pong e possibilidade de não envio
+RCMapper e Dispatcher
+E2SM-RC, E2AP, correlação RMR/SCTP e timeout local
+RAN controlada
+NORI/ns-3/5G-LENA; evolu-
+ção para srsRAN/Open5GS/SDR
+Retorno
+externo
+KPM posterior
+ACK/Failure
+Evidência
+logs, métricas,
+estado apli-
+cado e hashes
+controle
+telemetria e resposta
+Figura 2.1: Modelo arquitetural. Arquitetura operacional da H-RDL, separando o caminho
+de decisão, o retorno externo e os artefatos de evidência. As setas indicam fluxos de informação;
+as linhas tracejadas representam registro e auditoria, não mensagens de controle.
+11
+
+
+=== PAGE 13 ===
+2.2.4
+Refinement Agent
+O Refinement Agent verifica se a decisão candidata é admissível. Ele aplica limites
+de potência, limites de PRB, cooling window, capabilities e regras de fallback. A ação
+pode ser bloqueada mesmo que tenha utilidade alta.
+2.2.5
+RCMapper e Dispatcher
+O RCMapper traduz a decisão em um comando compatível com E2SM-RC. O
+Dispatcher envia a mensagem e registra o resultado: ACK, Failure, Timeout ou erro de
+correlação.
+2.2.6
+Observabilidade
+O projeto deve expor métricas de conflitos, decisões, safety, latência e saúde do
+serviço, idealmente por Prometheus/Grafana, como previsto na documentação operacional
+do projeto [Barbosa, 2026].
+12
+
+
+=== PAGE 14 ===
+Capítulo 3
+Protocolos, Interfaces e Modelos de
+Serviço
+3.1
+E2AP
+E2AP é o protocolo que transporta os procedimentos entre o Near-RT RIC e o nó
+E2. Na H-RDL, ele é a fronteira entre a decisão lógica e a atuação externa. O comando só
+ganha relevância científica quando pode ser associado a uma transação E2 identificável.
+3.2
+E2SM-KPM
+E2SM-KPM fornece medições de desempenho. No projeto, ele é usado tanto antes
+quanto depois da decisão. A medição antes da decisão compõe o estado. A medição
+posterior é necessária para avaliar efeito.
+As métricas KPM devem estar vinculadas a timestamp, nó, UE, slice, unidade e
+versão do service model.
+3.3
+E2SM-RC
+E2SM-RC é usado para controle. A H-RDL não deve enviar qualquer comando sem
+antes passar pelo Safety Guard. O RCMapper precisa registrar parâmetro, valor, nó-alvo,
+ranFunctionID, requestorID e instanceID.
+3.4
+Capability Discovery
+A campanha confirmatória não deve depender de IDs fixos. O fluxo correto é:
+E2Setup →RANFunctionDefinition →CapabilityRegistry →ranFunctionID.
+(3.1)
+Essa etapa evita confundir uma configuração local com interoperabilidade geral.
+13
+
+
+=== PAGE 15 ===
+3.5
+Diferença entre ACK e efeito
+ACK indica que o controle foi aceito no nível de procedimento. Isso não demonstra,
+por si só, que houve melhoria de rede. A validação completa segue uma técnica de
+correlação causal. Primeiro, o comando enviado recebe um identificador persistente. Em
+seguida, a resposta E2 é ligada a esse identificador e ao nó-alvo. O estado aplicado deve
+ser confirmado por uma fonte externa à decisão lógica; depois, uma KPM posterior, obtida
+em uma janela definida, é associada ao mesmo ciclo. Por fim, o resultado é comparado
+com uma condição de controle equivalente. A ausência de qualquer um desses elos reduz o
+alcance da conclusão: pode-se demonstrar decisão, transporte ou aplicação, mas não o
+ciclo completo.
+14
+
+
+=== PAGE 16 ===
+Capítulo 4
+Motor Determinístico e Modelagem
+Matemática
+4.1
+Representação da proposta
+Cada proposta é modelada por:
+ai = (idi, xi, ni, pi, vi, πi, ti, di),
+(4.1)
+onde idi é o identificador da ação, xi a xApp, ni o nó, pi o parâmetro, vi o valor, πi
+a prioridade, ti o instante de chegada e di o prazo de validade.
+4.2
+Estado
+O estado de decisão é:
+st = [KPMt, Capabilitiest, SLAt, Historyt, Proposalst].
+(4.2)
+4.3
+Janela de decisão
+A janela nominal é:
+∆twin = 200 ms.
+(4.3)
+Essa janela permite que propostas concorrentes sejam vistas como um lote, evitando
+decisões FIFO cegas.
+4.4
+Conflito direto
+Cdir(ai, aj) = I[ni = nj ∧pi = pj ∧vi̸ = vj].
+(4.4)
+15
+
+
+=== PAGE 17 ===
+Exemplo: xSlice solicita 80% de PRB para URLLC enquanto Energy Saving solicita
+30%.
+4.5
+Conflito indireto
+Cind(ai, aj) = I[ni = nj ∧pi̸ = pj ∧K(pi) ∩K(pj)̸ = ∅].
+(4.5)
+Exemplo: uma xApp altera handover e outra potência. O parâmetro é diferente,
+mas ambos podem afetar SINR, throughput ou delay.
+4.6
+Conflito temporal
+Ctemp = I[at ≈inverse(at−1) ∧∆t < ∆tmin].
+(4.6)
+Esse caso é importante para detectar ping-pong.
+4.7
+Função de utilidade
+Uma forma geral é:
+U(a|s) = wT ˆT(a, s) −wL ˆL(a, s) + wE ˆE(a, s) + wJ ˆJ(a, s) −wV ˆV (a, s),
+(4.7)
+com pesos não negativos e documentados no manifesto.
+4.8
+Seleção conjunta
+S⋆= arg max
+S∈Ft U(S|st),
+(4.8)
+onde Ft é o conjunto de subconjuntos compatíveis. O conjunto vazio ou “não enviar
+comando” também pode ser a decisão correta.
+4.9
+Safety
+Safe(a, s) =
+
+
+
+1,
+a ∈Aseg(s)
+0,
+caso contrário
+(4.9)
+Restrições:
+16
+
+
+=== PAGE 18 ===
+Pmin ≤Ptx ≤Pmax,
+(4.10)
+X
+s
+Quota(s) ≤100%,
+(4.11)
+∆topposite ≥∆tmin.
+(4.12)
+4.10
+Interpretação discursiva
+A modelagem matemática não deve ser lida como uma previsão perfeita do com-
+portamento físico da RAN. Ela formaliza uma política de decisão determinística. O
+valor científico da H-RDL está em tornar explícita a lógica que transforma propostas
+concorrentes em uma decisão controlável. Essa explicitação permite auditoria, reprodução
+e comparação com estratégias mais simples.
+17
+
+
+=== PAGE 19 ===
+Capítulo 5
+Cenários Experimentais
+5.1
+Visão geral dos cenários
+A Fase 1 usa S0–S8 como núcleo confirmatório. S9–S15 são úteis para roadmap 6G,
+mas não devem ser misturados com a validação principal da H-RDL.
+Tabela 5.1: Cenários F1 e função científica.
+ID
+Nome
+Classe
+O que demonstra
+S0
+Baseline Pass-Through
+sem conflito
+funcionamento nominal sem
+intervenção
+S1
+Colisão Direta de PRB
+direto
+arbitragem
+entre
+QoS
+e
+Energy Saving
+S2
+Potência vs QoS
+direto/indireto
+trade-off
+entre
+energia,
+SINR e MCS
+S3
+Multi-Slice TVS
+indireto
+acoplamento entre URLLC,
+eMBB e fairness
+S4
+Traffic
+Steering
+vs
+Green RAN
+indireto/semântico
+handover versus célula em
+sleep
+S5
+Ping-Pong Temporal
+temporal
+estabilidade, memória e coo-
+ling window
+S6
+Conflict Storm
+storm
+escalabilidade e deadline
+S7
+Fault Injection
+resiliência
+Failure, Timeout e Safety
+S8
+Closed Loop NORI
+integração
+cadeia E2 completa
+5.2
+Fluxo do S0
+O S0 verifica que a RDL não deve degradar a rede quando não há conflito. A ação
+esperada é pass-through ou não intervenção.
+Métricas principais: throughput, delay, jitter, overhead e ausência de safety blocks.
+18
+
+
+=== PAGE 20 ===
+5.3
+Fluxo do S1
+No S1, duas xApps emitem propostas conflitantes de PRB. A H-RDL deve identificar
+o mesmo alvo e o mesmo parâmetro com valores incompatíveis, calcular alternativa
+admissível, enviar comando RC e observar KPM posterior.
+Métricas principais: SLA violation, throughput, fairness, PRB allocation, decision
+latency, ACK RTT e churn.
+5.4
+Fluxo do S2
+O S2 avalia o trade-off entre redução de potência e QoS. O ponto crítico é não
+confundir potência de transmissão com consumo energético completo. Se não houver
+modelo elétrico validado, usa-se apenas proxy de TxPower.
+Métricas principais: SINR, MCS, BLER, throughput, delay, TxPower e safety.
+5.5
+Fluxo do S3
+O S3 avalia acoplamento entre slices.
+Uma decisão que melhora eMBB pode
+prejudicar URLLC. A H-RDL precisa preservar SLA crítico e fairness.
+Métricas principais: throughput por slice, delay URLLC, PRB por slice, Jain e
+SLA drift.
+5.6
+Fluxo do S4
+O S4 analisa Traffic Steering contra Energy Saving. A situação típica é uma xApp
+migrar usuários para uma célula que outra xApp quer reduzir ou colocar em sleep.
+Métricas principais: handover success, packet interruption, SINR, load per cell e
+action churn.
+5.7
+Fluxo do S5
+O S5 força decisões opostas em ciclo. O objetivo é demonstrar que a H-RDL reduz
+ping-pong com memória e cooling window.
+Métricas principais: action churn, reversões, settling time, jitter e estabilidade de
+PRB/potência.
+5.8
+Fluxo do S6
+O S6 injeta muitas propostas por segundo. O objetivo é avaliar escalabilidade e se
+o tempo de decisão permanece dentro do orçamento.
+19
+
+
+=== PAGE 21 ===
+Métricas principais: propostas/s, propostas/lote, CPU, memória, fila, deadline
+miss, decision latency P95/P99.
+5.9
+Fluxo do S7
+O S7 injeta falhas de interface E2. A H-RDL deve manter segurança mesmo se
+ACK for perdido, se houver timeout ou se a resposta for malformada.
+Métricas principais: Failure rate, Timeout rate, UnsafeApplied, fallback e estado
+final.
+5.10
+Fluxo do S8
+O S8 é o cenário de integração. Ele não testa apenas desempenho, mas a cadeia de
+evidência completa.
+Métricas principais: raw E2, KPM antes/depois, RC, ACK, state change, hashes e
+reconstrução do run.
+20
+
+
+=== PAGE 22 ===
+Capítulo 6
+Parâmetros, Métricas e Por que Elas
+Importam
+6.1
+Parâmetros de configuração
+Tabela 6.1: Parâmetros relevantes para a Fase 1.
+Grupo
+Parâmetro
+Por que importa
+Reprodução
+Git SHA
+identifica exatamente o código exe-
+cutado
+Simulação
+ns-3/5G-LENA
+define fidelidade e APIs disponí-
+veis
+E2
+E2AP/KPM/RC
+define semântica de telemetria e
+controle
+Rádio
+frequência e banda
+afetam PRB, capacidade e propa-
+gação
+Canal
+UMi/UMa,
+LOS/NLOS
+afeta SINR, BLER e throughput
+Scheduler
+OFDMA-PF
+influencia fairness e PRB alloca-
+tion
+Tráfego
+load, packet size
+afeta filas e perda
+H-RDL
+janela de decisão
+afeta concorrência e idade da in-
+formação
+Safety
+limites
+define envelope de admissibilidade
+Seeds
+streams
+permite comparação pareada
+6.2
+Métricas PHY/MAC
+SINR, CQI, MCS, BLER e HARQ ajudam a explicar por que uma decisão funcionou
+ou falhou. Um aumento de PRB pode não gerar maior throughput se a qualidade do canal
+estiver ruim, se o MCS cair ou se houver muitas retransmissões.
+21
+
+
+=== PAGE 23 ===
+6.3
+Métricas de governança
+As métricas de governança medem se a H-RDL cumpre sua função principal:
+detectar, arbitrar e estabilizar. São métricas próprias do projeto, não substitutos das
+métricas de rede. O fluxo de governança é caracterizado pela taxa de conflitos, pela
+proporção de conflitos resolvidos e pela taxa de rejeição dos Safety Guards. A estabilidade
+é observada por action churn, frequência de ping-pong e tempo de acomodação. A segurança
+exige contabilizar separadamente ações propostas, ajustadas, bloqueadas e aplicadas; a
+métrica unsafe applied actions somente é interpretável quando esse denominador e o
+envelope de segurança estão documentados.
+6.4
+Métricas de controle
+A latência total é decomposta:
+Tloop = Tdetect + Tdecision + Tencode + Tdispatch + TE2 + Tapply + Tobserve.
+(6.1)
+Essa decomposição impede atribuir ao algoritmo uma latência que pertence ao
+transporte ou ao tempo de observação KPM.
+6.5
+Idade da telemetria
+A idade da KPM é:
+AgeKPM = tdecision −tKPM.
+(6.2)
+Uma decisão rápida pode ainda ser ruim se estiver baseada em informação antiga.
+22
+
+
+=== PAGE 24 ===
+Capítulo 7
+Resultados, Gráficos e Insights
+7.1
+Observação metodológica
+Os gráficos a seguir usam valores reportados em per_seed_detailed_metrics.csv.
+As curvas B0–B3 representam médias de cinco registros S1 por política, e não observações
+temporais. Elas descrevem o piloto publicado e orientam a inspeção dos mecanismos, mas
+cada figura confirmatória deve ser regenerada dos diretórios por execução e associada a
+manifesto, arquivo de origem, script e hash.
+A auditoria atualizada reconcilia corretamente o limite amostral do piloto: com
+cinco pares, o menor p-valor bilateral exato é 0,0625. Ela também publica uma tabela
+inferencial para N = 30 e protege o cálculo de Cohen dz contra variância residual nula.
+Entretanto, o script associado constrói os 30 pares por uma grade determinística calibrada.
+Assim, os valores de inferential_statistics_b1_vs_b3.csv são mantidos como
+validação analítica do pipeline até que possam ser recalculados de 30 runs observados por
+condição.
+7.2
+Vazão e latência
+Throughput e latência são apresentados na mesma figura porque representam efeitos
+complementares do serviço entregue. O gráfico de vazão utiliza pontos, em vez de barras
+com eixo truncado, para não atribuir área visual a uma escala que começa em 80 Mbps. O
+painel de latência distingue média e P95, preservando a diferença entre tendência central e
+cauda da distribuição.
+B3 apresenta maior vazão e menores atrasos reportados. A hipótese explicativa é
+que a coordenação reduz colisões e reconfigurações improdutivas, mas essa interpretação
+deve ser confrontada com alocação de PRBs, BLER, MCS e dados do FlowMonitor. A
+redução do P95 também precisa ser avaliada junto à perda de pacotes, pois descartar
+pacotes atrasados pode reduzir artificialmente a cauda observada.
+23
+
+
+=== PAGE 25 ===
+B0
+B1
+B2
+B3
+80
+90
+100
+86,0
+89,2
+92,9
+102,5
+Mbps
+Vazão média
+B0
+B1
+B2
+B3
+0
+10
+20
+ms
+Latência média e P95
+Média
+P95
+Figura 7.1: Vazão média, latência média e P95 reportadas para B0–B3 no piloto S1 de cinco
+sementes por política. Fonte: per_seed_detailed_metrics.csv. Os pontos ligam categorias e
+não representam uma série temporal.
+B0
+B1
+B2
+B3
+0
+10
+20
+30
+40
+36.7
+24
+12.5
+0
+%
+Violações de SLA
+B0
+B1
+B2
+B3
+0
+0.5
+1
+0,52
+0,65
+0,78
+0,94
+Índice
+Equidade de Jain
+Figura 7.2: Taxa agregada de violações de SLA e índice de Jain reportados para B0–B3 no
+piloto. Fonte: per_seed_detailed_metrics.csv. A confirmação exige denominadores por
+serviço e vetores por UE preservados em cada run.
+24
+
+
+=== PAGE 26 ===
+7.3
+Violações de SLA e equidade
+A combinação de zero na taxa agregada de violações e Jain elevado é um indício
+favorável, pois sugere proteção do serviço sem concentração excessiva de recursos. A
+conclusão depende, entretanto, do denominador da taxa de SLA, da definição do conjunto
+de usuários empregado no índice e da confirmação por fatia. Zero em um resumo não
+equivale a garantia universal de prazo.
+7.4
+Estabilidade e custo de decisão
+B0
+B1
+B2
+B3
+0
+0.5
+1
+1,00
+0,85
+0,40
+0,05
+ações/s
+Reconfiguração
+B0
+B1
+B2
+B3
+0
+5 · 10−2
+0.1
+0,00
+0,04
+0,08
+0,12
+ms
+Custo decisório
+Figura 7.3: Taxa de reconfiguração e latência de decisão reportadas no piloto S1. Fonte:
+per_seed_detailed_metrics.csv. As linhas conectam políticas, não instantes; a campanha
+confirmatória deve preservar timelines por run-id.
+B3 adiciona custo computacional ao caminho de decisão, mas apresenta menor taxa
+de reconfiguração. Esse compromisso é favorável somente se a redução de churn representar
+supressão de reversões desnecessárias, e não bloqueio de ações úteis. A confirmação requer
+o histórico de action-id, o estado aplicado e a evolução posterior das métricas de serviço.
+7.5
+Tabela de insights
+Tabela 7.1: Insights derivados dos resultados reportados.
+Achado
+Interpretação
+Evidência adicional ne-
+cessária
+H-RDL reduz SLA
+arbitragem protege fatias crí-
+ticas
+KPM por slice e FlowMoni-
+tor
+Fairness aumenta
+recursos ficam menos con-
+centrados
+distribuição por UE
+Churn cai
+cooling window evita rever-
+sões
+logs de action-id e timeline
+25
+
+
+=== PAGE 27 ===
+Achado
+Interpretação
+Evidência adicional ne-
+cessária
+Latency cai
+menos conflito reduz fila e
+perdas
+P95/P99 por run
+Decision cost baixo
+algoritmo é leve
+decomposição de Tloop
+UnsafeApplied = 0
+safety está funcionando no
+envelope
+fault injection e logs de blo-
+queio
+26
+
+
+=== PAGE 28 ===
+Capítulo 8
+Rastreabilidade por Execução e
+Campanha Confirmatória
+8.1
+Golden Run publicada e nível de evidência
+A auditoria atualizada designa S1_B3_seed1001 como Golden Run da Fase 1. O
+diretório publicado contém manifesto com o commit f99483a, inventário hashes.sha256,
+arquivos sob raw/ e decoded/, cadeia causal/causal_chain.jsonl, captura indicada
+como pcap/e2.pcap e métricas em analysis/metrics.json. Essa estrutura é um avanço:
+cada etapa possui nome, localização e hash, e a cadeia causal registra KPM anterior,
+conflito, decisão, RC, ACK, aplicação e KPM posterior [Barbosa, 2026].
+O nível de evidência, contudo, é determinado pelo conteúdo e não apenas pelo
+nome do arquivo. Os artefatos *.raw inspecionados contêm marcadores textuais do
+payload, enquanto a decodificação de ACK publicada registra apenas arquivo, run e
+timestamp. Por isso, o pacote atual fecha a rastreabilidade estrutural da co-simulação,
+mas a comprovação de bytes ASN.1 APER capturados no transporte permanece um gate
+específico. A Tabela 8.1 define o aceite necessário para promover o pacote a evidência
+binária de malha fechada.
+Tabela 8.1: Pacote mínimo de evidência da Golden Run.
+Etapa
+Artefato mínimo
+Vínculo obrigatório
+Critério de aceite
+Identificação
+execution_manifest
+.json, configuração e
+comando
+cenário, política,
+semente, SHA, versões
+e relógio
+manifesto criado antes
+da execução e imutável
+após o início
+Entrada
+raw/kpm_t0.raw,
+decodificação e
+propostas
+nó, UE ou fatia,
+timestamp, unidade e
+identificador da
+proposta
+bytes reproduzem a
+estrutura APER
+decodificada
+Decisão
+conflito, utilidades,
+escolha e intervenção
+de safety
+proposal-id,
+conflict-id,
+decision-id e
+motivo
+mesma entrada e
+configuração
+reproduzem a mesma
+decisão
+27
+
+
+=== PAGE 29 ===
+Etapa
+Artefato mínimo
+Vínculo obrigatório
+Critério de aceite
+Atuação
+RIC Control,
+ACK/Failure/Timeout
+e estado aplicado
+requestor, instance,
+action-id, nó-alvo e
+parâmetro
+resposta decodificada
+da PDU e
+correlacionada à
+requisição
+Efeito
+raw/kpm_t1.raw,
+FlowMonitor e
+métricas por serviço
+mesmo nó, janela,
+relógio e decisão que
+originou o controle
+efeito calculado com
+denominador e intervalo
+de observação explícitos
+Integridade
+stdout, stderr, código
+de saída e
+hashes.sha256
+todos os arquivos do
+diretório da execução
+hashes recalculáveis e
+ausência de alteração
+após o fechamento
+8.2
+Matriz entre alegação e evidência
+A matriz claim–evidence impede que uma tabela agregada sustente afirmações de
+naturezas distintas. Cada alegação deve apontar para uma população de execuções, um
+artefato primário e um teste de aceite; a ausência de qualquer elo rebaixa a conclusão para
+observação descritiva.
+Tabela 8.2: Matriz mínima entre alegações e evidência por execução.
+Alegação
+Unidade e
+contraste
+Artefato primário
+Teste de aceite
+Maior vazão e
+menor atraso
+par B1–B3 sob a
+mesma semente
+FlowMonitor por
+execução, KPM e
+manifesto
+diferença calculada
+por par; IC e teste
+somente dos pares
+observados
+Menos violações
+de SLA
+pacote ou fluxo
+por serviço em
+cada execução
+contagens de
+entregues, atrasados e
+perdidos por fatia
+denominador
+explícito; zero
+agregado não
+substitui distribuição
+de prazos
+Maior equidade
+vetor de vazão ou
+recursos por UE
+métricas por UE
+usadas no índice de
+Jain
+índice recalculável do
+vetor, sem constante
+inserida manualmente
+Menor churn e
+ping-pong
+timeline de
+decisões e estados
+aplicados
+action-id, decisão,
+comando e estado
+anterior/posterior
+reversão contada após
+aplicação confirmada
+e dentro da janela
+definida
+Safety impede
+ação insegura
+proposta
+bloqueada ou
+refinada
+decisão candidata,
+regra acionada e
+comando não enviado
+ou alterado
+teste de limite e
+injeção de falha
+preservam motivo e
+resultado
+28
+
+
+=== PAGE 30 ===
+Alegação
+Unidade e
+contraste
+Artefato primário
+Teste de aceite
+Viabilidade
+temporal
+transação
+completa de
+malha fechada
+timestamps de
+chegada, decisão,
+despacho, resposta,
+aplicação e observação
+relógios conciliados;
+P50, P95 e P99 por
+execução e sob carga
+Efeito externo do
+controle
+evento causal na
+Golden Run
+PDU RC,
+ACK/Failure, estado
+aplicado e KPM t1
+eventos compartilham
+identificadores e
+ordem temporal
+verificável
+8.3
+Campanha confirmatória de 30 sementes por con-
+dição
+A auditoria classifica como confirmatória uma tabela de 30 pares B1–B3 e reporta
+Wilcoxon p = 1,86 × 10−9. A tabela é útil para testar o pipeline estatístico, mas o script
+publicado cria os pares por uma grade determinística calibrada, sem carregar diretórios de
+30 execuções. Este relatório reserva o termo campanha confirmatória para o conjunto
+R30 = {S1} × {B0, B1, B2, B3} × {1001, . . . , 1030},
+(8.1)
+totalizando 120 runs observados. O contraste principal utiliza os 30 pares B1–
+B3; B0 e B2 preservam a interpretação incremental. Topologia, tráfego, canal, duração,
+aquecimento, janela de decisão e versões permanecem iguais dentro de cada quarteto de
+mesma semente. Cada tentativa recebe run próprio; falhas são preservadas com manifesto,
+logs e código de saída, sem sobrescrita.
+Arrays construídos por fórmulas, interpolação ou offsets determinísticos continuam
+válidos para testes unitários, exemplos e modelos analíticos, mas não entram no cálculo
+confirmatório. A estatística final deve consumir apenas uma tabela extraída dos 120
+diretórios de execução, formando os pares pela semente.
+8.4
+Gates de publicação
+O alvo make reproduce-paper deve falhar quando uma figura não puder ser
+reconstruída dos artefatos declarados. Para a campanha completa, o pipeline deve confirmar
+os manifestos esperados, validar hashes.sha256, extrair métricas por run, formar pares e
+somente então calcular estimativas, intervalos e testes. Os índices mínimos são campaign
+_index.csv, per_run_metrics.csv, paired_comparisons.csv, claim_evidence.csv
+e um inventário criptográfico. Esses produtos apontam para os arquivos brutos; não os
+substituem.
+29
+
+
+=== PAGE 31 ===
+Capítulo 9
+Avaliação do Próprio Projeto
+9.1
+Pontos fortes
+O projeto aborda um problema diretamente associado à programabilidade da O-
+RAN: decisões concorrentes emitidas por aplicações independentes. Sua principal força
+técnica é a arquitetura modular, que separa percepção, detecção, raciocínio, refinamento
+de segurança e despacho. Essa separação permite testar cada responsabilidade e evita
+que o mecanismo que escolhe uma ação também seja o único responsável por declará-la
+segura. A integração com ns-3, 5G-LENA e NORI cria um caminho para relacionar lógica
+de governança a métricas de rede, enquanto a documentação e os artefatos de reprodu-
+ção favorecem a evolução para um testbed real. A auditoria atualizada acrescenta um
+commit canônico, inventários SHA-256 e o resultado declarado de 81/81 testes aprovados,
+fortalecendo a validação de software e a inspeção do pacote experimental [Barbosa, 2026].
+9.2
+Riscos tratados e limites residuais
+Os riscos de interpretação foram parcialmente tratados.
+Figuras obtidas por
+equações são diferenciadas de resultados experimentais; janelas, agregações e unidades
+amostrais são declaradas; e o SHA f99483a foi conciliado na configuração e nos manifestos
+atuais. A cadeia causal publicada também permite reconstruir a ordem lógica entre KPM,
+decisão, RC, ACK, aplicação e observação.
+Restam limites de conteúdo. Os arquivos brutos inspecionados funcionam como
+marcadores textuais de payload e ainda não demonstram, por seus próprios bytes, uma
+PDU ASN.1 APER capturada do transporte. Do mesmo modo, a tabela de 30 sementes é
+produzida por uma grade analítica, não por 30 diretórios de execução em cada condição.
+Esses artefatos validam estrutura, integração local e pós-processamento, mas não devem
+ser apresentados como medição adicional da rede.
+A validação em hardware com srsRAN/Open5GS/USRP continua futura. ACK e
+efeito aplicado podem ser correlacionados na cadeia da co-simulação, mas permanecem
+eventos distintos: o primeiro confirma um procedimento; o segundo exige estado aplicado e
+KPM posterior. Essa distinção deve permanecer explícita na campanha real e no testbed.
+30
+
+
+=== PAGE 32 ===
+9.3
+Recomendações
+A prioridade passa a ser completar os gates do Capítulo 8. A Golden Run publicada
+deve substituir os marcadores por bytes capturados e decodificações completas; depois,
+o mesmo contrato deve ser aplicado ao comparador B1. Somente após esse fechamento
+a campanha deve produzir 30 runs observados por condição, mantendo B1–B3 como
+contraste principal e registrando falhas e resultados negativos.
+Cada nova figura experimental deve ser regenerada de arquivos identificados por
+run e referenciada na matriz claim–evidence. Diagramas e modelos analíticos permanecem
+permitidos para explicação, desde que rotulados e segregados do conjunto confirmatório.
+31
+
+
+=== PAGE 33 ===
+Capítulo 10
+Próxima Etapa: srsRAN, Open5GS e
+Testbed UFPA
+10.1
+Objetivo da próxima etapa
+A próxima etapa é levar a lógica H-RDL para um ambiente mais próximo da
+operação real. O caminho recomendado é incremental: primeiro simulação com NORI/ns-
+3; depois ambiente emulado com srsRAN + Open5GS + ZeroMQ; depois SDR com USRP;
+por fim UE COTS e integração com Near-RT RIC.
+10.2
+Sequência de validação do testbed
+O testbed é organizado por três planos verificáveis. O plano de núcleo liga o gNB
+srsRAN ao Open5GS por NGAP e GTP-U; o plano de acesso conecta gNB e UE por
+ZeroMQ ou USRP; e o plano de controle relaciona o agente E2 ao Near-RT RIC e à xApp
+H-RDL. A validação segue essa ordem para que uma falha de registro, sessão PDU ou
+tráfego não seja atribuída prematuramente à governança.
+Cada plano somente é considerado disponível quando produz artefatos próprios. O
+núcleo requer logs de registro e sessão; o acesso requer tráfego medido e identificação da
+interface; o E2 requer PCAP, E2 Setup, funções anunciadas e KPM; por fim, o controle
+requer RIC Control, ACK/Failure correlacionado, estado aplicado e KPM posterior. Essa
+sequência substitui o diagrama ilustrativo por uma cadeia de aceite que pode ser registrada
+como run de testbed.
+10.3
+Fase A: ambiente virtual ZeroMQ
+A técnica desta fase é a validação incremental do plano de dados sem rádio físico.
+O Open5GS é iniciado com PLMN, TAC, AMF e DNN coerentes com a configuração
+do gNB e do UE. Em seguida, gNB e UE são conectados por ZeroMQ, o que permite
+verificar registro, sessão PDU, atribuição de endereço e tráfego sem introduzir efeitos de
+clock, ganho e propagação. Ping e iperf3 caracterizam a conectividade, enquanto os logs
+estabelecem um baseline antes da atuação da H-RDL.
+32
+
+
+=== PAGE 34 ===
+10.4
+Fase B: integração E2
+Objetivo: habilitar E2 do srsRAN gNB e conectá-lo ao Near-RT RIC.
+A documentação srsRAN indica suporte a E2SM-KPM e E2SM-RC, com limitações
+que precisam ser respeitadas [srsRAN Project, 2026c]. A técnica proposta é uma progressão
+por procedimentos: primeiro confirmar o E2 Setup e as funções anunciadas; depois criar
+uma Subscription e receber KPM; somente então enviar um RIC Control compatível com
+a capability observada. A resposta ACK ou Failure deve ser correlacionada ao pedido, e
+um PCAP deve preservar as PDUs necessárias à auditoria. Assim, uma falha de RC pode
+ser localizada no service model, na codificação, no transporte ou na aplicação, em vez de
+ser tratada genericamente como falha do testbed.
+10.5
+Fase C: SDR/USRP
+Objetivo: substituir ZeroMQ por rádio. Nesta fase entram clock, potência, ganho,
+cabos, antenas, ruído e regulação. A documentação srsRAN recomenda uso de clock
+externo em cenários com UE COTS e RF real [srsRAN Project, 2026a].
+O ensaio requer uma USRP B210, N310 ou equipamento equivalente, host com
+capacidade de processamento compatível, referência de clock apropriada e um UE de teste
+ou SIM programável. A operação deve ocorrer em banda autorizada ou ambiente isolado,
+com potência, cabos, antenas e procedimentos de segurança RF documentados. O método
+consiste em repetir primeiro o baseline validado em ZeroMQ e introduzir o rádio como
+única mudança principal; dessa forma, instabilidades acrescentadas pelo front-end podem
+ser distinguidas de problemas no core ou no controle E2.
+10.6
+Fase D: integração Kubernetes
+A documentação srsRAN também apresenta execução em Kubernetes e uso de
+Open5GS como core [srsRAN Project, 2026b]. Para o projeto UFPA, Kubernetes deve
+ser adotado quando a equipe precisar de repetição, observabilidade e deploy controlado.
+Antes disso, é melhor validar em VM ou bare metal.
+10.7
+Entregáveis para a próxima etapa
+Tabela 10.1: Entregáveis para a implantação srsRAN/Open5GS.
+Etapa
+Entregável
+Critério de aceite
+A
+Open5GS + srsRAN ZMQ
+UE registra e trafega
+B
+E2 KPM
+RIC recebe KPM real
+C
+E2 RC
+comando
+RC
+gera
+ACK/Failure
+33
+
+
+=== PAGE 35 ===
+D
+H-RDL adapter
+decisão H-RDL vira RC vá-
+lido
+E
+SDR
+UE real conecta e trafega
+F
+Demonstração
+dashboard mostra conflito,
+decisão e efeito
+34
+
+
+=== PAGE 36 ===
+Capítulo 11
+Demonstrações ao Vivo para Equipe
+11.1
+Método de demonstração e preparação comum
+A demonstração é tratada como um experimento curto, e não como uma sequência
+de telas. Cada execução começa com uma hipótese observável, registra a versão do código,
+preserva a saída do terminal e termina com um critério explícito de aceitação. Os comandos
+abaixo pressupõem que o terminal esteja aberto na raiz do repositório XApp-RDL-F1.
+Caminhos de workspace, endereços IP e nomes de interfaces devem ser ajustados ao
+ambiente da equipe antes da sessão. Os alvos de Make e os scripts correspondem à
+interface operacional publicada pelo projeto [Barbosa, 2026].
+Antes de apresentar qualquer cenário, o operador registra o commit e executa as
+verificações que impedem a mistura de artefatos sem proveniência. A saída é salva em
+um diretório próprio da demonstração. Esse preâmbulo permite explicar à equipe que um
+gráfico somente é considerado evidência quando pode ser associado à versão e ao run que
+o produziu.
+# Terminal 1 -- preparacao e trilha de auditoria
+export DEMO_ID="demo_$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "results/demos/${DEMO_ID}"
+git rev-parse HEAD | tee "results/demos/${DEMO_ID}/git_sha.txt"
+make verify-provenance |& tee "results/demos/${DEMO_ID}/provenance.log"
+make gate1-check |& tee "results/demos/${DEMO_ID}/gate1.log"
+make test-unit |& tee "results/demos/${DEMO_ID}/tests_unit.log"
+make test-codec |& tee "results/demos/${DEMO_ID}/tests_codec.log"
+O prosseguimento exige que o SHA tenha sido registrado, que a validação de
+proveniência não tenha indicado resultados sintéticos ou arquivos órfãos e que os testes
+essenciais tenham terminado sem erro. Se uma dessas condições falhar, a demonstração
+deve apresentar a falha como resultado de diagnóstico, em vez de continuar com evidência
+parcial.
+11.2
+Demonstração do conflito direto de PRB
+O primeiro ensaio mostra a técnica de arbitragem por propostas. Duas xApps
+solicitam valores incompatíveis para o mesmo recurso e a H-RDL constrói um lote, classifica
+35
+
+
+=== PAGE 37 ===
+o conflito, calcula uma decisão e aplica os Safety Guards antes do despacho. O lançador
+canônico do cenário S1 deve ser usado para preservar FlowMonitor e os arquivos de
+execução; o relatório é regenerado logo após o término.
+# Terminal 1 -- executar S1 e preservar a saida
+bash simulations/ns3/run_all_s0_s15_simulations.sh S1 \
+|& tee "results/demos/${DEMO_ID}/S1_console.log"
+# Reprocessar o FlowMonitor e localizar a evidencia de governanca
+python3 scripts/generate_ns3_flowmonitor_markdown_report.py \
+|& tee "results/demos/${DEMO_ID}/S1_flowmonitor.log"
+rg -n "S1|B0|B3|PRB|conflict|RDLDecision|Safety|ACK|throughput|latency|SLA" \
+experiments/runs results \
+| tee "results/demos/${DEMO_ID}/S1_evidence_index.txt"
+Durante a apresentação, a equipe acompanha o vínculo entre proposta, conflito,
+decisão e ação admissível. A leitura das métricas ocorre somente depois: alocação de
+PRBs, vazão, atraso, taxa de violação e custo decisório são comparados entre políticas
+identificadas. A demonstração é aceita quando os registros B0 e B3 pertencem à mesma
+configuração e semente e quando a decisão B3 pode ser correlacionada ao efeito posterior.
+A simples impressão de Safety Approved não substitui o estado aplicado nem a KPM
+posterior.
+11.3
+Demonstração da supressão de ping-pong
+O cenário S5 demonstra a técnica de estabilização temporal. A memória guarda
+a ação recente e a cooling window impede que uma proposta inversa seja aplicada antes
+do intervalo mínimo. O interesse não está apenas em mostrar menos comandos, mas em
+separar reversões desnecessárias de mudanças legítimas exigidas pelo estado da rede.
+# Terminal 1 -- executar o cenario temporal S5
+bash simulations/ns3/run_all_s0_s15_simulations.sh S5 \
+|& tee "results/demos/${DEMO_ID}/S5_console.log"
+# Extrair eventos temporais e conferir a ordem das acoes
+rg -n "S5|action[_-]id|opposite|cooling|churn|ping[-_ ]pong|settling" \
+experiments/runs results \
+| tee "results/demos/${DEMO_ID}/S5_timeline.txt"
+A discussão deve reconstruir a ordem das propostas e das decisões. Quando uma
+ação inversa é bloqueada, o log precisa indicar qual regra atuou, qual ação anterior motivou
+o bloqueio e qual era a idade do estado. O resultado é considerado favorável quando a
+redução de churn vem acompanhada de serviço preservado e de tempo de acomodação finito.
+Caso o churn caia porque nenhuma ação foi aplicada, o ensaio revela indisponibilidade do
+controle, e não estabilidade.
+11.4
+Demonstração de falha E2 e fallback seguro
+O cenário S7 aplica a técnica de injeção de falhas para observar o comportamento do
+sistema sob perda de resposta, timeout ou mensagem inválida. A falha deve ser introduzida
+36
+
+
+=== PAGE 38 ===
+em um instante registrado e retirada em outro; isso permite medir detecção, acionamento
+do fallback e recuperação como intervalos diferentes.
+# Terminal 1 -- executar S7 com captura integral do console
+bash simulations/ns3/run_all_s0_s15_simulations.sh S7 \
+|& tee "results/demos/${DEMO_ID}/S7_console.log"
+# Indexar timeout, fallback, resposta e acoes aplicadas
+rg -n "S7|fault|timeout|fallback|ACK|Failure|unsafe|applied|recover" \
+experiments/runs results \
+| tee "results/demos/${DEMO_ID}/S7_fault_timeline.txt"
+O operador explica que timeout é uma decisão local após expirar um prazo; ele
+não é uma mensagem enviada pelo nó. ACK e Failure são respostas de procedimento e
+precisam estar associados ao identificador da requisição. A demonstração é aceita quando
+a falha é visível, o fallback ocorre conforme a política e nenhuma ação fora do envelope
+é aplicada. A recuperação somente é contada depois da restauração da interface e deve
+indicar quando o serviço e o ciclo de controle voltam ao estado esperado.
+11.5
+Demonstração de observabilidade e auditoria
+Esta demonstração usa o cluster para mostrar a técnica de observabilidade em três
+níveis: saúde do serviço, métricas agregadas e eventos correlacionáveis. Antes de criar
+recursos, o operador verifica se já existe um cluster com o mesmo nome; a criação deve
+ocorrer apenas em ambiente isolado destinado à sessão.
+# Terminal 1 -- provisionamento e verificacao do ambiente
+k3d cluster list
+make cluster-create
+make helm-deploy
+make status
+make test-3xapps
+# Endpoints expostos pelo perfil local
+curl -fsS http://localhost:8080/health
+curl -fsS http://localhost:8080/ready
+curl -fsS http://localhost:8081/metrics \
+| rg "rdl_(conflicts|decisions|decision_latency|safety_blocks)"
+Em um segundo terminal, os logs são acompanhados enquanto o tráfego é ativado.
+A filtragem concentra a apresentação em identificadores e eventos da cadeia causal, sem
+ocultar o log integral que permanece disponível para auditoria.
+# Terminal 2 -- trafego e eventos de governanca
+make start-traffic
+kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl \
+--since=10m -f \
+| rg "action[_-]id|decision[_-]id|conflict|Safety|ACK|Failure|timeout"
+# Ao final da sessao, usar Ctrl+C e parar o trafego
+make stop-traffic
+O método de leitura começa pelos endpoints de saúde, passa pelos contadores
+e termina no evento individual. Um contador crescente prova que o instrumento foi
+37
+
+
+=== PAGE 39 ===
+atualizado, mas a auditoria de uma decisão exige o identificador que liga proposta, seleção,
+bloqueio ou despacho e resposta. Antes de encerrar, o operador salva logs e calcula hashes
+dos artefatos da sessão.
+kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl --since=30m \
+> "results/demos/${DEMO_ID}/rdl_k8s.log"
+find "results/demos/${DEMO_ID}" -type f -print0 \
+| sort -z | xargs -0 sha256sum \
+> "results/demos/${DEMO_ID}/SHA256SUMS"
+11.6
+Demonstração
+incremental
+com
+srsRAN
+e
+Open5GS
+A última demonstração apresenta o caminho para o testbed sem antecipar um
+controle RC ainda não validado. A técnica é incremental: confirmar o core, depois o
+acesso virtual, em seguida o E2 Setup e a telemetria KPM. Os comandos a seguir são
+modelos operacionais; os arquivos entre sinais de menor e maior devem ser substituídos
+pelos caminhos homologados no laboratório.
+# Terminal 1 -- verificar o nucleo 5G
+sudo systemctl status open5gs-amfd open5gs-smfd open5gs-upfd
+sudo journalctl -u open5gs-amfd -u open5gs-smfd --since "10 min ago"
+# Terminal 2 -- preservar o trafego E2 antes de iniciar o gNB
+sudo tcpdump -i any -nn -s0 -w e2_demo.pcap "sctp port 36422"
+# Terminal 3 -- iniciar o gNB com o perfil ZeroMQ/E2 do laboratorio
+sudo <SRSGNB_BIN> -c <GNB_ZMQ_E2_CONFIG> \
+|& tee "results/demos/${DEMO_ID}/gnb_zmq_e2.log"
+# Terminal 4 -- iniciar o UE compativel com o perfil ZeroMQ
+sudo <UE_BIN> -c <UE_ZMQ_CONFIG> \
+|& tee "results/demos/${DEMO_ID}/ue_zmq.log"
+Depois do registro, a conectividade é verificada na interface de túnel correspondente
+ao UE. O nome da interface e o endereço do servidor devem ser obtidos do próprio ambiente,
+em vez de permanecer fixos no roteiro.
+ip -br address
+ping -I <UE_TUN_INTERFACE> -c 10 <DATA_NETWORK_GATEWAY>
+iperf3 -c <IPERF_SERVER_IP> -t 30 -i 1
+# No cluster do RIC, confirmar E2 Setup e chegada de KPM
+kubectl logs -n ricplt -l app=e2term --since=10m \
+| rg "E2 Setup|RAN Function|Subscription|KPM"
+kubectl logs -n ricxapp -l app=ricxapp-iqos-xapp-rdl --since=10m \
+| rg "KPM|node|timestamp|subscription"
+O critério de sucesso desta etapa é deliberadamente limitado: Open5GS operacional,
+UE registrado, sessão de dados ativa, tráfego mensurável, E2 Setup identificado e KPM
+recebida com nó e timestamp. O controle RC deve ser incluído somente depois que a função
+anunciada pelo agente E2 e os formatos suportados forem confirmados. Essa restrição
+38
+
+
+=== PAGE 40 ===
+transforma a demonstração em um ensaio diagnóstico reproduzível, evitando atribuir ao
+testbed uma capacidade que ainda não foi observada.
+39
+
+
+=== PAGE 41 ===
+Capítulo 12
+Conclusão
+A H-RDL está em um ponto adequado para se transformar em um primeiro trabalho
+científico forte, desde que a validação seja disciplinada. O projeto já possui arquitetura,
+documentação, cenários, resultados preliminares e caminho de integração. O próximo passo
+não é ampliar ainda mais os cenários, mas fechar o núcleo experimental com evidência
+forte.
+A frase que deve orientar a próxima fase é:
+Menos figuras ilustrativas, mais evidência rastreável por run.
+A atualização documental consolida o SHA f99483a, o inventário de 35 runs,
+a suíte declarada de 81 testes e o pacote estrutural da Golden Run. Os cinco pares
+publicados permanecem como piloto. Depois da substituição dos marcadores por payloads
+binários verificáveis e da execução observada de 30 sementes por condição, a Fase 1 H-RDL
+poderá sustentar uma contribuição clara: governança determinística, segura e auditável de
+conflitos multi-xApp em O-RAN. A grade analítica de 30 pares valida o pipeline, mas não
+é contabilizada como campanha de rede.
+40
+
+
+=== PAGE 42 ===
+Referências Bibliográficas
+George Barbosa. XApp-RDL-F1: Arquitetura determinística e segura para mitigação de
+conflitos entre xapps no O-RAN Near-RT RIC. Repositório de software e documentação
+técnica, 2026.
+URL https://github.com/georgebarbosa3090/XApp-RDL-F1/.
+Consultado em 17 set. 2026.
+srsRAN Project. srsran gnb with cots ues. Documentação técnica, 2026a. URL https:
+//docs.srsran.com/projects/project/en/latest/tutorials/source/cotsUE/s
+ource/index.html.
+srsRAN Project. srsran gnb on kubernetes. Documentação técnica, 2026b. URL https:
+//docs.srsran.com/projects/project/en/latest/tutorials/source/k8s/sour
+ce/index.html.
+srsRAN Project. O-ran nearrt-ric and xapp. Documentação técnica, 2026c. URL https:
+//docs.srsran.com/projects/project/en/latest/tutorials/source/near-rt-r
+ic/source/.
+41
+
+
+=== PAGE 43 ===
+Apêndice A
+Gates operacionais por execução
+Tabela A.1: Gates de aceite aplicados a cada diretório de execução.
+Gate
+Evidência
+Condição de aprovação
+G0: versão
+manifesto, configuração e
+SHA
+f99483a e versões coerentes entre
+manifesto e tabela da campanha
+G1:
+término
+stdout, stderr, código de
+saída e duração
+processo encerrado de forma conhecida;
+falha preservada e classificada
+G2:
+entrada
+E2 Setup, capability, KPM
+t0 e propostas
+bytes e decodificações relacionados ao
+nó, timestamp e run-id
+G3:
+decisão
+conflitos, utilidades,
+memória, safety e decisão
+identificadores e motivos reproduzem a
+escolha determinística
+G4:
+atuação
+RIC Control,
+ACK/Failure/Timeout e
+estado aplicado
+PDU decodificada e resposta
+correlacionada; timeout distinguido de
+Failure
+G5: efeito
+KPM t1, FlowMonitor e
+métricas por serviço
+janela posterior ligada ao controle e
+denominadores preservados
+G6: inte-
+gridade
+inventário hashes.sha256
+todos os arquivos fechados possuem
+hash recalculável
+G7:
+análise
+métricas por run, pares e
+matriz claim–evidence
+nenhuma média ou figura depende de
+valor sem diretório de origem
+G8: repro-
+dução
+comando, ambiente e
+relatório de replay
+execução analítica repetida em
+ambiente limpo com as mesmas saídas
+derivadas
+42
+
+
+=== PAGE 44 ===
+Apêndice B
+Modelo de manifesto
+{
+"campaign_id": "F1_S1_CONFIRMATORY_30",
+"run_id": "S1_B3_seed1001_attempt01",
+"scenario": "S1",
+"baseline": "B3",
+"strategy": "H_RDL_DETERMINISTIC",
+"seed": 1001,
+"attempt": 1,
+"status": "<PLANNED|COMPLETED|FAILED>",
+"backend": "NORI_NS3_5GLENA",
+"source_git_sha": "f99483a",
+"nori_git_sha": "9b64c12",
+"ns3_version": "3.48",
+"fiveg_lena_version": "5.1",
+"e2ap": "02.03",
+"e2sm_kpm": "03.00",
+"e2sm_rc": "01.03",
+"decision_window_ms": 200,
+"started_at_utc": "<YYYY-MM-DDTHH:MM:SSZ>",
+"finished_at_utc": "<YYYY-MM-DDTHH:MM:SSZ>",
+"command": "<COMANDO_EXATO>",
+"exit_code": "<CODIGO>",
+"artifacts": {
+"kpm_t0_raw": "raw/kpm_t0.raw",
+"decision": "causal/causal_chain.jsonl",
+"ric_control_raw": "raw/ric_control_request.raw",
+"control_outcome_raw": "raw/ric_control_ack.raw",
+"kpm_t1_raw": "raw/kpm_t1.raw",
+"pcap": "pcap/e2.pcap",
+"per_run_metrics": "analysis/metrics.json"
+},
+"hashes": {
+"algorithm": "SHA-256",
+"inventory": "hashes.sha256"
+}
+}
+43
+
+

@@ -8,7 +8,7 @@
 **PROGRAMA DE PÓS-GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO (PPGCOMP)**  
 
 **Autor:** George Alexandro Ferreira Barbosa  
-**Orientador:** Prof. Dr. Carlos Renato Lisboa Francês  
+**Orientador:** Prof. Dr. André Riker  
 **Data da Homologação:** 18 de setembro de 2026  
 **Release Oficial no GitHub:** `v1.2.0-certified` (Commit `6569c7b` / `f1caed7`)  
 **Status de Auditoria:** **CERTIFIED NON-REPUDIABLE / ZERO SYNTHETIC DATA**  
