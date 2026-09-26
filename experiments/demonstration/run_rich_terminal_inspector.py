@@ -367,27 +367,55 @@ def record_scenario_metrics(scenario, engine, stream_telemetry: bool) -> Dict[st
 
 
 def export_demonstration_results(summaries: List[Dict[str, Any]]):
-    """Exporta resultados da demonstração rica em CSV e JSON."""
+    """Exporta resultados da demonstração rica em CSV e JSON com fusão não-destrutiva."""
     results_dir = Path(PROJECT_DIR) / "experiments" / "results"
     tables_dir = results_dir / "tables"
     results_dir.mkdir(parents=True, exist_ok=True)
     tables_dir.mkdir(parents=True, exist_ok=True)
 
     json_path = results_dir / "dataset_demonstration_summary.json"
-    with open(json_path, "w", encoding="utf-8") as f:
-        json.dump({"demonstrations": summaries, "total": len(summaries)}, f, indent=2, ensure_ascii=False)
-
     csv_path = tables_dir / "demonstration_scenarios_summary.csv"
-    if summaries:
-        headers = list(summaries[0].keys())
+
+    # Merge with existing summaries by scenario_id
+    merged_dict = {}
+    if json_path.exists():
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                old_data = json.load(f)
+                for item in old_data.get("demonstrations", []):
+                    s_id = item.get("scenario_id")
+                    if s_id:
+                        merged_dict[s_id] = item
+        except Exception:
+            pass
+
+    for s in summaries:
+        merged_dict[s["scenario_id"]] = s
+
+    # Canonical order A -> B -> C
+    canonical_order = ["scenario_a_conflict_storm", "scenario_b_urllc_dapp", "scenario_c_temporal_flapping"]
+    sorted_summaries = []
+    for sc_id in canonical_order:
+        if sc_id in merged_dict:
+            sorted_summaries.append(merged_dict[sc_id])
+    # Add any other scenarios
+    for k, v in merged_dict.items():
+        if k not in canonical_order:
+            sorted_summaries.append(v)
+
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump({"demonstrations": sorted_summaries, "total": len(sorted_summaries)}, f, indent=2, ensure_ascii=False)
+
+    if sorted_summaries:
+        headers = list(sorted_summaries[0].keys())
         lines = [",".join(headers)]
-        for s in summaries:
+        for s in sorted_summaries:
             row = [str(s.get(h, "")) for h in headers]
             lines.append(",".join(row))
         with open(csv_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
 
-    print(f"\n{GREEN}[OK] Resultados da demonstração rica persistidos com sucesso:{RESET}")
+    print(f"\n{GREEN}[OK] Resultados da demonstração rica persistidos com sucesso ({len(sorted_summaries)} Cenários Consolidados):{RESET}")
     print(f"  * JSON: {json_path}")
     print(f"  * CSV:  {csv_path}\n")
 
@@ -423,6 +451,55 @@ def trigger_automatic_artifacts_update():
                 print(f"      {RED}[ERRO] Falha ao rodar {label}: {ex}{RESET}")
 
     print(f"{GREEN}[OK] Pipeline de artefatos, figuras e relatórios 100% atualizado!{RESET}\n")
+
+
+def parse_selected_scenarios(scenario_str: str, group_str: str = None) -> List[Any]:
+    """Parse flexibly individual, comma-separated, group, or all scenarios."""
+    sc_map = {
+        "a": SCENARIO_A_CONFLICT_STORM,
+        "1": SCENARIO_A_CONFLICT_STORM,
+        "storm": SCENARIO_A_CONFLICT_STORM,
+        "scenario_a": SCENARIO_A_CONFLICT_STORM,
+        "scenario_a_conflict_storm": SCENARIO_A_CONFLICT_STORM,
+        "b": SCENARIO_B_URLLC_DAPP_ENVELOPES,
+        "2": SCENARIO_B_URLLC_DAPP_ENVELOPES,
+        "urllc": SCENARIO_B_URLLC_DAPP_ENVELOPES,
+        "dapp": SCENARIO_B_URLLC_DAPP_ENVELOPES,
+        "scenario_b": SCENARIO_B_URLLC_DAPP_ENVELOPES,
+        "scenario_b_urllc_dapp": SCENARIO_B_URLLC_DAPP_ENVELOPES,
+        "c": SCENARIO_C_TEMPORAL_FLAPPING,
+        "3": SCENARIO_C_TEMPORAL_FLAPPING,
+        "flapping": SCENARIO_C_TEMPORAL_FLAPPING,
+        "pingpong": SCENARIO_C_TEMPORAL_FLAPPING,
+        "scenario_c": SCENARIO_C_TEMPORAL_FLAPPING,
+        "scenario_c_temporal_flapping": SCENARIO_C_TEMPORAL_FLAPPING,
+    }
+
+    if group_str:
+        grp = group_str.strip().lower()
+        if grp in ("1", "ab", "a,b"):
+            return [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES]
+        elif grp in ("2", "bc", "b,c"):
+            return [SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
+        elif grp in ("3", "ac", "a,c"):
+            return [SCENARIO_A_CONFLICT_STORM, SCENARIO_C_TEMPORAL_FLAPPING]
+        elif grp in ("all", "todos", "123", "abc"):
+            return [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
+
+    if not scenario_str or scenario_str.lower() in ("all", "todos"):
+        return [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
+
+    chosen = []
+    for token in scenario_str.split(","):
+        t = token.strip().lower()
+        if not t:
+            continue
+        if t in ("all", "todos"):
+            return [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
+        if t in sc_map and sc_map[t] not in chosen:
+            chosen.append(sc_map[t])
+
+    return chosen if chosen else [SCENARIO_A_CONFLICT_STORM]
 
 
 def run_scenario(scenario, stream_telemetry=True, duration_s=30.0, interval_s=0.5) -> Dict[str, Any]:
@@ -528,8 +605,15 @@ def main():
         "-s",
         "--scenario",
         type=str,
-        choices=["a", "b", "c", "all", "scenario_a_conflict_storm", "scenario_b_urllc_dapp", "scenario_c_temporal_flapping"],
-        help="Cenário para executar: a (Conflict Storm), b (URLLC dApp), c (Temporal Flapping), all (Todos)",
+        default=None,
+        help="Cenário para executar: 'a', 'b', 'c', lista 'a,b', 'b,c' ou 'all' (Padrão: all)",
+    )
+    parser.add_argument(
+        "-g",
+        "--group",
+        type=str,
+        default=None,
+        help="Grupo de cenários: '1' (A,B), '2' (B,C), '3' (A,C), 'all' (A,B,C)",
     )
     parser.add_argument(
         "-d",
@@ -564,22 +648,15 @@ def main():
     args = parser.parse_args()
     target_duration = 0.0 if args.continuous else args.duration
 
-    if args.scenario:
-        if args.scenario in ("a", "scenario_a_conflict_storm"):
-            scenarios = [SCENARIO_A_CONFLICT_STORM]
-        elif args.scenario in ("b", "scenario_b_urllc_dapp"):
-            scenarios = [SCENARIO_B_URLLC_DAPP_ENVELOPES]
-        elif args.scenario in ("c", "scenario_c_temporal_flapping"):
-            scenarios = [SCENARIO_C_TEMPORAL_FLAPPING]
-        elif args.scenario == "all":
-            scenarios = [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
+    if args.scenario or args.group:
+        scenarios = parse_selected_scenarios(args.scenario, args.group)
     else:
         if sys.stdin.isatty():
             scenarios, menu_dur = interactive_menu()
             if not args.continuous and args.duration == 60.0:
                 target_duration = menu_dur
         else:
-            scenarios = [SCENARIO_A_CONFLICT_STORM]
+            scenarios = [SCENARIO_A_CONFLICT_STORM, SCENARIO_B_URLLC_DAPP_ENVELOPES, SCENARIO_C_TEMPORAL_FLAPPING]
 
     executed_summaries = []
     for i, sc in enumerate(scenarios, 1):

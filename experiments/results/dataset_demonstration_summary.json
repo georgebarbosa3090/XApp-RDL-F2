@@ -9,7 +9,7 @@
       "xapps_count": 6,
       "proposals_ingested": 6,
       "conflicts_detected": 6,
-      "conflict_types": "SPATIAL_BEAM_INTERFERENCE;INDIRECT_C2_POWER_VS_QOS;ZERO_TRUST_BOUNDARY_VIOLATION;DIRECT_C1_PRB_CONTENTION;IMPLICIT_HO_INTERFERENCE;ISAC_RADAR_SPECTRAL_CONTENTION",
+      "conflict_types": "IMPLICIT_HO_INTERFERENCE;INDIRECT_C2_POWER_VS_QOS;SPATIAL_BEAM_INTERFERENCE;DIRECT_C1_PRB_CONTENTION;ZERO_TRUST_BOUNDARY_VIOLATION;ISAC_RADAR_SPECTRAL_CONTENTION",
       "decision_latency_ms": 14.39,
       "e2_ack_latency_ms": 2.1,
       "sla_violations_pct": 0.0,
@@ -17,7 +17,7 @@
       "closed_loop_status": "CONVERGED_ACK_OK",
       "telemetry_streamed_influx": false,
       "grafana_dashboard_url": "http://localhost:3000/d/oran-rdl-closed-loop",
-      "timestamp": "2026-09-26 14:09:10"
+      "timestamp": "2026-09-26 14:24:29"
     },
     {
       "scenario_id": "scenario_b_urllc_dapp",
@@ -36,7 +36,7 @@
       "closed_loop_status": "CONVERGED_ACK_OK",
       "telemetry_streamed_influx": false,
       "grafana_dashboard_url": "http://localhost:3000/d/oran-rdl-closed-loop",
-      "timestamp": "2026-09-26 14:09:12"
+      "timestamp": "2026-09-26 14:24:31"
     },
     {
       "scenario_id": "scenario_c_temporal_flapping",
@@ -55,7 +55,7 @@
       "closed_loop_status": "CONVERGED_ACK_OK",
       "telemetry_streamed_influx": false,
       "grafana_dashboard_url": "http://localhost:3000/d/oran-rdl-closed-loop",
-      "timestamp": "2026-09-26 14:09:15"
+      "timestamp": "2026-09-26 14:24:34"
     }
   ],
   "total": 3
