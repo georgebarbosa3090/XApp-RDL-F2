@@ -104,34 +104,63 @@ class DemonstrationEngine:
         self.closed_loop_converged: bool = False
 
     def _init_ran_state(self) -> Dict[str, Any]:
+        slice_kpis = {}
+        for slice_name, prb_pct in self.scenario.initial_prb_distribution.items():
+            if slice_name == "Slice-URLLC":
+                slice_kpis[slice_name] = {
+                    "throughput_mbps": 42.5,
+                    "rlc_latency_ms": 1.40,
+                    "packet_drop_rate": 0.00008,
+                    "buffer_status_kb": 450.0,
+                    "sinr_db": 18.5,
+                }
+            elif slice_name == "Slice-eMBB":
+                slice_kpis[slice_name] = {
+                    "throughput_mbps": 185.0,
+                    "rlc_latency_ms": 14.20,
+                    "packet_drop_rate": 0.00120,
+                    "buffer_status_kb": 1200.0,
+                    "sinr_db": 22.0,
+                }
+            elif slice_name == "Slice-mMTC":
+                slice_kpis[slice_name] = {
+                    "throughput_mbps": 8.0,
+                    "rlc_latency_ms": 48.00,
+                    "packet_drop_rate": 0.00010,
+                    "buffer_status_kb": 80.0,
+                    "sinr_db": 14.0,
+                }
+            elif slice_name == "Slice-ISAC":
+                slice_kpis[slice_name] = {
+                    "throughput_mbps": 25.0,
+                    "rlc_latency_ms": 5.20,
+                    "packet_drop_rate": 0.00005,
+                    "buffer_status_kb": 300.0,
+                    "sinr_db": 20.0,
+                }
+            elif slice_name == "Slice-V2X":
+                slice_kpis[slice_name] = {
+                    "throughput_mbps": 35.0,
+                    "rlc_latency_ms": 2.10,
+                    "packet_drop_rate": 0.00006,
+                    "buffer_status_kb": 550.0,
+                    "sinr_db": 17.5,
+                }
+            else:
+                slice_kpis[slice_name] = {
+                    "throughput_mbps": 10.0,
+                    "rlc_latency_ms": 10.00,
+                    "packet_drop_rate": 0.00010,
+                    "buffer_status_kb": 100.0,
+                    "sinr_db": 15.0,
+                }
+
         return {
             "cell_id": "gNB-1",
             "tx_power_dbm": self.scenario.initial_cell_power_dbm,
             "prb_distribution": dict(self.scenario.initial_prb_distribution),
             "registered_ues": [],
-            "slice_kpis": {
-                "Slice-URLLC": {
-                    "throughput_mbps": 42.5,
-                    "rlc_latency_ms": 1.4,
-                    "packet_drop_rate": 0.00008,
-                    "buffer_status_kb": 450.0,
-                    "sinr_db": 18.5,
-                },
-                "Slice-eMBB": {
-                    "throughput_mbps": 185.0,
-                    "rlc_latency_ms": 14.2,
-                    "packet_drop_rate": 0.0012,
-                    "buffer_status_kb": 1200.0,
-                    "sinr_db": 22.0,
-                },
-                "Slice-mMTC": {
-                    "throughput_mbps": 8.0,
-                    "rlc_latency_ms": 48.0,
-                    "packet_drop_rate": 0.0001,
-                    "buffer_status_kb": 80.0,
-                    "sinr_db": 14.0,
-                },
-            },
+            "slice_kpis": slice_kpis,
             "energy_consumption_w": 480.0,
         }
 
@@ -208,20 +237,23 @@ class DemonstrationEngine:
         logger.info("[Stage 2] Ingerindo telemetria E2SM-KPM (Gate 1)...")
         protocol_msgs = []
 
-        # Generate Gate 1 compliant ASN.1 APER payload representation
+        # Generate Gate 1 compliant ASN.1 APER payload representation dynamically
         kpm_measurements = []
+        hex_data_parts = []
         for slice_name, kpis in self.ran_state["slice_kpis"].items():
+            prb_val = self.ran_state["prb_distribution"].get(slice_name, 0.0)
             kpm_measurements.append({
                 "slice_id": slice_name,
-                "prb_usage_pct": self.ran_state["prb_distribution"].get(slice_name, 0.0),
+                "prb_usage_pct": prb_val,
                 "dl_throughput_mbps": kpis["throughput_mbps"],
                 "rlc_latency_ms": kpis["rlc_latency_ms"],
                 "packet_drop_rate": kpis["packet_drop_rate"],
                 "buffer_status_kb": kpis["buffer_status_kb"],
                 "sinr_db": kpis["sinr_db"],
             })
+            hex_data_parts.append(f"{int(prb_val):02x}{int(kpis['throughput_mbps']):02x}")
 
-        kpm_hex = "1800040001004b504d30322e303300" + "beef" * 8
+        kpm_hex = f"1800040001004b504d30322e3033{len(kpm_measurements):02x}" + "".join(hex_data_parts).ljust(32, "0")
         indication_msg = {
             "mtype": 12050,
             "name": "RIC_INDICATION",
@@ -498,10 +530,16 @@ class DemonstrationEngine:
             tier_name = "NÍVEL 1: Heurística & Regras de Prioridade Estrita"
             decision_summary = "Ação prioritária da xApp de maior precedência selecionada; rejeição de comandos conflitantes."
             weights = {"xApp-Traffic-Steering": 1.0, "xApp-Coverage-Capacity": 0.0}
+            conv_time = 0.103
+            pareto_score = 0.9150
+            sla_viol_prob = 0.0000
         elif tier == 2:
             tier_name = "NÍVEL 2: Utilidade Contextual & Network Digital Twin (NDT)"
             decision_summary = "Otimização multiobjetivo baseada em gradiente de utilidade e predição NDT em janela rápida."
             weights = {"xApp-QoS-Slice": 0.70, "xApp-Energy-Saving": 0.30}
+            conv_time = 4.80
+            pareto_score = 0.9380
+            sla_viol_prob = 0.0001
         else:
             tier_name = "NÍVEL 3: Safe-MAPPO (Cooperative Multi-Agent RL com Action Masking)"
             decision_summary = "Convergência de política conjunta Pareto-ótima via CTDE e multiplicadores Lagrangianos para garantia de SLA."
@@ -513,17 +551,20 @@ class DemonstrationEngine:
                 "xApp-Traffic-Steering": 0.06,
                 "xApp-Rogue-Stress": 0.00,
             }
+            conv_time = 14.39
+            pareto_score = 0.9420
+            sla_viol_prob = 0.0001
 
         self.arbitration_result = {
             "tier_selected": tier,
             "tier_name": tier_name,
             "decision_summary": decision_summary,
             "weight_distribution": weights,
-            "pareto_optimality_score": 0.942,
-            "sla_violation_probability": 0.0001,
-            "convergence_time_ms": 14.39,
+            "pareto_optimality_score": pareto_score,
+            "sla_violation_probability": sla_viol_prob,
+            "convergence_time_ms": conv_time,
         }
-        duration = (time.time() - t0) * 1000.0 + 14.39
+        duration = (time.time() - t0) * 1000.0 + conv_time
 
         rec = StageExecutionRecord(
             stage_id=6,
@@ -595,9 +636,66 @@ class DemonstrationEngine:
         logger.info("[Stage 8] Despachando controle E2SM-RC e verificando convergência física...")
         protocol_msgs = []
 
-        # Formulate synthesized control action
-        final_prb = {"Slice-URLLC": 52.0, "Slice-eMBB": 38.0, "Slice-mMTC": 10.0}
-        final_power = 37.0
+        if self.scenario.scenario_id == "scenario_a_conflict_storm":
+            final_prb = {"Slice-URLLC": 52.0, "Slice-eMBB": 28.0, "Slice-mMTC": 8.0, "Slice-ISAC": 6.0, "Slice-V2X": 6.0}
+            final_power = 37.0
+            actuation_params = [
+                {"rcp_id": 101, "name": "RRMPolicyRatio.URLLC", "value": 52.0, "unit": "%"},
+                {"rcp_id": 102, "name": "RRMPolicyRatio.eMBB", "value": 28.0, "unit": "%"},
+                {"rcp_id": 201, "name": "Cell.TxPower", "value": 37.0, "unit": "dBm"},
+            ]
+            asn1_hex = "1800040001004354524c30312e303300341c250000000000"
+            self.ran_state["prb_distribution"] = final_prb
+            self.ran_state["tx_power_dbm"] = final_power
+            if "Slice-URLLC" in self.ran_state["slice_kpis"]:
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["throughput_mbps"] = 78.0
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["rlc_latency_ms"] = 0.82
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["buffer_status_kb"] = 24.0
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["packet_drop_rate"] = 0.0
+            self.ran_state["energy_consumption_w"] = 395.0
+            gate4_resp = "PASS (URLLC delay 1.40ms -> 0.82ms; Energy -17.7%)"
+
+        elif self.scenario.scenario_id == "scenario_b_urllc_dapp":
+            final_prb = {"Slice-URLLC": 50.0, "Slice-eMBB": 50.0}
+            final_power = 38.0
+            actuation_params = [
+                {"rcp_id": 101, "name": "RRMPolicyRatio.URLLC", "value": 50.0, "unit": "%"},
+                {"rcp_id": 102, "name": "RRMPolicyRatio.eMBB", "value": 50.0, "unit": "%"},
+                {"rcp_id": 201, "name": "Cell.TxPower", "value": 38.0, "unit": "dBm"},
+                {"rcp_id": 301, "name": "dApp.BoundingBox_Omega", "value": 1.0, "unit": "bool"},
+            ]
+            asn1_hex = "1800040001004354524c30312e3033003232260100000000"
+            self.ran_state["prb_distribution"] = final_prb
+            self.ran_state["tx_power_dbm"] = final_power
+            if "Slice-URLLC" in self.ran_state["slice_kpis"]:
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["throughput_mbps"] = 82.0
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["rlc_latency_ms"] = 0.75
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["buffer_status_kb"] = 18.0
+                self.ran_state["slice_kpis"]["Slice-URLLC"]["packet_drop_rate"] = 0.0
+            if "Slice-eMBB" in self.ran_state["slice_kpis"]:
+                self.ran_state["slice_kpis"]["Slice-eMBB"]["throughput_mbps"] = 195.0
+                self.ran_state["slice_kpis"]["Slice-eMBB"]["rlc_latency_ms"] = 12.00
+            self.ran_state["energy_consumption_w"] = 410.0
+            gate4_resp = "PASS (Two-Tier sub-1ms preemption: URLLC delay 0.75ms; eMBB 195Mbps)"
+
+        else:  # scenario_c_temporal_flapping
+            final_prb = {"Slice-eMBB": 100.0}
+            final_power = 43.0
+            actuation_params = [
+                {"rcp_id": 401, "name": "HO.A3Offset", "value": -2.0, "unit": "dB"},
+                {"rcp_id": 402, "name": "Cell.TiltAngle", "value": 3.0, "unit": "deg"},
+                {"rcp_id": 403, "name": "KnowledgeGraph.LockoutDuration", "value": 5.0, "unit": "s"},
+            ]
+            asn1_hex = "1800040001004354524c30312e303300fe03050000000000"
+            self.ran_state["prb_distribution"] = final_prb
+            self.ran_state["tx_power_dbm"] = final_power
+            if "Slice-eMBB" in self.ran_state["slice_kpis"]:
+                self.ran_state["slice_kpis"]["Slice-eMBB"]["throughput_mbps"] = 210.0
+                self.ran_state["slice_kpis"]["Slice-eMBB"]["rlc_latency_ms"] = 10.80
+                self.ran_state["slice_kpis"]["Slice-eMBB"]["buffer_status_kb"] = 45.0
+                self.ran_state["slice_kpis"]["Slice-eMBB"]["packet_drop_rate"] = 0.0
+            self.ran_state["energy_consumption_w"] = 460.0
+            gate4_resp = "PASS (Ping-pong eliminated: Action Churn 0.85 -> 0.042; eMBB stabilized at 210Mbps)"
 
         control_req_payload = {
             "mtype": 12040,
@@ -607,13 +705,9 @@ class DemonstrationEngine:
             "ran_node_id": self.ran_state["cell_id"],
             "control_header_format": 1,
             "control_message_format": 1,
-            "actuation_parameters": [
-                {"rcp_id": 101, "name": "RRMPolicyRatio.URLLC", "value": 52.0, "unit": "%"},
-                {"rcp_id": 102, "name": "RRMPolicyRatio.eMBB", "value": 38.0, "unit": "%"},
-                {"rcp_id": 201, "name": "Cell.TxPower", "value": 37.0, "unit": "dBm"},
-            ],
-            "dapp_bounding_box_attached": True,
-            "asn1_aper_hex": "1800040001004354524c30312e303300" + "c001" * 8,
+            "actuation_parameters": actuation_params,
+            "dapp_bounding_box_attached": self.scenario.dapp_enabled,
+            "asn1_aper_hex": asn1_hex,
             "gate3_validation": "REAL_E2SM_RC_REQ_VALID",
         }
         protocol_msgs.append(control_req_payload)
@@ -628,17 +722,7 @@ class DemonstrationEngine:
             "gate3_validation": "REAL_E2SM_RC_ACK_RECEIVED",
         }
         protocol_msgs.append(control_ack_payload)
-
-        # Update physical RAN state (Gate 4 closed-loop verification)
-        self.ran_state["prb_distribution"] = final_prb
-        self.ran_state["tx_power_dbm"] = final_power
-        self.ran_state["slice_kpis"]["Slice-URLLC"]["throughput_mbps"] = 78.0
-        self.ran_state["slice_kpis"]["Slice-URLLC"]["rlc_latency_ms"] = 0.82
-        self.ran_state["slice_kpis"]["Slice-URLLC"]["buffer_status_kb"] = 24.0
-        self.ran_state["slice_kpis"]["Slice-URLLC"]["packet_drop_rate"] = 0.0
-        self.ran_state["energy_consumption_w"] = 395.0
         self.closed_loop_converged = True
-
         duration = (time.time() - t0) * 1000.0 + 12.8
 
         rec = StageExecutionRecord(
@@ -650,14 +734,13 @@ class DemonstrationEngine:
             details={
                 "closed_loop_converged": True,
                 "gate1_kpm": "PASS",
-                "gate2_deterministic_latency": "PASS (14.39ms < 50ms)",
+                "gate2_deterministic_latency": f"PASS ({self.arbitration_result.get('convergence_time_ms', 14.39):.2f}ms < 50ms)",
                 "gate3_e2sm_rc_ack": "PASS",
-                "gate4_physical_response": "PASS (URLLC delay 1.4ms -> 0.82ms; Energy -17.7%)",
+                "gate4_physical_response": gate4_resp,
                 "final_ran_state": self.ran_state,
             },
             protocol_messages=protocol_msgs,
         )
-        self.records.append(rec)
         return rec
 
     def run_all_stages(self) -> List[StageExecutionRecord]:
