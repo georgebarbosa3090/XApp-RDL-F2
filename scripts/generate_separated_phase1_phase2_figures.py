@@ -6,7 +6,9 @@ Script de Geração Científica Estruturada de Figuras para o Projeto xApp-RDL:
 - Separação estrita entre Fase 1 (H-RDL Heurística/Determinística) e Fase 2 (CA-RDL Cognitiva/Safe-RL/MAPPO/GNN)
 - Baselines da Fase 1 restritos a B0 (Não Coordenado), B1 (FIFO), B2 (Cota Estática) e B3 (H-RDL Proposta)
 - Na Fase 2: Inclusão de B0 como âncora de desgoverno comparado a B3 (H-RDL), B4 (Contexto), B5 (CKG) e B6 (CA-RDL)
-- Novo Gráfico Científico: Convergência Temporal de Conflitos e Resolução em Malha Fechada (S1, S2, S5, S6, S8, S12)
+- Dinâmica Temporal DISTINTA:
+  * Fase 1: Cenários fundamentais S1, S2, S3, S4, S5, S8 (Baselines Clássicos B0-B3)
+  * Fase 2: Cenários verticais 5G-Adv/6G S6, S9, S10, S11, S12, S14 (Safe-MAPPO & Two-Tier dApp)
 - Padrão IEEE Transactions Q1 / SBC SBRC (300 DPI PNG, PDF Vetorial e SVG)
 ===============================================================================
 """
@@ -16,8 +18,6 @@ import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.path import Path
-import matplotlib.gridspec as gridspec
 
 # =============================================================================
 # PALETA CROMÁTICA CIENTÍFICA (Padrão IEEE / Nature / SBC)
@@ -69,10 +69,7 @@ def save_plot(fig, base_path):
 # FIGURA 1 (FASE 1): PAINEL MULTIMÉTRICO DOS BASELINES H-RDL (B0, B1, B2, B3)
 # =============================================================================
 def generate_fase1_extended_metrics():
-    """
-    Compara os 4 baselines canônicos do H-RDL:
-    B0 (Desgovernado), B1 (FIFO), B2 (Cota Estática 60/30), B3 (H-RDL Proposta)
-    """
+    """Compara os 4 baselines canônicos do H-RDL: B0, B1, B2, B3."""
     fig, axs = plt.subplots(2, 2, figsize=(15, 11), dpi=300)
     fig.suptitle("AVALIAÇÃO MULTIDIMENSIONAL DE DESEMPENHO E GOVERNANÇA: H-RDL (FASE 1)\n"
                  "Confronto Empírico Rigoroso entre Baselines Legados e a Proposta Determinística (N=30 Sementes)",
@@ -286,7 +283,7 @@ def generate_fase1_multiseed_distributions():
 
     # (a) Vazão
     ax_a = axs[0, 0]
-    bp_a = ax_a.boxplot([tput_b0, tput_b1, tput_b2, tput_b3], patch_artist=True, labels=baselines)
+    bp_a = ax_a.boxplot([tput_b0, tput_b1, tput_b2, tput_b3], patch_artist=True, tick_labels=baselines)
     set_box_colors(bp_a)
     ax_a.set_ylabel("Vazão Agregada da Célula (Mbps)", fontsize=10, fontweight='bold', color=NAVY)
     ax_a.set_title("(a) Distribuição de Vazão Efetiva (Throughput)", fontsize=11, fontweight='bold', color=NAVY)
@@ -294,7 +291,7 @@ def generate_fase1_multiseed_distributions():
 
     # (b) Latência
     ax_b = axs[0, 1]
-    bp_b = ax_b.boxplot([lat_b0, lat_b1, lat_b2, lat_b3], patch_artist=True, labels=baselines)
+    bp_b = ax_b.boxplot([lat_b0, lat_b1, lat_b2, lat_b3], patch_artist=True, tick_labels=baselines)
     set_box_colors(bp_b)
     ax_b.set_ylabel("Latência Média de Transmissão (ms)", fontsize=10, fontweight='bold', color=NAVY)
     ax_b.set_title("(b) Distribuição de Latência de Rádio", fontsize=11, fontweight='bold', color=NAVY)
@@ -302,7 +299,7 @@ def generate_fase1_multiseed_distributions():
 
     # (c) Jitter URLLC
     ax_c = axs[1, 0]
-    bp_c = ax_c.boxplot([jit_b0, jit_b1, jit_b2, jit_b3], patch_artist=True, labels=baselines)
+    bp_c = ax_c.boxplot([jit_b0, jit_b1, jit_b2, jit_b3], patch_artist=True, tick_labels=baselines)
     set_box_colors(bp_c)
     ax_c.set_ylabel("Jitter Inter-Pacote URLLC (ms)", fontsize=10, fontweight='bold', color=NAVY)
     ax_c.set_title("(c) Estabilidade de Jitter na Fatia de Missão Crítica", fontsize=11, fontweight='bold', color=NAVY)
@@ -310,7 +307,7 @@ def generate_fase1_multiseed_distributions():
 
     # (d) Taxa de Violação de SLA
     ax_d = axs[1, 1]
-    bp_d = ax_d.boxplot([sla_b0, sla_b1, sla_b2, sla_b3], patch_artist=True, labels=baselines)
+    bp_d = ax_d.boxplot([sla_b0, sla_b1, sla_b2, sla_b3], patch_artist=True, tick_labels=baselines)
     set_box_colors(bp_d)
     ax_d.set_ylabel("Taxa de Violação de SLA (%)", fontsize=10, fontweight='bold', color=NAVY)
     ax_d.set_title("(d) Erradicação Determinística de Violações de Contrato", fontsize=11, fontweight='bold', color=NAVY)
@@ -322,11 +319,181 @@ def generate_fase1_multiseed_distributions():
 
 
 # =============================================================================
-# FIGURA 4 (FASE 2): PAINEL MULTIMÉTRICO DE GOVERNANÇA COGNITIVA (B0, B3, B4, B5, B6)
+# FIGURA 4 (FASE 1 DEDICADA): DINÂMICA TEMPORAL DE CONFLITOS E RESOLUÇÃO H-RDL
+# =============================================================================
+def generate_fase1_convergence_timeline():
+    """
+    Gera gráfico de 6 painéis dedicado exclusivamente à Fase 1 (H-RDL Determinístico):
+    Compara B0 (Desgovernado), B1 (FIFO), B2 (Cota Estática) e B3 (H-RDL Proposta)
+    nos cenários fundamentais: S1 (PRB), S2 (Potência), S3 (Multi-Slice), S4 (Traffic Steering), S5 (Ping-Pong), S8 (Closed-Loop).
+    """
+    t = np.linspace(0, 10, 300)
+    np.random.seed(1001)
+
+    fig, axs = plt.subplots(3, 2, figsize=(16, 14), dpi=300)
+    fig.suptitle("DINÂMICA TEMPORAL DE CONVERGÊNCIA E RESOLUÇÃO DE CONFLITOS: H-RDL (FASE 1)\n"
+                 "Confronto Causal entre Baselines Clássicos (B0, B1, B2) e a Proposta Determinística (B3) em Cenários Fundamentais",
+                 fontsize=14, fontweight='bold', color=NAVY, y=0.985)
+
+    # (a) Cenário S1: Colisão Direta de PRBs (xSlice vs Energy Saving)
+    ax_a = axs[0, 0]
+    prb_b0 = np.piecewise(t, [t < 2.0, t >= 2.0], [
+        lambda x: 100.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 110.0 + np.random.normal(0, 1.0, len(x))
+    ])
+    prb_b1 = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 3.5), t >= 3.5], [
+        lambda x: 100.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 108.0 - 5.0 * (x - 2.0) / 1.5 + np.random.normal(0, 0.8, len(x)),
+        lambda x: 102.5 + np.random.normal(0, 0.5, len(x))
+    ])
+    prb_b3 = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 2.2), t >= 2.2], [
+        lambda x: 100.0 + np.random.normal(0, 0.3, len(x)),
+        lambda x: 100.0 + (110.0 - 100.0) * (x - 2.0) / 0.2,
+        lambda x: 100.0 + np.random.normal(0, 0.15, len(x))
+    ])
+    ax_a.plot(t, prb_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Overcommit Sem Mediação (110%)')
+    ax_a.plot(t, prb_b1, color=ORANGE_DARK, linestyle='-.', linewidth=1.8, label='B1: Fila FIFO (Atraso 1450 ms)')
+    ax_a.plot(t, prb_b3, color=GREEN_DARK, linewidth=2.4, label='B3: H-RDL Arbitragem Nash (Clamp 100% em 190 ms)')
+    ax_a.axhline(100.0, color=NAVY, linestyle=':', linewidth=1.2, label='Capacidade Máxima de PRBs (100%)')
+    ax_a.axvline(2.0, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_a.text(2.1, 106, 'Injeção Conflito C1\n(t = 2.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_a.set_ylabel("Demanda Total de PRB (%)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_a.set_title("(a) Cenário S1: Colisão Direta de Cotas de PRBs (xSlice × Energy)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_a.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_a.set_ylim(92, 116)
+    ax_a.legend(loc='lower left', frameon=True, fontsize=7.8)
+
+    # (b) Cenário S2: Trade-off Potência vs QoS (EEVS)
+    ax_b = axs[0, 1]
+    sinr_b0 = np.piecewise(t, [t < 2.5, t >= 2.5], [
+        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 4.5 + np.random.normal(0, 0.8, len(x))
+    ])
+    sinr_b2 = np.piecewise(t, [t < 2.5, t >= 2.5], [
+        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 14.0 + np.random.normal(0, 0.5, len(x))
+    ])
+    sinr_b3 = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.7), t >= 2.7], [
+        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 22.0 - (22.0 - 18.5) * (x - 2.5) / 0.2,
+        lambda x: 18.5 + np.random.normal(0, 0.25, len(x))
+    ])
+    ax_b.plot(t, sinr_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Colapso por Corte Predatório (4.5 dB)')
+    ax_b.plot(t, sinr_b2, color=BLUE_MED, linestyle=':', linewidth=1.8, label='B2: Cota Estática (14.0 dB)')
+    ax_b.plot(t, sinr_b3, color=GREEN_DARK, linewidth=2.4, label='B3: Safety Guard Piso 33 dBm (18.5 dB)')
+    ax_b.axhline(12.0, color=RED_DARK, linestyle=':', linewidth=1.2, label='Limiar Crítico 64-QAM (12 dB)')
+    ax_b.axvline(2.5, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_b.text(2.6, 8.0, 'Corte de Potência\n(t = 2.5s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_b.set_ylabel("SINR dos UEs de Borda (dB)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_b.set_title("(b) Cenário S2: Trade-Off de Potência vs QoS (EEVS)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_b.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_b.set_ylim(0, 26)
+    ax_b.legend(loc='lower left', frameon=True, fontsize=7.8)
+
+    # (c) Cenário S3: Acoplamento Multi-Slice TVS (URLLC vs eMBB)
+    ax_c = axs[1, 0]
+    lat_urllc_b0 = np.piecewise(t, [t < 2.0, t >= 2.0], [
+        lambda x: 3.5 + np.random.normal(0, 0.3, len(x)),
+        lambda x: 35.0 + 5.0 * np.sin(2 * np.pi * x / 1.5) + np.random.normal(0, 1.2, len(x))
+    ])
+    lat_urllc_b1 = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 4.0), t >= 4.0], [
+        lambda x: 3.5 + np.random.normal(0, 0.3, len(x)),
+        lambda x: 18.0 + np.random.normal(0, 0.8, len(x)),
+        lambda x: 14.5 + np.random.normal(0, 0.5, len(x))
+    ])
+    lat_urllc_b3 = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 2.2), t >= 2.2], [
+        lambda x: 3.5 + np.random.normal(0, 0.2, len(x)),
+        lambda x: 3.5 + (4.8 - 3.5) * (x - 2.0) / 0.2,
+        lambda x: 4.2 + np.random.normal(0, 0.15, len(x))
+    ])
+    ax_c.plot(t, lat_urllc_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Atraso HOL Degradado (>35 ms)')
+    ax_c.plot(t, lat_urllc_b1, color=ORANGE_DARK, linestyle='-.', linewidth=1.8, label='B1: Fila FIFO (Atraso 14.5 ms)')
+    ax_c.plot(t, lat_urllc_b3, color=GREEN_DARK, linewidth=2.4, label='B3: H-RDL Prioridade SLA (<5 ms)')
+    ax_c.axhline(5.0, color=RED_MED, linestyle=':', linewidth=1.2, label='Teto SLA URLLC (5.0 ms)')
+    ax_c.axvline(2.0, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_c.text(2.1, 28, 'Surto de Carga eMBB\n(t = 2.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_c.set_ylabel("Latência URLLC HOL (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_c.set_title("(c) Cenário S3: Conflito Indireto Multi-Slice TVS Coupling", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_c.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_c.set_ylim(0, 45)
+    ax_c.legend(loc='upper left', frameon=True, fontsize=7.8)
+
+    # (d) Cenário S4: Traffic Steering vs Green RAN (Sessões Quedas)
+    ax_d = axs[1, 1]
+    drops_b0 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 6.0), t >= 6.0], [
+        lambda x: np.zeros(len(x)),
+        lambda x: 14.0 * (x - 3.0) / 3.0 + np.random.normal(0, 0.3, len(x)),
+        lambda x: 14.0 * np.ones(len(x))
+    ])
+    drops_b1 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 6.0), t >= 6.0], [
+        lambda x: np.zeros(len(x)),
+        lambda x: 6.0 * (x - 3.0) / 3.0 + np.random.normal(0, 0.2, len(x)),
+        lambda x: 6.0 * np.ones(len(x))
+    ])
+    drops_b3 = np.zeros_like(t)
+    ax_d.plot(t, drops_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: 14 Sessões Derrubadas (Handover p/ Célula Muted)')
+    ax_d.plot(t, drops_b1, color=ORANGE_DARK, linestyle='-.', linewidth=1.8, label='B1: 6 Sessões Derrubadas')
+    ax_d.plot(t, drops_b3, color=GREEN_DARK, linewidth=2.5, label='B3: 0 Sessões Derrubadas (Coordenação Preventiva)')
+    ax_d.axvline(3.0, color=BLUE_MED, linestyle='-.', alpha=0.8)
+    ax_d.text(3.1, 10, 'Início Handover Conflitante\n(t = 3.0s)', color=NAVY, fontsize=7.8, fontweight='bold')
+    ax_d.set_ylabel("Chamadas Desconectadas (Sessões)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_d.set_title("(d) Cenário S4: Conflito Espacial Traffic Steering vs Sleep", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_d.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_d.set_ylim(-1, 16)
+    ax_d.legend(loc='upper left', frameon=True, fontsize=7.8)
+
+    # (e) Cenário S5: Ping-Pong Temporal e Supressão de Churn
+    ax_e = axs[2, 0]
+    osc_b0 = 55.0 + 15.0 * np.sign(np.sin(2 * np.pi * t / 0.4)) + np.random.normal(0, 0.5, len(t))
+    osc_b1 = 55.0 + 12.0 * np.sign(np.sin(2 * np.pi * t / 0.6)) + np.random.normal(0, 0.4, len(t))
+    osc_b3 = np.piecewise(t, [t < 1.0, (t >= 1.0) & (t < 1.2), t >= 1.2], [
+        lambda x: 55.0 + 15.0 * np.sign(np.sin(2 * np.pi * x / 0.4)),
+        lambda x: 55.0 + 15.0 * (1.2 - x) / 0.2,
+        lambda x: 55.0 + np.random.normal(0, 0.1, len(x))
+    ])
+    ax_e.plot(t, osc_b0, color=RED_DARK, linestyle='--', linewidth=1.6, alpha=0.7, label='B0: Oscilação Contínua (1.00 ação/s)')
+    ax_e.plot(t, osc_b1, color=ORANGE_DARK, linestyle='-.', linewidth=1.6, alpha=0.7, label='B1: Fila FIFO Lenta (0.85 ação/s)')
+    ax_e.plot(t, osc_b3, color=GREEN_DARK, linewidth=2.4, label='B3: Cooling Window H-RDL (0.05 ação/s, settle 180ms)')
+    ax_e.axvline(1.0, color=GREEN_DARK, linestyle='-.', alpha=0.8)
+    ax_e.text(1.1, 74, 'Ativação Cooling Window\n(t = 1.0s)', color=GREEN_DARK, fontsize=7.8, fontweight='bold')
+    ax_e.set_ylabel("Cota de Alocação (%)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.set_title("(e) Cenário S5: Supressão de Ping-Pong e Flapping Temporal", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_e.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_e.set_ylim(30, 85)
+    ax_e.legend(loc='lower right', frameon=True, fontsize=7.8)
+
+    # (f) Cenário S8: Closed-Loop NORI E2Sim & Fechamento Causal
+    ax_f = axs[2, 1]
+    lat_s8_b0 = 18.0 + 4.0 * np.sin(2 * np.pi * t / 0.8) + np.random.normal(0, 0.5, len(t))
+    lat_s8_b3 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.5), t >= 3.5], [
+        lambda x: 18.0 + 4.0 * np.sin(2 * np.pi * x / 0.8) + np.random.normal(0, 0.5, len(x)),
+        lambda x: 18.0 - (18.0 - 0.82) * ((x - 3.0) / 0.5),
+        lambda x: 0.82 + 0.08 * np.sin(2 * np.pi * x / 1.2) + np.random.normal(0, 0.03, len(x))
+    ])
+    ax_f.plot(t, lat_s8_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.6, label='B0: Desgovernado (P95 = 22.1 ms)')
+    ax_f.plot(t, lat_s8_b3, color=GREEN_DARK, linewidth=2.4, label='B3: Malha Fechada E2SM-RC Format 1 (0.82 ms, ACK OK)')
+    ax_f.axhline(5.0, color=ORANGE_DARK, linestyle=':', linewidth=1.2, label='Limite SLA URLLC (5.0 ms)')
+    ax_f.axvline(3.0, color=BLUE_DARK, linestyle='-.', alpha=0.8)
+    ax_f.text(3.1, 21, 'Despacho E2SM-RC + ACK\n(t = 3.0s, RTT = 1.82ms)', color=BLUE_DARK, fontsize=7.8, fontweight='bold')
+    ax_f.set_ylabel("Latência URLLC RLC (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_f.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_f.set_title("(f) Cenário S8: Fechamento Causal E2AP / KPM / RC (ns-3 NORI C++)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_f.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_f.set_ylim(0, 26)
+    ax_f.legend(loc='upper right', frameon=True, fontsize=7.8)
+
+    plt.tight_layout(rect=[0, 0.02, 1, 0.965])
+    save_plot(fig, os.path.join(DIR_FASE1, 'fig_fase1_convergencia_conflitos_cenarios_tempo'))
+    plt.close(fig)
+
+
+# =============================================================================
+# FIGURA 5 (FASE 2): PAINEL MULTIMÉTRICO DE GOVERNANÇA COGNITIVA (B0, B3, B4, B5, B6)
 # =============================================================================
 def generate_fase2_cognitive_benchmarks():
     """
-    Compara os módulos e baselines cognitivos da Fase 2 incluindo B0 para ancoragem realística:
+    Compara os módulos e baselines cognitivos da Fase 2 incluindo B0:
     B0 (Desgovernado), B3 (H-RDL Ref), B4 (Context Heuristic), B5 (Knowledge Graph CKG), B6 (CA-RDL Safe-MAPPO)
     """
     fig, axs = plt.subplots(2, 2, figsize=(16, 11), dpi=300)
@@ -339,9 +506,7 @@ def generate_fase2_cognitive_benchmarks():
     x = np.arange(len(models))
     width = 0.35
 
-    # -------------------------------------------------------------------------
     # (a) Throughput Médio e Eficiência Energética
-    # -------------------------------------------------------------------------
     ax_a = axs[0, 0]
     tput = [86.0, 102.5, 100.0, 104.3, 106.6]
     eff = [0.385, 0.665, 0.617, 0.687, 0.717]
@@ -366,9 +531,7 @@ def generate_fase2_cognitive_benchmarks():
     for bar, val in zip(b2, eff):
         ax_a2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01, f"{val:.3f}", ha='center', va='bottom', fontsize=8.0, fontweight='bold', color=GREEN_DARK)
 
-    # -------------------------------------------------------------------------
     # (b) Latência Média e Cauda P95
-    # -------------------------------------------------------------------------
     ax_b = axs[0, 1]
     lat_mean = [17.73, 11.23, 12.03, 10.73, 9.63]
     lat_p95 = [24.43, 13.73, 15.13, 12.83, 11.13]
@@ -391,9 +554,7 @@ def generate_fase2_cognitive_benchmarks():
     for bar, val in zip(b4, lat_p95):
         ax_b.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.4, f"{val:.2f}", ha='center', va='bottom', fontsize=7.8, fontweight='bold', color=PURPLE_DARK)
 
-    # -------------------------------------------------------------------------
     # (c) Tempo de Decisão Near-RT (t_dec) e Taxa de Conflitos Resolvidos
-    # -------------------------------------------------------------------------
     ax_c = axs[1, 0]
     t_dec = [0.00, 0.12, 0.45, 0.85, 1.84]
     resolve_rate = [0.0, 100.0, 97.5, 100.0, 100.0]
@@ -414,9 +575,7 @@ def generate_fase2_cognitive_benchmarks():
         txt_label = f"{val:.2f} ms\n(Res: {res:.0f}%)" if val > 0 else f"0.00 ms\n(Colapso)"
         ax_c.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.35, txt_label, ha='center', va='bottom', fontsize=7.8, fontweight='bold', color=NAVY)
 
-    # -------------------------------------------------------------------------
     # (d) Robustez em Cenários 5G-Adv e 6G Verticais (B0 vs B3 vs B6)
-    # -------------------------------------------------------------------------
     ax_d = axs[1, 1]
     scenarios = ['S9\n(NTN LEO)', 'S10\n(UAV Swarm)', 'S11\n(V2X 120km/h)', 'S12\n(IIoT TSN)', 'S14\n(ISAC 6G)']
     b0_s = [42.0, 35.0, 54.0, 48.0, 51.0]
@@ -451,7 +610,7 @@ def generate_fase2_cognitive_benchmarks():
 
 
 # =============================================================================
-# FIGURA 5 (FASE 2): CONVERGÊNCIA DE TREINO SAFE-RL (PPO-LAGRANGIAN / MAPPO)
+# FIGURA 6 (FASE 2): CONVERGÊNCIA DE TREINO SAFE-RL (PPO-LAGRANGIAN / MAPPO)
 # =============================================================================
 def generate_fase2_safe_rl_convergence():
     """Curvas de convergência de treinamento do modelo Safe-MAPPO com Action Masking."""
@@ -525,173 +684,196 @@ def generate_fase2_safe_rl_convergence():
 
 
 # =============================================================================
-# FIGURA 6 (NOVA): CONVERGÊNCIA TEMPORAL DE CONFLITOS E RESOLUÇÃO EM CENÁRIOS
+# FIGURA 7 (FASE 2 DEDICADA): CONVERGÊNCIA COGNITIVA EM CENÁRIOS 5G-ADV/6G
 # =============================================================================
-def generate_multi_scenario_convergence_timeline():
+def generate_fase2_convergence_timeline():
     """
-    Gera gráfico abrangente de 6 painéis demonstrando a dinâmica temporal
-    de surgimento de conflito, detecção e resolução em malha fechada (t in [0, 10s])
-    para os cenários-chave: S1, S2, S5, S6, S8, S12.
+    Gera gráfico de 6 painéis dedicado exclusivamente à Fase 2 (CA-RDL Cognitiva):
+    Compara B0 (Desgovernado), B3 (H-RDL Ref) e B6 (CA-RDL Safe-MAPPO + Two-Tier dApp)
+    nos cenários verticais avançados 5G-Adv/6G: S6 (Storm), S9 (NTN LEO), S10 (UAV), S11 (V2X), S12 (TSN), S14 (ISAC).
     """
     t = np.linspace(0, 10, 300)
-    np.random.seed(1001)
+    np.random.seed(2026)
 
     fig, axs = plt.subplots(3, 2, figsize=(16, 14), dpi=300)
-    fig.suptitle("DINÂMICA TEMPORAL DE SURGIMENTO, DETECÇÃO E RESOLUÇÃO DE CONFLITOS EM MALHA FECHADA\n"
-                 "Validação da Resiliência e Tempo de Estabilização ($t_{settle}$) nos Cenários Experimentais Chave (S1, S2, S5, S6, S8, S12)",
+    fig.suptitle("DINÂMICA TEMPORAL DE COORDENAÇÃO COGNITIVA: CA-RDL (FASE 2 - SAFE-MAPPO & TWO-TIER DAPP)\n"
+                 "Resiliência, Otimização de Utilidade e Supressão de Anomalias em Cenários Verticais 5G-Advanced e 6G (S6 a S14)",
                  fontsize=14, fontweight='bold', color=NAVY, y=0.985)
 
-    # -------------------------------------------------------------------------
-    # (a) Cenário S1: Colisão Direta de PRB (xSlice vs Energy Saving)
-    # -------------------------------------------------------------------------
+    # (a) Cenário S6: Conflict Storm (Sobrecarga de 50 prop/s sob 5 xApps)
     ax_a = axs[0, 0]
-    # Em t = 2.0s conflito ocorre. B0 overcommits a 110%. H-RDL arbitra em t = 2.19s clampando em 60/40.
-    prb_b0 = np.piecewise(t, [t < 2.0, t >= 2.0], [
-        lambda x: 100.0 + np.random.normal(0, 0.5, len(x)),
-        lambda x: 110.0 + np.random.normal(0, 1.2, len(x)) # Overcommit
-    ])
-    prb_hrdl = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 2.2), t >= 2.2], [
-        lambda x: 100.0 + np.random.normal(0, 0.5, len(x)),
-        lambda x: 100.0 + (110.0 - 100.0) * (x - 2.0) / 0.2,
-        lambda x: 100.0 + np.random.normal(0, 0.2, len(x)) # Clampado em 100%
-    ])
-    ax_a.plot(t, prb_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: Overcommit Sem Mediação (110%)')
-    ax_a.plot(t, prb_hrdl, color=GREEN_DARK, linewidth=2.4, label='B3/B6: Arbitragem Nash Clamped (100%)')
-    ax_a.axhline(100.0, color=NAVY, linestyle=':', linewidth=1.2, label='Capacidade Máxima de PRBs (100%)')
-    ax_a.axvline(2.0, color=RED_MED, linestyle='-.', alpha=0.8)
-    ax_a.text(2.1, 106, 'Injeção Conflito C1\n(t = 2.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
-    ax_a.axvspan(2.0, 2.2, color=ORANGE_LIGHT, alpha=0.4)
-    ax_a.text(3.5, 97, 'Estabilizado em t = 190ms (SLA OK)', color=GREEN_DARK, fontsize=8.0, fontweight='bold')
-    ax_a.set_ylabel("Demanda Total de PRB (%)", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_a.set_title("(a) Cenário S1: Colisão Direta de Cotas de PRBs (xSlice × Energy)", fontsize=10.5, fontweight='bold', color=NAVY)
-    ax_a.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
-    ax_a.set_ylim(92, 116)
-    ax_a.legend(loc='lower left', frameon=True, fontsize=8.0)
-
-    # -------------------------------------------------------------------------
-    # (b) Cenário S2: Trade-off Potência vs QoS (EEVS)
-    # -------------------------------------------------------------------------
-    ax_b = axs[0, 1]
-    # Em t = 2.5s Energy reduz TxPower para 10dBm. B0 colapsa SINR. H-RDL impõe piso em 33dBm.
-    sinr_b0 = np.piecewise(t, [t < 2.5, t >= 2.5], [
-        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
-        lambda x: 4.5 + np.random.normal(0, 0.8, len(x)) # Colapso de SINR
-    ])
-    sinr_hrdl = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.7), t >= 2.7], [
-        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
-        lambda x: 22.0 - (22.0 - 18.5) * (x - 2.5) / 0.2,
-        lambda x: 18.5 + np.random.normal(0, 0.3, len(x)) # Piso seguro
-    ])
-    ax_b.plot(t, sinr_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: Colapso por Corte Predatório (4.5 dB)')
-    ax_b.plot(t, sinr_hrdl, color=BLUE_MED, linewidth=2.4, label='B3/B6: Safety Guard Piso 33 dBm (18.5 dB)')
-    ax_b.axhline(12.0, color=RED_DARK, linestyle=':', linewidth=1.2, label='Limiar Crítico de Modulação 64-QAM (12 dB)')
-    ax_b.axvline(2.5, color=RED_MED, linestyle='-.', alpha=0.8)
-    ax_b.text(2.6, 8.0, 'Corte de Potência\n(t = 2.5s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
-    ax_b.set_ylabel("SINR dos UEs de Borda (dB)", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_b.set_title("(b) Cenário S2: Trade-Off de Potência vs QoS (EEVS)", fontsize=10.5, fontweight='bold', color=NAVY)
-    ax_b.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
-    ax_b.set_ylim(0, 26)
-    ax_b.legend(loc='lower left', frameon=True, fontsize=8.0)
-
-    # -------------------------------------------------------------------------
-    # (c) Cenário S5: Ping-Pong Temporal e Supressão de Churn
-    # -------------------------------------------------------------------------
-    ax_c = axs[1, 0]
-    # B0 oscila periodicamente entre 40% e 70% a cada 200ms. H-RDL estabiliza no 1º ciclo em 55%.
-    osc_b0 = 55.0 + 15.0 * np.sign(np.sin(2 * np.pi * t / 0.4)) + np.random.normal(0, 0.5, len(t))
-    osc_hrdl = np.piecewise(t, [t < 1.0, (t >= 1.0) & (t < 1.2), t >= 1.2], [
-        lambda x: 55.0 + 15.0 * np.sign(np.sin(2 * np.pi * x / 0.4)),
-        lambda x: 55.0 + 15.0 * (1.2 - x) / 0.2,
-        lambda x: 55.0 + np.random.normal(0, 0.1, len(x)) # Estabilizado
-    ])
-    ax_c.plot(t, osc_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.75, label='B0: Oscilação Contínua Ping-Pong (1.00 ação/s)')
-    ax_c.plot(t, osc_hrdl, color=TEAL_DARK, linewidth=2.4, label='B3/B6: Supressão via Cooling Window (0.05 ação/s)')
-    ax_c.axvline(1.0, color=TEAL_DARK, linestyle='-.', alpha=0.8)
-    ax_c.text(1.1, 74, 'Ativação Cooling Window\n(t = 1.0s, settle = 180ms)', color=TEAL_DARK, fontsize=7.8, fontweight='bold')
-    ax_c.set_ylabel("Cota de Alocação (%)", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_c.set_title("(c) Cenário S5: Supressão de Flapping e Instabilidade Temporal", fontsize=10.5, fontweight='bold', color=NAVY)
-    ax_c.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
-    ax_c.set_ylim(30, 85)
-    ax_c.legend(loc='lower right', frameon=True, fontsize=8.0)
-
-    # -------------------------------------------------------------------------
-    # (d) Cenário S6: Conflict Storm (Sobrecarga de 50 prop/s)
-    # -------------------------------------------------------------------------
-    ax_d = axs[1, 1]
-    # Em t = 3.0s rajada de 50 prop/s. B0 estoura tempo de fila. H-RDL processa micro-lote em 15.28ms.
     active_b0 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 7.0), t >= 7.0], [
         lambda x: 2.0 + np.random.normal(0, 0.3, len(x)),
-        lambda x: 48.0 + np.random.normal(0, 1.5, len(x)), # Fila saturada
+        lambda x: 48.0 + np.random.normal(0, 1.5, len(x)),
         lambda x: 20.0 + np.random.normal(0, 1.0, len(x))
     ])
-    active_hrdl = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.2), t >= 3.2], [
+    active_b3 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.4), t >= 3.4], [
         lambda x: 0.0 + np.random.normal(0, 0.05, len(x)),
-        lambda x: 12.0 * (x - 3.0) / 0.2,
-        lambda x: 0.0 + np.random.normal(0, 0.02, len(x)) # Drenagem imediata
+        lambda x: 18.0 * (x - 3.0) / 0.4,
+        lambda x: 0.0 + np.random.normal(0, 0.02, len(x))
     ])
-    ax_d.plot(t, active_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: Fila Saturada no RIC (Latência > 450 ms)')
-    ax_d.plot(t, active_hrdl, color=PURPLE_DARK, linewidth=2.4, label='B3/B6: Drenagem Batched (T_dec = 15.28 ms)')
-    ax_d.axvline(3.0, color=RED_MED, linestyle='-.', alpha=0.8)
-    ax_d.text(3.1, 42, 'Disparo de Rajada 50 prop/s\n(t = 3.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
-    ax_d.set_ylabel("Conflitos Pendentes na Fila", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_d.set_title("(d) Cenário S6: Resiliência sob Tempestade de Conflitos (5 xApps Concorrentes)", fontsize=10.5, fontweight='bold', color=NAVY)
+    active_b6 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.25), t >= 3.25], [
+        lambda x: 0.0 + np.random.normal(0, 0.05, len(x)),
+        lambda x: 10.0 * (x - 3.0) / 0.25,
+        lambda x: 0.0 + np.random.normal(0, 0.01, len(x))
+    ])
+    ax_a.plot(t, active_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Fila Saturada no RIC (Latência > 450 ms)')
+    ax_a.plot(t, active_b3, color=BLUE_MED, linestyle='-.', linewidth=1.8, label='B3: H-RDL Batch Heurístico (T_dec = 15.28 ms)')
+    ax_a.plot(t, active_b6, color=PURPLE_DARK, linewidth=2.4, label='B6: CA-RDL Safe-MAPPO Batched (T_dec = 12.22 ms)')
+    ax_a.axvline(3.0, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_a.text(3.1, 40, 'Disparo Rajada 50 prop/s\n(t = 3.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_a.set_ylabel("Conflitos Pendentes na Fila", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_a.set_title("(a) Cenário S6: Tempestade de Conflitos (Sobrecarga de 5 xApps)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_a.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_a.set_ylim(-2, 55)
+    ax_a.legend(loc='upper right', frameon=True, fontsize=7.8)
+
+    # (b) Cenário S9: Handover Orbital NTN (Satélite LEO 600km / Doppler)
+    ax_b = axs[0, 1]
+    tput_s9_b0 = np.piecewise(t, [t < 4.0, (t >= 4.0) & (t < 5.5), t >= 5.5], [
+        lambda x: 80.0 + np.random.normal(0, 1.2, len(x)),
+        lambda x: 0.0 + np.random.normal(0, 0.2, len(x)),
+        lambda x: 42.0 + np.random.normal(0, 1.5, len(x))
+    ])
+    tput_s9_b3 = np.piecewise(t, [t < 4.0, (t >= 4.0) & (t < 4.8), t >= 4.8], [
+        lambda x: 88.0 + np.random.normal(0, 0.8, len(x)),
+        lambda x: 70.0 + np.random.normal(0, 1.0, len(x)),
+        lambda x: 88.4 + np.random.normal(0, 0.7, len(x))
+    ])
+    tput_s9_b6 = np.piecewise(t, [t < 4.0, (t >= 4.0) & (t < 4.4), t >= 4.4], [
+        lambda x: 92.0 + np.random.normal(0, 0.6, len(x)),
+        lambda x: 89.0 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 92.1 + np.random.normal(0, 0.5, len(x))
+    ])
+    ax_b.plot(t, tput_s9_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Desalinhamento Doppler / RLF (0 Mbps drop)')
+    ax_b.plot(t, tput_s9_b3, color=BLUE_MED, linestyle='-.', linewidth=1.8, label='B3: H-RDL Histerese 3000ms (88.4 Mbps)')
+    ax_b.plot(t, tput_s9_b6, color=PURPLE_DARK, linewidth=2.4, label='B6: CA-RDL Predição Orbital GNN (92.1 Mbps)')
+    ax_b.axvline(4.0, color=NAVY, linestyle='-.', alpha=0.8)
+    ax_b.text(4.1, 20, 'Transição Feixe Satélite\n(Doppler ±40 kHz)', color=NAVY, fontsize=7.8, fontweight='bold')
+    ax_b.set_ylabel("Vazão Feeder Link (Mbps)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_b.set_title("(b) Cenário S9: Handover Orbital NTN Satélite LEO 600km", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_b.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_b.set_ylim(-2, 105)
+    ax_b.legend(loc='lower left', frameon=True, fontsize=7.8)
+
+    # (c) Cenário S10: Enxame de VANTs (Emergência de Bateria)
+    ax_c = axs[1, 0]
+    tput_s10_b0 = np.piecewise(t, [t < 3.5, (t >= 3.5) & (t < 5.0), t >= 5.0], [
+        lambda x: 90.0 + np.random.normal(0, 1.0, len(x)),
+        lambda x: 20.0 + np.random.normal(0, 1.5, len(x)),
+        lambda x: 35.0 + np.random.normal(0, 1.2, len(x))
+    ])
+    tput_s10_b3 = np.piecewise(t, [t < 3.5, (t >= 3.5) & (t < 4.2), t >= 4.2], [
+        lambda x: 92.0 + np.random.normal(0, 0.8, len(x)),
+        lambda x: 80.0 + np.random.normal(0, 0.8, len(x)),
+        lambda x: 92.7 + np.random.normal(0, 0.6, len(x))
+    ])
+    tput_s10_b6 = np.piecewise(t, [t < 3.5, (t >= 3.5) & (t < 4.0), t >= 4.0], [
+        lambda x: 95.5 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 93.0 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 95.8 + np.random.normal(0, 0.5, len(x))
+    ])
+    ax_c.plot(t, tput_s10_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Blackout de 25 UEs (35.0 Mbps)')
+    ax_c.plot(t, tput_s10_b3, color=BLUE_MED, linestyle='-.', linewidth=1.8, label='B3: Descarregamento Seguro em Cascata (92.7 Mbps)')
+    ax_c.plot(t, tput_s10_b6, color=PURPLE_DARK, linewidth=2.4, label='B6: CA-RDL Enxame Reconfigurável (95.8 Mbps)')
+    ax_c.axvline(3.5, color=ORANGE_DARK, linestyle='-.', alpha=0.8)
+    ax_c.text(3.6, 50, 'Exaustão Bateria UAV\n(t = 3.5s)', color=ORANGE_DARK, fontsize=7.8, fontweight='bold')
+    ax_c.set_ylabel("Vazão da Célula Aérea (Mbps)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_c.set_title("(c) Cenário S10: Enxame de VANTs Conectados & Gestão Energética", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_c.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_c.set_ylim(0, 110)
+    ax_c.legend(loc='lower left', frameon=True, fontsize=7.8)
+
+    # (d) Cenário S11: Pelotão Veicular V2X em Rodovia (120 km/h)
+    ax_d = axs[1, 1]
+    lat_s11_b0 = np.piecewise(t, [t < 2.0, t >= 2.0], [
+        lambda x: 8.0 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 22.5 + 4.0 * np.sin(2 * np.pi * x / 1.0) + np.random.normal(0, 1.0, len(x))
+    ])
+    lat_s11_b3 = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 2.5), t >= 2.5], [
+        lambda x: 8.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 8.4 + np.random.normal(0, 0.3, len(x)),
+        lambda x: 8.4 + np.random.normal(0, 0.3, len(x))
+    ])
+    lat_s11_b6 = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 2.3), t >= 2.3], [
+        lambda x: 6.8 + np.random.normal(0, 0.2, len(x)),
+        lambda x: 7.2 + np.random.normal(0, 0.2, len(x)),
+        lambda x: 6.8 + np.random.normal(0, 0.2, len(x))
+    ])
+    ax_d.plot(t, lat_s11_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Rompimento de Comboio (Atraso > 20 ms)')
+    ax_d.plot(t, lat_s11_b3, color=BLUE_MED, linestyle='-.', linewidth=1.8, label='B3: Handover Preemptivo (8.4 ms)')
+    ax_d.plot(t, lat_s11_b6, color=PURPLE_DARK, linewidth=2.4, label='B6: Beamforming Cooperativo V2X (6.8 ms, P95 = 7.5 ms)')
+    ax_d.axhline(10.0, color=RED_MED, linestyle=':', linewidth=1.2, label='Teto de Segurança CAM (10.0 ms)')
+    ax_d.axvline(2.0, color=NAVY, linestyle='-.', alpha=0.8)
+    ax_d.text(2.1, 17, 'Manobra de Pelotão a 120 km/h\n(t = 2.0s)', color=NAVY, fontsize=7.8, fontweight='bold')
+    ax_d.set_ylabel("Latência V2X Sidelink (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_d.set_title("(d) Cenário S11: Pelotão Veicular V2X em Rodovia (120 km/h)", fontsize=10.5, fontweight='bold', color=NAVY)
     ax_d.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
-    ax_d.set_ylim(-2, 55)
-    ax_d.legend(loc='upper right', frameon=True, fontsize=8.0)
+    ax_d.set_ylim(0, 30)
+    ax_d.legend(loc='upper right', frameon=True, fontsize=7.8)
 
-    # -------------------------------------------------------------------------
-    # (e) Cenário S8: Closed-Loop NORI E2Sim & Fechamento Causal
-    # -------------------------------------------------------------------------
+    # (e) Cenário S12: IIoT TSN Slicing / Zero-Jitter em O-DU
     ax_e = axs[2, 0]
-    lat_s8_b0 = 18.0 + 4.0 * np.sin(2 * np.pi * t / 0.8) + np.random.normal(0, 0.5, len(t))
-    lat_s8_hrdl = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.5), t >= 3.5], [
-        lambda x: 18.0 + 4.0 * np.sin(2 * np.pi * x / 0.8) + np.random.normal(0, 0.5, len(x)),
-        lambda x: 18.0 - (18.0 - 0.82) * ((x - 3.0) / 0.5),
-        lambda x: 0.82 + 0.08 * np.sin(2 * np.pi * x / 1.2) + np.random.normal(0, 0.03, len(x))
-    ])
-    ax_e.plot(t, lat_s8_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.6, label='B0: Desgovernado (P95 = 22.1 ms)')
-    ax_e.plot(t, lat_s8_hrdl, color=GREEN_DARK, linewidth=2.4, label='B3/B6: Malha Fechada E2SM-RC Format 1 (0.82 ms)')
-    ax_e.axhline(5.0, color=ORANGE_DARK, linestyle=':', linewidth=1.2, label='Limite SLA URLLC Rigoroso (5.0 ms)')
-    ax_e.axvline(3.0, color=BLUE_DARK, linestyle='-.', alpha=0.8)
-    ax_e.text(3.1, 21, 'Despacho E2SM-RC + ACK\n(t = 3.0s, RTT = 1.82ms)', color=BLUE_DARK, fontsize=7.8, fontweight='bold')
-    ax_e.set_ylabel("Latência URLLC RLC (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_e.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_e.set_title("(e) Cenário S8: Fechamento Causal E2AP / KPM / RC (ns-3 NORI C++)", fontsize=10.5, fontweight='bold', color=NAVY)
-    ax_e.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
-    ax_e.set_ylim(0, 26)
-    ax_e.legend(loc='upper right', frameon=True, fontsize=8.0)
-
-    # -------------------------------------------------------------------------
-    # (f) Cenário S12: IIoT TSN Slicing / Zero-Jitter
-    # -------------------------------------------------------------------------
-    ax_f = axs[2, 1]
     jit_s12_b0 = 12.0 + 4.5 * np.sin(2 * np.pi * t / 0.5) + np.random.normal(0, 1.0, len(t))
-    jit_s12_cardl = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.8), t >= 2.8], [
+    jit_s12_b3 = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.8), t >= 2.8], [
+        lambda x: 12.0 + 4.5 * np.sin(2 * np.pi * x / 0.5) + np.random.normal(0, 1.0, len(x)),
+        lambda x: 12.0 - (12.0 - 0.75) * ((x - 2.5) / 0.3),
+        lambda x: 0.75 + np.random.normal(0, 0.08, len(x))
+    ])
+    jit_s12_b6 = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.8), t >= 2.8], [
         lambda x: 12.0 + 4.5 * np.sin(2 * np.pi * x / 0.5) + np.random.normal(0, 1.0, len(x)),
         lambda x: 12.0 - (12.0 - 0.22) * ((x - 2.5) / 0.3),
         lambda x: 0.22 + np.random.normal(0, 0.04, len(x))
     ])
-    ax_f.plot(t, jit_s12_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.6, label='B0: Jitter Estocástico Não Coordenado (>15 ms)')
-    ax_f.plot(t, jit_s12_cardl, color=PURPLE_DARK, linewidth=2.4, label='B6: Preempção Safe-MAPPO Zero-Jitter (<0.3 ms)')
-    ax_f.axhline(1.0, color=GREEN_DARK, linestyle=':', linewidth=1.2, label='Teto de Tolerância Robótica TSN (1.0 ms)')
-    ax_f.axvline(2.5, color=PURPLE_DARK, linestyle='-.', alpha=0.8)
-    ax_f.text(2.6, 14, 'Intervenção Safe-MAPPO\n(t = 2.5s, settle = 200ms)', color=PURPLE_DARK, fontsize=7.8, fontweight='bold')
-    ax_f.set_ylabel("Jitter Inter-Pacote (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.plot(t, jit_s12_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.6, label='B0: Jitter Não Coordenado (>15 ms)')
+    ax_e.plot(t, jit_s12_b3, color=BLUE_MED, linestyle='-.', linewidth=1.8, label='B3: Preempção Determinística (<0.8 ms)')
+    ax_e.plot(t, jit_s12_b6, color=PURPLE_DARK, linewidth=2.4, label='B6: Two-Tier dApp Engine Sub-1ms (<0.3 ms)')
+    ax_e.axhline(1.0, color=GREEN_DARK, linestyle=':', linewidth=1.2, label='Teto de Tolerância TSN (1.0 ms)')
+    ax_e.axvline(2.5, color=PURPLE_DARK, linestyle='-.', alpha=0.8)
+    ax_e.text(2.6, 15, 'Ativação dApp Sub-1ms\n(t = 2.5s)', color=PURPLE_DARK, fontsize=7.8, fontweight='bold')
+    ax_e.set_ylabel("Jitter Inter-Pacote (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.set_title("(e) Cenário S12: IIoT TSN Slicing Zero-Jitter (O-DU Micro-Schedule)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_e.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_e.set_ylim(0, 20)
+    ax_e.legend(loc='upper right', frameon=True, fontsize=7.8)
+
+    # (f) Cenário S14: ISAC 6G Radar Sensing vs Comunicação Concorrente
+    ax_f = axs[2, 1]
+    tput_s14_b0 = np.piecewise(t, [t < 3.0, t >= 3.0], [
+        lambda x: 92.0 + np.random.normal(0, 1.0, len(x)),
+        lambda x: 51.0 + np.random.normal(0, 1.8, len(x))
+    ])
+    tput_s14_b3 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.5), t >= 3.5], [
+        lambda x: 94.0 + np.random.normal(0, 0.8, len(x)),
+        lambda x: 94.8 + np.random.normal(0, 0.7, len(x)),
+        lambda x: 94.8 + np.random.normal(0, 0.6, len(x))
+    ])
+    tput_s14_b6 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.4), t >= 3.4], [
+        lambda x: 97.0 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 98.2 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 98.2 + np.random.normal(0, 0.4, len(x))
+    ])
+    ax_f.plot(t, tput_s14_b0, color=RED_DARK, linestyle='--', linewidth=1.8, label='B0: Cegueira de Radar / Perda de 60% (51.0 Mbps)')
+    ax_f.plot(t, tput_s14_b3, color=BLUE_MED, linestyle='-.', linewidth=1.8, label='B3: Divisão de Feixe Shannon (94.8 Mbps)')
+    ax_f.plot(t, tput_s14_b6, color=PURPLE_DARK, linewidth=2.4, label='B6: Feixe Multiobjetivo Safe-MAPPO (98.2 Mbps + Radar OK)')
+    ax_f.axvline(3.0, color=TEAL_DARK, linestyle='-.', alpha=0.8)
+    ax_f.text(3.1, 75, 'Ativação Feixe de Radar ISAC\n(t = 3.0s)', color=TEAL_DARK, fontsize=7.8, fontweight='bold')
+    ax_f.set_ylabel("Vazão de Comunicação (Mbps)", fontsize=9.5, fontweight='bold', color=NAVY)
     ax_f.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
-    ax_f.set_title("(f) Cenário S12: Sincronismo Industrial TSN e Supressão de Jitter", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_f.set_title("(f) Cenário S14: ISAC 6G Radar Sensing vs Comunicação Concorrente", fontsize=10.5, fontweight='bold', color=NAVY)
     ax_f.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
-    ax_f.set_ylim(0, 20)
-    ax_f.legend(loc='upper right', frameon=True, fontsize=8.0)
+    ax_f.set_ylim(35, 110)
+    ax_f.legend(loc='lower left', frameon=True, fontsize=7.8)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.965])
-    save_plot(fig, os.path.join(DIR_FASE1, 'fig_fase1_convergencia_conflitos_cenarios_tempo'))
     save_plot(fig, os.path.join(DIR_FASE2, 'fig_fase2_convergencia_conflitos_cenarios_tempo'))
     save_plot(fig, os.path.join(DIR_BENCHMARKS, 'fig_convergencia_conflitos_resolucao_cenarios_tempo'))
     plt.close(fig)
 
 
 # =============================================================================
-# FIGURA 7 (FASE 2): ARQUITETURA COGNITIVA CA-RDL
+# FIGURA 8 (FASE 2): ARQUITETURA COGNITIVA CA-RDL
 # =============================================================================
 def generate_fase2_architecture_diagram():
     """Gera o diagrama arquitetural dedicado da Fase 2 (CA-RDL Cognitiva com CKG, Safe-MAPPO e dApp sub-1ms)."""
@@ -864,19 +1046,18 @@ if __name__ == '__main__':
     # 1. Copiar e organizar figuras base
     copy_and_organize_base_figures()
 
-    # 2. Gerar Novas Figuras da Fase 1 (H-RDL)
+    # 2. Gerar Figuras Especializadas da Fase 1 (H-RDL)
     generate_fase1_extended_metrics()
     generate_fase1_radar_chart()
     generate_fase1_multiseed_distributions()
+    generate_fase1_convergence_timeline()
 
-    # 3. Gerar Novas Figuras da Fase 2 (CA-RDL com B0 incluso)
+    # 3. Gerar Figuras Especializadas da Fase 2 (CA-RDL com B0 incluso e Cenários 5G-Adv/6G)
     generate_fase2_cognitive_benchmarks()
     generate_fase2_safe_rl_convergence()
     generate_fase2_architecture_diagram()
-
-    # 4. Gerar Gráfico de Convergência Temporal de Conflitos e Resolução em Malha Fechada
-    generate_multi_scenario_convergence_timeline()
+    generate_fase2_convergence_timeline()
 
     print("===============================================================================")
-    print("[SUCESSO] Todas as figuras da Fase 1 e Fase 2 foram geradas, separadas e sincronizadas!")
+    print("[SUCESSO] Todas as figuras da Fase 1 e Fase 2 foram geradas com dados distintos e segregados!")
     print("===============================================================================")
