@@ -1,0 +1,535 @@
+
+--- Page 1 ---
+A Practical Demonstration of DRL-Based Dynamic
+Resource Allocation xApp Using OpenAirInterface
+Onur Sever∗, Onur Salan∗, Ibrahim Hokelek∗, Ali Gorcin∗†
+∗Communications and Signal Processing Research (HISAR) Lab, TUBITAK BILGEM, Kocaeli, Turkiye
+†Faculty of Electrical and Electronics Engineering, Istanbul Technical University, Istanbul, Turkiye
+Email: {onur.sever, onur.salan, ibrahim.hokelek, ali.gorcin}@tubitak.gov.tr
+Abstract—Network slicing is a key enabler for providing a
+differentiated service support to heterogeneous use cases and
+applications in 5G and beyond networks through creating mul-
+tiple logical slices. Resource allocation for satisfying diverse
+requirements of slices is a highly challenging task under time-
+varying traffic and wireless channel conditions. This paper
+presents a deep reinforcement learning (DRL) approach for
+allocating radio resources to slices, where the objective is to
+meet the latency requirement of the low-latency slice without
+jeopardizing the performance of the other slice. The proposed
+DRL approach is implemented within an open source mobile
+network emulator, namely OpenAirInterface, to create an O-
+RAN compliant end-to-end 5G network capable of dynamic re-
+source allocation capabilities. The intelligent resource allocation
+mechanism operates on the RAN Intelligent Controller (RIC) as
+an xApp, enabling monitoring and dynamic resource control of
+the gNB through the E2 interface. The results demonstrate that
+the latency requirement of the low-latency slice is met under
+extremely loaded traffic scenarios, where the trained DRL model
+deployed on the near-RT RIC platform is used to dynamically
+allocate the radio resources to the slices.
+Index Terms—Network Slicing, Open RAN, RIC, Reinforce-
+ment Learning, OAI
+I. INTRODUCTION
+The disaggregation of the RAN into Centralized Unit (CU),
+Distributed Unit (DU), and Radio Unit (RU) by 3GPP is an
+important concept for enabling a modular and flexible system
+architecture. Open Radio Access Network (O-RAN) extends
+this functional split by promoting software-defined RAN intel-
+ligent controller (RIC) frameworks through standardised open
+interfaces for service management and orchestration (SMO)
+[1]. Artificial intelligence (AI) and machine learning (ML)
+empowered by big data, cloud and edge networking, and
+virtualization are other enabling concepts from the system
+perspective for designing flexible and programmable network
+infrastructure. These concepts will enable zero-touch network
+management while significantly lowering CAPEX and OPEX
+in the longer term, and open architectures are anticipated to be
+the main driver behind this innovation. It is a highly challeng-
+ing task to develop AI/ML based intelligent applications which
+can automate network functions as the network conditions
+change dynamically due to mobility and unprecedented traffic
+variations.
+An intelligent SMO is crucial for not only optimizing the
+overall network performance but also satisfying Quality of Ser-
+vice (QoS) requirements of diverse services and use cases. A
+related concept is network slicing (NS) which divides a single
+physical network into multiple logical slices to meet specific
+application requirements of 5G and beyond networks. NS can
+be categorized into core network (CN) slicing [2] and RAN
+slicing [3]. The latter remains a particularly challenging and
+interesting problem due to time-varying traffic and dynamic
+wireless channel conditions [4].
+In the O-RAN standards, the non-real time RIC (non-
+RT RIC) operates on a time scale longer than one second,
+with the main goal of supporting long-term radio resource
+management and policy optimization through rApps with AI
+and ML models. Similarly, the near-real time RIC (near-RT
+RIC) operates on a time scale of 10 ms to 1 second, managing
+and controlling valuable radio resources on the RAN side
+through xApps [5]. There are numerous studies exploring
+the integration of RIC with advanced 6G RAN technologies,
+including Reconfigurable Intelligent Surfaces (RIS), MIMO
+[6], and Network Slicing [7]. In this context, reinforcement
+learning (RL) becomes a prominent tool to optimize resource
+allocation and decision-making processes in highly dynamic
+network conditions, such as varying channel capacities, traffic
+loads, and interference levels [8]–[11]. In these studies, the
+action space generally represents the allocation of radio re-
+sources, including frequency blocks and transmission power,
+to users. This approach allows for continuous adaptation
+and optimization of network policies, enabling more efficient
+automation of network functions.
+In this paper, we propose a DRL-based intelligent resource
+scheduling application (xApp) on the near-RT RIC within the
+Open RAN (O-RAN) to autonomously allocate the limited
+radio resources to network slices. The state space includes
+the traffic arrival rates of the network slices while the action
+space includes the allocation ratio of the avialable resource
+blocks to the low latency slice. The reward function is designed
+in such a way that the minimal allocation ratio that satisfy
+the delay requirement of the low latency slice is utilized.
+We implemented the proposed DRL approach using open
+source 5G mobile network emulator, namely OpenAirInterface
+(OAI) which provides a complete 5G protocol stack for
+user equipment (UE), gNodeB (gNB), and the core network
+(CN) [12]. The DRL models are first trained by generating
+a comprehensive traffic data set using the iperf tool within
+the OAI based end-to-end 5G network emulator, where real-
+time traffic ranging from 10 Mbps to 140 Mbps is generated
+arXiv:2501.05879v1  [eess.SP]  10 Jan 2025
+
+--- Page 2 ---
+E2
+Data Network
+RC xApp
+Near-RT RIC
+SM xApp
+Trained model
+Database
+DRL Offline Training Block
+CN
+AMF/NRF/NSSF/AUSF
+SMF 1
+UPF 1
+SMF 2
+UPF 2
+DU
+gNB
+CU
+SDAP/PDCP
+RRC/PDCP
+RLC
+MAC
+PHY
+Slice Aware
+Scheduler
+DU
+RU
+Slice 1
+Slice 2
+UE2
+UE1
+RF Simulator
+Fig. 1. The convergence of the DRL algoritm
+for the low-latency slice while the traffic rate for the other
+slice is generated with a constant rate of around 117 Mbps.
+The DRL-based resource allocation mechanism with emphasis
+on the self-organizing network (SON) aspect is an important
+enabler to provide robustness and elasticity for mobile network
+operators.
+The rest of the paper is organized as follows. Section
+II introduces the system model of the DRL-based resource
+allocation mechanism for network slicing capable O-RAN net-
+works. Section III describes the proposed DRL-based resource
+allocation algorithm. Section IV presents the experiment re-
+sults using open source 5G emulators including CN, gNB,
+UEs, and RIC. Section V concludes the paper and highlights
+the future work plan.
+II. SYSTEM MODEL
+Fig. ?? illustrates the system model of the DRL-based intel-
+ligent resource allocation mechanism in an O-RAN complaint
+mobile cellular network consisting of a CN, a gNB, a near-RT
+RIC, and two UEs. The CN provides a Data Network access
+by creating two independent slices (Slice 1 in blue, Slice 2
+in yellow) with a differentiated service support. A dedicated
+user plane function (UPF) and session management function
+(SMF) pair is created for each slice within the CN. Each NS
+is distinguished from each other using a single network slice
+selection assistance information (S-NSSAI), which obtains a
+slice/service type (SST) and a slice differentiator (SD). SST
+defines the characteristics of an NS using an 8-bit value,
+similarly, the optional SD distinguishes slices of the same type
+using a 24-bit value. A slice aware gNB connected to the CN
+provides a radio access functionality to the users of two slices.
+The near-RT RIC platform hosts Resource Control (RC) and
+Slice Monitoring (SM) xApps, which communicate with the
+gNB through the E2 interface. The SM xApp continuously
+collects key performance measurements (KPMs) from the gNB
+while the RC xApp is responsible for allocating the radio
+resources to the slices.
+First of all, the data sets consisting of different traffic arrival
+rates and modulation and coding schemes (MCSs) of the users
+are generated using the end-to-end 5G emulator. The SM xApp
+collects these data sets and writes them to the database. The
+DRL Offline Training Block utilizes this dataset to obtain the
+trained DRL model which includes the resource allocation
+weights of the slices (i.e., DRL actions) corresponding to
+different traffic arrival rates of the slices (i.e., DRL states).
+The RC xApp is responsible for intelligently allocating the
+radio resources to the slices using the trained DRL model.
+During the DRL testing phase, the SM xApp provides the
+state information to the RC xApp by continuously monitoring
+the gNB performance statistics and the RC xApp determines
+the resource allocation weights of the slices (the DRL actions)
+from the trained DRL model. Once these weights are provided
+to the gNB, the scheduler provided by the OAI emulator
+ensures that the resources are allocated according to the RC
+xApp provided resource allocation weights. When the trained
+DRL model is not used, the default resource allocation weights
+are set to equal in the OAI emulator.
+III. DRL-BASED RESOURCE ALLOCATION
+An agent in a typical RL mechanism interacts with its
+environment to maximize its rewards. One technique for
+predicting the reward of an action is Q-learning which is
+iteratively updated to obtain the Q(s,a) function. A deep neural
+network (DNN) is utilized to approximate the Q-function in
+the deep Q-Network (DQN) which uses a ϵ-greedy policy to
+choose actions. Experiences are randomly selected from the
+
+--- Page 3 ---
+replay memory to avoid biases in learning. The aim of training
+is to decrease the discrepancy between the target and predicted
+Q-values using a loss function [9].
+For the sake of simplicity, this paper presents the DRL-
+based resource allocation when there are two diverse slices
+in the network. However, the DRL approach can be further
+extended to support more than two slices. The DRL policy
+for the first slice is to use the minimum number of resource
+blocks (RBs) that can satisfy the pre-defined delay threshold
+(DT ) while the policy for the second slice is to utilize the
+remaining RBs to maximize its throughput. The DQN algo-
+rithm dynamically modifies the resource allocation weights of
+the slices to ensure that each slice adheres to its pre-defined
+policies and maximizes the overall network performance.
+A. State
+Our state space is defined by all possible traffic arrival rates
+of the selected slice. The state space of the model would
+become extremely large if the traffic arrival rate of the slice
+were used without a quantization process. To reduce the state
+space, the quantized traffic arrival rate (ˆtarr) is calculated as
+follows:
+ˆtarr =
+jtarr −L
+s
+m
+s + L
+(1)
+where tarr, s, and L represent traffic arrival rate, quantization
+step, and the minimum traffic arrival rate, respectively. If ˆtarr
+exceeds the maximum traffic arrival rate (H), the clipped
+traffic arrival rate is calculated using the following formula:
+¯tarr =
+
+
+
+
+
+H,
+if ˆtarr ≥H
+L,
+if ˆtarr ≤L
+ˆtarr,
+otherwise
+(2)
+B. Action
+The action space of the DRL includes the resource alloca-
+tion weight of the selected slice as follows:
+A(s) = {a1, a2, . . . , an}
+(3)
+where 0 < ai < 100. Here, the resource allocation weight of
+the selected slice represents the percentage of RBs allocated to
+the selected slice. In this study, the resource allocation weight
+is changed from 10% to 90% by the increment of 5%.
+C. Reward
+The DRL reward function is designed as follows:
+A∗(s) = {ak ∈A(s) : UEd < DT }
+(4)
+where UEd represents the delay in the service data unit (SDU).
+R = −1 · |ai −min{A∗(s)}|
+(5)
+The reward function selects an action which provides the
+minimum delay requirement of the selected slice using the
+minimum number of RBs. As the absolute difference be-
+tween the action ai selected by the agent and min{A∗(s)}
+increases, the agent moves further away from the optimal
+action. Conversely, as the absolute difference decreases, the
+agent approaches the optimal action.
+Parameters
+Value
+Model Architecture
+Fully connected 5 layers
+Hidden Layer Size
+256
+Activation Function
+ReLU
+Adam optimizer
+β1 = 0.9, β2 = 0.999
+Learning Rate
+0.001
+Batch Size
+128
+Replay Buffer Size
+10,000
+Target Network Update
+Every N episodes
+Discount Factor (γ)
+0.99
+Exploration Strategy
+ε-greedy (1 →0.01)
+Training Episodes
+1500
+Maximum step number
+100
+TABLE I
+TRAINING MODEL PARAMETERS
+IV. PERFORMANCE EVALUATION
+In this section, we present the experimental setup and
+measurement results using the O-RAN compliant end-to-end
+5G network emulator including 5G CN, 5G gNB, and UEs
+developed by OpenAirInterface (OAI). FlexRIC developed by
+the MOSAIC5G project group is utilized as the near-RT RIC
+platform [13]. The OAI gNB emulator with 106 PRBs and
+30 kHz SCS runs on a PC (Ubuntu 20.04.6 LTS, Intel i9-
+13900K), together with two OAI UEs and FlexRIC platform.
+The OAI CN emulator runs on a separate PC (Ubuntu 22.04.5
+LTS, Intel i7-1260P). For all experiments, the RF simulator is
+utilized to simulate wireless channels between the gNB and
+UEs.
+In this study, the training of the DRL agent is performed
+using the DQN algorithm using the parameters in Table I. For
+generating the data set using the iperf tool, the traffic arrival
+rate is varied from 10 Mbps to 140 Mbps for the selected
+slice while the traffic arrival rate of the other slice is kept
+constant around 117 Mbps. The SM xApp periodically collects
+performance statistics including downlink traffic volume and
+latency from the gNB. In each traffic arrival scenario, the
+SM xApp writes the collected performance statistics to the
+database at 100 ms intervals for a duration of two minutes.
+The DRL agent is trained using the datasets acquired from the
+database. Fig. [2] shows that the average reward increases with
+the number of episodes, demonstrating that the DRL algorithm
+successfully converges.
+The performance of the proposed DRL approach is com-
+pared with the proportional fair (PF) scheduling algorithm
+which is available in the OAI emulator. Note that we conducted
+13 different experiments corresponding to 13 different traffic
+arrival rate combinations of the slices for each algorithm as
+depicted in Figs. 3-5, where the x-axis represents the average
+traffic arrival rate of Slice 1. For example, the arrival rate of
+Slice 2 is set to 117 Mbps for 13 experiments while the arrival
+rate of Slice 1 is increased from 20 Mbps to 140 Mbps by the
+increment of 10 Mbps. For each experiment with the duration
+of 5 minutes, the average performance results (packet loss rate,
+latency, traffic departure rate) are reported.
+Fig. 3 illustrates the average packet loss rate results of the
+DRL and the PF approaches for each slice. The DRL method
+achieves zero packet loss for Slice 1 (DRL-S1) under any
+
+--- Page 4 ---
+0
+200
+400
+600
+800
+1000
+1200
+1400
+Number of episodes
+0
+5
+10
+15
+20
+25
+30
+35
+40
+Average Reward
+Fig. 2. The convergence of the DRL algoritm
+20
+30
+40
+50
+60
+70
+80
+90
+100
+110
+120
+130
+140
+Average traffic rate (Mbps)
+0
+5
+10
+15
+20
+Packet loss rate (%)
+DRL-S1
+DRL-S2
+PF-S1
+PF-S2
+Fig. 3. The packet loss rate results for the DRL and PF approaches
+traffic arrival rate scenario as the policy specifies the reliability
+objective for Slice 1. When the traffic arrival rate of Slice 1
+increases beyond 60 Mbps, we observed that there are non-
+zero packet loss rates for Slice 2 while the DRL provides no
+packet loss for both slices up to the traffic arrival rate of 110
+Mbps. When the traffic arrival rate of Slice 1 goes beyond 110
+Mbps, the DRL still maintains zero packet loss at the expense
+of higher packet loss rates for Slice 2. This is an expected
+result according to the network administrator specified policy.
+For the PF approach, the traffic arrival rate of Slice 1 is beyond
+120 Mbps, the packet loss rates of Slice 2 is lower than Slice
+1. This might be due to the fact that the PF provides equal
+RB allocation for each slice under heavy traffic loads while
+the arrival rate of Slice 2 is lower.
+20
+30
+40
+50
+60
+70
+80
+90
+100
+110
+120
+130
+140
+Average traffic rate (Mbps)
+0
+200
+400
+600
+800
+Latency (ms)
+DRL-S1
+DRL-S2
+PF-S1
+PF-S2
+D
+T
+Fig. 4. The latency results for the DRL and PF approaches
+20
+30
+40
+50
+60
+70
+80
+90
+100
+110
+120
+130
+140
+Average traffic rate (Mbps)
+20
+40
+60
+80
+100
+120
+140
+T
+raffic departure rate (Mbps)
+DRL-S1
+DRL-S2 
+PF-S1
+PF-S2
+Fig. 5. The traffic departure rate results for the DRL and PF approaches
+Fig. 4 shows the average latency results of the DRL and the
+PF approaches for all slices. The DRL method successfully
+satisfies the latency requirement of Slice 1 (DRL-S1) under
+any traffic arrival rate scenario by keeping the average latency
+results of Slice 1 below the pre-defined threshold value. When
+the traffic arrival rate of Slice 1 increases beyond 60 Mbps, we
+observed that the latency of PF-S2 begins to rise sharply while
+both DRL-S1 and DRL-S2 result in low latency values below
+the threshold up to the traffic arrival rate of 110 Mbps for
+Slice 1. Using the same traffic arrival rates, Fig. 5 illustrates
+the average traffic departure rate results of the DRL and the
+PF approaches at the gNB for both slices. The results are
+consistent with the packet loss rate and latency resuts in Fig.
+3 and Fig. 4, respectively.
+
+--- Page 5 ---
+V. CONCLUSION
+This paper proposes a DRL-based intelligent resource al-
+location mechanism which is implemented within an open
+source mobile network emulator. We performed a sucessful
+demonstration of the DRL-approach using O-RAN compliant
+end-to-end 5G network, where the dynamic resource alloca-
+tion is performed by an xApp running on the near-RT RIC
+platform. The experiment results demonstrate that the DRL
+approach satisfies the latency requirement of the selected slice
+under heavily loaded traffic scenarios. The performance results
+show that the DRL-based RAN slicing approach optimizes the
+resource utilization compared to the default resource allocation
+in the OAI platform. For future work, we will validate the
+proposed method in an over-the-air environment instead of
+using an RF simulator.
+REFERENCES
+[1] M. Polese, L. Bonati, S. D’oro, S. Basagni, and T. Melodia, “Under-
+standing O-RAN: Architecture, interfaces, algorithms, security, and re-
+search challenges,” IEEE Communications Surveys & Tutorials, vol. 25,
+no. 2, pp. 1376–1411, 2023.
+[2] A. Blenk, A. Basta, M. Reisslein, and W. Kellerer, “Survey on network
+virtualization hypervisors for software defined networking,” IEEE Com-
+munications Surveys & Tutorials, vol. 18, no. 1, pp. 655–685, 2015.
+[3] A. Ksentini and N. Nikaein, “Toward enforcing network slicing on RAN:
+Flexibility and resources abstraction,” IEEE Communications Magazine,
+vol. 55, no. 6, pp. 102–108, 2017.
+[4] M. Zangooei, N. Saha, M. Golkarifard, and R. Boutaba, “Reinforcement
+learning for radio resource management in RAN slicing: A survey,”
+IEEE Communications Magazine, vol. 61, no. 2, pp. 118–124, 2023.
+[5] L. Bonati, S. D’Oro, M. Polese, S. Basagni, and T. Melodia, “Intelli-
+gence and learning in O-RAN for data-driven NextG cellular networks,”
+IEEE Communications Magazine, vol. 59, no. 10, pp. 21–27, 2021.
+[6] S. S. R. Jonnavithula, I. K. Jain, and D. Bharadia, “MIMO-RIC:
+RAN intelligent controller for MIMO xApps,” in Proceedings of
+the 30th Annual International Conference on Mobile Computing
+and Networking, ser. ACM MobiCom ’24.
+New York, NY, USA:
+Association for Computing Machinery, 2024, p. 2315–2322. [Online].
+Available: https://doi.org/10.1145/3636534.3701548
+[7] J. Dai, L. Li, R. Safavinejad, S. Mahboob, H. Chen, V. V. Ratnam,
+H. Wang, J. Zhang, and L. Liu, “O-RAN-enabled Intelligent Network
+Slicing to Meet Service-Level Agreement (SLA),” IEEE Transactions
+on Mobile Computing, 2024.
+[8] Y. Cui, X. Huang, P. He, D. Wu, and R. Wang, “QoS guaranteed network
+slicing orchestration for Internet of vehicles,” IEEE Internet of Things
+Journal, vol. 9, no. 16, pp. 15 215–15 227, 2022.
+[9] H. A. Akyıldız, Ö. F. Gemici, I. Hökelek, and H. A. Çırpan, “Hierarchi-
+cal reinforcement learning based resource allocation for RAN slicing,”
+IEEE Access, 2024.
+[10] M. Alsenwi, N. H. Tran, M. Bennis, S. R. Pandey, A. K. Bairagi,
+and C. S. Hong, “Intelligent resource slicing for eMBB and URLLC
+coexistence in 5G and beyond: A deep reinforcement learning based
+approach,” IEEE Transactions on Wireless Communications, vol. 20,
+no. 7, pp. 4585–4600, 2021.
+[11] H. Zhou, M. Elsayed, and M. Erol-Kantarci, “RAN resource slicing
+in 5G using multi-agent correlated Q-learning,” in 2021 IEEE 32nd
+Annual International Symposium on Personal, Indoor and Mobile Radio
+Communications (PIMRC).
+IEEE, 2021, pp. 1179–1184.
+[12] N. Nikaein, M. K. Marina, S. Manickam, A. Dawson, R. Knopp, and
+C. Bonnet, “OpenAirInterface: A flexible platform for 5G research,”
+ACM SIGCOMM Computer Communication Review, vol. 44, no. 5, pp.
+33–38, 2014.
+[13] R. Schmidt, M. Irazabal, and N. Nikaein, “FlexRIC: An SDK for
+next-generation SD-RANs,” in Proceedings of the 17th International
+Conference on emerging Networking EXperiments and Technologies,
+2021, pp. 411–425.

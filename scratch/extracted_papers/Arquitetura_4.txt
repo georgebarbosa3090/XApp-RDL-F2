@@ -1,0 +1,116 @@
+
+--- Page 1 ---
+RDL — Context-Aware Resource and Decision Layer
+XApp-RDL-F2 — Arquitetura interna da CA-RDL
+CAMADA RDL — decisão adaptativa sob governança determinística
+OBSERVAÇÃO E CONTEXTO
+RACIOCÍNIO / PROPOSTA
+GOVERNANÇA
+SAÍDA
+ENTRADA
+E2SM-KPM
+Telemetria
+/ estado
+throughput
+PRB usado
+atraso
+ações con-
+correntes
+OBSERVADO DA RAN
+PERCEPTION
+AGENT
+recebe KPMs
+↓
+constrói estado
+↓
+detecta conflitos
+CONTEXTO
+conjunto de ações
+KPMs atuais
+conflito direto
+ou indireto
+grafo de
+dependências
+entre parâmetros
+e KPMs
+REASONING
+AGENT
+decisão híbrida
+1. histórico, se
+confiança > 0,8
+2. conflito direto:
+TVS/EEVS heurístico
+3. conflito indireto:
+interface MARL/MAPPO
+MAPPO PARCIAL / PROXY
+AÇÃO
+PROPOSTA
+a∗
+ainda não autorizada
+REFINEMENT
+AGENT
+recebe decisão
+candidata
+↓
+prepara a ação
+para validação
+SAFETY GUARDS
+DETERMINÍSTICOS
+AÇÃO
+VÁLIDA?
+fallback /
+rejeição segura
+intervalo ≥1000 ms · PRB: 0–100
+TX: −10 a 23 dBm · nó-alvo existente
+AÇÃO
+EXECUTÁVEL
+validada
+SAÍDA
+E2SM-RC
+Controle
+da RAN
+PRB / potência
+parâmetro
+e nó-alvo
+RAN EXECUTA
+telemetria
+estado
+contexto
+propõe
+candidata
+refinada
+SIM
+NÃO
+segura
+E2SM-RC
+STATE / OBSERVATION
+VECTOR — 10 atributos
+o
+=
+[Idir, Nx/5, TDL/100, P RBDL/100, D/50,
+p1/10, v1/100, p2/10, v2/100, 0]
+RECOMPENSA PROXY
+R = 0,6fqos + 0,3fee −0,1P
+pesos fixos; não aprendi-
+dos pelo classificador atual
+INTENT CLASSIFIER —
+PROTÓTIPO ISOLADO
+Random Forest com dados dummy;
+integração com o runtime e
+modulação dinâmica de pesos
+não confirmadas no código atual
+MARL / MAPPO
+NO CÓDIGO ATUAL
+Actor/Critic genéricos; 2 agen-
+tes; 10 entradas e 5 ações;
+update() retorna perdas fixas,
+sem treinamento PPO efetivo
+feedback contínuo: a execução produz nova telemetria e reinicia o ciclo
+MAPPO PROPÕE →REFINEMENT PREPARA →SAFETY GUARDS VALIDAM →AÇÃO EXECUTÁVEL →RAN EXECUTA
+OBSERVAR →ENTENDER O CONTEXTO →RACIOCINAR →PROPOR →REFINAR →VALIDAR →EXECUTAR →OBSERVAR NOVAMENTE
+O aprendizado propõe; a segurança determinística valida.
+observação
+estado
+decisão
+refinamento
+segurança

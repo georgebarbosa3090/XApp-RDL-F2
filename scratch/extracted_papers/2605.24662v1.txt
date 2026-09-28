@@ -1,0 +1,1515 @@
+
+--- Page 1 ---
+1
+OpenTwin: Digital Twin–Driven Closed-Loop
+KPM Inference and Control for Open RAN
+Md Sharif Hossen*, Senior Member, IEEE, Zifan Zhang*, Dara Ron,
+Yuchen Liu, Member, IEEE, Vijay K. Shah, Senior Member, IEEE
+Abstract—The open radio access network (O-RAN) RAN
+intelligent controller (RIC) hosts data-driven xApps and rApps to
+optimize network performance. However, two challenges hinder
+ML-driven xApp/rApp development: (i) key performance metric
+(KPM) data scarcity caused by interface latency, and (ii) network
+disruption risks when testing and validating AI models directly on
+live networks. We develop OpenTwin, a digital twin framework
+built on an open-source O-RAN simulator (ns-O-RAN-flexRIC)
+and KPM streaming via the O1 interface, deployed within
+the non-RT RIC. OpenTwin uses a two-step ML approach:
+an XGBoost model that learns time-varying network behavior
+to generate simulator configuration parameters, followed by a
+time-aware recursive least squares (RLS) tuner that continu-
+ously corrects KPM deviations between the twin and real-world
+measurements. A deviation-aware scoring mechanism monitors
+twin fidelity and automatically triggers resynchronization upon
+detecting network drift. We demonstrate OpenTwin with an
+energy-saving xApp that validates control policies in the virtual
+space before applying reconfigurations to the physical network.
+Experimental results show that OpenTwin mirrors real-world
+KPMs with up to 96% accuracy and enables the xApp to
+significantly reduce energy consumption without disrupting live
+operations.
+Index Terms—Open RAN, Digital Twin, Closed-loop Control,
+KPM Modeling, XGBoost, Recursive Least Squares, Network
+Synchronization, Energy-efficient RAN
+I. INTRODUCTION
+The next-generation open radio access network (O-RAN)
+is transforming the cellular ecosystem and is already being
+trialed and deployed for 5G networks in the United States and
+worldwide [1], [2]. Unlike traditional, vertically integrated cel-
+lular architectures, O-RAN promotes openness, programma-
+bility, interoperability, and virtualization, enabling operators
+to mix and match hardware and software components from
+different vendors [3]. This paradigm shift enhances flexibility,
+scalability, and cost efficiency for operators while foster-
+ing competition and innovation among vendors, ultimately
+benefiting consumers. The momentum is reflected in market
+projections: the O-RAN sector, valued at $1.69 billion in 2023,
+is expected to surpass $455 billion by 2036, with a 53.8%
+compound annual growth rate (CAGR) [4].
+Md Sharif Hossen, Dara Ron, and Vijay K. Shah are with the Department
+of Electrical and Computer Engineering, North Carolina State University,
+Raleigh, NC, 27695, USA (Email: {mhossen, dron, vijay.shah}@ncsu.edu).
+(Corresponding author: Vijay K. Shah.)
+Zifan Zhang and Yuchen Liu are with the Department of Computer
+Science, North Carolina State University, Raleigh, NC, 27695, USA (Email:
+{zzhang66, yuchen.liu}@ncsu.edu).
+*These authors contributed equally to this work.
+O-RAN has defined two levels of RAN intelligent con-
+trollers (RIC), which enable software-defined, data-driven con-
+trol of RAN [5], [6]. RIC collects telemetry, hosts modular
+control applications, and coordinates decision-making across
+distributed network elements. It operates across two comple-
+mentary control loops: the near-real-time RIC (near-RT RIC)
+manages fast control loops (10 ms–1 s) via xApps, while the
+non-real-time RIC (non-RT RIC) leverages rApps operating at
+slower timescales (≥1 s). Both RICs also host third-party ar-
+tificial intelligence (AI)-driven software microservices, which
+perform various RAN functionalities, including optimizing
+operational networks and costs and addressing various O-RAN
+use cases to enhance network performance. O-RAN Work
+Group 1 has released a technical report that demonstrates
+the critical role of AI-driven xApp/rApp in advancing O-
+RAN capabilities across various use cases, including seamless
+handovers, radio resource optimization, quality of experience
+(QoE) enhancement, traffic steering, RAN slice service level
+agreement (SLA) assurance, dynamic spectrum sharing, and
+congestion prediction [7].
+While the RIC’s programmable control plane marks a
+major advance over legacy wireless systems, we identify two
+categories of systemic challenges: (i) telemetry data scarcity
+and (ii) the safety of network testing and validation for AI.
+(i) Telemetry data scarcity: KPMs and I/Q samples collected
+from physical networks through open interfaces (O-Fronthaul,
+E2, and O1) provide critical data for effective network control
+and orchestration. However, data scarcity caused by latency
+constraints in near-RT and non-RT RICs limits the frequency
+of KPM updates, compromising timely data collection and
+network adaptation.
+(ii) Lack of validation, safety, and scalability: AI-driven
+control xApps/rApps require continuous KPM feedback over
+time (e.g., at sub-millisecond intervals) to validate and refine
+their models. However, when AI agents learn directly through
+interactions with physical networks via the E2 and O1 inter-
+faces, the limited availability of real-time KPMs and the trial-
+and-error nature of learning can lead to network instability
+or service disruption. Despite the advances enabled by the
+RF scenario server, a massive channel emulator (MCHEM),
+high-fidelity ray-tracing, and 3D mapping, several limitations
+persist. Synchronization between virtual and real networks un-
+der dynamic conditions, configuration changes, and/or network
+drift remains challenging due to high computational complex-
+ity. Furthermore, the high computational cost of continuous
+digital twin (DT) updates limits scalability for large-scale
+deployments.
+arXiv:2605.24662v1  [cs.NI]  23 May 2026
+
+--- Page 2 ---
+2
+DT technology has emerged as a complementary tool for
+addressing the above challenges [8], [9]. It represents an
+evolution of next-generation wireless networks, offering a
+virtual representation of physical networks that serves as a
+promising framework to facilitate network design, analysis,
+operation, automation, control, optimization, monitoring, and
+orchestration, particularly for AI training, testing, and valida-
+tion [10], [11], [12], [13]. Telecom unions, network operators,
+and university labs, including ITU-R, O-RAN Alliance, and
+NVIDIA’s Sionna, have actively designed, developed, and out-
+lined roadmaps for future DT development. ITU-T has defined
+the requirements and architecture of DT technology [14], while
+ITU-R has identified DT as a key 6G enabler in its report on
+future international mobile telecommunications (IMT) systems
+toward 2030 and beyond [15]. ITU-R recommends prioritizing
+a top-level DT design for the RAN before extending it beyond
+the RAN scope. NVIDIA has actively developed a high-fidelity
+DT platform called Sionna Omniverse
+[16], designed as
+an advanced simulator for next-generation wireless network
+development and deployment. It incorporates site-specific 3D
+maps (e.g., buildings and other structures) and employs ray-
+tracing techniques to model signal reflection, refraction, and
+RF propagation channels. The Sionna Omniverse provides
+a virtual environment for deploying base stations and users
+within the simulator to perform network analysis, modeling,
+and optimization offline before real network deployment.
+However, the NVIDIA DT operates entirely independently
+of physical networks, raising concerns regarding calibration
+errors, missing configuration parameters, and limited ability
+to mirror real network dynamics. The O-RAN Next Gen-
+eration Research Group has released a research report on
+DT RAN use cases, specifying DT development directly
+connected to physical networks for AI/ML workflows such
+as model training, testing, and continuous optimization [17].
+The Colosseum DT described in [18] relies on the CaST
+workflow to identify node locations and trajectories, generate
+3D maps using OpenStreetMap, and extract RF propagation
+channels from MATLAB or Sionna ray-tracer outputs. It is
+coupled with an RF scenario server and an MCHEM to achieve
+better alignment of RF channels between the DT and the real
+network.
+SAJD [19], [20] introduces a self-adaptive jamming detec-
+tion framework leveraging closed-loop learning in O-RAN.
+However, such approaches rely solely on real-world data
+and lack integration with digital twin environments. Recent
+efforts have also investigated security and privacy challenges
+in O-RAN. For example, ZT-RIC [21] proposes a zero-trust
+framework that enables privacy-preserving xApp inference
+over encrypted KPM data. They do not provide mechanisms
+for predictive network modeling, digital twin synchronization,
+or safe pre-deployment validation of control policies.
+We identify three key challenges when applying the existing
+DT tool within O-RAN system, which can be highlighted as
+follows.
+• Lack of full attention to all metrics: Beyond high-fidelity
+RF channels, a comprehensive set of metrics is essential
+for efficient network prediction, control, and orchestration.
+The metrics requiring careful attention include time/frequency
+offset, bit rate, bit error rate (BER), modulation and coding
+scheme, received signal strength indicator, transmitted packet
+size, latency, signal-to-noise ratio (SNR), physical resource
+blocks (PRBs), buffer size, and more. They enable a deep
+understanding of the network demands and allow the system
+to intelligently manage and cross-layer control the network
+(NET), medium access control (MAC), and physical (PHY)
+layers to effectively meet performance objectives.
+• Limitations in flexibility under real network drift:
+Despite the advances enabled by the RF scenario server,
+MCHEM, high-fidelity ray-tracing, and 3D mapping, several
+limitations persist. Synchronization between virtual and real
+networks under dynamic conditions, configuration changes,
+and/or network drift remains challenging. The high compu-
+tational complexity of the Sionna DT and the absence of
+predictive network configuration in Colosseum limit their
+flexibility and scalability in mimicking real network changes.
+• Absence of predictive capability: Previous studies have
+primarily focused on constructing high-fidelity DT but lack
+the predictive capability to forecast near-future network states.
+In this paper, we develop an OpenTwin, an intelligent DT
+framework for O-RAN that centers around addressing three
+challenges outlined above by providing All the Metrics You
+Need, coupled with high flexibility, scalability, and predictive
+capability for efficient RAN network control and orchestration
+and ever-enhancing DT mirroring. The contributions of our
+proposed OpenTwin are clearly highlighted as follows.
+• OpenTwin leverages a well-known network simulator
+(ns-O-RAN-flexRIC [22]) and KPM streaming via O1 to
+develop an intelligent and reliable DT within non-RT RIC,
+enabling communication between the virtual twin networks
+and the physical networks through open interfaces. This
+bidirectional exchange allows DT to collect KPMs, continu-
+ously adjust simulator configurations to adapt to the dynamic
+environment, and enable xApps/rApps to feed well-suited
+configurations back to the physical network so as to maximize
+network operational efficiency.
+• Building OpenTwin requires a predictive network config-
+uration file (JSON) for the network simulator, along with tuned
+KPMs generated by the simulator. Therefore, we incorporate
+a two-step AI-driven approach into the proposed OpenTwin
+framework to build a robust virtualized network. First, an
+extreme gradient boosting (XGBoost) algorithm capable of
+fast learning and overfitting prevention is employed to capture
+historical patterns of the upcoming KPMs and generate well-
+suited configurations for the simulator. Second, a time-series
+tuning algorithm, recursive least squares (RLS), is applied
+on top of XGBoost to validate the KPMs generated by the
+simulator and minimize deviations from those collected in
+the physical networks. Beyond KPM error mitigation, both
+XGBoost and RLS work together to capture network variations
+and predict near-future network states.
+• An energy-saving xApp is developed to demonstrate the
+performance improvements achieved by our OpenTwin. This
+xApp interacts with OpenTwin to manage and validate the
+networks within virtual space, aiming to save energy while
+maintaining service reliability, with a focus on throughput and
+latency that adhere to application requirements, without any
+
+--- Page 3 ---
+3
+Fig. 1: O-RAN network architecture: Network elements, RIC microservices, and control loop time scale.
+physical network disruption.
+• The experiments demonstrate that the ML models incorpo-
+rated into OpenTwin, such as XGBoost and RLS, outperform
+other time-series learning schemes, including Random Forest,
+LSTM, and Transformer. Working together, these models
+achieve remarkable performance, enabling the OpenTwin to
+accurately mirror real-world networks with high fidelity and
+flexibility under network drift, approaching an accuracy level
+of up to 96%. Moreover, we demonstrate that the energy-
+saving xApp can manage the network within these virtualized
+networks, significantly reducing energy consumption.
+II. BACKGROUND: O-RAN
+Fig. 1 illustrates the O-RAN architecture, including dis-
+aggregated components, functionalities, open interfaces, and
+closed-loop control time scales. O-RAN is a disaggregated
+RAN architecture that builds upon and complements 3rd Gen-
+eration Partnership Project (3GPP) standards and specifications
+while extending them through open interfaces for third-party
+integration, network virtualization, and intelligent functions for
+control and optimization of the RAN [23], [24], [3]. The O-
+RAN architecture further extends 3GPP’s New Radio (NR)
+by splitting the traditional monolithic base station (BS) into
+disaggregated components, including the open central unit (O-
+CU), distributed unit (O-DU), and radio unit (O-RU) [25].
+The O-RU handles radio front-end operations, digital front-
+end processing, lower physical-layer functions, and fronthaul
+transport. The O-DU is responsible for real-time RAN control,
+handling the high physical layer along with the medium access
+control (MAC) and radio link control (RLC) layers. It executes
+tasks such as scrambling, modulation, layer mapping, and
+resource block allocation and is connected to the O-CU via
+the F1 interface. The O-CU is split into two components:
+one for the control plane (CP) and another for the user plane
+(UP), which hosts the RAN functionalities, including (i) the
+radio resource control (RRC) layer, which manages connection
+lifecycles; (ii) the service data adaptation protocol (SDAP)
+layer, which handles quality of service (QoS) for traffic flows;
+and (iii) the packet data convergence protocol (PDCP) layer,
+which performs reordering, duplication, and encryption to
+ensure secure and reliable over-the-air communication.
+The O-RAN Alliance has also standardized other open
+interfaces, including E2, A1, and O1, which enable con-
+nectivity between the O-CU and/or O-DU and the RAN
+intelligent controller (RIC) [1], [19]. The near-RT RIC hosts
+multiple microservices, known as xApps, which perform
+various RAN control and optimization functions, such as
+latency and throughput management [26], traffic steering and
+load balancing [27], dynamic spectrum sharing [28], attack
+detection [29], quality of service (QoS) enhancement [30],
+and intelligent network slicing [31]. Multiple near-RT RICs
+can stream telemetry data to a meta server (non-RT RIC)
+via the A1 interface. The non-RT RIC, as a component of
+the service management and orchestration (SMO) framework,
+hosts RAN applications, known as rApps, which govern all O-
+RAN components (O-DU, O-CU, and near-RT RIC) connected
+to the SMO, enabling high-level decision-making and policy
+control to enhance over-the-air communications between cellu-
+lar networks and thousands of users across large geographical
+regions. We leverage key features of the non-RT RIC, such as
+its high computational capability and large-scale control, to
+develop a high-fidelity OpenTwin, creating a virtual space
+for network testing, validation, and training.
+III. PROPOSED OPENTWIN SYSTEM
+In this study, we develop OpenTwin, which incorporates
+data-driven ML models into scenario-driven network simula-
+tors (e.g., ns-O-RAN-flexric [22]) to construct a reliable and
+flexible OpenTwin within the non-RT RIC. As illustrated in
+Fig. 2, our framework establishes a DT-driven feedback loop,
+with assistance from key performance measurements (KPMs),
+between configuration inference, reconstruction, and network
+optimization. Unlike existing simulators that operate in an
+open-loop manner, this closed-loop method transforms the
+conventional static network simulator into an adaptive twin
+with high fidelity that can replicate key KPM distributions
+and monitor deviations as the O-RAN network evolves. ML
+models are responsible for observing variations and capturing
+patterns in physical O-RAN network states to automatically
+generate optimal network configurations, tune the synthetic
+KPMs from simulators to align with the distribution of real
+KPMs from physical networks, and predict near-future net-
+work conditions to provide a lookahead window for xApps
+to control and orchestrate the network before events occur.
+In the next few subsections, we will first briefly give a high-
+level walkthrough of our proposed OpenTwin in Sec. III-A,
+introduce several key modules in Sec. III-B-III-C, and provide
+a use case to demonstrate the effectiveness of OpenTwin in
+Sec. IV.
+
+--- Page 4 ---
+4
+Fig. 2: OpenTwin framework with closed-loop feedback between KPM generation, ML inference, and simulation updates.
+A. High-level Framework Walkthrough
+The proposed OpenTwin framework encompasses three
+main components: configuration file generation, KPM tun-
+ing and prediction, and network testing and validation
+within virtual networks. We first generate a custom config-
+uration file regarding how many user equipments (UEs), next
+generation nodes (gNBs), bandwidth, packet size, buffer size,
+inter-site distance between cells, inter-site distance between
+UEs, mobility models, handover mode, outage threshold, and
+many other parameters as well. We then modify the network
+simulator to parse this configuration file and apply the speci-
+fied parameters. ①Once the setup is ready and UEs commu-
+nicate with the cells, we extract the raw KPMs generated by
+the simulator via O1 interface and store them in an InfluxDB
+time-series database. The RIC testing as a platform (RIC-TaaP)
+studio is used to monitor the network status and KPMs of the
+gNBs’ cells and UEs. ②OpenTwin initiates its first ML com-
+ponent to leverage eXtreme gradient boosting (XGBoost) to
+learn network traffic patterns from historical raw KPMs and
+generate appropriate network parameters for configuring the
+network simulator. However, the static and discrete snapshot
+configuration parameters generated by XGBoost may not be
+sufficient to achieve precise time-varying pattern alignment
+between the real network KPMs and OpenTwin due to network
+variations such as UE mobility, unknown interference, noise,
+traffic load fluctuations, and changing channel conditions.
+③To address this challenge, OpenTwin activates its sec-
+ond ML component, called the time-aware recursive least
+squares (RLS) tuner, a synchronization engine that tunes the
+simulator-generated KPMs to minimize their deviation from
+the raw KPMs collected from real networks. Depending on
+the deviation of the generated OpenTwin and the historical
+KPMs, we calculate an average score using the exponentially
+weighted moving average (EWMA). ④A Supervisor Block,
+as shown in Fig. 2, consumes this score that contains several
+microservices. Network configuration regeneration (ConFil-
+eReg) monitors the EWMA score; if the score exceeds a
+threshold, it regenerates a new configuration file. An initial
+configuration file is always generated to start the simulator.
+When the microservice program ConFileReg produces a new
+configuration and signals that the OpenTwin needs to be
+retuned. Once the deviation between raw and DT-predicted
+KPMs is minimal, another microservice will be waiting for
+sufficient samples of KPMs from OpenTwin to initiate the
+xApp for network performance validations, such as turning off
+underutilized cells. When OpenTwin concludes that applying
+a given xApp policy improves performance in simulation, it
+sends a deployment decision to the A1 termination node. The
+non-RT RIC then coordinates with the near-RT RIC to deploy
+the xApp on the physical network.
+B. XGBoost-Based Configuration Generation
+1) KPM Preprocessing: In this initial stage, KPMs are
+collected through an O1 interface and processed into a uni-
+fied, time-aligned feature map. The extracted feature map is
+essential for subsequent OpenTwin construction and evalu-
+ation. Let M denote the set of collected KPMs. We fix a
+sampling interval ∆and index samples by t, where both pre-
+defined parameters are selected to capture relevant system
+dynamics while controlling signal variance. Note that we use
+xt = [x(m)
+t
+]m∈M ∈R|M| for the KPM vector at time t. For
+each KPM m ∈M (e.g., SNR, PRBs, buffer size, modulation
+and coding scheme (MCS), or others), we construct a feature
+sequence {x(m)
+t
+}T
+t=1 as input for the twinning process. A pri-
+mary challenge is handling raw telemetry that arrives at non-
+uniform intervals (with a fixed time interval ≥1 s for the non-
+RT RIC). As a first step, we apply a low-pass smoothing filter
+and resample all data to the common interval ∆. This ensures
+downstream twin models operate on standardized inputs. We
+further establish a consistent timeline by aligning timestamps
+from all sources to a common clock and reconciling unit
+conventions. Minor temporal offsets are corrected by cross-
+checking shared change points and minimizing discrepancies
+among co-varying KPMs, by aligning prominent change points
+across KPMs, and by mitigating spurious shifts that could
+be misread as drift. This preprocessing step standardizes the
+temporal base but does not resolve all data inconsistencies.
+Deeper misalignments, such as missing values or data from
+sources with fundamentally heterogeneous sampling policies,
+are explicitly deferred. These issues will be addressed by the
+fully constructed DT, as discussed in later subsections. The
+OpenTwin itself is designed to reconcile these inconsistencies
+and input missing values, thereby providing a complete and
+robust system representation.
+
+--- Page 5 ---
+5
+To represent both bursty behavior and long-term trends, we
+preprocess the raw KPMs to extract short-lag and smoothed
+features. In accordance with the tuner formulation intro-
+duced later, we define lagged terms {xt−1, . . . , xt−τ}, along
+with a windowed average, which can be defined as xt =
+1
+W
+PW −1
+i=0
+xt−i . Note that, for a generic scalar KPM xt, we
+drop the superscript m for simplicity. This averaging reduces
+noise variance by a factor of approximately 1/W at the cost
+of an average lag of (W −1)/2 samples. This trade-off
+stabilizes the learning process while retaining responsiveness
+to system changes. We complement these features with rate-
+of-change metrics (e.g., xt −xt−1), calendar indicators (e.g.,
+time-of-day and day-of-week), and cross-KPM ratios where
+domain knowledge suggests stable inter-metric relationships.
+This ensures that both OpenTwin construction stage and
+the tuner stage operate on a consistent format. All features
+are standardized per KPM using statistics derived from the
+training set. Furthermore, data quality masks are retained to
+enable principled weighting during configuration inference and
+calibration.
+2) Configuration File Generation: Given the preprocessed
+feature maps from Sec. III-B1, our goal is to infer a plausible
+O-RAN configuration that explains the observed KPMs and
+serves as an initial OpenTwin state. We denote by xt ∈Rd the
+KPM feature vector at time t produced by a KPM generator,
+where the generator can be either a real O -RAN testbed via O1
+or a historical KPM dataset. Each xt is constructed using the
+same lag and smoothing operators (e.g., window length W and
+windowed average xt) as in Sec. III-B1. Similarly, we denote
+by yt ∈Rd the KPM feature vector generated by the network
+simulator under a known O -RAN configuration, after applying
+the same preprocessing pipeline. The mapping of configuration
+file xt 7→c is learned with gradient-boosted trees (XGBoost),
+chosen for their ability to capture nonlinear interactions,
+handle heterogeneous features, and support structure-imposing
+constraints. We use hundreds of feature pairs (yt, ct) solely
+from network simulators to learn an inverse mapping from
+KPM features to configuration parameters during the training
+process, and then apply it to KPM generator features xt, which
+share a similar feature schema.
+We denote the configuration parameters as a mixed vector
+at time t ct =
+ ccont
+t
+, ccat
+t
+
+, ccont
+t
+∈Rp includes p bounded
+continuous parameters (like transmit power, bandwidth, buffer
+sizes), and ccat
+t
+includes categorical parameters (like scheduler
+type or handover policy). Each parameter has box constraints
+[ℓj, uj] for dimension j, while each categorical parameter takes
+values from a set {Vk}, with one set Vk for each category k.
+We jointly train regressors {fj}p
+j=1 for continuous param-
+eters and classifiers {gk} for categorical ones by minimizing
+a composite loss L, and let T be the index set of simulator-
+generated training samples:
+L =
+X
+t
+wt
+"
+p
+X
+j=1
+αjLHuber
+ fj(xt), ccont
+j,t
+
++
+X
+k
+βkLCE
+ gk(xt), ccat
+k,t
+
+#
+(1)
+where αj, βk > 0 weight parameters by operational criticality.
+The sample weight wt incorporates both generated KPM
+quality and temporal recency, which is given by:
+wt = qt λ T −t,
+λ ∈(0, 1),
+(2)
+with qt ∈{0, 1} derived from the quality masks in Sec-
+tion III-B1. The Huber loss provides robustness against out-
+liers, while the cross-entropy loss for ccat utilizes class weights
+to mitigate imbalance.
+At the inference phase, we take a KPM feature vector
+xt from the KPM generator. We pass it through the trained
+XGBoost models to get raw configuration parameters. For the
+continuous parameters, we concatenate the outputs as:
+ˆccont
+t
+=
+
+f1(xt), . . . , fp(xt)
+⊤∈Rp.
+(3)
+In addition, for each categorical parameter k, we get a prob-
+ability vector:
+ˆπ(k)
+t
+= gk(xt) ∈[0, 1]|Vk|.
+(4)
+The raw model outputs ˆc are then projected to a feasible
+configuration file to ensure schema validity. For continuous
+parameters, we solve a small quadratic program (QP):
+˜ccont = arg min
+z
+∥z −ˆccont∥2
+2
+s.t. ℓj ≤zj ≤uj, Az ≤b.
+This enforces both box constraints (ℓj, uj) and linear coupling
+constraints (Az ≤b). For categorical parameters, we take
+the calibrated Maximum A Posteriori (MAP) label, ˜ccat
+k
+=
+arg maxv∈Vk Pr
+ gk(x) = v
+
+. The result ˜c is a schema-valid
+configuration file ready to initialize OpenTwin in the O-RAN-
+compliant manner.
+This approach provides a fast, synthetic data-driven estimate
+of the configuration state via supervised inversion, which is
+then refined using simulation. The use of monotone and fea-
+sibility constraints ensures that predictions remain plausible.
+Because the inference features yt, although collected in the
+network simulator, reuse the same KPM format defined in
+Sec. III-B1, the inferred configuration ˜c is immediately con-
+sumable by the time-aware calibration module (Section III-C).
+This design yields an initialization that is feasible and well-
+conditioned for continuous synchronization against the real
+testbed.
+C. Time-Aware Recursive Least Square Tuner
+KPMs produced by the simulator with a generated con-
+figuration file usually differ from ground-truth measurements
+obtained from KPM generators due to modeling simplifica-
+tions, stochastic network dynamics, measurement noise, and
+unpredictable user activities. To synchronize OpenTwin with
+the ground-truth measurements, we design an online correc-
+tion tuner that adjusts DT-produced raw KPMs toward the
+ground-truth while tracking nonstationarity, e.g., slow drifts
+and regime changes. Note that the number of ground-truth
+KPM samples is small due to the high collection expense,
+so we adopt recursive least squares (RLS) as a data-efficient
+online tuning method. Let xt denote the ground-truth KPM
+preprocessed in Sec. III-B1 at time t and yt the corresponding
+
+--- Page 6 ---
+6
+OpenTwin output. The instantaneous residual is rt = xt −yt,
+where our goal is to approximate the time-varying relation.
+xt ≈g
+ yt, yt−1, . . . , yt−τ, yt
+
+,
+yt = 1
+W
+W −1
+X
+i=0
+yt−i, (5)
+where the windowed average yt reduces high-frequency noise
+variance by approximately 1/W at the cost of an average
+lag of (W −1)/2 samples. This feature set captures short-
+term dynamics and longer-term trends that are predictive of
+systematic bias.
+We implement g(·) as a linear, adaptive filtering model
+trained with RLS with exponential forgetting. We define the
+feature vector ut as:
+ut =
+
+1, yt, yt−1, . . . , yt−τ, yt
+T ∈Rτ+3,
+(6)
+and the one-step prediction is given by:
+ˆxt = uT
+t θt−1,
+(7)
+where θt ∈Rτ+3 is the time-varying vector of correction
+coefficients. With forgetting factor λ ∈(0, 1) and inverse
+covariance matrix Pt ∈R(τ+3)×(τ+3), the RLS updates are:
+kt =
+Pt−1ut
+λ + uT
+t Pt−1ut
+,
+(8)
+et = xt −uT
+t θt−1,
+(9)
+θt = θt−1 + kt et,
+(10)
+Pt = 1
+λ
+ Pt−1 −ktuT
+t Pt−1
+
+,
+(11)
+which is initialized with a small ridge term γ > 0 via P0 =
+γ−1I to stabilize early updates under collinearity. Equivalently,
+at each time t the RLS solution ˆθt minimizes the exponentially
+weighted, ℓ2-regularized objective
+ˆθt = arg min
+θ
+"
+t
+X
+s=1
+λ t−s xs −uT
+s θ
+2 + ρ∥θ∥2
+2
+#
+,
+(12)
+where ρ > 0 is a ridge regularization coefficient. The corrected
+KPM estimate is then ˆxt
+≡
+ˆyt
+= uT
+t ˆθt, applied per-
+KPM in parallel (each KPM maintains its own θt and Pt).
+In practical settings, we optionally trigger the correction to
+enhance robustness under abrupt regime changes, letting dt
+denote a smoothed deviation defined in Section III-C1 and τm
+an acceptance threshold, we use
+ˆyt =
+(
+ˆxt,
+if |dt| ≤τm,
+yt,
+otherwise,
+(13)
+so that large, sudden discrepancies trigger conservative behav-
+ior until the tuner adapts. The forgetting factor λ controls the
+speed–stability trade-off: smaller values react quickly to shifts
+but increase variance; larger values favor smooth tracking
+of slowly varying biases. The choice of window W plays
+a complementary role through the bias–variance balance of
+yt. Together, the RLS updates and feature design provide a
+lightweight, online mechanism to continuously reduce DT-
+reference gaps while respecting the nonstationary nature of
+the network.
+1) Deviation Scoring and Continuous Synchronization: We
+continuously monitor the fidelity of OpenTwin with a single
+deviation signal that averages smoothed, relative errors across
+all KPMs, and then uses this signal to decide whether to retune
+the tuner, adjust cadence, or regenerate the configuration. Let
+x(m)
+t
+be the ground-truth value for KPM m at time t, and
+let y(m)
+t
+and ˆy(m)
+t
+be the raw and RLS–corrected OpenTwin
+outputs. To make deviations comparable across heterogeneous
+scales, we work with relative percentage errors:
+∆raw
+m,t = 100
+y(m)
+t
+−x(m)
+t
+max
+ |x(m)
+t
+|, ϵ
+,
+∆corr
+m,t = 100
+ˆy(m)
+t
+−x(m)
+t
+max
+ |x(m)
+t
+|, ϵ
+,
+(14)
+where ϵ > 0 is a small constant to avoid division by very small
+denominators. These instantaneous gaps can fluctuate rapidly,
+so each KPM stream is smoothed with an exponentially
+weighted moving average,
+dm,t = αm ∆corr
+m,t + (1 −αm) dm,t−1,
+αm ∈(0, 1), (15)
+where larger αm favors recency and smaller αm favors sta-
+bility. In practice, αm is set from a target half-life Hm at the
+working cadence ∆via αm = 1−2−∆/Hm so that smoothing
+has a clear temporal interpretation.
+To prevent positive and negative errors from canceling out
+and to reflect KPM criticality, we aggregate absolute EWMAs
+with nonnegative weights wm,
+¯dt =
+P
+m wm |dm,t|
+P
+m wm
+,
+(16)
+Weights can encode operational importance and also com-
+pensate for noise scale differences. A practical choice is
+wm ∝ωm/bσm, where ωm is a priority coefficient and bσm is a
+robust scale estimate for ∆corr
+m,t (for example, median absolute
+deviation), which reduces domination by inherently high-
+variance KPMs. When some KPMs are missing or flagged
+as low quality by the masks from Section III-B1, we compute
+(16) over the available subset with renormalized weights and
+defer updates if coverage falls below a minimum threshold.
+For a single, interpretable decision variable we map ¯dt to a
+normalized score St ∈[0, 1] using global warning and alarm
+thresholds 0 ≤τ warn < τ alarm,
+St =
+
+
+
+
+
+
+
+
+
+
+
+0,
+¯dt ≤τ warn,
+1,
+¯dt ≥τ alarm,
+¯dt −τ warn
+τ alarm −τ warn ,
+otherwise.
+(17)
+In our implementation, we use a fixed choice of τ warn and
+τ alarm for regeneration alarms, initialized from offline analysis
+of representative traces with expert input. This single-score de-
+sign naturally focuses on downstream measurements because
+the KPM set already includes metrics tied to the downstream
+tasks, such as energy and load-related measurements. Improve-
+ments or regressions in those outcomes directly influence ¯dt
+and therefore St, so the same synchronization mechanism
+governs both OpenTwin fidelity and task-relevant behavior.
+Algorithm 1 summarizes the complete closed-loop opera-
+tion. At each time step, the framework preprocesses incoming
+
+--- Page 7 ---
+7
+Fig. 3: Comparison of ML model accuracy.
+KPMs and evaluates the deviation score St from (17). If
+St−1 exceeds the alarm threshold τ alarm, XGBoost regenerates
+the configuration file and restarts the simulator (lines 4-8);
+otherwise, the RLS tuner corrects the simulator-produced
+KPMs toward the real-world measurements (lines 11-13).
+When St falls below the warning threshold τ warn, the twin
+is considered faithful and the xApp is permitted to execute
+control actions (lines 17-19). The deviation tracking in (15)-
+(17) runs continuously throughout the operation, keeping the
+twin aligned with the real testbed as load, mobility, and radio
+conditions evolve.
+We also evaluated sequence-based models, such as LSTMs
+and Transformers, using historical KPMs to predict OpenTwin
+KPMs. However, as illustrated in Fig. 3, these models struggle
+to track rapid PRB fluctuations and require fixed sampling
+intervals and large training sets, which is not realistic for
+KPM streams delivered by the O1 interface and is very
+time-consuming in practice. By contrast, RLS is lightweight,
+data-efficient, and responsive, making it more suitable for
+continuous OpenTwin synchronization.
+IV. USE CASE: ENERGY-SAVING XAPP
+In this study, we implement the energy-saving xApp to
+demonstrate how this control xApp employs our proposed
+OpenTwin to observe network status for efficient control and
+orchestration to save energy consumption. As illustrated in
+Fig. 2, the control xApp continuously monitors per-UE serving
+and neighbor SINR reports via A1 interface. These reports
+help as UE–cell attachments to determine when the xApp
+will trigger handovers and cell sleep transitions through RIC
+indication to control the RAN. When the UE’s serving-cell
+SINR drops below a smoothed neighbor SINR, the xApp
+triggers a controlled handover to the neighbor with the highest
+averaged SINR cell. After all associated UEs are handed over,
+if a cell does not serve any UE, xApp will send an RIC
+indication to change the cell status to Sleep state to reduce
+energy consumption. If a cell has at least one UE, xApp
+will treat that cell as active and will not change its state.
+Along with this, sleeping cells are also periodically probe-
+woken for a short interval to detect new user activity. If there
+are no changes in SINR, the cell goes back into the Sleep
+state again. This ensures energy savings without compromising
+connectivity.
+V. RESULTS AND DISCUSSION
+In this section, we discuss the evaluation of fidelity, adapt-
+ability, and the effectiveness of control in the proposed
+Algorithm 1 OpenTwin Closed-Loop Framework
+1: Input: Real-world KPM stream {xt}, window W, thresh-
+olds τ warn, τ alarm, RLS factor λ
+2: for t = 1 to T do
+3:
+Preprocess xt to form inference features vt (for XG-
+Boost)
+4:
+if St−1 ≥τ alarm then
+5:
+ˆc ←XGBoost(vt)
+6:
+˜c ←arg minz ∥z−ˆc∥2
+2
+s.t.
+ℓ≤z ≤u, Az ≤b
+7:
+Restart the network simulator with ˜c and reset
+Pt, θt
+8:
+end if
+9:
+ysim
+t
+←network simulator(˜c)
+10:
+Construct tuning feature ut ←[1, ysim
+t , . . . ]T based on
+W
+11:
+kt ←Pt−1ut(λ + uT
+t Pt−1ut)−1
+12:
+θt ←θt−1 + kt(xt −uT
+t θt−1)
+13:
+Pt ←λ−1(Pt−1 −ktuT
+t Pt−1)
+14:
+ˆyt ←uT
+t θt
+15:
+∆raw
+t
+←|(ˆyt −xt)/xt|;
+dt ←αdt−1 + (1 −α)∆raw
+t
+16:
+Update global deviation score St based on dt
+17:
+if St ≤τ warn then
+18:
+Trigger xApp logic control based on valid twin
+state
+19:
+end if
+20: end for
+21: Output: Optimized network control actions
+OpenTwin framework with the four steps: (i) DT fidelity, (ii)
+adaptation under network drift, (iii) configuration regeneration
+via deviation score, and (iv) the energy-saving xApp-based
+RAN control.
+A. Experimental Setup
+1) Network Simulator: Network Simulator 3 (ns-3) is an
+open-source, packet-level, discrete-event simulation platform
+developed for the scientific community, industry, and educa-
+tional purposes. This simulator supports high-fidelity virtual-
+ized experiments that are compliant with 3GPP standards and
+the Wi-Fi/LTE/5G protocol stack [32]. Its source code can be
+reused on real-world testbeds, demonstrating the minimal gap
+between simulation and prototype implementations. This open-
+source application can be deployed and run on RICs (near-RT
+RIC or non-RT RIC) to bridge the connection between 5G
+simulations in ns-3 and physical networks. This integration
+allows KPMs, including realistic channel data, to be streamed
+to the RICs via open interfaces (O-FH, F1, O1, E2, and A1),
+supporting the control actions of AI-driven software microser-
+vices called xApps and rApps. An ns-O-RAN simulator has
+been introduced as an extension of OpenRAN Gym [33] that
+integrates the ns-3 simulator with an E2-compliant RIC [34],
+[35]. Orange has leveraged the FlexRIC from EURECOM,
+the ns-O-RAN simulator from WIoT, the 5G-LENA module
+from CTTC, and the Sionna Ray Tracing tool from Nvidia to
+develop ns-O-RAN-flexric, an open-source for testing ecosys-
+tem initiative designed to streamline xApp/rApp functional and
+
+--- Page 8 ---
+8
+operational testing, foster innovation in xApp/rApp design, and
+provide proven digital-twin networks [22]. Therefore, the net-
+work simulator block in the proposed OpenTwin framework
+uses this ns-O-RAN-flexRIC simulator, running within the non-
+RT RIC, to conduct the experiments.
+2) Digital Twin Scenario: Our developed OpenTwin runs
+on top of ns-O-RAN-FlexRIC and utilizes the mmWave mod-
+ule. Note that the mmWave module only provides related
+attributes to our system, but OpenTwin does not directly run
+on mmWave band. The simulated network includes one LTE
+eNB and N number of gNB mmWave sites. The LTE eNB and
+one mmWave gNB are placed at the center of a 4 km by 4
+km area, while the other mmWave cells are set up on a ring
+whose intersite distance is controlled by a parameter named
+IntersideDistanceCells. We apply the 3GPP UMi street canyon
+model inside ns-3 to emulate both path loss and channel
+conditions. In our scenarios, all antenna elements are modeled
+as isotropic, while the carrier frequency and bandwidth are set
+through the DT configuration parameters.
+On the other hand, the number of UEs, their spacing,
+and mobility patterns are set up from the configuration file
+that is generated by the inference step in Sections III-B and
+V-A5. UEs are uniformly distributed within a disc of radius
+given by IntersideDistanceUEs centered on the deployment,
+and their movements are triggered following the mobility
+model specified by the parameter MobilityModel. For example,
+if RandomDirection2dMobilityModel is set up, UEs move
+towards the random direction within a 2D plane, with speeds
+uniformly distributed within [Speed Min, Speed Max]. The
+bounds of the mobility area span the whole simulation area.
+Finally, handover behavior is controlled by the hoSinrDiffer-
+ence, handoverMode, and outageThreshold parameters, which
+map to the radio resource control (RRC) configuration used for
+the co-located gNBs. Each radio link control (RLC) entity uses
+a transmit buffer size determined by the bufferSize parameter.
+3) KPM Collection: We need to collect the KPMs properly
+to synchronize them in the DT and the historical KPM
+generator, also referred to as real-world (RW) KPMs. We
+collect both cell-level and UE-level KPMs from the baseline
+ns-3 simulation, which serves as a synthetic ground truth.
+For the cell level, we collect KPMs such as downlink PRB
+usage, the number of active UEs, PDCP traffic volume, and
+detailed transport block statistics, which include the number
+of transmitted transport blocks (TB), counts of 16-quadrature
+amplitude modulation (16QAM), 64QAM, and quadrature
+phase shift keying (QPSK) modulation formats, and TB error
+events. While for the UE level, we log each UE’s PRB
+allocation, downlink PDCP throughput, serving and neighbor
+SINR, buffer status metrics, and PDCP volume based on
+the QoS filters. These KPMs are exported through the O1
+interface, which imitates the behavior and periodicity of O1
+reporting. These are then stored with timestamps and cell or
+UE identifiers in InfluxDB. These time series datasets emulate
+scheduler actions, traffic dynamics, mobility patterns, and link
+quality changes, which are then used as an input for the
+XGBoost-based configuration generation and time-aware RLS
+tuner.
+4) Traffic and E2 Integration: To drive user traffic, we
+connect one remote host to the packet gateway (PGW) via
+a high-capacity point-to-point link. Each UE is served by one
+such saturated downlink user datagram protocol (UDP) flow
+from this remote host. Packets are sent every 500 microseconds
+by default, as the packet size is taken from the inferred Pack-
+etSize parameter. This sets up a constant load that stresses the
+scheduler and emphasizes how radio and mobility parameters
+impact PRB usage, PDCP volume, and TB error events. The
+ns-3 deployment is connected to FlexRIC, so it can expose E2
+KPMs that match the real-world O1 telemetry. E2 reporting
+for DU, CU-CP, and CU-UP is turned on in accordance with
+configuration flags and the chosen indication period. The DT
+exports its KPMs according to the same data schema as the
+real network, which enables a deviation score computation.
+5) Configuration File Prediction: Using a logical or infer-
+ence approach, we can extract several configuration fields from
+the RW KPMs, such as the number of gNBs and UEs, node
+positions, E2 function flags, and the reporting interval. For
+the remaining radio, mobility, and buffering parameters that
+cannot be logically inferred from the KPM structure, we only
+apply ML to predict them. To generate those remaining fields
+from the RW KPMs, we compare two approaches, random
+forest (RF) and XGBoost, and we evaluate which one more
+accurately predicts the configuration file. Table I illustrates
+that RF significantly struggles with several key fields, such as
+bandwidth, packet size, and speed, often with large errors. In
+contrast, XGBoost recovers almost all continuous parameters
+with very high accuracy, which are rounded to match the cor-
+responding RW KPM-derived configurations. XGBoost also
+shows good accuracy in terms of predicting categorical param-
+eters, e.g., handover mode and mobility model. As illustrated
+in Table II, XGBoost matches closely with the ground truth
+configuration, while RF shows noticeable deviations. Given the
+importance of XGBoost’s model capability to reproduce the
+continuous radio and mobility settings, we consider XGBoost
+models to predict the configuration file in our DT.
+TABLE I: Example of continuous parameter inference error
+using RF and XGBoost.
+Parameter
+Random Forest
+XGBoost
+MAE
+MAPE
+MAE
+MAPE
+OutageThreshold
+0.61
+12.2%
+0.0007
+0.014%
+Bandwidth
+4.35e6
+17.4%
+0
+0%
+CenterFrequency
+4.768e7
+1.20%
+896
+0.00002%
+IntersideDistanceCells
+11
+1.83%
+0
+0%
+IntersideDistanceUEs
+6
+6.0%
+0.000259
+0.000259%
+Speed Min
+0.865
+43.25%
+0.000034
+0.0017%
+Speed Max
+2.83
+56.6%
+0.000078
+0.00156%
+PacketSize
+134
+104%
+0.00043
+0.00034%
+BufferSize
+3.1
+6.2%
+0.00086
+0.0017%
+HoSinrDifference
+0.52
+10.4%
+0.000427
+0.0085%
+IndicationPeriodicity
+0.032
+3.2%
+0.000023
+0.0023%
+B. Experimental Results
+1) OpenTwin Fidelity: Fig. 4 demonstrates the high fi-
+delity of the proposed OpenTwin using three complementary
+results: (a) a comparison of KPMs collected from real net-
+works and those generated by the DT over time, (b) a scatter
+
+--- Page 9 ---
+9
+0
+100
+200
+300
+400
+500
+Time (s)
+0
+10
+20
+30
+40
+50
+ue_2_l3 serving sinr
+RW
+DT
+(a) RW serving-cell SINR over time for UE2.
+0
+10
+20
+30
+RW SINR (dB)
+0
+10
+20
+30
+DT SINR (dB)
+UE4
+UE5
+UE6
+Ideal match
+(b) Scatter plot of DT-generated SINR versus
+real-world SINR.
+UE1
+UE2
+UE3
+UE4
+UE5
+UE6
+UE
+0
+20
+40
+60
+80
+100
+DT accuracy [%]
+96.6%
+97.1%
+96.7%
+97.3%
+96.8%
+95.5%
+(c) DT accuracy for serving–cell SINR for 6 UEs.
+Fig. 4: Serving-cell SINR comparison between real-world (RW) and Digital Twin (DT). (a) Time-series comparison for UE2.
+(b) Scatter plot of DT versus RW SINR for representative UEs, where the diagonal line indicates ideal agreement. (c) DT
+accuracy across multiple UEs.
+TABLE II: Example configuration reconstruction from RW
+KPMs.
+Parameter
+Ground True
+Random Forest
+XGBoost
+OutageThreshold
+-5
+-4.39
+-4.9993
+Bandwidth (Hz)
+25000000
+29350000
+25000000
+CenterFrequency (Hz)
+3970000000
+3922320000
+3969999104
+IntersideDistanceCells (m)
+600
+611
+600
+IntersideDistanceUEs (m)
+100
+106
+100.000259
+Speed Min (m/s)
+2
+2.865
+2.00003387
+Speed Max (m/s)
+5
+7.83
+5.00007821
+PacketSize (bytes)
+128
+262
+127.99957
+BufferSize
+50
+46.9
+50.00086
+HoSinrDifference
+5
+4.48
+4.99957
+IndicationPeriodicity (s)
+1.0
+0.968
+1.000023
+MobilityModel
+RD2MM
+RD2MM
+RD2MM
+HandoverMode
+FixedTtt
+FixedTtt
+FixedTtt
+plot illustrating pointwise agreement between DT-generated
+and real-world SINR, and (c) the accuracy of user-specific
+KPMs generated by the DT compared to those from the
+real networks. These detailed results demonstrate the high
+fidelity of the proposed OpenTwin. The experimental setup
+is described in Subsection V-A, where the number of active
+users is set to 6, and the RandomDirection2dMobilityModel
+is set up to simulate UE mobility within a two-dimensional
+plane. The OpenTwin activates its ML models to learn the
+dynamics of the network changes in order to generate a
+well-suited configuration file and tune the KPMs to closely
+align with those from real networks. The experimental results
+demonstrate that (a) the SINR generated by the OpenTwin
+(· black dots) almost perfectly coincides with the real-world
+SINR (· red dots), (b) the scatter plot of DT-generated SINRs
+versus real-world SINRs shows strong pointwise agreement,
+with most data points closely aligned along the ideal diagonal
+line, and (c) the SINR accuracy of the OpenTwin reaches
+approximately 96% compared to the real-world measurements.
+These results showcase the robustness of our OpenTwin in
+generating network representations within a virtual space for
+control xApps/rApps.
+2) Adaptability and Flexibility of OpenTwin: This experi-
+ment aims to demonstrate the flexibility of the OpenTwin in
+maintaining synchronization with real networks under network
+drift. The network is configured and scheduled to activate 10
+UEs over a time interval of [0, 480] seconds, and 4 of them
+are scheduled to become inactive at the predetermined time of
+480 seconds. As illustrated in Fig. 5(a), the PRB usage drops
+sharply at this point due to those UEs leaving the network.
+The results demonstrate that the OpenTwin adapts effectively
+to network dynamics, with its KPM (PRB usage) almost
+perfectly overlapping the measurements obtained from the
+real-world network over time. This achievement highlights the
+key features of the OpenTwin models: overfitting prevention,
+fast convergence, and the ability of XGBoost and RLS to adapt
+to time-varying networks.
+Fig. 5(b) summarizes the mean absolute percentage error
+(MAPE) across a broad set of KPMs to quantify the overall
+fidelity of the DT. The KPMs include transport block statistics,
+modulation formats, buffer status, PRB usage, and downlink
+PDCP volume and altogether span physical, MAC, and PDCP
+layer characteristics. Results show that the DT maintains low
+error across all metrics, as most KPMs show MAPE values in
+the range of approximately 3 to 6 percent. Of these, lower-level
+metrics such as QPSK and error-related TB counters show
+particularly small deviations, while more dynamic metrics like
+PRB usage and PDCP volume have slightly higher MAPE
+values because those KPMs have larger absolute magnitudes.
+Across these KPMs, the DT maintains roughly 93% to 98%
+accuracy, confirming that it stays tightly synchronized with the
+real network even as the number of active UEs changes.
+3) Regeneration Triggering via Deviation Score: To in-
+struct the regeneration of the configuration file in scenarios
+when the DT cannot capture the RW KPMs, we compare the
+deviation score in (17) over time as shown in Fig. 6 (a). It
+shows that the deviation score S changes over iterations with
+respect to a threshold. For example, for a threshold of 0.15,
+the score remains below the limit for most of the run, which
+indicates that DT is well aligned with the RW.
+4) OpenTwin-Assisted Energy Saving xApp: This experi-
+ment demonstrates how the energy-saving xApp employs our
+OpenTwin to manage the network in a way that reduces
+energy consumption. We measure the energy consumption
+when the energy-saving xApp is set to both active and inactive
+modes to clearly illustrate the amount of energy that can be
+
+--- Page 10 ---
+10
+0
+200
+400
+600
+800
+Time (s)
+20
+40
+60
+80
+100
+ue_3_dlprbusage
+RW
+DT
+(a) DL PRB usage versus time for UE3.
+tb.totnbrdlinitial.qpsk.ueid
+tb.errtotalnbrdl.1.ueid
+tb.totnbrdl.1.ueid
+l3 serving sinr
+drb.buffersize.qos.ueid
+tb.totnbrdlinitial.16qam
+tb.totnbrdlinitial.64qam
+tb.totnbrdlinitial
+rru.prbuseddl
+qosflow.pdcppduvolumedl_filter
+dlprbusage
+KPI
+0
+1
+2
+3
+4
+5
+6
+7
+MAPE [%]
+0.52%
+1.01%
+2.67%
+3.51%
+3.88%
+4.64%
+5.10%
+5.81%
+5.81%
+5.83%
+5.84%
+(b) Mean absolute percentage error versus KPM.
+Fig. 5: OpenTwin adaptability under network drift.
+(a) Deviation score S over iterations.
+(b) Energy consumption versus KPM.
+Fig. 6: Total energy consumption in DT and real-world under xApp active and inactive.
+saved. The dashed lines represent the scenario in which the
+energy-saving xApp is inactive. We observe that the energy
+consumption is high in this case. When the energy-saving
+xApp is activated, this control xApp immediately observes
+the network within the virtual space and interacts with the
+OpenTwin via the A1 interface to orchestrate the virtualized
+network. A logic-based configuration approach is applied in
+this experiment, in which the xApp periodically detects cells
+without active UEs and puts them into sleep mode, a state
+in which power consumption is reduced. The xApp then
+sends a control message to the real network via the E2
+interface to implement the necessary changes according to
+the network reconfiguration in the OpenTwin. Fig.
+6 (b)
+demonstrates that the xApp significantly reduces energy con-
+sumption. Notably, the energy consumption of the OpenTwin
+and the real-world network closely overlap, demonstrating that
+the energy savings in the real implementation are consistent
+with the performance achieved within the OpenTwin. This
+result sufficiently highlights the value of our OpenTwin in
+providing a virtual space that allows xApps to control and
+manage the network without any disruption to real operations.
+VI. CONCLUSION
+In this paper, we develop OpenTwin, a simulator-assisted
+DT framework that allows for closed-loop configuration in-
+ference, KPM calibration, and downstream network con-
+trol within an O-RAN–compliant architecture. Through an
+XGBoost-based configuration generation and a time-aware
+RLS tuner for continuous KPM generation calibration, our
+OpenTwin emulates the target O-RAN environment and adapts
+to dynamic changes in mobility, load, and radio conditions. An
+additional deviation-aware, lightweight supervisor microser-
+vice ensures fidelity assessment and automatic regeneration
+upon detection of significant network drift. Through extensive
+experiments, we demonstrate that OpenTwin reproduces KPM
+streams, including serving-cell SINR and PDCP volume over
+varying load conditions, along with accurate predictions of
+the configuration parameters and KPM evolution over time.
+We also illustrate the capability of OpenTwin to host down-
+stream control applications, such as an energy-saving xApp,
+to validate control policies safely and repeatably without a
+physical deployment. This ensures our approach is a pragmatic
+and extensible foundation for self-calibrating DTs in O-RAN
+systems. Because of its modular architecture, high fidelity
+
+--- Page 11 ---
+11
+under dynamic conditions, and compatibility with existing
+O-RAN interfaces, it can be a useful platform for research
+on ML-assisted RAN control, xApp/rApp development, and
+further work toward integrating live telemetry and partial real-
+world synchronization.
+ACKNOWLEDGMENT
+This work is supported in part by the NSF #2120411 and
+#2443035, CNS #2440756, and CNS #2312138.
+REFERENCES
+[1] N. D. Tripathi and V. K. Shah, Fundamentals of O-RAN.
+John Wiley
+& Sons, 2025.
+[2] A. S. Abdalla, P. S. Upadhyaya, V. K. Shah, and V. Marojevic, “Toward
+next generation open radio access networks: What O-RAN can and
+cannot do!” IEEE Netw., vol. 36, no. 6, pp. 206–213, 2022.
+[3] J. F. Santos, A. Huff, D. Campos, K. V. Cardoso, C. B. Both, and L. A.
+DaSilva, “Managing O-RAN networks: xApp development from zero to
+hero,” IEEE Commun. Surveys Tuts., 2025.
+[4] Research
+nester
+global
+market
+size,
+forecast,
+and
+trend
+highlights
+over
+2024
+-
+2036.
+Accessed:2026-03-25.
+[Online].
+Available:
+https://www.researchnester.com/reports/open-radio-access-
+network-market/2781
+[5] B. Agarwal, R. Irmer, D. Lister, and G.-M. Muntean, “Open RAN for
+6G networks: Architecture, use cases and open issues,” IEEE Commun.
+Surveys Tuts., 2025.
+[6] G. Reus-Muns, P. S. Upadhyaya, U. Demir, N. Stephenson, N. Soltani,
+V. K. Shah, and K. R. Chowdhury, “SenseORAN: O-RAN-based radar
+detection in the CBRS band,” IEEE J. Sel. Areas Commun., vol. 42,
+no. 2, pp. 326–338, 2023.
+[7] O-RAN Alliance, “O-RAN massive MIMO use cases technical report
+1.0,” O-RAN Alliance, Tech. Rep., 2022, release v01.00. [Online].
+Available: https://specifications.o-ran.org/specifications
+[8] P. Almasan, M. Ferriol-Galm´es, J. Paillisse, J. Su´arez-Varela, D. Perino,
+D. L´opez, A. A. P. Perales, P. Harvey, L. Ciavaglia, L. Wong et al.,
+“Network digital twin: Context, enabling technologies, and opportuni-
+ties,” IEEE Commun. Mag., vol. 60, no. 11, pp. 22–27, 2022.
+[9] Z. Zhang, Z. Peng, H. Yu, M. Chen, and Y. Liu, “Digital network twins
+for next-generation wireless: Creation, optimization, and challenges,”
+IEEE network, 2025.
+[10] ——, “Digital network twins for next-generation wireless: Creation,
+optimization, and challenges,” arXiv preprint arXiv:2410.18002, 2024.
+[11] T. Li, Q. Long, H. Chai, S. Zhang, F. Jiang, H. Liu, W. Huang,
+D. Jin, and Y. Li, “Generative AI empowered network digital twins:
+Architecture, technologies, and applications,” ACM Comput. Surveys,
+vol. 57, no. 6, pp. 1–43, 2025.
+[12] S. M. Raza, R. Minerva, N. Crespi, M. Alvi, M. Herath, and H. Dutta,
+“A comprehensive survey of network digital twin architecture, capabili-
+ties, challenges, and requirements for edge–cloud continuum,” Comput.
+Commun., vol. 236, p. 108144, 2025.
+[13] Z. Zhang, M. Fang, D. Chen, X. Yang, and Y. Liu, “Synergizing AI and
+digital twins for next-generation network optimization, forecasting, and
+security,” IEEE Wireless Commun., vol. 32, no. 3, pp. 98–105, 2025.
+[14] ITU-T-3090, “Digital twin network – requirements and architecture,”
+International Telecommunication Union, Recommendation Y.3090, 2
+2022, available: https://www.itu.int/rec/T-REC-Y.3090-202202-I/en.
+[15] ITU-R
+WP
+5D,
+“IMT
+towards
+2030
+and
+beyond
+(IMT-2030),”
+https://www.itu.int/en/ITU-R/study-groups/rsg5/rwp5d/imt-2030/pages/
+default.aspx, 2023, accessed: 2025-11-30.
+[16] J. Yang, M. Andersin, T. Balercia, and C. Chong, “Developing next-
+generation wireless networks with NVIDIA aerial omniverse digital
+twin,” https://developer.nvidia.com/blog/developing-next-gen-wireless-
+networks-with-nvidia-aerial-omniverse-digital-twin/,
+2024,
+accessed:
+2025-11-30.
+[17] M. C. Kirana, P. Keyela, F. Rostamian, D. H. Tashman, and
+S. Cherkaoui, “ML-enabled open RAN: A comprehensive survey of
+architectures, challenges, and opportunities,” IEEE Commun. Surveys
+Tut., vol. 28, pp. 4948–4979, 2026.
+[18] M. Polese, L. Bonati, S. D’Oro, P. Johari, D. Villa, S. Velumani,
+R. Gangula, M. Tsampazi, C. Paul Robinson, G. Gemmi, A. Lacava,
+S. Maxenti, H. Cheng, and T. Melodia, “Colosseum: The open RAN
+digital twin,” IEEE Open J. Commun. Soc., vol. 5, pp. 5452–5466, 2024.
+[19] M. H. Rahman, M. S. Hossen, N. H. Stephenson, V. K. Shah, and
+A. Da Silva, “SAJD: Self-adaptive jamming attack detection in AI/ML
+integrated 5G O-RAN networks,” in Proc. IEEE Military Commun. Conf.
+(MILCOM), 2025, pp. 1130–1135.
+[20] M. H. Rahman, M. S. Hossen, N. H. Stephenson, V. K. Shah, and
+A. D. Silva, “A demonstration of self-adaptive jamming attack detection
+in AI/ML integrated O-RAN,” in Proc. IEEE Military Commun. Conf.
+(MILCOM), 2025, pp. 901–902.
+[21] D. Lin, S. Bhargav, A. Chiejina, M. I. Ibrahem, and V. K. Shah,
+“ZT-RIC: A zero trust RIC framework for ensuring data privacy and
+confidentiality in open RAN,” in Proc. IEEE Consum. Commun. Netw.
+Conf. (CCNC), 2025, pp. 1–7.
+[22] EURECOM, “RIC-TaaP: RIC testing as a platform,” Accessed: 2026-
+03-25. [Online]. Available: https://github.com/Orange-OpenSource/ns-
+O-RAN-flexric
+[23] M. Polese, L. Bonati, S. D’oro, S. Basagni, and T. Melodia, “Un-
+derstanding O-RAN: Architecture, interfaces, algorithms, security, and
+research challenges,” IEEE Commun. Surveys Tuts., vol. 25, no. 2, pp.
+1376–1411, 2023.
+[24] K. Alam, M. A. Habibi, M. Tammen, D. Krummacker, W. Saad,
+M. Di Renzo, T. Melodia, X. Costa-P´erez, M. Debbah, A. Dutta et al.,
+“A comprehensive tutorial and survey of o-ran: Exploring slicing-aware
+architecture, deployment options, use cases, and challenges,” IEEE
+Communications Surveys & Tutorials, 2025.
+[25] J. L. Herrera, S. Montebugnoli, D. Scotece, L. Foschini, and P. Bellav-
+ista, “A tutorial on O-RAN deployment solutions for 5G: From simula-
+tion to emulated and real testbeds,” IEEE Commun. Surveys Tut., 2025.
+[26] A. Lacava, M. Polese, R. Sivaraj, R. Soundrarajan, B. S. Bhati, T. Singh,
+T. Zugno, F. Cuomo, and T. Melodia, “Programmable and customized
+intelligence for traffic steering in 5G networks using open RAN archi-
+tectures,” IEEE Trans. Mobile Comput., vol. 23, no. 4, pp. 2882–2897,
+2023.
+[27] F. Kavehmadavani, V.-D. Nguyen, T. X. Vu, and S. Chatzinotas, “Intel-
+ligent traffic steering in beyond 5G open RAN based on LSTM traffic
+prediction,” IEEE Trans. Wireless Commun., vol. 22, no. 11, pp. 7727–
+7742, 2023.
+[28] L. Bonati, M. Polese, S. D’Oro, S. Basagni, and T. Melodia, “NeutRAN:
+An open RAN neutral host architecture for zero-touch RAN and
+spectrum sharing,” IEEE Trans. Mobile Comput., vol. 23, no. 5, pp.
+5786–5798, 2023.
+[29] A. Scalingi, S. D’Oro, F. Restuccia, T. Melodia, and D. Giustiniano,
+“Det-RAN: Data-driven cross-layer real-time attack detection in 5G open
+RANs,” in Proc. IEEE INFOCOM Conf., 2024, pp. 41–50.
+[30] A. Wadud, F. Golpayegani, and N. Afraz, “QACM: QoS-aware xApp
+conflict mitigation in open RAN,” IEEE Trans. Green Commun. Netw.,
+vol. 8, no. 3, pp. 978–993, 2024.
+[31] A. Abouaomar, A. Taik, A. Filali, and S. Cherkaoui, “Federated deep
+reinforcement learning for open RAN slicing in 6G networks,” IEEE
+Commun. Mag., vol. 61, no. 2, pp. 126–132, 2022.
+[32] G. F. Riley and T. R. Henderson, “The ns-3 network simulator,” in
+Model. Tools Netw. Simul.
+Springer, 2010, pp. 15–34.
+[33] L. Bonati, M. Polese, S. D’Oro, S. Basagni, and T. Melodia, “OpenRAN
+Gym: An open toolbox for data collection and experimentation with AI
+in O-RAN,” in Proc. IEEE Wireless Commun. Netw. Conf., 2022, pp.
+518–523.
+[34] A. Lacava, M. Bordin, M. Polese, R. Sivaraj, T. Zugno, F. Cuomo,
+and T. Melodia, “ns-O-RAN: Simulating O-RAN 5G systems in ns-3,”
+in Proc. Workshop ns-3, ser. WNS3 ’23.
+NY, USA: Association for
+Computing Machinery, 2023, p. 35–44.
+[35] W. Garey, T. Ropitault, R. Rouil, E. Black, and W. Gao, “O-RAN
+with machine learning in ns-3,” in Proc. Workshop ns-3.
+NY, USA:
+Association for Computing Machinery, 2023, p. 60–68.
