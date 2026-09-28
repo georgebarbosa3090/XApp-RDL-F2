@@ -741,6 +741,7 @@ class DemonstrationEngine:
             },
             protocol_messages=protocol_msgs,
         )
+        self.records.append(rec)
         return rec
 
     def run_all_stages(self) -> List[StageExecutionRecord]:
