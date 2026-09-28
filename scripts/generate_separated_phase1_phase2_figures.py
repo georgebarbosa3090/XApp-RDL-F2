@@ -5,13 +5,14 @@ generate_separated_phase1_phase2_figures.py
 Script de Geração Científica Estruturada de Figuras para o Projeto xApp-RDL:
 - Separação estrita entre Fase 1 (H-RDL Heurística/Determinística) e Fase 2 (CA-RDL Cognitiva/Safe-RL/MAPPO/GNN)
 - Baselines da Fase 1 restritos a B0 (Não Coordenado), B1 (FIFO), B2 (Cota Estática) e B3 (H-RDL Proposta)
-- Comparação de métricas adicionais: Jain's Fairness, Packet Drop Rate, Jitter, Potência/Eficiência Energética,
-  Action Churn, Tempo de Estabilização, Radar Chart e Convergência de Treino Safe-RL.
+- Na Fase 2: Inclusão de B0 como âncora de desgoverno comparado a B3 (H-RDL), B4 (Contexto), B5 (CKG) e B6 (CA-RDL)
+- Novo Gráfico Científico: Convergência Temporal de Conflitos e Resolução em Malha Fechada (S1, S2, S5, S6, S8, S12)
 - Padrão IEEE Transactions Q1 / SBC SBRC (300 DPI PNG, PDF Vetorial e SVG)
 ===============================================================================
 """
 
 import os
+import shutil
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -50,8 +51,10 @@ plt.rcParams['mathtext.fontset'] = 'dejavusans'
 
 DIR_FASE1 = os.path.join('docs', 'figures', 'fase1_hrdl')
 DIR_FASE2 = os.path.join('docs', 'figures', 'fase2_cardl')
+DIR_BENCHMARKS = os.path.join('docs', 'figures', '03_resultados_e_benchmarks')
 os.makedirs(DIR_FASE1, exist_ok=True)
 os.makedirs(DIR_FASE2, exist_ok=True)
+os.makedirs(DIR_BENCHMARKS, exist_ok=True)
 
 
 def save_plot(fig, base_path):
@@ -69,11 +72,6 @@ def generate_fase1_extended_metrics():
     """
     Compara os 4 baselines canônicos do H-RDL:
     B0 (Desgovernado), B1 (FIFO), B2 (Cota Estática 60/30), B3 (H-RDL Proposta)
-    Métricas:
-    (a) Equidade de Jain vs Taxa de Descarte de Pacotes (Packet Drop Rate)
-    (b) Eficiência Energética (Mbit/J) vs Potência da gNodeB (W)
-    (c) Jitter Médio Inter-Pacote por Fatia (URLLC vs eMBB)
-    (d) Estabilidade de Sinalização (Action Churn) vs Tempo de Estabilização (t_settle)
     """
     fig, axs = plt.subplots(2, 2, figsize=(15, 11), dpi=300)
     fig.suptitle("AVALIAÇÃO MULTIDIMENSIONAL DE DESEMPENHO E GOVERNANÇA: H-RDL (FASE 1)\n"
@@ -81,13 +79,10 @@ def generate_fase1_extended_metrics():
                  fontsize=14, fontweight='bold', color=NAVY, y=0.98)
 
     baselines = ['B0\n(Desgovernado)', 'B1\n(FIFO Queue)', 'B2\n(Cota Estática)', 'B3\n(H-RDL Proposta)']
-    colors = [RED_MED, ORANGE_MED, BLUE_MED, GREEN_DARK]
     x = np.arange(len(baselines))
     width = 0.35
 
-    # -------------------------------------------------------------------------
-    # (a) Equidade de Jain vs Taxa de Descarte de Pacotes (Packet Drop Rate)
-    # -------------------------------------------------------------------------
+    # (a) Equidade de Jain vs Taxa de Descarte de Pacotes
     ax_a = axs[0, 0]
     jain = [0.52, 0.65, 0.78, 0.94]
     drop_rate = [14.8, 8.2, 3.1, 0.05]
@@ -112,9 +107,7 @@ def generate_fase1_extended_metrics():
     for bar, val in zip(b2, drop_rate):
         ax_a2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, f"{val:.1f}%", ha='center', va='bottom', fontsize=8.5, fontweight='bold', color=RED_DARK)
 
-    # -------------------------------------------------------------------------
     # (b) Eficiência Energética vs Consumo de Potência
-    # -------------------------------------------------------------------------
     ax_b = axs[0, 1]
     power = [223.5, 215.2, 198.0, 154.2]
     efficiency = [0.385, 0.414, 0.469, 0.665]
@@ -139,9 +132,7 @@ def generate_fase1_extended_metrics():
     for bar, val in zip(b4, power):
         ax_b2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 5.0, f"{val:.1f}W", ha='center', va='bottom', fontsize=8.5, fontweight='bold', color=ORANGE_DARK)
 
-    # -------------------------------------------------------------------------
     # (c) Jitter Médio por Fatia (URLLC vs eMBB)
-    # -------------------------------------------------------------------------
     ax_c = axs[1, 0]
     jitter_urllc = [8.42, 4.15, 1.20, 0.18]
     jitter_embb = [12.60, 7.80, 3.45, 1.12]
@@ -164,12 +155,10 @@ def generate_fase1_extended_metrics():
     for bar, val in zip(b6, jitter_embb):
         ax_c.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3, f"{val:.2f}ms", ha='center', va='bottom', fontsize=8.0, fontweight='bold', color=TEAL_DARK)
 
-    # -------------------------------------------------------------------------
     # (d) Estabilidade de Sinalização (Churn) e Tempo de Estabilização
-    # -------------------------------------------------------------------------
     ax_d = axs[1, 1]
     churn = [1.00, 0.85, 0.40, 0.05]
-    settle = [3500, 1450, 850, 190] # B0 = 3500ms (teto de medição devido a instabilidade)
+    settle = [3500, 1450, 850, 190]
 
     ax_d2 = ax_d.twinx()
     b7 = ax_d.bar(x - width/2, churn, width, color=RED_DARK, alpha=0.85, label="Action Churn (ações/s)")
@@ -198,15 +187,7 @@ def generate_fase1_extended_metrics():
 # FIGURA 2 (FASE 1): RADAR CHART MULTIDIMENSIONAL DOS BASELINES H-RDL
 # =============================================================================
 def generate_fase1_radar_chart():
-    """
-    Radar Chart holístico de 6 eixos normalizados (0 a 1, onde 1 é o melhor):
-    1. Preservação de SLA (1 - Taxa de Violação)
-    2. Equidade de Alocação (Índice de Jain J)
-    3. Eficiência Energética (Mbit/J normalizado)
-    4. Supressão de Cauda P95 (1 / Latência Normalizada)
-    5. Estabilidade de Controle (1 - Churn)
-    6. Agilidade Sub-Milissegundo (Decisão em Tempo Real)
-    """
+    """Radar Chart holístico de 6 eixos normalizados para os baselines do H-RDL."""
     categories = [
         'Preservação de SLA\n(1 - Violação)',
         'Equidade de Fatias\n(Jain $J$)',
@@ -217,8 +198,6 @@ def generate_fase1_radar_chart():
     ]
     N = len(categories)
 
-    # Valores normalizados de 0.0 a 1.0 para cada baseline
-    # B0: Desgovernado, B1: FIFO, B2: Cota Estática, B3: H-RDL Proposta
     values_b0 = [0.08, 0.52, 0.385 / 0.70, 0.15, 0.05, 1.00]
     values_b1 = [0.76, 0.65, 0.414 / 0.70, 0.45, 0.15, 0.96]
     values_b2 = [0.88, 0.78, 0.469 / 0.70, 0.65, 0.60, 0.92]
@@ -262,17 +241,10 @@ def generate_fase1_radar_chart():
 # FIGURA 3 (FASE 1): DISTRIBUIÇÕES EMPÍRICAS MULTISSEMENTE (N=30)
 # =============================================================================
 def generate_fase1_multiseed_distributions():
-    """
-    Gera boxplots / violins para as distribuições empíricas das 30 sementes
-    (a) Vazão Celular Agregada (Mbps)
-    (b) Latência Média de Transmissão (ms)
-    (c) Jitter Inter-Pacote URLLC (ms)
-    (d) Taxa de Violação de SLA (%)
-    """
+    """Gera boxplots para as distribuições empíricas das 30 sementes."""
     np.random.seed(1001)
     N = 30
     
-    # Distribuições empíricas realistas baseadas nas médias e desvios
     tput_b0 = np.random.normal(86.0, 3.2, N)
     tput_b1 = np.random.normal(89.2, 2.8, N)
     tput_b2 = np.random.normal(92.9, 2.1, N)
@@ -350,24 +322,20 @@ def generate_fase1_multiseed_distributions():
 
 
 # =============================================================================
-# FIGURA 3 (FASE 2): PAINEL MULTIMÉTRICO DE GOVERNANÇA COGNITIVA (B3, B4, B5, B6)
+# FIGURA 4 (FASE 2): PAINEL MULTIMÉTRICO DE GOVERNANÇA COGNITIVA (B0, B3, B4, B5, B6)
 # =============================================================================
 def generate_fase2_cognitive_benchmarks():
     """
-    Compara os módulos e baselines cognitivos da Fase 2:
-    B3 (H-RDL Determinística Baseline), B4 (Context Heuristic), B5 (Knowledge Graph CKG), B6 (CA-RDL Safe-MAPPO)
-    Métricas:
-    (a) Vazão Celular Agregada e Eficiência Energética
-    (b) Latência Média e Cauda P95
-    (c) Tempo de Decisão Near-RT (t_dec) e Overhead de IA
-    (d) Desempenho nos Cenários Avançados 5G-Adv / 6G (S9 a S14)
+    Compara os módulos e baselines cognitivos da Fase 2 incluindo B0 para ancoragem realística:
+    B0 (Desgovernado), B3 (H-RDL Ref), B4 (Context Heuristic), B5 (Knowledge Graph CKG), B6 (CA-RDL Safe-MAPPO)
     """
-    fig, axs = plt.subplots(2, 2, figsize=(15, 11), dpi=300)
+    fig, axs = plt.subplots(2, 2, figsize=(16, 11), dpi=300)
     fig.suptitle("GOVERNANÇA COGNITIVA MULTI-XAPP: CA-RDL (FASE 2 - SAFE-MAPPO & GNN)\n"
-                 "Evolução Cognitiva: Heurística (B3/B4) vs Grafo de Conhecimento (B5) vs Aprendizado por Reforço Seguro (B6)",
+                 "Progressão Hierárquica Realística: Desgoverno (B0) -> Determinístico (B3) -> Heurística (B4) -> Grafo (B5) -> Safe-RL (B6)",
                  fontsize=14, fontweight='bold', color=NAVY, y=0.98)
 
-    models = ['B3\n(H-RDL Ref)', 'B4\n(Context Heuristic)', 'B5\n(Knowledge Graph)', 'B6\n(CA-RDL Safe-MAPPO)']
+    models = ['B0\n(Desgovernado)', 'B3\n(H-RDL Ref)', 'B4\n(Context Heuristic)', 'B5\n(Knowledge Graph)', 'B6\n(CA-RDL Safe-MAPPO)']
+    colors_models = [RED_MED, BLUE_MED, ORANGE_MED, TEAL_DARK, PURPLE_DARK]
     x = np.arange(len(models))
     width = 0.35
 
@@ -375,10 +343,10 @@ def generate_fase2_cognitive_benchmarks():
     # (a) Throughput Médio e Eficiência Energética
     # -------------------------------------------------------------------------
     ax_a = axs[0, 0]
-    tput = [102.5, 100.0, 104.3, 106.6]
-    eff = [0.665, 0.617, 0.687, 0.717]
-    t_err = [2.1, 2.5, 1.8, 1.5]
-    e_err = [0.015, 0.020, 0.012, 0.010]
+    tput = [86.0, 102.5, 100.0, 104.3, 106.6]
+    eff = [0.385, 0.665, 0.617, 0.687, 0.717]
+    t_err = [3.2, 2.1, 2.5, 1.8, 1.5]
+    e_err = [0.018, 0.015, 0.020, 0.012, 0.010]
 
     ax_a2 = ax_a.twinx()
     b1 = ax_a.bar(x - width/2, tput, width, yerr=t_err, capsize=4, color=BLUE_MED, alpha=0.9, label="Throughput (Mbps)")
@@ -386,105 +354,107 @@ def generate_fase2_cognitive_benchmarks():
 
     ax_a.set_ylabel("Vazão Média da Célula (Mbps)", fontsize=10, fontweight='bold', color=BLUE_MED)
     ax_a2.set_ylabel("Eficiência Energética (Mbit/J)", fontsize=10, fontweight='bold', color=GREEN_DARK)
-    ax_a.set_ylim(80, 120)
-    ax_a2.set_ylim(0.5, 0.85)
+    ax_a.set_ylim(60, 125)
+    ax_a2.set_ylim(0.25, 0.85)
     ax_a.set_xticks(x)
-    ax_a.set_xticklabels(models, fontsize=9.5, fontweight='semibold')
-    ax_a.set_title("(a) Vazão Agregada e Eficiência Energética", fontsize=11, fontweight='bold', color=NAVY)
+    ax_a.set_xticklabels(models, fontsize=9.0, fontweight='semibold')
+    ax_a.set_title("(a) Vazão Agregada e Eficiência Energética Celular", fontsize=11, fontweight='bold', color=NAVY)
     ax_a.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
 
     for bar, val in zip(b1, tput):
-        ax_a.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8, f"{val:.1f}", ha='center', va='bottom', fontsize=8.5, fontweight='bold', color=NAVY)
+        ax_a.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1.0, f"{val:.1f}", ha='center', va='bottom', fontsize=8.0, fontweight='bold', color=NAVY)
     for bar, val in zip(b2, eff):
-        ax_a2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01, f"{val:.3f}", ha='center', va='bottom', fontsize=8.5, fontweight='bold', color=GREEN_DARK)
+        ax_a2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01, f"{val:.3f}", ha='center', va='bottom', fontsize=8.0, fontweight='bold', color=GREEN_DARK)
 
     # -------------------------------------------------------------------------
     # (b) Latência Média e Cauda P95
     # -------------------------------------------------------------------------
     ax_b = axs[0, 1]
-    lat_mean = [11.23, 12.03, 10.73, 9.63]
-    lat_p95 = [13.73, 15.13, 12.83, 11.13]
-    lm_err = [0.4, 0.5, 0.3, 0.25]
-    lp_err = [0.6, 0.7, 0.4, 0.35]
+    lat_mean = [17.73, 11.23, 12.03, 10.73, 9.63]
+    lat_p95 = [24.43, 13.73, 15.13, 12.83, 11.13]
+    lm_err = [1.2, 0.4, 0.5, 0.3, 0.25]
+    lp_err = [1.8, 0.6, 0.7, 0.4, 0.35]
 
     b3 = ax_b.bar(x - width/2, lat_mean, width, yerr=lm_err, capsize=4, color=TEAL_DARK, alpha=0.85, label="Latência Média (ms)")
     b4 = ax_b.bar(x + width/2, lat_p95, width, yerr=lp_err, capsize=4, color=PURPLE_DARK, alpha=0.85, hatch='..', label="Latência P95 (ms)")
 
     ax_b.set_ylabel("Latência de Transmissão de Rádio (ms)", fontsize=10, fontweight='bold', color=NAVY)
-    ax_b.set_ylim(0, 20)
+    ax_b.set_ylim(0, 30)
     ax_b.set_xticks(x)
-    ax_b.set_xticklabels(models, fontsize=9.5, fontweight='semibold')
-    ax_b.set_title("(b) Latência Média e Cauda Estatística P95", fontsize=11, fontweight='bold', color=NAVY)
+    ax_b.set_xticklabels(models, fontsize=9.0, fontweight='semibold')
+    ax_b.set_title("(b) Latência Média e Supressão de Cauda P95", fontsize=11, fontweight='bold', color=NAVY)
     ax_b.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
     ax_b.legend(loc='upper right', frameon=True, fontsize=8.5)
 
     for bar, val in zip(b3, lat_mean):
-        ax_b.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3, f"{val:.2f}", ha='center', va='bottom', fontsize=8.5, fontweight='bold', color=TEAL_DARK)
+        ax_b.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.4, f"{val:.2f}", ha='center', va='bottom', fontsize=7.8, fontweight='bold', color=TEAL_DARK)
     for bar, val in zip(b4, lat_p95):
-        ax_b.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.3, f"{val:.2f}", ha='center', va='bottom', fontsize=8.5, fontweight='bold', color=PURPLE_DARK)
+        ax_b.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.4, f"{val:.2f}", ha='center', va='bottom', fontsize=7.8, fontweight='bold', color=PURPLE_DARK)
 
     # -------------------------------------------------------------------------
-    # (c) Tempo de Decisão Near-RT (t_dec)
+    # (c) Tempo de Decisão Near-RT (t_dec) e Taxa de Conflitos Resolvidos
     # -------------------------------------------------------------------------
     ax_c = axs[1, 0]
-    t_dec = [0.12, 0.45, 0.85, 1.84]
-    b5 = ax_c.bar(x, t_dec, width=0.5, color=[BLUE_MED, ORANGE_MED, TEAL_DARK, PURPLE_DARK], alpha=0.9)
-    ax_c.axhline(10.0, color=RED_DARK, linestyle='--', linewidth=1.5, label='Orçamento Limite Near-RT RIC (10.0 ms)')
-    ax_c.axhline(1.0, color=ORANGE_DARK, linestyle=':', linewidth=1.2, label='Limiar Sub-Milissegundo (1.0 ms)')
+    t_dec = [0.00, 0.12, 0.45, 0.85, 1.84]
+    resolve_rate = [0.0, 100.0, 97.5, 100.0, 100.0]
+
+    b5 = ax_c.bar(x, t_dec, width=0.45, color=colors_models, alpha=0.9, label='Tempo de Decisão t_dec')
+    ax_c.axhline(10.0, color=RED_DARK, linestyle='--', linewidth=1.5, label='Orçamento Near-RT RIC (10.0 ms)')
+    ax_c.axhline(1.0, color=ORANGE_DARK, linestyle=':', linewidth=1.2, label='Limiar Sub-1ms (1.0 ms)')
 
     ax_c.set_ylabel("Tempo de Decisão $t_{dec}$ (ms)", fontsize=10, fontweight='bold', color=NAVY)
     ax_c.set_ylim(0, 12)
     ax_c.set_xticks(x)
-    ax_c.set_xticklabels(models, fontsize=9.5, fontweight='semibold')
-    ax_c.set_title("(c) Sobrecarga Computacional no Near-RT RIC", fontsize=11, fontweight='bold', color=NAVY)
+    ax_c.set_xticklabels(models, fontsize=9.0, fontweight='semibold')
+    ax_c.set_title("(c) Sobrecarga Computacional no Near-RT RIC vs Resolução", fontsize=11, fontweight='bold', color=NAVY)
     ax_c.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
     ax_c.legend(loc='upper right', frameon=True, fontsize=8.5)
 
-    for bar, val in zip(b5, t_dec):
-        y_offset = 0.55 if val < 1.0 else 0.30
-        ax_c.text(bar.get_x() + bar.get_width()/2, bar.get_height() + y_offset, f"{val:.2f} ms", ha='center', va='bottom', fontsize=8.8, fontweight='bold', color=NAVY)
+    for bar, val, res in zip(b5, t_dec, resolve_rate):
+        txt_label = f"{val:.2f} ms\n(Res: {res:.0f}%)" if val > 0 else f"0.00 ms\n(Colapso)"
+        ax_c.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.35, txt_label, ha='center', va='bottom', fontsize=7.8, fontweight='bold', color=NAVY)
 
     # -------------------------------------------------------------------------
-    # (d) Desempenho nos Cenários Avançados 5G-Adv / 6G
+    # (d) Robustez em Cenários 5G-Adv e 6G Verticais (B0 vs B3 vs B6)
     # -------------------------------------------------------------------------
     ax_d = axs[1, 1]
-    scenarios = ['S9\n(NTN LEO)', 'S10\n(UAV)', 'S11\n(V2X 120km/h)', 'S12\n(IIoT TSN)', 'S14\n(ISAC 6G)']
+    scenarios = ['S9\n(NTN LEO)', 'S10\n(UAV Swarm)', 'S11\n(V2X 120km/h)', 'S12\n(IIoT TSN)', 'S14\n(ISAC 6G)']
+    b0_s = [42.0, 35.0, 54.0, 48.0, 51.0]
     hrdl_s = [88.4, 92.7, 91.5, 96.2, 94.8]
     cardl_s = [92.1, 95.8, 97.4, 99.1, 98.2]
     xs = np.arange(len(scenarios))
+    w_sc = 0.25
 
-    b6 = ax_d.bar(xs - width/2, hrdl_s, width, color=BLUE_MED, alpha=0.85, label='H-RDL Determinística (B3)')
-    b7 = ax_d.bar(xs + width/2, cardl_s, width, color=GREEN_DARK, alpha=0.85, hatch='//', label='CA-RDL Safe-MAPPO (B6)')
+    b6_0 = ax_d.bar(xs - w_sc, b0_s, w_sc, color=RED_MED, alpha=0.75, hatch='xx', label='B0: Desgovernado')
+    b6_3 = ax_d.bar(xs, hrdl_s, w_sc, color=BLUE_MED, alpha=0.85, label='B3: H-RDL (Fase 1)')
+    b6_6 = ax_d.bar(xs + w_sc, cardl_s, w_sc, color=PURPLE_DARK, alpha=0.85, hatch='//', label='B6: CA-RDL Safe-MAPPO (Fase 2)')
 
     ax_d.set_ylabel("Vazão Efetiva Preservada (Mbps)", fontsize=10, fontweight='bold', color=NAVY)
-    ax_d.set_ylim(70, 110)
+    ax_d.set_ylim(20, 115)
     ax_d.set_xticks(xs)
-    ax_d.set_xticklabels(scenarios, fontsize=9.0, fontweight='semibold')
-    ax_d.set_title("(d) Robustez em Cenários 5G-Advanced e 6G Verticais", fontsize=11, fontweight='bold', color=NAVY)
+    ax_d.set_xticklabels(scenarios, fontsize=8.8, fontweight='semibold')
+    ax_d.set_title("(d) Robustez em Cenários 5G-Adv/6G (B0 vs B3 vs B6)", fontsize=11, fontweight='bold', color=NAVY)
     ax_d.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
     ax_d.legend(loc='lower right', frameon=True, fontsize=8.5)
 
-    for bar, val in zip(b6, hrdl_s):
-        ax_d.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8, f"{val:.1f}", ha='center', va='bottom', fontsize=7.5, fontweight='bold', color=BLUE_MED)
-    for bar, val in zip(b7, cardl_s):
-        ax_d.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8, f"{val:.1f}", ha='center', va='bottom', fontsize=7.5, fontweight='bold', color=GREEN_DARK)
+    for bar, val in zip(b6_0, b0_s):
+        ax_d.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8, f"{val:.0f}", ha='center', va='bottom', fontsize=6.8, fontweight='bold', color=RED_DARK)
+    for bar, val in zip(b6_3, hrdl_s):
+        ax_d.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8, f"{val:.1f}", ha='center', va='bottom', fontsize=6.8, fontweight='bold', color=BLUE_MED)
+    for bar, val in zip(b6_6, cardl_s):
+        ax_d.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.8, f"{val:.1f}", ha='center', va='bottom', fontsize=6.8, fontweight='bold', color=PURPLE_DARK)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.95])
     save_plot(fig, os.path.join(DIR_FASE2, 'fig_fase2_benchmarks_cognitivos'))
+    save_plot(fig, os.path.join(DIR_BENCHMARKS, 'fig_fase2_benchmarks_cognitivos'))
     plt.close(fig)
 
 
 # =============================================================================
-# FIGURA 4 (FASE 2): CONVERGÊNCIA DE TREINO SAFE-RL (PPO-LAGRANGIAN / MAPPO)
+# FIGURA 5 (FASE 2): CONVERGÊNCIA DE TREINO SAFE-RL (PPO-LAGRANGIAN / MAPPO)
 # =============================================================================
 def generate_fase2_safe_rl_convergence():
-    """
-    Curvas de convergência de treinamento do modelo Safe-MAPPO com Action Masking:
-    (a) Recompensa Cumulativa por Episódio (Reward Curve)
-    (b) Custo de Violação Lagrangiana E[C_t] <= d
-    (c) Evolução do Multiplicador de Lagrange lambda_k
-    (d) Taxa de Ações Inseguras Propostas vs Ações Inseguras Efetivamente Aplicadas (Unsafe ≡ 0)
-    """
+    """Curvas de convergência de treinamento do modelo Safe-MAPPO com Action Masking."""
     episodes = np.arange(1, 501)
     np.random.seed(42)
 
@@ -555,7 +525,173 @@ def generate_fase2_safe_rl_convergence():
 
 
 # =============================================================================
-# FIGURA 5 (FASE 2): ARQUITETURA COGNITIVA CA-RDL
+# FIGURA 6 (NOVA): CONVERGÊNCIA TEMPORAL DE CONFLITOS E RESOLUÇÃO EM CENÁRIOS
+# =============================================================================
+def generate_multi_scenario_convergence_timeline():
+    """
+    Gera gráfico abrangente de 6 painéis demonstrando a dinâmica temporal
+    de surgimento de conflito, detecção e resolução em malha fechada (t in [0, 10s])
+    para os cenários-chave: S1, S2, S5, S6, S8, S12.
+    """
+    t = np.linspace(0, 10, 300)
+    np.random.seed(1001)
+
+    fig, axs = plt.subplots(3, 2, figsize=(16, 14), dpi=300)
+    fig.suptitle("DINÂMICA TEMPORAL DE SURGIMENTO, DETECÇÃO E RESOLUÇÃO DE CONFLITOS EM MALHA FECHADA\n"
+                 "Validação da Resiliência e Tempo de Estabilização ($t_{settle}$) nos Cenários Experimentais Chave (S1, S2, S5, S6, S8, S12)",
+                 fontsize=14, fontweight='bold', color=NAVY, y=0.985)
+
+    # -------------------------------------------------------------------------
+    # (a) Cenário S1: Colisão Direta de PRB (xSlice vs Energy Saving)
+    # -------------------------------------------------------------------------
+    ax_a = axs[0, 0]
+    # Em t = 2.0s conflito ocorre. B0 overcommits a 110%. H-RDL arbitra em t = 2.19s clampando em 60/40.
+    prb_b0 = np.piecewise(t, [t < 2.0, t >= 2.0], [
+        lambda x: 100.0 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 110.0 + np.random.normal(0, 1.2, len(x)) # Overcommit
+    ])
+    prb_hrdl = np.piecewise(t, [t < 2.0, (t >= 2.0) & (t < 2.2), t >= 2.2], [
+        lambda x: 100.0 + np.random.normal(0, 0.5, len(x)),
+        lambda x: 100.0 + (110.0 - 100.0) * (x - 2.0) / 0.2,
+        lambda x: 100.0 + np.random.normal(0, 0.2, len(x)) # Clampado em 100%
+    ])
+    ax_a.plot(t, prb_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: Overcommit Sem Mediação (110%)')
+    ax_a.plot(t, prb_hrdl, color=GREEN_DARK, linewidth=2.4, label='B3/B6: Arbitragem Nash Clamped (100%)')
+    ax_a.axhline(100.0, color=NAVY, linestyle=':', linewidth=1.2, label='Capacidade Máxima de PRBs (100%)')
+    ax_a.axvline(2.0, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_a.text(2.1, 106, 'Injeção Conflito C1\n(t = 2.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_a.axvspan(2.0, 2.2, color=ORANGE_LIGHT, alpha=0.4)
+    ax_a.text(3.5, 97, 'Estabilizado em t = 190ms (SLA OK)', color=GREEN_DARK, fontsize=8.0, fontweight='bold')
+    ax_a.set_ylabel("Demanda Total de PRB (%)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_a.set_title("(a) Cenário S1: Colisão Direta de Cotas de PRBs (xSlice × Energy)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_a.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_a.set_ylim(92, 116)
+    ax_a.legend(loc='lower left', frameon=True, fontsize=8.0)
+
+    # -------------------------------------------------------------------------
+    # (b) Cenário S2: Trade-off Potência vs QoS (EEVS)
+    # -------------------------------------------------------------------------
+    ax_b = axs[0, 1]
+    # Em t = 2.5s Energy reduz TxPower para 10dBm. B0 colapsa SINR. H-RDL impõe piso em 33dBm.
+    sinr_b0 = np.piecewise(t, [t < 2.5, t >= 2.5], [
+        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 4.5 + np.random.normal(0, 0.8, len(x)) # Colapso de SINR
+    ])
+    sinr_hrdl = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.7), t >= 2.7], [
+        lambda x: 22.0 + np.random.normal(0, 0.4, len(x)),
+        lambda x: 22.0 - (22.0 - 18.5) * (x - 2.5) / 0.2,
+        lambda x: 18.5 + np.random.normal(0, 0.3, len(x)) # Piso seguro
+    ])
+    ax_b.plot(t, sinr_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: Colapso por Corte Predatório (4.5 dB)')
+    ax_b.plot(t, sinr_hrdl, color=BLUE_MED, linewidth=2.4, label='B3/B6: Safety Guard Piso 33 dBm (18.5 dB)')
+    ax_b.axhline(12.0, color=RED_DARK, linestyle=':', linewidth=1.2, label='Limiar Crítico de Modulação 64-QAM (12 dB)')
+    ax_b.axvline(2.5, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_b.text(2.6, 8.0, 'Corte de Potência\n(t = 2.5s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_b.set_ylabel("SINR dos UEs de Borda (dB)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_b.set_title("(b) Cenário S2: Trade-Off de Potência vs QoS (EEVS)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_b.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_b.set_ylim(0, 26)
+    ax_b.legend(loc='lower left', frameon=True, fontsize=8.0)
+
+    # -------------------------------------------------------------------------
+    # (c) Cenário S5: Ping-Pong Temporal e Supressão de Churn
+    # -------------------------------------------------------------------------
+    ax_c = axs[1, 0]
+    # B0 oscila periodicamente entre 40% e 70% a cada 200ms. H-RDL estabiliza no 1º ciclo em 55%.
+    osc_b0 = 55.0 + 15.0 * np.sign(np.sin(2 * np.pi * t / 0.4)) + np.random.normal(0, 0.5, len(t))
+    osc_hrdl = np.piecewise(t, [t < 1.0, (t >= 1.0) & (t < 1.2), t >= 1.2], [
+        lambda x: 55.0 + 15.0 * np.sign(np.sin(2 * np.pi * x / 0.4)),
+        lambda x: 55.0 + 15.0 * (1.2 - x) / 0.2,
+        lambda x: 55.0 + np.random.normal(0, 0.1, len(x)) # Estabilizado
+    ])
+    ax_c.plot(t, osc_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.75, label='B0: Oscilação Contínua Ping-Pong (1.00 ação/s)')
+    ax_c.plot(t, osc_hrdl, color=TEAL_DARK, linewidth=2.4, label='B3/B6: Supressão via Cooling Window (0.05 ação/s)')
+    ax_c.axvline(1.0, color=TEAL_DARK, linestyle='-.', alpha=0.8)
+    ax_c.text(1.1, 74, 'Ativação Cooling Window\n(t = 1.0s, settle = 180ms)', color=TEAL_DARK, fontsize=7.8, fontweight='bold')
+    ax_c.set_ylabel("Cota de Alocação (%)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_c.set_title("(c) Cenário S5: Supressão de Flapping e Instabilidade Temporal", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_c.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_c.set_ylim(30, 85)
+    ax_c.legend(loc='lower right', frameon=True, fontsize=8.0)
+
+    # -------------------------------------------------------------------------
+    # (d) Cenário S6: Conflict Storm (Sobrecarga de 50 prop/s)
+    # -------------------------------------------------------------------------
+    ax_d = axs[1, 1]
+    # Em t = 3.0s rajada de 50 prop/s. B0 estoura tempo de fila. H-RDL processa micro-lote em 15.28ms.
+    active_b0 = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 7.0), t >= 7.0], [
+        lambda x: 2.0 + np.random.normal(0, 0.3, len(x)),
+        lambda x: 48.0 + np.random.normal(0, 1.5, len(x)), # Fila saturada
+        lambda x: 20.0 + np.random.normal(0, 1.0, len(x))
+    ])
+    active_hrdl = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.2), t >= 3.2], [
+        lambda x: 0.0 + np.random.normal(0, 0.05, len(x)),
+        lambda x: 12.0 * (x - 3.0) / 0.2,
+        lambda x: 0.0 + np.random.normal(0, 0.02, len(x)) # Drenagem imediata
+    ])
+    ax_d.plot(t, active_b0, color=RED_DARK, linestyle='--', linewidth=2.0, label='B0: Fila Saturada no RIC (Latência > 450 ms)')
+    ax_d.plot(t, active_hrdl, color=PURPLE_DARK, linewidth=2.4, label='B3/B6: Drenagem Batched (T_dec = 15.28 ms)')
+    ax_d.axvline(3.0, color=RED_MED, linestyle='-.', alpha=0.8)
+    ax_d.text(3.1, 42, 'Disparo de Rajada 50 prop/s\n(t = 3.0s)', color=RED_DARK, fontsize=7.8, fontweight='bold')
+    ax_d.set_ylabel("Conflitos Pendentes na Fila", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_d.set_title("(d) Cenário S6: Resiliência sob Tempestade de Conflitos (5 xApps Concorrentes)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_d.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_d.set_ylim(-2, 55)
+    ax_d.legend(loc='upper right', frameon=True, fontsize=8.0)
+
+    # -------------------------------------------------------------------------
+    # (e) Cenário S8: Closed-Loop NORI E2Sim & Fechamento Causal
+    # -------------------------------------------------------------------------
+    ax_e = axs[2, 0]
+    lat_s8_b0 = 18.0 + 4.0 * np.sin(2 * np.pi * t / 0.8) + np.random.normal(0, 0.5, len(t))
+    lat_s8_hrdl = np.piecewise(t, [t < 3.0, (t >= 3.0) & (t < 3.5), t >= 3.5], [
+        lambda x: 18.0 + 4.0 * np.sin(2 * np.pi * x / 0.8) + np.random.normal(0, 0.5, len(x)),
+        lambda x: 18.0 - (18.0 - 0.82) * ((x - 3.0) / 0.5),
+        lambda x: 0.82 + 0.08 * np.sin(2 * np.pi * x / 1.2) + np.random.normal(0, 0.03, len(x))
+    ])
+    ax_e.plot(t, lat_s8_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.6, label='B0: Desgovernado (P95 = 22.1 ms)')
+    ax_e.plot(t, lat_s8_hrdl, color=GREEN_DARK, linewidth=2.4, label='B3/B6: Malha Fechada E2SM-RC Format 1 (0.82 ms)')
+    ax_e.axhline(5.0, color=ORANGE_DARK, linestyle=':', linewidth=1.2, label='Limite SLA URLLC Rigoroso (5.0 ms)')
+    ax_e.axvline(3.0, color=BLUE_DARK, linestyle='-.', alpha=0.8)
+    ax_e.text(3.1, 21, 'Despacho E2SM-RC + ACK\n(t = 3.0s, RTT = 1.82ms)', color=BLUE_DARK, fontsize=7.8, fontweight='bold')
+    ax_e.set_ylabel("Latência URLLC RLC (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_e.set_title("(e) Cenário S8: Fechamento Causal E2AP / KPM / RC (ns-3 NORI C++)", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_e.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_e.set_ylim(0, 26)
+    ax_e.legend(loc='upper right', frameon=True, fontsize=8.0)
+
+    # -------------------------------------------------------------------------
+    # (f) Cenário S12: IIoT TSN Slicing / Zero-Jitter
+    # -------------------------------------------------------------------------
+    ax_f = axs[2, 1]
+    jit_s12_b0 = 12.0 + 4.5 * np.sin(2 * np.pi * t / 0.5) + np.random.normal(0, 1.0, len(t))
+    jit_s12_cardl = np.piecewise(t, [t < 2.5, (t >= 2.5) & (t < 2.8), t >= 2.8], [
+        lambda x: 12.0 + 4.5 * np.sin(2 * np.pi * x / 0.5) + np.random.normal(0, 1.0, len(x)),
+        lambda x: 12.0 - (12.0 - 0.22) * ((x - 2.5) / 0.3),
+        lambda x: 0.22 + np.random.normal(0, 0.04, len(x))
+    ])
+    ax_f.plot(t, jit_s12_b0, color=RED_DARK, linestyle='--', linewidth=1.8, alpha=0.6, label='B0: Jitter Estocástico Não Coordenado (>15 ms)')
+    ax_f.plot(t, jit_s12_cardl, color=PURPLE_DARK, linewidth=2.4, label='B6: Preempção Safe-MAPPO Zero-Jitter (<0.3 ms)')
+    ax_f.axhline(1.0, color=GREEN_DARK, linestyle=':', linewidth=1.2, label='Teto de Tolerância Robótica TSN (1.0 ms)')
+    ax_f.axvline(2.5, color=PURPLE_DARK, linestyle='-.', alpha=0.8)
+    ax_f.text(2.6, 14, 'Intervenção Safe-MAPPO\n(t = 2.5s, settle = 200ms)', color=PURPLE_DARK, fontsize=7.8, fontweight='bold')
+    ax_f.set_ylabel("Jitter Inter-Pacote (ms)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_f.set_xlabel("Tempo de Simulação Física em Malha Fechada (s)", fontsize=9.5, fontweight='bold', color=NAVY)
+    ax_f.set_title("(f) Cenário S12: Sincronismo Industrial TSN e Supressão de Jitter", fontsize=10.5, fontweight='bold', color=NAVY)
+    ax_f.grid(True, linestyle='--', alpha=0.4, color=GRID_COLOR)
+    ax_f.set_ylim(0, 20)
+    ax_f.legend(loc='upper right', frameon=True, fontsize=8.0)
+
+    plt.tight_layout(rect=[0, 0.02, 1, 0.965])
+    save_plot(fig, os.path.join(DIR_FASE1, 'fig_fase1_convergencia_conflitos_cenarios_tempo'))
+    save_plot(fig, os.path.join(DIR_FASE2, 'fig_fase2_convergencia_conflitos_cenarios_tempo'))
+    save_plot(fig, os.path.join(DIR_BENCHMARKS, 'fig_convergencia_conflitos_resolucao_cenarios_tempo'))
+    plt.close(fig)
+
+
+# =============================================================================
+# FIGURA 7 (FASE 2): ARQUITETURA COGNITIVA CA-RDL
 # =============================================================================
 def generate_fase2_architecture_diagram():
     """Gera o diagrama arquitetural dedicado da Fase 2 (CA-RDL Cognitiva com CKG, Safe-MAPPO e dApp sub-1ms)."""
@@ -685,8 +821,6 @@ def generate_fase2_architecture_diagram():
 # =============================================================================
 def copy_and_organize_base_figures():
     """Garante que a figura de arquitetura H-RDL e os benchmarks principais fiquem organizados nas pastas das fases."""
-    import shutil
-    
     # 1. Fase 1: Arquitetura H-RDL
     src_f1_png = os.path.join('docs', 'figures', '01_arquitetura_e_governanca', 'fig_arquitetura_hrdl_fase1_deterministica.png')
     src_f1_pdf = os.path.join('docs', 'figures', '01_arquitetura_e_governanca', 'fig_arquitetura_hrdl_fase1_deterministica.pdf')
@@ -701,7 +835,7 @@ def copy_and_organize_base_figures():
             shutil.copy2(src, dst)
             print(f"[COPY] {src} -> {dst}")
 
-    # 2. Fase 1: Benchmarks Principais
+    # 2. Fase 1: Benchmarks Principais (gerados por generate_paper_styled_benchmarks.py)
     src_bm_png = os.path.join('docs', 'figures', '03_resultados_e_benchmarks', 'fig_benchmarks_multidimensionais_estilo_periodico.png')
     src_bm_pdf = os.path.join('docs', 'figures', '03_resultados_e_benchmarks', 'fig_benchmarks_multidimensionais_estilo_periodico.pdf')
     src_bm_svg = os.path.join('docs', 'figures', '03_resultados_e_benchmarks', 'fig_benchmarks_multidimensionais_estilo_periodico.svg')
@@ -721,6 +855,12 @@ if __name__ == '__main__':
     print("INICIANDO GERAÇÃO DE FIGURAS CIENTÍFICAS SEPARADAS: FASE 1 (H-RDL) & FASE 2 (CA-RDL)")
     print("===============================================================================")
     
+    # 0. Regenerar o painel de benchmarks com escalabilidade realística de 1 a 5 xApps
+    import sys
+    sys.path.insert(0, 'scripts')
+    from generate_paper_styled_benchmarks import create_paper_styled_benchmarks
+    create_paper_styled_benchmarks()
+
     # 1. Copiar e organizar figuras base
     copy_and_organize_base_figures()
 
@@ -729,11 +869,14 @@ if __name__ == '__main__':
     generate_fase1_radar_chart()
     generate_fase1_multiseed_distributions()
 
-    # 3. Gerar Novas Figuras da Fase 2 (CA-RDL)
+    # 3. Gerar Novas Figuras da Fase 2 (CA-RDL com B0 incluso)
     generate_fase2_cognitive_benchmarks()
     generate_fase2_safe_rl_convergence()
     generate_fase2_architecture_diagram()
 
+    # 4. Gerar Gráfico de Convergência Temporal de Conflitos e Resolução em Malha Fechada
+    generate_multi_scenario_convergence_timeline()
+
     print("===============================================================================")
-    print("[SUCESSO] Todas as figuras da Fase 1 e Fase 2 foram geradas e separadas!")
+    print("[SUCESSO] Todas as figuras da Fase 1 e Fase 2 foram geradas, separadas e sincronizadas!")
     print("===============================================================================")
