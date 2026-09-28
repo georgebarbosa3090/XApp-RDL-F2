@@ -90,12 +90,12 @@ def create_paper_styled_benchmarks():
         else:
             ax1_twin.text(bar.get_x() + bar.get_width()/2.0, 2, '0.0%', ha='center', va='bottom', fontsize=8.2, color='#047857', fontweight='bold')
 
-    ax1.set_title('(a) Desempenho Físico e Preservação de SLA (N=30 Sementes)', pad=8)
+    ax1.set_title('(a) Desempenho Físico e Preservação de SLA (N=30 Sementes)', y=1.12, fontweight='bold', color=NAVY)
 
-    # Legenda combinada
+    # Legenda combinada fora do gráfico
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax1_twin.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', framealpha=0.95)
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=2, framealpha=0.95, fontsize=8.0)
 
     # =========================================================================
     # SUBPLOT (b): ECDF da Latência de Enfileiramento RLC (URLLC Tail Suppression)
@@ -113,10 +113,10 @@ def create_paper_styled_benchmarks():
     b3_lat = np.clip(b3_lat, 0.5, 2.35)
 
     for data, label, color, ls, lw in [
-        (b0_lat, 'B0 (Não Coordenado) - P95=221.7ms', COLOR_B0, '--', 2.0),
-        (b1_lat, 'B1 (FIFO) - P95=7.8ms', COLOR_B1, '-.', 2.0),
-        (b2_lat, 'B2 (Cota 60/30) - P95=2.34ms', COLOR_B2, ':', 2.2),
-        (b3_lat, 'B3 (H-RDL Proposta) - P95=2.34ms', COLOR_B3, '-', 2.5),
+        (b0_lat, 'B0 - P95=221.7ms', COLOR_B0, '--', 1.8),
+        (b1_lat, 'B1 - P95=7.8ms', COLOR_B1, '-.', 1.8),
+        (b2_lat, 'B2 - P95=2.34ms', COLOR_B2, ':', 2.0),
+        (b3_lat, 'B3 (H-RDL) - P95=2.34ms', COLOR_B3, '-', 2.4),
     ]:
         sorted_d = np.sort(data)
         ecdf = np.arange(1, len(sorted_d) + 1) / len(sorted_d)
@@ -129,10 +129,10 @@ def create_paper_styled_benchmarks():
     ax2.set_xscale('log')
     ax2.set_xlabel('Latência de Enfileiramento RLC / HOL Delay (ms) [Escala Log]', fontweight='bold')
     ax2.set_ylabel('Probabilidade Acumulada (ECDF)', fontweight='bold')
-    ax2.set_title('(b) Supressão Estrita de Cauda de Latência URLLC', pad=8)
+    ax2.set_title('(b) Supressão Estrita de Cauda de Latência URLLC', y=1.12, fontweight='bold', color=NAVY)
     ax2.set_xlim(0.5, 350)
     ax2.set_ylim(-0.02, 1.02)
-    ax2.legend(loc='lower right', framealpha=0.95)
+    ax2.legend(loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=2, framealpha=0.95, fontsize=7.8)
 
     # =========================================================================
     # SUBPLOT (c): Escalabilidade Medida e Decomposição de Tempo (1 a 5 xApps / 10 a 50 prop/s)
@@ -155,7 +155,7 @@ def create_paper_styled_benchmarks():
     p3 = ax3.bar(x_c, t_arb, width_c, bottom=t_ingest + t_detect, label='3. Arbitragem TVS', color='#10B981', edgecolor='#059669', linewidth=1.0)
     p4 = ax3.bar(x_c, t_guard, width_c, bottom=t_ingest + t_detect + t_arb, label='4. Safety Guard', color='#8B5CF6', edgecolor='#6D28D9', linewidth=1.0)
 
-    ax3.plot(x_c, t_total, color='#1E293B', marker='o', linewidth=2.0, markersize=5, label='Latência Total T_dec')
+    ax3.plot(x_c, t_total, color='#1E293B', marker='o', linewidth=2.0, markersize=5, label='Total T_dec')
 
     for i, txt in enumerate(t_total):
         ax3.text(x_c[i], txt + 0.012, f'{txt*1000:.0f} µs', ha='center', va='bottom', fontsize=8.2, fontweight='bold', color='#1E293B')
@@ -169,8 +169,8 @@ def create_paper_styled_benchmarks():
     ax3.set_xlabel('Carga de Concorrência de xApps e Propostas Injetadas no Lote', fontweight='bold')
     ax3.set_ylabel('Tempo de Processamento (ms)', fontweight='bold')
     ax3.set_ylim(0, 1.30)
-    ax3.set_title('(c) Escalabilidade Medida & Decomposição Temporal (GATE 3)', pad=8)
-    ax3.legend(loc='upper left', framealpha=0.95, ncol=2)
+    ax3.set_title('(c) Escalabilidade Medida & Decomposição Temporal (GATE 3)', y=1.12, fontweight='bold', color=NAVY)
+    ax3.legend(loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=3, framealpha=0.95, fontsize=7.5)
 
     # =========================================================================
     # SUBPLOT (d): Dinâmica de Controle em Circuito Fechado (Cenário S8)
@@ -210,30 +210,30 @@ def create_paper_styled_benchmarks():
     # Marcação da Intervenção H-RDL no tempo t = 3.0s
     ax4.axvline(x=3.0, color='#1E3A8A', linestyle='--', linewidth=1.8, alpha=0.9)
     ax4.text(3.1, 23.0, 'Disparo E2SM-RC Format 1\n(Atuação H-RDL em Malha Fechada)', 
-             color='#1E3A8A', fontsize=8, fontweight='bold', bbox=dict(boxstyle='round,pad=0.2', facecolor='#EFF6FF', edgecolor='#1E3A8A', lw=0.8))
+             color='#1E3A8A', fontsize=7.8, fontweight='bold', bbox=dict(boxstyle='round,pad=0.2', facecolor='#EFF6FF', edgecolor='#1E3A8A', lw=0.8))
 
     # Área de Colisão vs Área Estabilizada
     ax4.axvspan(0, 3.0, color='#FEE2E2', alpha=0.4, zorder=1)
-    ax4.text(1.5, 3.0, 'ESTADO DESGOVERNADO\n(Colisão C1 + Degradação SLA)', color='#991B1B', fontsize=8, fontweight='bold', ha='center')
+    ax4.text(1.5, 3.0, 'ESTADO DESGOVERNADO\n(Colisão C1 + Degradação SLA)', color='#991B1B', fontsize=7.8, fontweight='bold', ha='center')
 
     ax4.axvspan(3.5, 10.0, color='#ECFDF5', alpha=0.4, zorder=1)
-    ax4.text(6.75, 3.0, 'ESTADO ESTABILIZADO H-RDL\n(CRE = 100%, E2 ACK, SLA Preservado)', color='#065F46', fontsize=8, fontweight='bold', ha='center')
+    ax4.text(6.75, 3.0, 'ESTADO ESTABILIZADO H-RDL\n(CRE = 100%, E2 ACK, SLA Preservado)', color='#065F46', fontsize=7.8, fontweight='bold', ha='center')
 
     ax4.set_xlabel('Tempo de Simulação Física em Malha Fechada (s)', fontweight='bold')
-    ax4.set_title('(d) Fechamento Causal de Malha E2 (Cenário S8 · ns-3 NORI E2Sim)', pad=8)
+    ax4.set_title('(d) Fechamento Causal de Malha E2 (Cenário S8 · ns-3 NORI E2Sim)', y=1.12, fontweight='bold', color=NAVY)
     ax4.set_xlim(0, 10)
 
-    # Legenda combinada
+    # Legenda combinada fora do gráfico
     lines = line1 + line2
     labels = [l.get_label() for l in lines]
-    ax4.legend(lines, labels, loc='upper right', framealpha=0.95)
+    ax4.legend(lines, labels, loc='lower center', bbox_to_anchor=(0.5, 1.01), ncol=2, framealpha=0.95, fontsize=8.0)
 
     # =========================================================================
     # TÍTULO GLOBAL & SALVAMENTO DA FIGURA
     # =========================================================================
     plt.suptitle('VALIDAÇÃO EXPERIMENTAL MULTIDIMENSIONAL DO MIDDLEWARE H-RDL (OPEN RAN 5G-ADV/6G)', 
-                 fontsize=13, fontweight='black', color=NAVY, y=0.995)
-    plt.tight_layout(rect=[0, 0.02, 1, 0.98])
+                 fontsize=13, fontweight='black', color=NAVY, y=0.985)
+    plt.subplots_adjust(top=0.86, bottom=0.08, hspace=0.48, wspace=0.28)
 
     out_dir_1 = "docs/figures/03_resultados_e_benchmarks"
     out_dir_2 = "docs/figures"

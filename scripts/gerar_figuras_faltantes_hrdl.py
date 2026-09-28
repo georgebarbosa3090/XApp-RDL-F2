@@ -256,7 +256,7 @@ for (lab,v),c in zip(vals.items(),cols):
     ax.scatter([v],[1],s=24,c=[c],edgecolors='white',linewidths=.5,zorder=4)
 ax.axvline(10,color=COL['red'],lw=1.1,ls='--',label='Envelope de referência: 10 ms')
 ax.set_xlim(0,10.5); ax.set_ylim(-.02,1.04); ax.set_xlabel('Latência decisória reportada (ms)'); ax.set_ylabel('ECDF empírica')
-ax.set_title('ECDF dos resumos de latência decisória — B1–B6',fontweight='bold'); ax.grid(True); ax.legend(loc='lower right',ncol=2,frameon=True)
+ax.set_title('ECDF dos resumos de latência decisória — B1–B6', fontweight='bold', pad=25); ax.grid(True); ax.legend(loc='lower center', bbox_to_anchor=(0.5, 1.04), ncol=3, frameon=True, framealpha=0.95)
 ax.text(.01,.03,'Cada política possui 5 registros coincidentes; o salto representa resumos por execução, não amostras de ciclos.',transform=ax.transAxes,fontsize=7.2,va='bottom')
 save(fig,'fig_03_latency_ecdf',category='benchmarks')
 
