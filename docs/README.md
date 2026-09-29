@@ -23,7 +23,8 @@ docs/
 ├── 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028, Fase 3 Federada 6G e Testbed UFPA
 ├── 07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md # [Vol 07] Resultados da Simulação, Baselines e Cenários (S0–S15)
 ├── 20_relatorio_experimental_ns3_flowmonitor_s0_s15.md       # [Vol 20] Relatório Técnico Experimental ns-3 FlowMonitor (S0–S15)
-├── 21_relatorio_demonstracao_rica_closed_loop.md             # [Vol 21] Relatório de Demonstração Rica Closed-Loop (D1–D5 / Cenários A–C)
+├── 21_relatorio_demonstracao_rica_closed_loop.md             # [Vol 21] Relatório de Demonstração Rica Closed-Loop (CA-RDL / Fase 2)
+├── 21_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md  # [Vol 21-F1] Relatório de Demonstração Rica Closed-Loop (H-RDL / Fase 1)
 ├── assets/                                  # Diagramas de arquitetura e modelos visuais
 ├── compliance/                              # Perfis de compatibilidade O-RAN congelados
 ├── e2/                                      # Definições ASN.1 e matrizes normativas E2AP/E2SM
@@ -69,8 +70,11 @@ Apresenta o comparativo multidimensional completo cruzando os 7 baselines (B0 a 
 ### [Volume 20: Relatório Técnico Experimental e Rastreabilidade ns-3 FlowMonitor](20_relatorio_experimental_ns3_flowmonitor_s0_s15.md)
 Registro oficial exaustivo de nível de pacote extraído diretamente dos traces FlowMonitor XML gerados pelo simulador ns-3.48 / 5G-LENA / NORI, cobrindo os 16 cenários (S0 a S15) ordenados cronologicamente, matrizes de RF, dispersão de pacotes, jitter e governança determinística.
 
-### [Volume 21: Relatório de Demonstração Científica Rica em Circuito Fechado](21_relatorio_demonstracao_rica_closed_loop.md)
+### [Volume 21: Relatório de Demonstração Científica Rica em Circuito Fechado (CA-RDL / Fase 2)](21_relatorio_demonstracao_rica_closed_loop.md)
 Documento oficial consolidando os resultados empíricos da suíte operacional D1 a D5 e do inspetor visual dos 8 estágios cognitivos (Cenários A, B e C), comprovando a validação irrefutável dos Gates 1 a 4, conformidade ASN.1 APER WG3, envelopes dApp sub-1ms (O-RAN nGRG) e estabilidade de sinalização sob tempestade de conflitos.
+
+### [Volume 21-F1: Relatório de Demonstração Rica em Circuito Fechado (H-RDL / Fase 1)](21_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)
+Documento oficial da Fase 1 consolidando a governança determinística do H-RDL, comparativo empírico dos baselines B0 a B3, cenários canônicos S0 a S8, a cadeia causal forense em 6 elos ($KPM(t_0) \to \text{Decisão} \to \text{RC} \to \text{ACK} \to \text{MAC} \to KPM(t_1)$), estudo de ablação e a campanha estatística multi-semente $N=30$.
 
 
 
