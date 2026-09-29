@@ -29,9 +29,9 @@
 
 ## 1. Sumário Executivo
 
-Este documento consolida os resultados empíricos da **Demonstração Científica Rica em Circuito Fechado (*Closed-Loop*)** do ecossistema **O-RAN H-RDL (*Hierarchical Resource and Decision Layer* — Fase 1)**. O objetivo primordial desta fase consiste em prover governança determinística, transparente e em tempo real estrito para múltiplas aplicações de controle (*xApps*) concorrentes no Near-RT RIC, mitigando conflitos de rádio antes que comandos destrutivos alcancem a camada física do gNodeB.
+Este documento consolida os resultados empíricos da **Demonstração Científica Rica em Circuito Fechado (*Closed-Loop*)** do ecossistema **O-RAN H-RDL (*Heuristic Resource and Decision Layer* — Fase 1)**, fundamentado em uma **Camada Heurística baseada em Modelo Matemático Determinístico**. O objetivo primordial desta fase consiste em prover governança determinística, transparente e em tempo real estrito para múltiplas aplicações de controle (*xApps*) concorrentes no Near-RT RIC, mitigando conflitos de rádio antes que comandos destrutivos alcancem a camada física do gNodeB.
 
-A arquitetura H-RDL resolve o problema de colisão multi-xApp por meio de quatro pilares determinísticos:
+A arquitetura H-RDL resolve o problema de colisão multi-xApp por meio de quatro pilares matemáticos determinísticos:
 1. **Agregação Temporal em Janela Sincronizada ($\Delta t_{\text{win}} = 200\text{ ms}$):** Coleta e alinhamento de propostas assíncronas de xApps para análise em lote (*batching*);
 2. **Classificação Formal de Conflitos:** Identificação imediata de colisões diretas de parâmetros (C1 - *Direct Resource Collision*) e acoplamentos indiretos multiobjetivo (C2 - *Cross-KPI Degradation*);
 3. **Arbitragem Axiomática de Nash com Heurísticas TVS/EEVS:** Otimização multiobjetivo com ponderação de utilidade entre Vazão/SLA (*Throughput vs SLA - TVS*) e Eficiência Energética (*Energy Efficiency vs SLA - EEVS*);
@@ -63,7 +63,7 @@ A suíte experimental da Fase 1 foi submetida a cinco demonstrações operaciona
 - **Baseline B0 (Sem Coordenação / Predatório):** As xApps despacham comandos diretamente ao gNodeB sem mediação intermediária;
 - **Baseline B1 (Fila FIFO):** Resolução sequencial por ordem de chegada;
 - **Baseline B2 (Prioridade Estática com Utilidade):** Ponderação fixa pré-configurada sem ajuste dinâmico de canal;
-- **Baseline B3 (H-RDL Completa):** Governança hierárquica determinística com Barganha de Nash, janelas de 200 ms e Safety Guards.
+- **Baseline B3 (H-RDL Completa):** Governança heurística determinística com Barganha de Nash baseada em modelo matemático, janelas de 200 ms e Safety Guards.
 
 ### Tabela 1: Resumo Consolidado das Demonstrações e Baselines H-RDL (Fase 1)
 
@@ -94,7 +94,7 @@ A suíte experimental da Fase 1 foi submetida a cinco demonstrações operaciona
 ### Análise Detalhada dos Experimentos D1 a D5
 
 1. **D1 — Cenário Predatório Sem Governança (Baseline B0):** Duas xApps com objetivos concorrentes atuam sobre o mesmo gNodeB `gnb_01`: a xApp de QoS de Fatias exige quota de $80\%$ de PRBs para atender ao surto de tráfego, enquanto a xApp de Eficiência Energética comuta blocos para estado de repouso exigindo teto de $30\%$. Sem um árbitro central, a soma de requisições atinge $110\%$, os comandos sobrescrevem-se a cada $200\text{ ms}$, disparando *Action Churn* de $1,00\text{ ação/s}$, colapso da equidade de Jain para $0,52$ e taxa massiva de violação de SLA de $36,7\%$.
-2. **D2 — Governança Determinística H-RDL (Baseline B3):** O motor hierárquico absorve as propostas na janela de sincronização $\Delta t_{\text{win}} = 200\text{ ms}$, identifica o conflito direto de capacidade e aplica a função de utilidade de Nash. O recurso é balanceado em quotas exatas de $50\%$ para URLLC e $50\%$ para eMBB em apenas $0,118\text{ ms}$ ($118\ \mu\text{s}$), eliminando $100\%$ das violações de SLA, reduzindo o *churn* para $0,05\text{ ação/s}$ e elevando a vazão para $102,5\text{ Mbps}$.
+2. **D2 — Governança Heurística Determinística H-RDL (Baseline B3):** O motor heurístico determinístico absorve as propostas na janela de sincronização $\Delta t_{\text{win}} = 200\text{ ms}$, identifica o conflito direto de capacidade e aplica a função de utilidade de Nash com modelo matemático de rádio. O recurso é balanceado em quotas exatas de $50\%$ para URLLC e $50\%$ para eMBB em apenas $0,118\text{ ms}$ ($118\ \mu\text{s}$), eliminando $100\%$ das violações de SLA, reduzindo o *churn* para $0,05\text{ ação/s}$ e elevando a vazão para $102,5\text{ Mbps}$.
 3. **D3 — Injeção de Falhas e Resiliência de Transporte SCTP:** Durante o despacho de controle `RIC_CONTROL_REQUEST` (PRB = 85%), injeta-se intencionalmente uma quebra de enlace com descarte do pacote ACK no nó E2. O rastreador `ACK Tracker` detecta o timeout de $1,0\text{ s}$, cancela a transação pendente e executa *rollback* atômico para o estado seguro homologado (PRB = 50%), preservando o invariante estrito $\text{UnsafeApplied} \equiv 0$.
 4. **D4 — Observabilidade Causal e Métricas Prometheus:** O exportador expõe continuamente métricas de conformidade na porta `:8081/metrics`. Os indicadores confirmam $100,0\%$ de Taxa de Resolução de Conflitos (CRR), $100,0\%$ de Efetividade de Resolução de Conflitos (CRE) e latência média ponta a ponta do ciclo de controle de $18,50\text{ ms}$.
 5. **D5 — Prontidão para Bancada Experimental (Open5GS + srsRAN):** O codec ASN.1 APER serializa a PDU E2SM-RC Format 1 em formato binário compacto ($19\text{ bytes}$). O adaptador desacoplado `src/e2/backends/srsran_e2_adapter.py` executa o loop de controle em bancada ZeroMQ e SDR USRP B210 sem nenhuma alteração na lógica de decisão.

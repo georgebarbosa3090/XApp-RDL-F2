@@ -1,6 +1,6 @@
 # Suíte de Demonstração Científica: H-RDL & CA-RDL em Tempo Real (5G-Adv / 6G O-RAN)
 
-Este diretório contém a suíte completa de **demonstração interativa, terminal inspector e telemetria em tempo real** para avaliação dos frameworks **H-RDL (Hierarchical Resource and Decision Layer)** e **CA-RDL (Cognitive Arbitration RDL)** no ecossistema O-RAN ALLIANCE.
+Este diretório contém a suíte completa de **demonstração interativa, terminal inspector e telemetria em tempo real** para avaliação dos frameworks **H-RDL (Heuristic Resource and Decision Layer — Heurística baseada em Modelo Matemático Determinístico)** e **CA-RDL (Cognitive Arbitration RDL)** no ecossistema O-RAN ALLIANCE.
 
 A arquitetura e os passos de execução seguem o padrão metodológico internacional de plataformas de teste e validação aberta como **RIC-TaaP** (Orange / O-RAN SC), **Colosseum** e **OpenRAN Gym** (WiNES Lab / Northeastern University).
 

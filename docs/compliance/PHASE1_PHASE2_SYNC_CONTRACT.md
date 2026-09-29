@@ -10,7 +10,7 @@
 
 ## 1. Princípios Arquiteturais da Sincronização
 
-A sincronização entre o H-RDL (**Fase 1: Hierarchical Resource and Decision Layer**) e o CA-RDL (**Fase 2: Context-Aware Resource and Decision Layer**) segue três princípios fundamentais:
+A sincronização entre o H-RDL (**Fase 1: Heuristic Resource and Decision Layer — Heurística baseada em Modelo Matemático Determinístico**) e o CA-RDL (**Fase 2: Context-Aware Resource and Decision Layer**) segue três princípios fundamentais:
 
 1. **Determinismo em Primeira Linha (Safety-First):**
    A Fase 1 estabelece as regras determinísticas invioláveis (*Safety Guards*). A Fase 2 opera sobre o subespaço de ações aprovadas pela Fase 1.
