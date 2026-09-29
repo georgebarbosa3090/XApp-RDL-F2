@@ -57,25 +57,20 @@ A validação em circuito fechado estrutura-se na verificação rigorosa dos **4
 
 ---
 
-## 2. Resultados das Demonstrações Operacionais e Baselines de Governança
+## 2. Resultados dos Baselines Canônicos e Demonstrações Operacionais
 
-A suíte experimental da Fase 1 foi submetida a cinco demonstrações operacionais (D1 a D5) e ao confronto direto entre os quatro baselines canônicos de governança:
-- **Baseline B0 (Sem Coordenação / Predatório):** As xApps despacham comandos diretamente ao gNodeB sem mediação intermediária;
-- **Baseline B1 (Fila FIFO):** Resolução sequencial por ordem de chegada;
-- **Baseline B2 (Prioridade Estática com Utilidade):** Ponderação fixa pré-configurada sem ajuste dinâmico de canal;
-- **Baseline B3 (H-RDL Completa):** Governança heurística determinística com Barganha de Nash baseada em modelo matemático, janelas de 200 ms e Safety Guards.
+A avaliação empírica da Fase 1 estrutura-se em dois níveis de validação:
+1. **Campanha de Simulação Factual (ns-3.48 + 5G-LENA + NORI):** Confronto pareado entre os quatro baselines de governança (B0 a B3), com telemetria rastreada em nível de pacote pelo *FlowMonitor*;
+2. **Suíte de Demonstração Operacional ao Vivo (D1 a D5):** Verificação funcional dos módulos de percepção, arbitragem, injeção de falhas, observabilidade e codecs normativos ASN.1 (`scripts/run_live_demonstrations_d1_d5.py`).
 
-### Tabela 1: Resumo Consolidado das Demonstrações e Baselines H-RDL (Fase 1)
+### Tabela 1: Resumo Consolidado dos Baselines Canônicos de Governança (Cenário S1 — SSOT ns-3 / 5G-LENA)
 
-| Demonstração / Regime | Estratégia de Governança | Vazão Média (Mbps) | Latência Média (ms) | Latência P95 (ms) | Violação de SLA (%) | Índice de Jain ($J$) | $T_{\text{dec}}$ (ms) | Action Churn (ações/s) | Potência gNB (W) | Eficiência (Mbit/J) | Ações Inseguras | Veredito Científico |
-| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **D1 / B0** | Sem Mediação (Predatório) | 86,0 | 17,73 | 24,43 | 36,7% | 0,52 | 0,000 ms | 1,00 | 223,5 W | 0,385 | 0 | **FALHA DE GOVERNANÇA (Colapso)** |
+| Baseline | Estratégia de Governança | Vazão Média (Mbps) | Latência Média (ms) | Latência P95 (ms) | Violação de SLA (%) | Índice de Jain ($J$) | $T_{\text{dec}}$ (ms) | Action Churn (ações/s) | Potência gNB (W) | Eficiência (Mbit/J) | Ações Inseguras | Veredito Científico |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **B0** | Sem Mediação (Predatório) | 86,0 | 17,73 | 24,43 | 36,7% | 0,52 | 0,000 ms | 1,00 | 223,5 W | 0,385 | 0 | **FALHA DE GOVERNANÇA (Colapso)** |
 | **B1** | Resolução FIFO Simples | 89,2 | 15,13 | 20,93 | 24,0% | 0,65 | 0,039 ms | 0,85 | 215,2 W | 0,414 | 0 | **SUBÓTIMO (Injustiça e Atraso)** |
 | **B2** | Prioridade Estática Utilidade | 92,9 | 13,43 | 18,13 | 12,5% | 0,78 | 0,079 ms | 0,40 | 198,0 W | 0,469 | 0 | **MEDIAÇÃO PARCIAL (Perda SLA)** |
-| **D2 / B3** | **H-RDL (Fase 1 Completa)** | **102,5** | **11,23** | **13,73** | **0,0%** | **0,94** | **0,118 ms** | **0,05** | **154,2 W** | **0,665** | **0** | **GOVERNANÇA DETERMINÍSTICA HOMOLOGADA** |
-| **D3: Resiliência** | SCTP Timeout & Rollback | 100,8 | 11,50 | 14,00 | 0,0% | 0,91 | < 310 ms | 0,00 | 165,0 W | 0,611 | 0 | **RESILIÊNCIA COMPROVADA ($\text{Unsafe} \equiv 0$)** |
-| **D4: Observabilidade** | Prometheus Exporter (:8081) | 102,5 | 11,23 | 13,73 | 0,0% | 0,94 | 0,118 ms | 0,05 | 154,2 W | 0,665 | 0 | **MÉTRICAS CAUSAIS ATIVAS (CRR = 100%)** |
-| **D5: Testbed Ready** | srsRAN + Open5GS / ZMQ | 102,0 | 11,35 | 13,85 | 0,0% | 0,93 | 0,120 ms | 0,05 | 155,0 W | 0,658 | 0 | **PRONTO PARA SDR USRP B210** |
+| **B3** | **H-RDL (Fase 1 Completa)** | **102,5** | **11,23** | **13,73** | **0,0%** | **0,94** | **0,118 ms** | **0,05** | **154,2 W** | **0,665** | **0** | **GOVERNANÇA DETERMINÍSTICA HOMOLOGADA** |
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -91,13 +86,23 @@ A suíte experimental da Fase 1 foi submetida a cinco demonstrações operaciona
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### Tabela 1b: Resumo da Suíte de Demonstrações Operacionais e Resiliência (D1 a D5)
+
+| Demonstração | Foco Operacional | Evento Injetado / Testado | Resultado Funcional Observado | Métrica Principal | Veredito Operacional |
+| :--- | :--- | :--- | :--- | :---: | :--- |
+| **D1: Sem H-RDL** | Cenário Predatório | Disputa direta de PRBs (80% vs 30%) | Oscilação cíclica *ping-pong* e inanição | SLA Viol = 36,7% \| Churn = 0,85 | **Instabilidade Severa** |
+| **D2: Com H-RDL** | Mediação Determinística | Lote temporal com conflito C1 | Arbitragem Nash e Safety Guard aprovado | $T_{\text{dec}} = 0,0523\text{ ms}$ \| SLA Viol = 0,0% | **Governança Eficaz** |
+| **D3: Resiliência** | Falha de Enlace SCTP | Descarte de ACK e timeout de 1,0 s | Rollback atômico para estado seguro (50%) | UnsafeApplied $\equiv 0$ \| $T_{\text{rec}} < 310\text{ ms}$ | **Resiliência Comprovada** |
+| **D4: Observabilidade**| Telemetria Causal | Exportação Prometheus (:8081/metrics)| Rastreabilidade $KPM(t_0) \to \text{Decisão} \to KPM(t_1)$ | CRR = 100,0% \| CRE = 100,0% | **Monitoramento Ativo** |
+| **D5: Codec ASN.1** | Prontidão de Protocolo | Codificação E2SM-RC Format 1 APER | Header (4B) + Message (15B) = PDU 19 bytes | Precisão Q8.8 exata \| Conforme WG3 | **Homologado para Testbed** |
+
 ### Análise Detalhada dos Experimentos D1 a D5
 
-1. **D1 — Cenário Predatório Sem Governança (Baseline B0):** Duas xApps com objetivos concorrentes atuam sobre o mesmo gNodeB `gnb_01`: a xApp de QoS de Fatias exige quota de $80\%$ de PRBs para atender ao surto de tráfego, enquanto a xApp de Eficiência Energética comuta blocos para estado de repouso exigindo teto de $30\%$. Sem um árbitro central, a soma de requisições atinge $110\%$, os comandos sobrescrevem-se a cada $200\text{ ms}$, disparando *Action Churn* de $1,00\text{ ação/s}$, colapso da equidade de Jain para $0,52$ e taxa massiva de violação de SLA de $36,7\%$.
-2. **D2 — Governança Heurística Determinística H-RDL (Baseline B3):** O motor heurístico determinístico absorve as propostas na janela de sincronização $\Delta t_{\text{win}} = 200\text{ ms}$, identifica o conflito direto de capacidade e aplica a função de utilidade de Nash com modelo matemático de rádio. O recurso é balanceado em quotas exatas de $50\%$ para URLLC e $50\%$ para eMBB em apenas $0,118\text{ ms}$ ($118\ \mu\text{s}$), eliminando $100\%$ das violações de SLA, reduzindo o *churn* para $0,05\text{ ação/s}$ e elevando a vazão para $102,5\text{ Mbps}$.
+1. **D1 — Cenário Predatório Sem Governança (Baseline B0):** Duas xApps com objetivos concorrentes atuam sobre o mesmo gNodeB `gnb_01`: a xApp de QoS de Fatias exige quota de $80\%$ de PRBs para atender ao surto de tráfego, enquanto a xApp de Eficiência Energética comuta blocos para estado de repouso exigindo teto de $30\%$. Sem um árbitro central, a soma de requisições atinge $110\%$, os comandos sobrescrevem-se a cada $200\text{ ms}$, disparando *Action Churn* de $0,85\text{ ação/s}$, colapso da equidade de Jain para $0,52$ e taxa massiva de violação de SLA de $36,7\%$.
+2. **D2 — Governança Heurística Determinística H-RDL (Baseline B3):** O motor heurístico determinístico absorve as propostas na janela de sincronização $\Delta t_{\text{win}} = 200\text{ ms}$, identifica o conflito direto de capacidade e aplica a função de utilidade de Nash com modelo matemático de rádio. O recurso é balanceado em quotas exatas de $50\%$ para URLLC e $50\%$ para eMBB em apenas $0,0523\text{ ms}$ ($52,3\ \mu\text{s}$), eliminando $100\%$ das violações de SLA, reduzindo o *churn* para $0,05\text{ ação/s}$ e elevando a vazão para $102,5\text{ Mbps}$.
 3. **D3 — Injeção de Falhas e Resiliência de Transporte SCTP:** Durante o despacho de controle `RIC_CONTROL_REQUEST` (PRB = 85%), injeta-se intencionalmente uma quebra de enlace com descarte do pacote ACK no nó E2. O rastreador `ACK Tracker` detecta o timeout de $1,0\text{ s}$, cancela a transação pendente e executa *rollback* atômico para o estado seguro homologado (PRB = 50%), preservando o invariante estrito $\text{UnsafeApplied} \equiv 0$.
 4. **D4 — Observabilidade Causal e Métricas Prometheus:** O exportador expõe continuamente métricas de conformidade na porta `:8081/metrics`. Os indicadores confirmam $100,0\%$ de Taxa de Resolução de Conflitos (CRR), $100,0\%$ de Efetividade de Resolução de Conflitos (CRE) e latência média ponta a ponta do ciclo de controle de $18,50\text{ ms}$.
-5. **D5 — Prontidão para Bancada Experimental (Open5GS + srsRAN):** O codec ASN.1 APER serializa a PDU E2SM-RC Format 1 em formato binário compacto ($19\text{ bytes}$). O adaptador desacoplado `src/e2/backends/srsran_e2_adapter.py` executa o loop de controle em bancada ZeroMQ e SDR USRP B210 sem nenhuma alteração na lógica de decisão.
+5. **D5 — Prontidão Normativa e Validação de Codec ASN.1 APER:** O codec ASN.1 APER serializa a PDU E2SM-RC Format 1 em formato binário compacto de $19\text{ bytes}$ (4 bytes de cabeçalho e 15 bytes de corpo de mensagem). A decodificação reversa confirma precisão exata de ponto fixo Q8.8 no parâmetro de controle `PRB_QUOTA = 65.0%`, assegurando total conformidade com a especificação O-RAN.WG3.E2SM-RC v01.03 para futuros ensaios em hardware SDR.
 
 ---
 
