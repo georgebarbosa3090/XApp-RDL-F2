@@ -210,9 +210,12 @@ O arcabouço científico do projeto consolida **21 tabelas normativas e comparat
 | **T17** | Mapeamento de Ações de Controle E2SM-RC Format 1 | [`docs/01_arquitetura_e_modelagem.md`](docs/01_arquitetura_e_modelagem.md) | RAN Parameters: `DRB.QoS.Allocation`, `PEAK_POWER_LIMIT`, `CELL_STATE`. |
 | **T18** | Índices de Eficiência Energética e Redução de Carbono | [`docs/04_relatorio_cientifico_mestre_rdl.md`](docs/04_relatorio_cientifico_mestre_rdl.md) | Ganhos em Joules por Megabit transferido sem degradação do índice de satisfação. |
 | **T19** | Auditoria de Segurança e Action Masking | [`docs/05_auditoria_e_conformidade_oran.md`](docs/05_auditoria_e_conformidade_oran.md) | Taxa de violação zero de limites físicos 3GPP através do Action Masking. |
-| **T20** | Roadmap Tecnológico e Evolução para o 6G | [`docs/06_roadmap_e_pesquisa_futura_6g.md`](docs/06_roadmap_e_pesquisa_futura_6g.md) | Marcos de transição de Fase 1 (H-RDL) a Fase 3 (Federated Zero-Touch SAGIN). |
-| **T21** | Índice Mestre de Relatórios de Simulação | [`docs/README.md`](docs/README.md) | Índice canônico de todos os 8 volumes técnicos e relatórios de evidências. |
-| **T22** | Relatório de Demonstração Rica Closed-Loop | [`docs/21_relatorio_demonstracao_rica_closed_loop.md`](docs/21_relatorio_demonstracao_rica_closed_loop.md) | Demonstração rica em circuito fechado, inspeção dos 8 estágios, D1–D5 e Cenários A–C. |
+| **T21** | Índice Mestre da Documentação Técnica e Científica | [`docs/README.md`](docs/README.md) | Índice canônico dos 14 volumes técnicos, relatórios de evidências e auditoria. |
+| **T22** | Relatório de Demonstração Rica Closed-Loop (Fase 1 H-RDL) | [`docs/12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md`](docs/12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md) | Relatório oficial de circuito fechado da Fase 1, baseline B0–B3 e 6 elos causais. |
+| **T23** | Relatório de Demonstração Rica Closed-Loop (Fase 2 CA-RDL) | [`docs/13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md`](docs/13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md) | Demonstração rica em circuito fechado, inspeção dos 8 estágios, D1–D5 e Cenários A–C. |
+| **T24** | Estado da Arte (2020–2026) sobre Governança Multi-xApp | [`docs/08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md`](docs/08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md) | Revisão cronológica e sistemática de 23 trabalhos seminais e hipóteses H1–H4. |
+| **T25** | Rastreabilidade do ns-3 FlowMonitor (S0 a S15) | [`docs/11_relatorio_experimental_ns3_flowmonitor_s0_s15.md`](docs/11_relatorio_experimental_ns3_flowmonitor_s0_s15.md) | Registro físico extraído dos traces XML do FlowMonitor em 16 cenários. |
+| **T26** | Plano Editorial Estratégico & Matriz de Publicações | [`docs/14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md`](docs/14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md) | Roteiro de submissões em 6 manuscritos para periódicos IEEE (2026–2028). |
 
 ---
 

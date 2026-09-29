@@ -1,7 +1,8 @@
 # Volume 02: Guia Operacional de Deploy, Simulação e Observabilidade
 
-> **Navegação da Documentação Consolidada:**  
-> **[01. Arquitetura & Modelagem](01_arquitetura_e_modelagem.md)** | **[02. Guia Operacional & Deploy](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia de Conflitos & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade O-RAN](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap & Futuro 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados Simulação (S0–S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)**
+> **Portal da Documentação Oficial (xApp-RDL):**  
+> **Fase 1 (H-RDL) & Fase 2 (CA-RDL) — 14 Volumes Canônicos:**  
+> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 H-RDL](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 CA-RDL](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
 
 ---
 

@@ -249,9 +249,12 @@ python3 scripts/auto_update_simulation_figures_and_github.py
    - [`experiments/results/tables/demonstration_scenarios_summary.csv`](../../experiments/results/tables/demonstration_scenarios_summary.csv)
 2. **16 Tabelas Científicas CSV:** em [`experiments/results/tables/`](../../experiments/results/tables/)
 3. **37 Figuras Científicas (300 DPI):** em [`reports/figures/`](../../reports/figures/) e [`docs/figures/`](../../docs/figures/)
-4. **Relatórios Científicos e Técnicos Reconciliados:**
    - [`docs/04_relatorio_cientifico_mestre_rdl.md`](../../docs/04_relatorio_cientifico_mestre_rdl.md)
    - [`docs/07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md`](../../docs/07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)
+   - [`docs/08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md`](../../docs/08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)
    - [`docs/09_protocolo_execucao_simulacoes_validacao_periodico.md`](../../docs/09_protocolo_execucao_simulacoes_validacao_periodico.md)
-   - [`docs/20_relatorio_experimental_ns3_flowmonitor_s0_s15.md`](../../docs/20_relatorio_experimental_ns3_flowmonitor_s0_s15.md)
+   - [`docs/11_relatorio_experimental_ns3_flowmonitor_s0_s15.md`](../../docs/11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)
+   - [`docs/12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md`](../../docs/12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)
+   - [`docs/13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md`](../../docs/13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)
+   - [`docs/14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md`](../../docs/14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)
 
