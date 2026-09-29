@@ -102,6 +102,7 @@ wheels/
 .vscode/
 .idea/
 Thumbs.db
+scratch/
 
 # 12. Scripts PowerShell locais de automação IDE
 *.ps1

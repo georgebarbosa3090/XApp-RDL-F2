@@ -22,6 +22,7 @@ docs/
 ├── 05_auditoria_e_conformidade_oran.md      # [Vol 05] Auditoria Causal, Rastreabilidade SHA-256 e Normas O-RAN
 ├── 06_roadmap_e_pesquisa_futura_6g.md       # [Vol 06] Roadmap 2026-2028, Fase 3 Federada 6G e Testbed UFPA
 ├── 07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md # [Vol 07] Resultados da Simulação, Baselines e Cenários (S0–S15)
+├── 08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md # [Vol 08] Estado da Arte (2020–2026) sobre Governança e Mitigação de Conflitos Multi-xApp
 ├── 20_relatorio_experimental_ns3_flowmonitor_s0_s15.md       # [Vol 20] Relatório Técnico Experimental ns-3 FlowMonitor (S0–S15)
 ├── 21_relatorio_demonstracao_rica_closed_loop.md             # [Vol 21] Relatório de Demonstração Rica Closed-Loop (CA-RDL / Fase 2)
 ├── 21_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md  # [Vol 21-F1] Relatório de Demonstração Rica Closed-Loop (H-RDL / Fase 1)
@@ -66,6 +67,9 @@ Delineia a evolução do projeto em direção ao 6G Zero-Touch, detalhando a gov
 
 ### [Volume 07: Relatório Exaustivo de Resultados de Simulação (S0 a S15)](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)
 Apresenta o comparativo multidimensional completo cruzando os 7 baselines (B0 a B6) e os 16 cenários experimentais (S0 a S15), detalhando throughput, latência P95, violação de SLA, tempos de estabilização ($t_{\text{settle}}$), eficiência energética (EEVS), decomposição em 11 estágios do loop fechado e matriz de recomendações técnicas de uso H-RDL vs CA-RDL.
+
+### [Volume 08: Estado da Arte (2020–2026) sobre Governança, Detecção e Mitigação de Conflitos Multi-xApp](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)
+Revisão sistemática aprofundada da literatura cobrindo trabalhos de 2020 a 2026 (team learning, CMF, QACM, PACIFISTA, COMIX, OTIC, xApp distillation, GNNs e AI-native/LLM), mapeamento direto das hipóteses H1–H4, tabela comparativa com 23 trabalhos seminais e análise das 5 lacunas científicas preenchidas pelo ecossistema XApp-RDL. Documento PDF original disponível em [`assets/estado_arte_xapp_rdl_2020_2026.pdf`](assets/estado_arte_xapp_rdl_2020_2026.pdf).
 
 ### [Volume 20: Relatório Técnico Experimental e Rastreabilidade ns-3 FlowMonitor](20_relatorio_experimental_ns3_flowmonitor_s0_s15.md)
 Registro oficial exaustivo de nível de pacote extraído diretamente dos traces FlowMonitor XML gerados pelo simulador ns-3.48 / 5G-LENA / NORI, cobrindo os 16 cenários (S0 a S15) ordenados cronologicamente, matrizes de RF, dispersão de pacotes, jitter e governança determinística.
