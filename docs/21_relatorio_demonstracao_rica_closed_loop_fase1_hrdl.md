@@ -55,7 +55,11 @@ A validação em circuito fechado estrutura-se na verificação rigorosa dos **4
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-![Arquitetura H-RDL Fase 1](docs/figures/fase1_hrdl/hrdl_architecture_preview.png)
+### 1.1. Arquitetura do Middleware Determinístico H-RDL
+
+A Figura 1 apresenta a arquitetura detalhada e o fluxo operacional em circuito fechado da camada **H-RDL (Fase 1)**, ilustrando a mediação matemática entre as xApps concorrentes no Near-RT RIC, a ingestão de telemetria E2SM-KPM v03.00, o particionamento axiomático de Nash com heurísticas TVS/EEVS, a projeção de invariantes físicos (*Safety Guards*) e a atuação determinística via E2SM-RC Format 1 sobre o escalonador MAC do 5G-LENA / ns-3:
+
+![Figura 1: Arquitetura do Middleware Determinístico H-RDL (Fase 1)](figures/fase1_hrdl/hrdl_architecture_preview.png)
 
 ---
 
