@@ -23,9 +23,9 @@ docs/figures/
 
 ---
 
-## 📊 1. Fase 1: H-RDL (Hierarchical Conflict Arbitration)
+## 📊 1. Fase 1: H-RDL (Heuristic Resource and Decision Layer)
 
-A Fase 1 foca na arbitragem determinística, árvore de decisão de 3 estágios (L0 Heurística, L1 Tabela de Conflitos, L2 Utilidade) e baselines **B0 (Uncoordinated)**, **B1 (FIFO Priority)**, **B2 (Static Slicing)** e **B3 (H-RDL Determinística)**.
+A Fase 1 foca na governança determinística baseada em modelo matemático e árvore de decisão (L0 Heurística Direta, L1 Tabela de Conflitos, L2 Barganha de Nash / TVS / EEVS) e baselines **B0 (Uncoordinated)**, **B1 (FIFO Priority)**, **B2 (Static Slicing)** e **B3 (H-RDL Determinística)**.
 
 ### Gráficos Individuais (1 Gráfico por Página — Prontos para Inserção em Artigos)
 
@@ -33,7 +33,7 @@ A Fase 1 foca na arbitragem determinística, árvore de decisão de 3 estágios 
 | :--- | :--- | :--- |
 | `fig_fase1_01_vazao_sla_baselines` | Vazão & Violação de SLA | Vazão agregada (Mbps) e taxa de violação de SLA (%) com IC 95% para B0..B3. |
 | `fig_fase1_02_ecdf_latencia_urllc` | ECDF de Latência URLLC | Função de Distribuição Cumulativa Empírica confrontada com o limiar de 10 ms. |
-| `fig_fase1_03_escalabilidade_decomposicao_temporal` | Sobrecarga de Decisão | Decomposição temporal de processamento do pipeline (L0, L1, L2, E2 Overhead) até 20 xApps. |
+| `fig_fase1_03_escalabilidade_decomposicao_temporal` | Sobrecarga de Decisão | Decomposição temporal de processamento do pipeline sob carga concorrente. |
 | `fig_fase1_04_fechamento_causal_malha_e2` | Fechamento Causal E2 | Dinâmica temporal em malha fechada E2SM-KPM $\to$ H-RDL $\to$ E2SM-RC com injeção de perturbação. |
 | `fig_fase1_05_equidade_jain_descarte` | Índice de Jain & Descarte | Equidade de alocação de recursos (Jain's Fairness Index) e taxa de descarte de pacotes por baseline. |
 | `fig_fase1_06_eficiencia_energetica_potencia` | Eficiência Energética | Trade-off entre consumo de potência (W) e eficiência energética (Mbits/Joule) em regime de alta carga. |
@@ -51,7 +51,7 @@ A Fase 1 foca na arbitragem determinística, árvore de decisão de 3 estágios 
 | `fig_fase1_cenario_s5_ping_pong_temporal` | S5 (Ping-Pong Handover)| Supressão de oscilações de handover veicular em células adjacentes. |
 | `fig_fase1_cenario_s8_fechamento_causal_temporal`| S8 (Fechamento Causal) | Resposta temporal do ciclo E2SM-KPM / E2SM-RC sob surto estocástico de carga. |
 
-### Painéis Compostos e Síntese Multidimensional
+### Painéis Compostos e Diagramas Arquiteturais
 
 | Arquivo Base | Tipo | Descrição |
 | :--- | :--- | :--- |
@@ -61,6 +61,7 @@ A Fase 1 foca na arbitragem determinística, árvore de decisão de 3 estágios 
 | `fig_fase1_radar_multidimensional_baselines` | Radar Polar | Comparativo holístico de 6 eixos (Vazão, Latência, SLA, Jain, Energia, Churn). |
 | `fig_fase1_distribuicoes_multissemente_boxplots` | Boxplots ($N=30$) | Distribuições empíricas multissemente com dispersão estatística e outliers. |
 | `fig_fase1_arquitetura_hrdl_deterministica` | Arquitetura | Pipeline determinístico H-RDL L0/L1/L2 com barramento E2 e Near-RT RIC. |
+| `hrdl_architecture_preview` | Arquitetura Preview | Diagrama visual da arquitetura de governança H-RDL (Fase 1) em alta resolução. |
 
 ---
 

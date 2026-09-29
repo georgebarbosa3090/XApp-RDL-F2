@@ -55,6 +55,8 @@ A validação em circuito fechado estrutura-se na verificação rigorosa dos **4
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+![Arquitetura H-RDL Fase 1](docs/figures/fase1_hrdl/hrdl_architecture_preview.png)
+
 ---
 
 ## 2. Resultados dos Baselines Canônicos e Demonstrações Operacionais
@@ -254,6 +256,7 @@ Em estrita obediência à política de proveniência experimental e reprodutibil
 | :--- | :--- | :--- | :--- |
 | `canonical_simulation_master.csv` | SSOT Mestre | [`experiments/results/canonical_simulation_master.csv`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/experiments/results/canonical_simulation_master.csv) | `b7c1dd9efa48140ef1d5266522dab88919600a544c49af564419f598ea058322` |
 | `figures_manifest.json` | Manifesto de Figuras | [`reports/figures/figures_manifest.json`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/reports/figures/figures_manifest.json) | `1.2.0-certified` |
+| `hrdl_architecture_preview.png` | Arquitetura H-RDL Preview | [`docs/figures/fase1_hrdl/hrdl_architecture_preview.png`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/docs/figures/fase1_hrdl/hrdl_architecture_preview.png) | `4673f765ad928a2f2388653b4da2e5478fa2d1c901c8f398b59a4e2ecd1fa364` |
 | `fig_fase1_01_vazao_sla_baselines.png` | Figura Científica 300 DPI | [`docs/figures/fase1_hrdl/fig_fase1_01_vazao_sla_baselines.png`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/docs/figures/fase1_hrdl/fig_fase1_01_vazao_sla_baselines.png) | `ceea9284c0612dcf96c3a475cfc1f73876f6413a9065a2f662eef37cfe498b88` |
 | `fig_fase1_02_ecdf_latencia_urllc.png` | ECDF Latência URLLC | [`docs/figures/fase1_hrdl/fig_fase1_02_ecdf_latencia_urllc.png`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/docs/figures/fase1_hrdl/fig_fase1_02_ecdf_latencia_urllc.png) | `17c5f5f1472dbad20121a8430c00467472c9e1d1c004e503c3343a8fbddb0f41` |
 | `fig_fase1_03_escalabilidade_temporal.png` | Decomposição Temporal | [`docs/figures/fase1_hrdl/fig_fase1_03_escalabilidade_decomposicao_temporal.png`](file:///c:/Users/george.barbosa/.gemini/antigravity/scratch/iqos-xapp-rdl-phase2/docs/figures/fase1_hrdl/fig_fase1_03_escalabilidade_decomposicao_temporal.png) | `543dbaf20b594f1e748f477af60730fc9acb1b93174919c3583f14d634951b23` |
