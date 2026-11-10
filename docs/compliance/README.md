@@ -1,5 +1,7 @@
 # Diretório de Conformidade e Integridade Experimental — docs/compliance/
 
+> **Aviso (2026-11-10).** As versões de referência destes documentos ficam no repositório da Fase 1 (`XApp-RDL-F1/docs/compliance/`). As cópias abaixo são anteriores à auditoria de novembro de 2026; valem como histórico, e só `CARDL_F2_COMPATIBILITY_PROFILE.md` e `PHASE1_PHASE2_SYNC_CONTRACT.md` foram atualizados aqui. Ver [../SANEAMENTO_20261110.md](../SANEAMENTO_20261110.md).
+
 **Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (H-RDL Determinística)  
 **Escopo:** Documentos de conformidade normativa O-RAN ALLIANCE, perfis de implantação O-RAN SC, matriz de rastreabilidade, política de proveniência de dados e roadmap do O-RAN Release 5.
 

@@ -428,14 +428,7 @@ def trigger_automatic_artifacts_update():
 
     py_exe = sys.executable
     scripts_to_run = [
-        ("Exportar Tabelas CSV", Path(PROJECT_DIR) / "analysis" / "export_tables.py"),
-        ("Reconciliar SSOT & Relatórios", Path(PROJECT_DIR) / "scripts" / "reconcile_all_tables_and_docs.py"),
-        ("Gerar 25 Figuras Científicas", Path(PROJECT_DIR) / "analysis" / "generate_plots.py"),
-        ("Gerar Figuras Cross-Layer & Dashboard", Path(PROJECT_DIR) / "analysis" / "generate_crosslayer_modular_plots.py"),
-        ("Gerar Gráficos da Demonstração Rica & Simulações (Fig 31-37)", Path(PROJECT_DIR) / "analysis" / "generate_demonstration_and_latest_sim_plots.py"),
-        ("Gerar Figuras Estendidas (Fig 26-30)", Path(PROJECT_DIR) / "scripts" / "generate_extended_figures_and_tables.py"),
-        ("Gerar Figuras de Publicação", Path(PROJECT_DIR) / "scripts" / "generate_publication_report_figures.py"),
-        ("Compilar Relatório FlowMonitor XML", Path(PROJECT_DIR) / "scripts" / "generate_ns3_flowmonitor_markdown_report.py"),
+        ("Gerar figuras a partir de execuções reais (generate_plots)", Path(PROJECT_DIR) / "analysis" / "generate_plots.py"),
     ]
 
     for label, script_path in scripts_to_run:
@@ -450,7 +443,7 @@ def trigger_automatic_artifacts_update():
             except Exception as ex:
                 print(f"      {RED}[ERRO] Falha ao rodar {label}: {ex}{RESET}")
 
-    print(f"{GREEN}[OK] Pipeline de artefatos, figuras e relatórios 100% atualizado!{RESET}\n")
+    print(f"{GREEN}[OK] Etapa de figuras concluída (só gera figuras se houver execuções reais em experiments/results).{RESET}\n")
 
 
 def parse_selected_scenarios(scenario_str: str, group_str: str = None) -> List[Any]:

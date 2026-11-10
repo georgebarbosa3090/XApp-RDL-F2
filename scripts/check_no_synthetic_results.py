@@ -30,6 +30,13 @@ FORBIDDEN_PATTERNS = [
     ("RandomState", re.compile(r"RandomState\(")),
     ("rng.normal", re.compile(r"rng\.normal\(")),
     ("rng.uniform", re.compile(r"rng\.uniform\(")),
+    ("np.random.randn", re.compile(r"np\.random\.randn\(")),
+    ("np.random.rand", re.compile(r"np\.random\.rand\(")),
+    ("np.random.randint", re.compile(r"np\.random\.randint\(")),
+    ("np.random.choice", re.compile(r"np\.random\.choice\(")),
+    ("random.randint", re.compile(r"(?<![\w.])random\.randint\(")),
+    ("random.choice", re.compile(r"(?<![\w.])random\.choice\(")),
+    ("pcap montado por script", re.compile(r"0x12345678")),
     ("generate_flowmonitor_xml", re.compile(r"generate_flowmonitor_xml", re.IGNORECASE)),
     ("synthetic_metric_generator", re.compile(r"synthetic_metric_generator", re.IGNORECASE)),
     ("synthetic_tradeoff_figure", re.compile(r"cenario_2_tradeoff_energy_vs_qos\.png", re.IGNORECASE)),
@@ -99,23 +106,29 @@ def main():
         print(f"\n[FALHA CRÍTICA] Erro ao carregar provenance_policy.yaml: {e}")
         sys.exit(1)
 
-    # Validação do figures_manifest.json (Solução 2)
-    manifest_path = os.path.join(REPORTS_DIR, "figures", "figures_manifest.json")
-    if not os.path.exists(manifest_path):
-        print(f"\n[FALHA CRÍTICA] figures_manifest.json não encontrado em: {manifest_path}")
+    # Execuções registradas: rejeita placeholders no lugar de PDUs e PCAPs vazios
+    # (padrão encontrado nas execuções S1_B0..B6 removidas em 2026-11-10).
+    runs_dir = os.path.join(EXPERIMENTS_DIR, "runs")
+    bad_runs: List[str] = []
+    if os.path.isdir(runs_dir):
+        for root, _, files in os.walk(runs_dir):
+            for f in files:
+                fpath = os.path.join(root, f)
+                rel = os.path.relpath(fpath, BASE_DIR)
+                if f.endswith(".raw"):
+                    with open(fpath, "rb") as fh:
+                        head = fh.read(64)
+                    if head.startswith(b"ASN1_") or head.isascii() and head[:1].isalpha():
+                        bad_runs.append(f"{rel}: conteúdo textual no lugar de APER")
+                elif f.endswith(".pcap") and os.path.getsize(fpath) <= 24:
+                    bad_runs.append(f"{rel}: PCAP sem pacotes")
+    if bad_runs:
+        print(f"\n[FALHA CRÍTICA] {len(bad_runs)} artefatos de execução inválidos:")
+        for item in bad_runs:
+            print(f"  - {item}")
         sys.exit(1)
 
-    import json
-    with open(manifest_path, "r", encoding="utf-8") as mf:
-        mdata = json.load(mf)
-    figs = mdata.get("figures", [])
-    ssot_hash = mdata.get("ssot_source", {}).get("sha256", "")
-    if not ssot_hash or len(figs) < 25:
-        print(f"\n[FALHA CRÍTICA] figures_manifest.json incompleto! Figuras catalogadas: {len(figs)} (esperado >= 25)")
-        sys.exit(1)
-
-    print(f"[OK] figures_manifest.json validado com sucesso! ({len(figs)} figuras empíricas vinculadas à SSOT {ssot_hash[:12]}...)")
-    print("[OK] Nenhum gerador sintético detectado no pipeline científico! (100% CONFORME)")
+    print("[OK] Nenhum gerador sintético detectado em scripts/, experiments/ e analysis/.")
     sys.exit(0)
 
 if __name__ == "__main__":

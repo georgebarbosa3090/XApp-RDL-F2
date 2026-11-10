@@ -28,7 +28,7 @@ PCAP_PATH = os.path.join(BASE_DIR, "experiments", "results", "traces", "live_e2_
 def inspect_pcap(pcap_path: str):
     if not os.path.exists(pcap_path):
         print(f"[ERRO] Arquivo PCAP nao encontrado em: {pcap_path}")
-        print("Execute primeiro: python scripts/run_e2_live_socket_capture.py")
+        print("Informe um PCAP capturado na interface E2 real (tcpdump/tshark no E2Term).")
         return
 
     file_size = os.path.getsize(pcap_path)

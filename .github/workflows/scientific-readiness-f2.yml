@@ -1,5 +1,10 @@
 name: CI-Scientific-Readiness - CA-RDL F2
 
+# Gate de prontidão científica: só passa quando houver evidência elegível.
+# Em 2026-11-10 não há nenhuma (ver docs/SANEAMENTO_20261110.md), então este
+# workflow falha de propósito até que exista treino do MAPPO em ambiente real
+# (manifesto com publication_eligible: true) e afirmações verificadas.
+
 on:
   workflow_dispatch:
   push:
@@ -17,14 +22,25 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install -r requirements.txt
           pip install pyyaml
       - name: Validate software evidence firewall
         run: |
           python scripts/check_no_synthetic_results.py
-      - name: Validate CA-RDL ML provenance
+      - name: Require publication-eligible MAPPO training
         run: |
-          python scripts/validate_ml_provenance.py --require-publication-data
-      - name: Scientific readiness status
+          python - <<'PY'
+          import glob, json, sys
+          manifests = glob.glob("experiments/training/*/training_manifest.json")
+          eligible = [m for m in manifests if json.load(open(m, encoding="utf-8")).get("publication_eligible") is True]
+          print(f"manifestos: {len(manifests)}, elegíveis: {len(eligible)}")
+          sys.exit(0 if eligible else 1)
+          PY
+      - name: Require verified claims
         run: |
-          echo "=== CA-RDL F2 SCIENTIFIC READINESS PASS ==="
+          python - <<'PY'
+          import sys, yaml
+          claims = yaml.safe_load(open("specs/claims.yaml", encoding="utf-8"))["claims"]
+          pending = [c["id"] for c in claims if c.get("compliance_status") != "VERIFIED_EMPIRICAL"]
+          print("afirmações sem verificação:", pending)
+          sys.exit(1 if pending else 0)
+          PY

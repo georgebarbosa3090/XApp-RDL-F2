@@ -1,6 +1,5 @@
 .PHONY: build build-no-cache test test-pytest reproduce-f1 validate package onboard install status logs smoke-test uninstall helm-deploy helm-deploy-baseline helm-package helm-test helm-uninstall k8s-deploy k8s-deploy-baseline k8s-uninstall k8s-test test-3xapps kiali-install kiali-dashboard inject-traffic start-traffic stop-traffic cluster-create cluster-delete cluster-recreate rancher-start rancher-stop rancher-logs rancher-password rancher-connect setup-ns3 deploy-rdl deploy-baseline run-baseline run-rdl run-scenario1-rdl run-scenario1-baseline run-scenario2-rdl run-scenario2-baseline
 
-
 NS3_DIR ?= $(HOME)/ns3-oran-workspace/ns-3-oran
 
 IMAGE_NAME ?= iqos-xapp-rdl
@@ -48,25 +47,11 @@ verify-provenance: verify-no-synthetic
 gate1-check:
 	python scripts/validate_experiment_tree.py --check-gate1
 
-reproduce-paper: verify-no-synthetic gate1-check
-	python scripts/reproduce_paper_artifacts.py --seeds 30 --output-dir experiments/runs/reproduced_audit_2026
-
-test-campaign:
-	pytest tests/unit/test_campaign_scenarios.py -v
-
-run-campaign-s0-s8:
-	python scripts/run_full_campaign_s0_s8.py --seeds 30 --output-dir results/campaign_s0_s8
-
-run-3-rounds:
-	python scripts/run_3_consecutive_simulations.py --round all
-
 run-single-round:
 	python scripts/run_single_round_simulation.py --round 3
 
 reproduce-f1:
 	bash scripts/reproduce_f1.sh
-
-
 
 # -------------------------------------------------------------
 # Gestão e Ciclo de Vida do Cluster k3d
@@ -181,15 +166,6 @@ test-f2:
 	@curl -i http://localhost:8080/health || true
 	@echo "\nMétricas Prometheus:"
 	@curl -s http://localhost:8081/metrics | grep -E "rdl_|marl_" || true
-
-sync-f1-f2-check:
-	@echo "=== Validação de Sincronização e Compatibilidade H-RDL (F1) <-> CA-RDL (F2) ==="
-	@python scripts/verify_f1_f2_cross_repo_sync.py
-	@python scripts/check_no_synthetic_results.py
-	@python scripts/validate_provenance.py
-	@pytest tests/unit/test_conflict_detection.py tests/unit/test_safety_guards.py -v
-	@echo "[OK] Contrato de Sincronização F1 <-> F2 Validado com Sucesso!"
-
 
 helm-package:
 
@@ -343,47 +319,4 @@ run-scenario2-baseline:
 	@mkdir -p $(NS3_DIR)/scratch
 	@cp simulations/ns3/scenario_rdl_tvs_conflict.cc $(NS3_DIR)/scratch/
 	cd $(NS3_DIR) && export NS_LOG="ScenarioRdlTvsConflict=level_all" && ./ns3 run "scratch/scenario_rdl_tvs_conflict --enableE2=false --simTime=30"
-
-git-sync:
-	bash scripts/git_sync.sh "results: synchronize experimental datasets and reports"
-
-auto-update-figures:
-	@if command -v uv >/dev/null 2>&1; then \
-		uv run python scripts/auto_update_simulation_figures_and_github.py; \
-	elif command -v python3 >/dev/null 2>&1; then \
-		python3 scripts/auto_update_simulation_figures_and_github.py; \
-	else \
-		python scripts/auto_update_simulation_figures_and_github.py; \
-	fi
-
-sync-cross:
-	@echo "Executando sincronização cruzada bidirecional F1 <-> F2, GitHub e Drive..."
-	@if command -v uv >/dev/null 2>&1; then \
-		uv run python scripts/sync_cross_repos.py; \
-	elif command -v python3 >/dev/null 2>&1; then \
-		python3 scripts/sync_cross_repos.py; \
-	else \
-		python scripts/sync_cross_repos.py; \
-	fi
-
-run-and-sync:
-	bash simulations/ns3/run_all_s0_s15_simulations.sh all
-	@$(MAKE) sync-cross
-
-push-results: sync-cross
-	@echo "Todos os dados, relatórios e figuras de F1 e F2 foram sincronizados e enviados!"
-
-backup-drive:
-	@echo "Executando backup de governança para o Google Drive..."
-	@if command -v uv >/dev/null 2>&1; then \
-		uv run --with google-api-python-client --with google-auth-httplib2 --with google-auth-oauthlib python scripts/backup_to_google_drive.py; \
-	elif command -v python3 >/dev/null 2>&1; then \
-		python3 scripts/backup_to_google_drive.py; \
-	else \
-		python scripts/backup_to_google_drive.py; \
-	fi
-
-
-
-
 

@@ -48,8 +48,6 @@ auditoria/
 *relatorio_extenso*
 *.audit.md
 docs/relatorio_extenso*
-!docs/auditoria/
-!docs/auditoria/*
 
 # 5. Notebooks do Google Colab e Análises Locais
 notebooks/
@@ -93,7 +91,6 @@ htmlcov/
 
 # 10. Logs e Bancos de Dados Locais
 *.log
-!experiments/runs/certified_closed_loop_chain/*.log
 *.sqlite3
 wheels/
 

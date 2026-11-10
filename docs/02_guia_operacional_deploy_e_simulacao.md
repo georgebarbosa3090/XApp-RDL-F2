@@ -1,5 +1,7 @@
 # Volume 02: Guia Operacional de Deploy, Simulação e Observabilidade
 
+> **Aviso de saneamento (2026-11-10).** Este documento foi escrito quando o repositório guardava execuções sintéticas. Valores de desempenho, latência, energia ou SLA citados aqui **não têm evidência elegível**, e links para `docs/04`, `07`, `11`–`13`, `docs/auditoria/`, `docs/figures/fig_*`, `reports/figures/` e `experiments/results/` apontam para arquivos removidos (preservados no histórico do git). Ver [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md).
+
 > **Portal da Documentação Oficial (xApp-RDL):**  
 > **Fase 1 (H-RDL) & Fase 2 (CA-RDL) — 14 Volumes Canônicos:**  
 > **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 H-RDL](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 CA-RDL](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
@@ -197,23 +199,6 @@ Para validação em hardware de rádio real e ambiente O-RAN desagregado:
 | **RMR Routing Failure (`RMR_ERR_NOENDPT`)** | Tabela de rotas RMR desatualizada | Verificar `configs/routes.rt` e reiniciar pod da RDL |
 | **Conflitos de portas locais (8080)** | Outro serviço ocupando a porta | Modificar mapeamento no `k3d cluster create` para `8090:8080` |
 | **Falha de memória no ns-3** | Múltiplas instâncias simultâneas | Executar com limitador de jobs: `make run-simulations JOBS=2` |
-
-### 7.2. Backup Automatizado para o Google Drive
-O projeto inclui um pipeline autônomo de empacotamento com manifesto criptográfico SHA-256 e streaming para o Google Drive:
-
-- **Pasta Destino:** [Google Drive - XApp-RDL Backups](https://drive.google.com/drive/folders/14ZHofqW5rT3UIXe248wb6JHiNX0WiGiM?usp=sharing)
-- **Folder ID:** `14ZHofqW5rT3UIXe248wb6JHiNX0WiGiM`
-
-```bash
-# Execução via Make
-make backup-drive
-
-# Execução via PowerShell (Windows)
-powershell -ExecutionPolicy Bypass -File scripts/backup_to_google_drive.ps1
-
-# Execução direta via Python / uv
-uv run --with google-api-python-client --with google-auth-httplib2 --with google-auth-oauthlib python scripts/backup_to_google_drive.py
-```
 
 ### 7.3. Limpeza e Reinicialização Completa do Ambiente
 ```bash

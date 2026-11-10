@@ -3,7 +3,7 @@
 <div align="center">
 
 **Manifestos de Implantação Kubernetes e Configurações de Rede para o namespace `ricxapp`**  
-*Homologado em conformidade com consórcio OpenRAN@Brasil (LABORA/UFG, CPQD, INATEL, UFPA PCT)*
+*Manifestos de referência para um cluster local (k3d). Não foram validados no testbed OpenRAN@Brasil nem homologados por seus parceiros.*
 
 </div>
 

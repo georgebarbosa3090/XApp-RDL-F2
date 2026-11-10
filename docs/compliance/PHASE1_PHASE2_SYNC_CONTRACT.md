@@ -2,7 +2,7 @@
 
 **Projeto:** xApp RDL (Resource and Decision Layer)  
 **Documento:** `PHASE1_PHASE2_SYNC_CONTRACT.md`  
-**Status:** **SPECIFIED / PARTIALLY IMPLEMENTED (CI VERIFIED)**  
+**Status:** **ESPECIFICADO.** A reserva determinística (fallback para a H-RDL em ≤ 200 ms) não foi verificada, e o CI deste repositório falhava até 2026-11-10. Versão de referência do contrato: `XApp-RDL-F1/docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md`.  
 
 **Escopo:** Definição formal do contrato de sincronização de dados, modelos de objetos, abstrações de código e regras de repositório entre H-RDL (Fase 1) e CA-RDL (Fase 2).
 

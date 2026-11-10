@@ -65,16 +65,16 @@ target_scenarios: "S9 a S15 (NTN, UAV, V2X, IIoT, ISAC)"
 
 | Portão | Nome do Portão | Descrição do Critério de Aceitação Normativo | Status de Maturidade |
 | :--- | :--- | :--- | :---: |
-| **F2-G0** | Zero Sintético | Zero dados sintéticos em publicação; proveniência validada por hash SHA-256 (`check_no_synthetic_results.py`). | **UNIT_VALIDATED (Software Firewall PASS)**<br/>*Scientific Data Provenance: PENDING (ns-3)* |
-| **F2-G1** | Cobertura de Testes | Suíte de testes unitários e de integração (90/90 PASS, >85% stmts covered em código central). | **UNIT_VALIDATED (90/90 PASS)**<br/>*Measured Core Statement Coverage: >85% PASS* |
+| **F2-G0** | Zero Sintético | Zero dados sintéticos em publicação; proveniência validada por hash SHA-256 (`check_no_synthetic_results.py`). | **Firewall reforçado em 2026-11-10** (padrões `randn`/`randint`/`choice`, PCAP montado, PDUs textuais); estava falhando antes do saneamento. Proveniência científica: **sem dados elegíveis** |
+| **F2-G1** | Cobertura de Testes | Suíte de testes unitários e de integração. | **111 passam, 2 pulados** (2026-11-10, Python 3.10, Windows); cobertura de `src/` medida: **79 %** (o limite de 85 % nunca foi atingido; CI ajustado para 75 %) |
 | **F2-G2** | Determinismo Estrito | Inicializações determinísticas e sementes fixadas para reprodutibilidade. | **UNIT_VALIDATED** |
 | **F2-G3** | Integridade de Codificação | Ausência total de caracteres UTF-8 BOM (`U+FEFF`) no código-fonte. | **IMPLEMENTED** |
 | **F2-G4** | Constantes RMR / E2AP | RMR Message Types alinhados com E2AP v03.01 (12040 REQ, 12041 ACK, 12042 FAIL). | **IMPLEMENTED** |
 | **F2-G5** | Dimensões MARL Canônicas | Dimensões unificadas do espaço MARL (6 agentes, 60 observações, 7 ações). | **IMPLEMENTED** |
 | **F2-G6** | RMR Resiliente e Dry-Run | Respeito estrito a `control.dry_run`, tratamento APER raw e sem leak em dry-run. | **LOCALLY_INTEGRATED** |
 | **F2-G7** | Proveniência E2AP/E2SM | Rastreabilidade dos provedores de protocolo com validação de manifesto. | **LOCALLY_INTEGRATED** |
-| **F2-G8** | Tipagem Estrita e Pyright | Código limpo sem exceções de importação ou erros de tipagem (`run_pyright_check.py`). | **UNIT_VALIDATED (0 blocking errors)** |
+| **F2-G8** | Tipagem Estrita e Pyright | Código limpo sem exceções de importação ou erros de tipagem. | **NÃO VERIFICADO** (`run_pyright_check.py` nunca existiu; pyright roda no CI só como informativo) |
 | **F2-G9** | Conformidade de API MARL | Assinaturas de métodos unificadas em `MAPPOAgent` e `MAPPOCoordinator`. | **IMPLEMENTED** |
-| **F2-G10** | Sincronização F1-F2 | Validação automatizada e sincronia bidirecional entre H-RDL F1 e CA-RDL F2. | **LOCALLY_INTEGRATED** |
-| **F2-G11** | Convergência MARL | Manifesto de treinamento e salvamento de checkpoints (`actor.pt`, `training_manifest.json`). | **UNIT/ALGORITHMIC PIPELINE PASS**<br/>*RAN Environmental Convergence: PENDING* |
-| **F2-G12** | Blueprint OpenRAN-BR v3 | Compatibilidade com o perfil OpenRAN@Brasil Blueprint v3. | **PROFILE READY**<br/>*External Validation: PENDING* |
+| **F2-G10** | Sincronização F1-F2 | Validação automatizada e sincronia bidirecional entre H-RDL F1 e CA-RDL F2. | **NÃO IMPLEMENTADO** (o código da F2 é anterior às correções da F1; o script de verificação nunca existiu) |
+| **F2-G11** | Convergência MARL | Manifesto de treinamento e salvamento de checkpoints (`actor.pt`, `training_manifest.json`). | **Só teste de fumaça** (ruído aleatório, `publication_eligible: false`, sem PyTorch); a inferência não carrega checkpoint |
+| **F2-G12** | Blueprint OpenRAN-BR v3 | Compatibilidade com o perfil OpenRAN@Brasil Blueprint v3. | **NÃO VALIDADO** (manifestos para k3d local; nada executado no testbed) |

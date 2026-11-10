@@ -1,4 +1,6 @@
 # Volume 08: Estado da Arte (2020–2026) sobre Governança, Detecção e Mitigação de Conflitos Multi-xApp em O-RAN
+
+> **Aviso de saneamento (2026-11-10).** Este documento foi escrito quando o repositório guardava execuções sintéticas. Valores de desempenho, latência, energia ou SLA citados aqui **não têm evidência elegível**, e links para `docs/04`, `07`, `11`–`13`, `docs/auditoria/`, `docs/figures/fig_*`, `reports/figures/` e `experiments/results/` apontam para arquivos removidos (preservados no histórico do git). Ver [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md).
 ## Evidências para as Hipóteses do XApp-RDL-F1 (H-RDL), Lacunas Científicas e Comparação Sistemática
 
 > **Portal da Documentação Oficial (xApp-RDL):**  

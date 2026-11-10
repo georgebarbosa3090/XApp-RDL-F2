@@ -1,5 +1,7 @@
 # Mapeamento e Matriz Metodológica da Campanha de Cenários (S0 a S15)
 
+> **Aviso (2026-11-10).** Estes arquivos `.cc` são as versões anteriores às correções da Fase 1 (achados 14, 15, 16 e 39 do `XApp-RDL-F1/docs/07_certificacao_e_achados.md`): S0–S8 não aplicavam as ações na RAN, S8 imprimia um handshake E2 fixo e as sementes eram anuladas por `SetSeed`. O NORI não compila sobre ns-3.48. Não há execução registrada neste repositório, e S9–S15 nunca foram executados. Para simulação com evidência, use a pilha da Fase 1.
+
 Este diretório contém a suíte de simulações físicas **ns-3 + 5G-LENA + NORI + E2 real** para validação experimental do middleware **xApp RDL (H-RDL)**.
 
 ---

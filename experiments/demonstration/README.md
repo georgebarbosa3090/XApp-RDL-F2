@@ -1,5 +1,7 @@
 # Suíte de Demonstração Científica: H-RDL & CA-RDL em Tempo Real (5G-Adv / 6G O-RAN)
 
+> **Demonstração, não evidência.** O motor desta pasta executa um roteiro com estado inicial e propostas definidos em `demo_scenarios.py` sobre um modelo de RAN em Python; nada aqui foi medido em RAN simulada (ns-3/NORI) ou real. Ver [../../docs/SANEAMENTO_20261110.md](../../docs/SANEAMENTO_20261110.md).
+
 Este diretório contém a suíte completa de **demonstração interativa, terminal inspector e telemetria em tempo real** para avaliação dos frameworks **H-RDL (Heuristic Resource and Decision Layer — Heurística baseada em Modelo Matemático Determinístico)** e **CA-RDL (Cognitive Arbitration RDL)** no ecossistema O-RAN ALLIANCE.
 
 A arquitetura e os passos de execução seguem o padrão metodológico internacional de plataformas de teste e validação aberta como **RIC-TaaP** (Orange / O-RAN SC), **Colosseum** e **OpenRAN Gym** (WiNES Lab / Northeastern University).
@@ -121,9 +123,8 @@ Enquanto o inspetor roda no terminal, os dados de rádio e as decisões cognitiv
 ### InfluxDB v2.7 ([http://localhost:8086](http://localhost:8086))
 
 * **Dashboard Nativo**: [http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000](http://localhost:8086/orgs/445e29c60c125b09/dashboards/115fc5ee1de1d000)
-* **Username**: `admin` | **Password**: `oran_admin_password_2026`
+* **Credenciais**: valores padrão de desenvolvimento local definidos em `deployments/telemetry/docker-compose.telemetry.yml` (troque-os antes de expor o serviço)
 * **Organization**: `oran-alliance` | **Bucket**: `oran_telemetry`
-* **API / Admin Token**: `oran_rdl_token_secret_key_2026_super_secure`
 
 #### Script de Provisionamento Automático do InfluxDB:
 Se precisar reconstruir o painel nativo do InfluxDB do zero:
