@@ -55,6 +55,8 @@ Tudo o que foi removido continua no histórico do git (commit anterior: `95a1382
 
 - `pytest`: 111 passam, 2 pulados (antes: 111 passam, 2 pulados e 1 erro de coleta). Python 3.10, Windows.
 - `python scripts/check_no_synthetic_results.py`: sai com 0 (antes saía com 1).
+- CI na `main`: a primeira execução depois do saneamento (`1ab2a1e`) ficou presa no passo de testes. Com a biblioteca RMR instalada, `RDLxApp` usa o `Xapp` real do `ricxappframe`, cuja thread RMR não é daemon; os testes criam a xApp sem `stop()` e o pytest não termina. Correção em `6390581`: `tests/conftest.py` substitui o `Xapp` por um transporte em processo equivalente ao stub (`RDL_TEST_REAL_RMR=true` mantém o real), e o CI ganhou `pytest-timeout` (120 s) e limite de 45 min. Execução 42877786595: todos os passos com sucesso, inclusive testes, auditor e build da imagem Docker.
+- Instabilidade conhecida: `tests/test_latency_components.py::test_full_runtime_queue_and_decision_latency_breakdown` dorme 2 ms e exige ≥ 1,9 ms medidos; no Windows falhou 2 vezes em cerca de 25 execuções (o `sleep` volta antes). Não ocorreu no CI (Linux).
 
 ## 4. Pendências (não feitas neste saneamento)
 
