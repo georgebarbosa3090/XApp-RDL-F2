@@ -13,3 +13,8 @@ Makefile text eol=lf
 *.png binary
 *.jpg binary
 *.pdf binary
+
+# Checkpoints e artefatos binários do treino: nunca converter fins de linha
+*.pt binary
+*.npy binary
+experiments/training/** -text
