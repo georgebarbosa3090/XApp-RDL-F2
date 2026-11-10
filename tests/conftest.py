@@ -11,6 +11,53 @@ if ROOT_DIR not in sys.path:
 from src.conflict_types import XAppAction, ConflictEvent, ConflictType, ConflictSeverity
 from src.infrastructure.memory_module import MemoryModule
 
+class _InProcessXapp:
+    """Transporte em processo para testes unitários (mesmo comportamento do stub de src/rdl_xapp.py)."""
+
+    def __init__(self, entrypoint=None, rmr_port: int = 4560, rmr_wait_for_ready: bool = False, use_fake_sdl: bool = False, **kwargs):
+        self.entrypoint = entrypoint
+        self.rmr_port = rmr_port
+        self.rmr_wait_for_ready = rmr_wait_for_ready
+        self.use_fake_sdl = False
+        self._callbacks = {}
+        self.transport_name = "RMR_E2_OPERATIONAL"
+        self.is_mock_transport = True
+
+    def register_callback(self, handler, mtype: int):
+        self._callbacks[mtype] = handler
+
+    def run(self):
+        if self.entrypoint:
+            self.entrypoint(self)
+
+    def stop(self):
+        pass
+
+    def rmr_send(self, payload: bytes, mtype: int) -> bool:
+        return True
+
+    def rmr_free(self, sbuf):
+        pass
+
+
+@pytest.fixture(autouse=True)
+def _in_process_rmr_transport(monkeypatch):
+    """Evita o Xapp real do ricxappframe nos testes unitários.
+
+    Com a biblioteca RMR instalada (CI), o Xapp real inicia uma thread RMR que não é
+    daemon; como os testes criam RDLxApp sem chamar stop(), o pytest não termina.
+    Sem a biblioteca (Windows, máquinas de desenvolvimento), src/rdl_xapp.py já usa
+    um stub equivalente. Defina RDL_TEST_REAL_RMR=true para usar o transporte real.
+    """
+    if os.environ.get("RDL_TEST_REAL_RMR", "false").lower() == "true":
+        yield
+        return
+    import src.rdl_xapp as rdl_xapp_module
+    if rdl_xapp_module.HAS_RICXAPPFRAME:
+        monkeypatch.setattr(rdl_xapp_module, "Xapp", _InProcessXapp)
+    yield
+
+
 @pytest.fixture
 def test_memory():
     return MemoryModule()

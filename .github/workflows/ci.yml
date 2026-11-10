@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     
     steps:
     - name: Checkout repository
@@ -33,7 +34,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip setuptools wheel
         pip install -r requirements.txt
-        pip install pytest pytest-cov pytest-env pyyaml pyright
+        pip install pytest pytest-cov pytest-env pytest-timeout pyyaml pyright
         
     - name: Syntax & Smoke Import Check
       run: |
@@ -55,7 +56,7 @@ jobs:
         USE_FAKE_SDL: "True"
         LD_LIBRARY_PATH: "/usr/local/lib:/usr/lib"
       run: |
-        pytest tests/ --cov=src --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=75 -v
+        pytest tests/ --cov=src --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=75 --timeout=120 -v
         
   docker-build:
     needs: test
