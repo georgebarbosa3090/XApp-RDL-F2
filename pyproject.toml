@@ -4,24 +4,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xapp-rdl-f2"
-version = "2.0.0"
-description = "O-RAN Near-RT RIC Conflict Mitigation xApp — Phase 2: Context-Aware MARL (CA-RDL)"
-authors = [{ name = "George Barbosa", email = "georgebarbosa3090@gmail.com" }]
+version = "2.1.0"
+description = "CA-RDL (Fase 2): arbitragem aprendida (MAPPO com restrição) sobre o núcleo H-RDL da Fase 1"
+authors = [{ name = "George Barbosa" }]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "pydantic>=2.0.0",
-    "structlog>=23.1.0",
-    "prometheus-client>=0.17.0",
-    "pycrate>=0.5.0",
-    "requests>=2.31.0",
+    # Núcleo H-RDL (percepção, TVS/EEVS, Safety Guard, grafo de conhecimento, A1, E2):
+    # fonte única na Fase 1, fixada por commit. Para desenvolvimento local:
+    #   uv pip install -e ../XApp-RDL-F1
+    "xapp-rdl-f1 @ git+https://github.com/georgebarbosa3090/XApp-RDL-F1@main",
     "numpy>=1.24.0",
-    "scipy>=1.10.0"
+    "torch>=2.0.0",
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=2.0.0"]
+test = ["pytest>=8.0.0", "pytest-cov>=4.1.0"]
 
-[project.scripts]
-xapp-rdl = "src.main:main"
+[tool.setuptools]
+packages = ["cardl", "cardl.marl"]
 
+[tool.setuptools.package-data]
+cardl = ["calibration/*.json"]

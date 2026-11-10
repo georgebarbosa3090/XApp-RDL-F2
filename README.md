@@ -1,91 +1,54 @@
-# xApp RDL — Resource and Decision Layer (Fase 2: CA-RDL)
-
-Extensão da camada de governança da Fase 1 para o Near-RT RIC (O-RAN): além da arbitragem determinística (H-RDL), um nível de decisão aprendida (MAPPO com restrições e *action masking*) para conflitos de maior complexidade, com a H-RDL como reserva determinística e o Safety Guard da Fase 1 como barreira final.
+# xApp RDL — Fase 2: CA-RDL (arbitragem aprendida sobre a H-RDL)
 
 Projeto de mestrado — PPGCOMP / UFPA. Autor: George Alexandro Ferreira Barbosa. Orientador: Prof. Dr. André Riker.
 
 | Fase | Abordagem | Repositório |
 | :-- | :-- | :-- |
-| 1 — H-RDL | Heurísticas determinísticas (TVS/EEVS) + Safety Guard; E2 real com NORI | [XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
-| 2 — CA-RDL | Contexto + Safe-MARL (MAPPO com restrições) | este repositório |
-| 3 | RDL autônoma/federada (6G) | planejamento |
+| 1 — H-RDL | Núcleo: percepção (inclusive conflitos entre células), TVS/EEVS, Safety Guard, grafo de conhecimento, janela adaptativa, A1, E2 real com NORI | [XApp-RDL-F1](https://github.com/georgebarbosa3090/XApp-RDL-F1) |
+| 2 — CA-RDL | MAPPO com restrição (CMDP) e mascaramento, com a H-RDL como reserva determinística | este repositório |
 
----
+## Arquitetura
 
-## Estado atual (2026-11-10)
-
-**Este repositório está em reconstrução e não tem resultados experimentais.** Em 2026-11-10 saíram daqui as execuções, tabelas, figuras e relatórios que eram sintéticos ou montados por script; o registro completo está em [`docs/SANEAMENTO_20261110.md`](docs/SANEAMENTO_20261110.md). Para resultados com evidência (E2 real, closed loop, campanhas pareadas), veja a Fase 1.
-
-| Item | Situação |
-| :-- | :-- |
-| Decisão em níveis (`src/agents/reasoning_agent.py`): heurística (nível 1), utilidade TVS/EEVS (nível 2A), MAPPO (nível 2B) por limiares de complexidade `tau1`/`tau2` | implementado; testes unitários |
-| MAPPO (`src/agents/marl/mappo_agent.py`) | arquitetura implementada; **a inferência usa rede não treinada** (nenhum checkpoint é carregado) e força confiança ≥ 0,80 |
-| Treino (`src/agents/marl/mappo_trainer.py`, `experiments/training/`) | só teste de fumaça com observações aleatórias; manifestos `publication_eligible: false` |
-| Ambiente de treino `NoriRanEnvironment` | tabela fixa de vazão/latência por faixa de cota; **não conversa com o NORI** |
-| Grafo de conhecimento / GNN (GraphSAGE) / janela adaptativa | **não implementados** |
-| Classificador de intenção | *stub* treinado com dados aleatórios |
-| Reserva determinística para a H-RDL em ≤ 200 ms | não verificada |
-| Interoperabilidade E2 | código anterior às correções da Fase 1 (ex.: `rmr_send` sem MEID; cota de PRB fora do E2SM-RC Style 2 / Action 6); **nenhuma execução E2 registrada aqui** |
-| Cenários ns-3 (`simulations/ns3/`) | versões anteriores às correções da Fase 1; S9–S15 nunca executados |
-| Afirmações C1–C6 ([`specs/claims.yaml`](specs/claims.yaml)) | todas `NOT_VERIFIED` |
-| Testes | 111 passam, 2 pulados; cobertura de `src/` 79 % |
-| Demonstração (`experiments/demonstration/`) | roteiro sobre um modelo de RAN em Python; **não é evidência** |
-
-Próximos passos, em ordem: (1) passar a importar o núcleo atual da Fase 1 em vez desta cópia antiga; (2) ambiente de treino ligado ao NORI pela xApp da Fase 1; (3) treino com proveniência e checkpoint carregado na inferência; (4) gate da reserva determinística; (5) comparação H-RDL × CA-RDL pré-registrada. Detalhes em [`docs/SANEAMENTO_20261110.md`](docs/SANEAMENTO_20261110.md), seção 4.
-
----
-
-## Como a CA-RDL decide (desenho)
+A Fase 2 **não copia** o núcleo: depende do pacote da Fase 1 (`xapp-rdl-f1`, fixado por commit no `pyproject.toml`) e só acrescenta o motor de decisão aprendido.
 
 ```mermaid
 flowchart LR
-    X["Propostas das xApps"] --> P["Percepção<br/>(conflitos por alvo)"]
-    K["E2SM-KPM"] --> P
-    P --> C{"Complexidade C(c, s)"}
-    C -->|"≤ tau1, conflito direto"| H["Nível 1: heurística H-RDL"]
-    C -->|"≤ tau2"| U["Nível 2A: utilidade TVS/EEVS"]
-    C -->|"> tau2"| M["Nível 2B: MAPPO<br/>(action masking)"]
-    M -.->|"falha ou estouro da janela"| H
-    H --> R["Refinement / Safety Guard<br/>(barreira da Fase 1)"]
-    U --> R
-    M --> R
-    R --> E["RIC Control E2SM-RC"]
+    P["Percepção (F1)<br/>conflitos diretos, indiretos, entre células"] --> R{"CARDLReasoning (F2)"}
+    R -->|"PRB_QUOTA, modelo válido,<br/>confiança e orçamento ok"| M["MAPPO<br/>(checkpoint com sha256)"]
+    R -->|"demais casos"| H["TVS/EEVS (F1)"]
+    M --> S["Refinement / Safety Guard (F1)"]
+    H --> S
+    S --> E["RIC Control E2SM-RC"]
+    A["A1 20002 (SMO)"] -.->|"liga/desliga o MARL,<br/>confiança mínima"| R
 ```
 
-O contrato com a Fase 1 está em [`docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md`](docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md): a Fase 2 só acrescenta campos opcionais aos tipos de `src/conflict_types.py`, e toda ação passa pelo Refinement antes do despacho.
+| Módulo | Conteúdo |
+| :-- | :-- |
+| `cardl/engine.py` | `CARDLReasoning` (subclasse do `Reasoning` da F1) e `build_cardl_xapp()` (a `RDLxApp` da F1 com o motor CA-RDL e a política A1 20002) |
+| `cardl/marl/calibration.py` | curva teto de PRB → vazão medida no NORI (`cardl/calibration/slice_cap_curve_v5.json`, sha256 verificado) |
+| `cardl/marl/env.py` | ambiente CMDP multiagente calibrado: 2 fatias, propostas de RANSlicer, EnergySaver e Rogue, Safety Guard da F1 como máscara |
+| `cardl/marl/mappo.py` | MAPPO com crítico centralizado, mascaramento e multiplicador de Lagrange |
+| `cardl/marl/baselines.py` | B0–B2 e B3 (o `Reasoning` real da F1) no mesmo ambiente |
+| `cardl/marl/train.py` | treino com proveniência (commit, versão da F1, sha256 da curva e do checkpoint) e avaliação contra B0–B3 |
 
----
+## Estado (2026-11-10)
 
-## Início rápido
+- **Treino:** `experiments/training/mappo_seed{101,102,103}`, 2000 episódios cada, no ambiente calibrado (`publication_eligible: false`). Na avaliação em 20 sementes separadas, a H-RDL (B3) atende o SLA crítico em todas as janelas. O MAPPO economiza PRBs ativos em uma semente, sacrificando a fatia eMBB, e é instável em outra; **não supera a H-RDL** neste ambiente. Detalhes em [`docs/15_treino_mappo_calibrado.md`](docs/15_treino_mappo_calibrado.md).
+- **Validação com E2 real (NORI):** a pré-registrar; nenhuma execução ainda.
+- **Afirmações C1–C6:** `NOT_VERIFIED` ([`specs/claims.yaml`](specs/claims.yaml)).
+- **Histórico:** em 2026-11-10 saíram deste repositório os dados sintéticos ([`docs/SANEAMENTO_20261110.md`](docs/SANEAMENTO_20261110.md)) e a cópia antiga do núcleo, substituída pela dependência da Fase 1.
 
-Pré-requisitos: Python 3.10+.
+## Uso
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt
-USE_FAKE_SDL=True pytest -q                     # testes
-python scripts/check_no_synthetic_results.py    # auditor de dados sintéticos
-python -m src.main                              # xApp em modo local, sem RIC
+pip install -e ../XApp-RDL-F1          # núcleo da Fase 1 (ou o commit fixado no pyproject)
+pip install -e ".[test]"
+pytest -q
+python -m cardl.marl.train --seeds 101 102 103 --episodes 2000 --out experiments/training
 ```
 
----
-
-## Estrutura do repositório
-
-| Caminho | Conteúdo |
-| :-- | :-- |
-| `src/` | xApp: `rdl_xapp.py`, `agents/` (percepção, raciocínio, refinamento, `marl/`), `e2/`, `infrastructure/`, `coordination/`, `observability/`, `simulation/` (modelo de RAN em Python) |
-| `tests/` | testes unitários, de codec, integração e interoperabilidade local |
-| `simulations/ns3/` | cenários ns-3 (versões antigas; ver aviso no README da pasta) |
-| `experiments/training/` | manifestos e pesos dos testes de fumaça do MAPPO |
-| `experiments/demonstration/` | demonstração interativa (não é evidência) |
-| `reference-xapps/` | xApps que geram propostas (xSlice, Energy Saving, Traffic Steering, Beamformer, ISAC, *rogue*) |
-| `deploy/`, `deployments/` | Helm, Kubernetes, telemetria (InfluxDB/Grafana) |
-| `reproducibility/` | política de proveniência e versões |
-| `specs/claims.yaml` | afirmações científicas e seu estado |
-| `docs/` | documentação ([índice](docs/README.md)) |
-
----
+Na xApp: `CARDL_CHECKPOINT` e `CARDL_CHECKPOINT_SHA256` apontam o modelo. Sem eles, ou com a política A1 20002 desligando o MARL, a decisão é a da H-RDL.
 
 ## Licença
 
