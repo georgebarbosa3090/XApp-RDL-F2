@@ -39,6 +39,7 @@ class DecisionRecord:
     confidence: Optional[float] = None
     latency_ms: Optional[float] = None
     probabilities: List[float] = field(default_factory=list)
+    context: Dict[str, float] = field(default_factory=dict)   # grafo de conhecimento da Fase 1
 
 
 class CARDLReasoning(Reasoning):
@@ -54,6 +55,8 @@ class CARDLReasoning(Reasoning):
         self.policy = None
         self.policy_sha256: Optional[str] = None
         self.last_decision: Optional[DecisionRecord] = None
+        # Grafo de conhecimento da Fase 1 (o mesmo da RDLxApp); fornece o contexto de cada decisão
+        self.knowledge_graph = None
         if checkpoint_path:
             self.load_policy(checkpoint_path, expected_sha256)
 
@@ -65,6 +68,9 @@ class CARDLReasoning(Reasoning):
         from cardl.marl.mappo import MAPPO
         self.policy = MAPPO.load(path)
         self.policy_sha256 = digest
+        # Aquecimento: a primeira inferência do PyTorch é bem mais lenta e estouraria o orçamento
+        mask = np.ones(ACTION_DIM, dtype=np.float32)
+        self.policy.probabilities(np.zeros(OBS_DIM, dtype=np.float32), mask)
 
     def apply_model_policy(self, policy: Dict[str, Any]) -> None:
         """Política A1 20002 (CARDL_Model_Policy): liga/desliga o MARL e ajusta a confiança mínima."""
@@ -73,7 +79,22 @@ class CARDLReasoning(Reasoning):
             self.min_confidence = float(policy["min_confidence"])
 
     # ---------------------------------------------------------------- decisão
+    def _context(self, conflict: ConflictEvent) -> Dict[str, float]:
+        if self.knowledge_graph is None or not conflict.involved_xapps:
+            return {}
+        first = conflict.involved_xapps[0]
+        try:
+            return self.knowledge_graph.context_features(first.node_id, first.parameter)
+        except Exception:
+            return {}
+
     def resolve(self, conflict: ConflictEvent) -> ResolutionAction:
+        resolution = self._resolve(conflict)
+        if self.last_decision is not None:
+            self.last_decision.context = self._context(conflict)
+        return resolution
+
+    def _resolve(self, conflict: ConflictEvent) -> ResolutionAction:
         reason = self._marl_ineligible(conflict)
         if reason is None:
             t0 = time.perf_counter()
@@ -168,15 +189,9 @@ def build_cardl_xapp():
         min_confidence=float(os.getenv("CARDL_MIN_CONFIDENCE", "0.5")),
         time_budget_ms=float(os.getenv("CARDL_TIME_BUDGET_MS", "20")),
     )
+    reasoning.knowledge_graph = app.knowledge_graph
     app.reasoning = reasoning
-    app.a1_policies.policy_types["20002"] = {
-        "name": "CARDL_Model_Policy",
-        "description": "Liga/desliga a arbitragem MAPPO e ajusta a confiança mínima (reserva: H-RDL)",
-        "schema": {"type": "object", "properties": {
-            "marl_enabled": {"type": "boolean"},
-            "min_confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
-        }},
-    }
+    # O tipo A1 20002 (CARDL_Model_Policy) é definido na Fase 1, fonte única dos esquemas
     previous = app._apply_a1_policy
 
     def apply(policy: Dict[str, Any]) -> None:

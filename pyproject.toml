@@ -13,7 +13,7 @@ dependencies = [
     # Núcleo H-RDL (percepção, TVS/EEVS, Safety Guard, grafo de conhecimento, A1, E2):
     # fonte única na Fase 1, fixada por commit. Para desenvolvimento local:
     #   uv pip install -e ../XApp-RDL-F1
-    "xapp-rdl-f1 @ git+https://github.com/georgebarbosa3090/XApp-RDL-F1@main",
+    "xapp-rdl-f1 @ git+https://github.com/georgebarbosa3090/XApp-RDL-F1@a0cb21eb",
     "numpy>=1.24.0",
     "torch>=2.0.0",
 ]

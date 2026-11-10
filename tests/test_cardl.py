@@ -91,7 +91,8 @@ def test_checkpoint_sha256_is_enforced(checkpoint):
 
 def test_mappo_decides_prb_conflicts_with_confidence_floor_and_fallback(checkpoint):
     path, digest = checkpoint
-    engine = CARDLReasoning(MemoryModule(), checkpoint_path=path, expected_sha256=digest, min_confidence=0.0)
+    engine = CARDLReasoning(MemoryModule(), checkpoint_path=path, expected_sha256=digest, min_confidence=0.0,
+                            time_budget_ms=10_000)   # este teste não é sobre tempo (ver test_time_budget_forces_fallback)
     resolution = engine.resolve(_conflict())
     if engine.last_decision.source == "MAPPO":
         assert resolution.strategy_used == ResolutionStrategy.MARL_AGENT
@@ -133,5 +134,8 @@ def test_cardl_xapp_registers_model_policy_and_keeps_phase1_policies(checkpoint,
         assert app.reasoning.marl_enabled is False and app.reasoning.min_confidence == 0.8
         assert app.a1_policies.put_policy("20001", "g", {"energy_weight": 0.4})[0]
         assert app.reasoning.w_energy == 0.4      # política da Fase 1 continua aplicada
+        assert app.reasoning.knowledge_graph is app.knowledge_graph
+        app.reasoning.resolve(_conflict())
+        assert set(app.reasoning.last_decision.context) >= {"neighbor_count", "recent_conflicts"}
     finally:
         app.stop()
