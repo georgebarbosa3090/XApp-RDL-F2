@@ -35,3 +35,29 @@ Arquivos: `experiments/training/mappo_seed{101,102,103}/` (`evaluation.json`, `c
 4. **O treino não é determinístico na CPU.** A mesma semente produziu números diferentes numa rodada anterior, com o mesmo código e a árvore suja; essa rodada foi descartada. Para relato, fixar threads e algoritmos determinísticos do PyTorch.
 
 **Estas medidas não são evidência de RAN** (`publication_eligible: false`): o ambiente é um substituto calibrado. A próxima etapa é uma validação pré-registrada na bancada NORI, com E2 real, comparando H-RDL e CA-RDL (semente selecionada por critério fixado antes) no S8.
+
+## 4. Seleção do modelo, determinismo e reserva (2026-11-11)
+
+Resposta aos itens 3 e 4 da seção 3 e ao gate de reserva do relatório de adequação da Fase 1.
+
+**Critério de seleção** (`cardl/marl/select.py`), fixado no código antes da execução:
+
+1. Validação nas sementes 8001–8010, disjuntas das de treino e das de avaliação final (9001–9020).
+2. É elegível o checkpoint com violação do SLA crítico até o `cost_limit` do CMDP (5 %).
+3. Entre os elegíveis, vence a maior recompensa; sem elegível, a CA-RDL opera só com a H-RDL.
+
+**Resultado** (`experiments/training/selection.json`):
+
+| Semente | Situação |
+| :-: | :-- |
+| 101 | **selecionada** |
+| 102 | elegível |
+| 103 | **excluída**: violação acima do limite |
+
+O motor carrega o checkpoint escolhido, com o sha256 conferido, por `CARDL_SELECTION=experiments/training/selection.json`.
+
+**Determinismo:** `train_seed` fixa as sementes de `random`, NumPy e PyTorch, um thread e algoritmos determinísticos (`set_determinism`). Os checkpoints atuais são de antes dessa mudança; um novo treino é necessário para conferir a reprodução bit a bit.
+
+**Gate de reserva:** `tests/test_cardl.py::test_reserve_gate_latency_within_budget` exige decisão em toda chamada. A decisão do MAPPO só vale dentro do orçamento (`CARDL_TIME_BUDGET_MS`, 20 ms); fora dele, ou sem checkpoint, sha256 divergente, baixa confiança ou conflito fora do escopo, vale a H-RDL.
+
+**Continua pendente:** a validação pré-registrada CA-RDL × H-RDL na bancada NORI com E2 real, com a semente escolhida por este critério.

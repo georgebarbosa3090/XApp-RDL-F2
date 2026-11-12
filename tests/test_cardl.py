@@ -139,3 +139,51 @@ def test_cardl_xapp_registers_model_policy_and_keeps_phase1_policies(checkpoint,
         assert set(app.reasoning.last_decision.context) >= {"neighbor_count", "recent_conflicts"}
     finally:
         app.stop()
+
+
+# --- seleção do modelo e gate de reserva (docs/15 §4) -----------------------------------
+
+def test_model_selection_rule_excludes_unsafe_seed():
+    from cardl.marl.select import select
+    repo = Path(__file__).resolve().parents[1]
+    result = select(repo / "experiments" / "training", [101, 103, 999])
+    by_seed = {c["seed"]: c for c in result["candidates"]}
+    assert by_seed[999]["eligible"] is False and by_seed[999]["reason"] == "checkpoint ausente"
+    assert by_seed[103]["eligible"] is False                       # semente que não converge
+    assert by_seed[103]["validation"]["critical_sla_violation_rate"] > result["cost_limit"]
+    assert result["selected"]["seed"] == 101 and len(result["selected"]["sha256"]) == 64
+    none = select(repo / "experiments" / "training", [103])
+    assert none["selected"] is None                                # sem elegível: só H-RDL
+
+
+def test_engine_uses_selection_file(tmp_path, monkeypatch):
+    import json
+    from cardl.engine import selected_checkpoint
+    sel = tmp_path / "experiments" / "training" / "selection.json"
+    sel.parent.mkdir(parents=True)
+    sel.write_text(json.dumps({"selected": None}), encoding="utf-8")
+    monkeypatch.setenv("CARDL_SELECTION", str(sel))
+    assert selected_checkpoint() == (None, None)
+    sel.write_text(json.dumps({"selected": {"checkpoint": "experiments/training/mappo_seed101/actor_critic.pt",
+                                            "sha256": "ab" * 32}}), encoding="utf-8")
+    path, sha = selected_checkpoint()
+    assert Path(path).parts[-2:] == ("mappo_seed101", "actor_critic.pt")
+    assert sha == "ab" * 32
+    monkeypatch.delenv("CARDL_SELECTION")
+    monkeypatch.setenv("CARDL_CHECKPOINT", "x.pt")
+    assert selected_checkpoint() == ("x.pt", None)
+
+
+def test_reserve_gate_latency_within_budget(checkpoint):
+    """Gate de reserva: com o orçamento padrão (20 ms), as decisões cabem nele ou recaem na H-RDL; nunca falta decisão."""
+    path, digest = checkpoint
+    engine = CARDLReasoning(MemoryModule(), checkpoint_path=path, expected_sha256=digest, min_confidence=0.0)
+    sources = []
+    for _ in range(50):
+        resolution = engine.resolve(_conflict())
+        assert resolution is not None and resolution.winning_actions          # sempre há decisão
+        rec = engine.last_decision
+        sources.append(rec.source)
+        if rec.source == "MAPPO":
+            assert rec.latency_ms is not None and rec.latency_ms <= engine.time_budget_ms
+    assert set(sources) <= {"MAPPO", "H_RDL"}

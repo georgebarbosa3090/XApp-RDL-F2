@@ -1,0 +1,73 @@
+{
+  "schema": "xapp-rdl-f2/model-selection/v1",
+  "rule": "validação nas sementes 8001–8010; elegível se violação do SLA crítico ≤ cost_limit; maior recompensa entre os elegíveis; sem elegível, só H-RDL",
+  "cost_limit": 0.05,
+  "validation_seeds": [
+    8001,
+    8002,
+    8003,
+    8004,
+    8005,
+    8006,
+    8007,
+    8008,
+    8009,
+    8010
+  ],
+  "candidates": [
+    {
+      "seed": 101,
+      "eligible": true,
+      "reason": "violação ≤ limite do CMDP",
+      "checkpoint": "experiments/training/mappo_seed101/actor_critic.pt",
+      "sha256": "77f883013af046abf49943c9884c9f302e100c490d7e3a07e3c1e7774d0e961c",
+      "validation": {
+        "episode_reward_mean": 68.14602433951265,
+        "episode_reward_sd": 0.9921424593496465,
+        "critical_sla_violation_rate": 0.004166666666666667,
+        "active_prb_ratio_mean": 0.34137500000000004,
+        "critical_satisfaction_mean": 0.9992927060349894,
+        "embb_satisfaction_mean": 0.7926244973499746,
+        "cap_changes_per_step": 0.7541666666666667
+      }
+    },
+    {
+      "seed": 102,
+      "eligible": true,
+      "reason": "violação ≤ limite do CMDP",
+      "checkpoint": "experiments/training/mappo_seed102/actor_critic.pt",
+      "sha256": "58f6bffc534668e2c775f6d961deb2996d6b1a1e35277600b415d2c7f5e199c3",
+      "validation": {
+        "episode_reward_mean": 66.37110122567977,
+        "episode_reward_sd": 1.4638027275071737,
+        "critical_sla_violation_rate": 0.016666666666666666,
+        "active_prb_ratio_mean": 0.31357291666666665,
+        "critical_satisfaction_mean": 0.99716938070065,
+        "embb_satisfaction_mean": 0.69313487103582,
+        "cap_changes_per_step": 0.7979166666666667
+      }
+    },
+    {
+      "seed": 103,
+      "eligible": false,
+      "reason": "violação acima do limite do CMDP",
+      "checkpoint": "experiments/training/mappo_seed103/actor_critic.pt",
+      "sha256": "9e8c1b3c88218ca2627c34ef691379293374912cf877982e61c56c99c8efaadf",
+      "validation": {
+        "episode_reward_mean": 62.404612848212174,
+        "episode_reward_sd": 1.167232466432599,
+        "critical_sla_violation_rate": 0.346875,
+        "active_prb_ratio_mean": 0.6581041666666666,
+        "critical_satisfaction_mean": 0.9116901865802132,
+        "embb_satisfaction_mean": 1.0,
+        "cap_changes_per_step": 0.41458333333333336
+      }
+    }
+  ],
+  "selected": {
+    "seed": 101,
+    "checkpoint": "experiments/training/mappo_seed101/actor_critic.pt",
+    "sha256": "77f883013af046abf49943c9884c9f302e100c490d7e3a07e3c1e7774d0e961c"
+  },
+  "publication_eligible": false
+}

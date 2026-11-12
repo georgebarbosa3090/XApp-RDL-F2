@@ -177,15 +177,34 @@ class CARDLReasoning(Reasoning):
         ), record
 
 
+def selected_checkpoint():
+    """Checkpoint e sha256: de ``CARDL_SELECTION`` (seleção por critério, cardl/marl/select.py) ou de
+    ``CARDL_CHECKPOINT``. Seleção sem modelo elegível: nenhum checkpoint (só H-RDL)."""
+    selection = os.getenv("CARDL_SELECTION")
+    if selection:
+        import json
+        from pathlib import Path
+        data = json.loads(Path(selection).read_text(encoding="utf-8"))
+        chosen = data.get("selected")
+        if not chosen:
+            return None, None
+        path = Path(chosen["checkpoint"])
+        if not path.is_absolute():
+            path = Path(selection).resolve().parents[2] / path
+        return str(path), chosen["sha256"]
+    return os.getenv("CARDL_CHECKPOINT") or None, os.getenv("CARDL_CHECKPOINT_SHA256") or None
+
+
 def build_cardl_xapp():
     """RDLxApp da Fase 1 com o raciocínio CA-RDL e a política A1 20002."""
     from src.rdl_xapp import RDLxApp
 
     app = RDLxApp()
+    checkpoint, expected = selected_checkpoint()
     reasoning = CARDLReasoning(
         app.memory, config={}, inter_cell_rules=app.inter_cell_rules,
-        checkpoint_path=os.getenv("CARDL_CHECKPOINT") or None,
-        expected_sha256=os.getenv("CARDL_CHECKPOINT_SHA256") or None,
+        checkpoint_path=checkpoint,
+        expected_sha256=expected,
         min_confidence=float(os.getenv("CARDL_MIN_CONFIDENCE", "0.5")),
         time_budget_ms=float(os.getenv("CARDL_TIME_BUDGET_MS", "20")),
     )

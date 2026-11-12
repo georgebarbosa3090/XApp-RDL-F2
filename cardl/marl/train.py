@@ -116,7 +116,19 @@ def mappo_policy(agent: MAPPO) -> Callable[[CalibratedSliceEnv], List[int]]:
     return act
 
 
+def set_determinism(seed: int) -> None:
+    """Treino reprodutível na CPU (docs/15 §3, item 4): sementes, um thread e algoritmos determinísticos."""
+    import random
+    import torch
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.set_num_threads(1)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
+
 def train_seed(seed: int, episodes: int, out: Path, env_cfg: EnvConfig, cfg: MappoConfig, episodes_per_update: int = 4) -> Dict:
+    set_determinism(seed)
     run_dir = out / f"mappo_seed{seed}"
     run_dir.mkdir(parents=True, exist_ok=True)
     env = CalibratedSliceEnv(env_cfg, seed=seed)
