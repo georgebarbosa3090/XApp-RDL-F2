@@ -1,4 +1,4 @@
-# Documentação — Fase 2 (CA-RDL)
+# Documentação — Fase 2 (RDL-N2)
 
 A documentação do núcleo (percepção, TVS/EEVS, Safety Guard, grafo de conhecimento, janela adaptativa, A1/SMO, E2, cenários e certificação) está na Fase 1: [XApp-RDL-F1/docs](https://github.com/georgebarbosa3090/XApp-RDL-F1/tree/main/docs). Aqui fica só o que é próprio da Fase 2.
 

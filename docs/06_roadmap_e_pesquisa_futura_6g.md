@@ -3,8 +3,8 @@
 > **Aviso de saneamento (2026-11-10).** Este documento foi escrito quando o repositório guardava execuções sintéticas. Valores de desempenho, latência, energia ou SLA citados aqui **não têm evidência elegível**, e links para `docs/04`, `07`, `11`–`13`, `docs/auditoria/`, `docs/figures/fig_*`, `reports/figures/` e `experiments/results/` apontam para arquivos removidos (preservados no histórico do git). Ver [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md).
 
 > **Portal da Documentação Oficial (xApp-RDL):**  
-> **Fase 1 (H-RDL) & Fase 2 (CA-RDL) — 14 Volumes Canônicos:**  
-> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 H-RDL](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 CA-RDL](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
+> **Fase 1 (RDL-N1) & Fase 2 (RDL-N2) — 14 Volumes Canônicos:**  
+> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 RDL-N1](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 RDL-N2](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
 
 ---
 
@@ -15,8 +15,8 @@ A pesquisa no projeto **xApp RDL (Resource and Decision Layer)** é estruturada 
 ```
 2026 (Q1-Q3)                      2026 (Q3-Q4)                      2027-2028
 ┌───────────────────────────┐     ┌───────────────────────────┐     ┌───────────────────────────┐
-│     FASE 1: H-RDL         │     │     FASE 2: CA-RDL        │     │     FASE 3: FEDERADA 6G   │
-│ - Heurísticas TVS/EEVS    │────►│ - Context Engine & KG     │────►│ - Intent-Driven A1 Policy │
+│     FASE 1: RDL-N1         │     │     FASE 2: RDL-N2        │     │     FASE 3: FEDERADA 6G   │
+│ - Regras TVS/EEVS    │────►│ - Context Engine & KG     │────►│ - Intent-Driven A1 Policy │
 │ - Safety Guards Físicos   │     │ - Safe-MAPPO (CMDP)       │     │ - Federação Multi-RIC     │
 │ - Zero Violação de SLA    │     │ - Otimização de Pareto    │     │ - SAGIN / NTN / Zero-Trust│
 │ [STATUS: CONCLUÍDA]       │     │ [STATUS: CONCLUÍDA]       │     │ [STATUS: ROADMAP ATIVO]   │
@@ -62,10 +62,10 @@ A Fase 3 estende os conceitos de governança cognitiva para redes altamente dist
 
 ### 2.1. Pilares Tecnológicos da Fase 3
 
-1. **Governança por Intenção (Intent-Driven A1):** Tradução automática de metas operacionais de alto nível do operador (e.g., *"Garantir 99,999% de confiabilidade para cirurgia remota na área metropolitana consumindo no máximo 150 W por gNB"*) em restrições Lagrangeanas $C_k$ na CA-RDL.
+1. **Governança por Intenção (Intent-Driven A1):** Tradução automática de metas operacionais de alto nível do operador (e.g., *"Garantir 99,999% de confiabilidade para cirurgia remota na área metropolitana consumindo no máximo 150 W por gNB"*) em restrições Lagrangeanas $C_k$ na RDL-N2.
 2. **Aprendizado Federado Multi-RIC:** Compartilhamento de modelos neurais cognitivos entre múltiplos controladores Near-RT RIC sem tráfego de dados sensíveis de usuários (Preservação de Privacidade / LGPD).
 3. **Coordenação Multi-Domínio SAGIN:** Arbitragem de tráfego integrada entre camadas espaciais (Satélites LEO), aéreas (Drones/UAVs) e terrestres (gNodeBs / Superfícies Inteligentes Reconfiguráveis - RIS).
-4. **Zero-Trust & Sandbox de Isolamento:** Detecção heurística e estatística de xApps maliciosas (*Rogue xApps*) com quarentena automática de comandos antes da emissão E2.
+4. **Zero-Trust & Sandbox de Isolamento:** Detecção por regras e estatística de xApps maliciosas (*Rogue xApps*) com quarentena automática de comandos antes da emissão E2.
 
 ---
 
@@ -92,7 +92,7 @@ Os resultados obtidos nas Fases 1 e 2 fundamentam a submissão de manuscritos pa
    - *Título Proposto:* "Provably Safe Closed-Loop Conflict Mitigation for Multi-xApp Open RAN via Hierarchical Arbitrage and Safe-MAPPO".
    - *Foco:* Protocolo causal em 6 camadas, conformidade O-RAN e validação multi-seed.
 2. **IEEE Transactions on Cognitive Communications and Networking (TCCN):**
-   - *Título Proposto:* "Context-Aware Cognitive Conflict Resolution in 5G-Advanced and 6G Open RAN using Graph Knowledge and CMDP".
+   - *Título Proposto:* "Multi-Level Conflict Resolution in 5G-Advanced and 6G Open RAN: Learned Constrained Arbitration over a Rule- and Policy-Based Level, with Graph Knowledge and CMDP".
    - *Foco:* Grafo de conhecimento semântico e formulação CMDP com Safety Guards.
 3. **Simpósio Brasileiro de Redes de Computadores e Sistemas Distribuídos (SBRC 2027):**
    - *Trilha Principal:* Artigo completo cobrindo a arquitetura xApp-RDL e avaliação experimental no simulador ns-3.48 / 5G-LENA.

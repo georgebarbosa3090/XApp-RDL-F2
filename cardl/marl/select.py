@@ -1,5 +1,5 @@
 # Autor: George Barbosa
-# Software próprio do projeto CA-RDL (Fase 2). Licença: Apache-2.0 (ver LICENSE).
+# Software próprio do projeto RDL-N2 (Fase 2). Licença: Apache-2.0 (ver LICENSE).
 """
 Seleção do modelo MAPPO por critério fixado antes de olhar os resultados (docs/15 §4).
 
@@ -13,7 +13,7 @@ Critério (fixado neste arquivo, antes da execução):
 2. É **elegível** se a taxa de violação do SLA crítico na validação for ≤ ``cost_limit`` do CMDP (5 %).
 3. Entre os elegíveis, vence a maior recompensa média de validação; empate: menor violação; depois, a
    menor semente.
-4. Sem elegível, nenhum modelo é selecionado e a CA-RDL opera só com a H-RDL (reserva).
+4. Sem elegível, nenhum modelo é selecionado e a RDL-N2 opera só com a RDL-N1 (reserva).
 
 Saída: ``experiments/training/selection.json`` (métricas de validação por semente, regra, escolha e sha256
 do checkpoint escolhido). O motor usa esse arquivo com ``CARDL_SELECTION``.
@@ -53,7 +53,7 @@ def select(training_dir: Path, seeds: List[int], validation_seeds: List[int] = V
     return {
         "schema": "xapp-rdl-f2/model-selection/v1",
         "rule": ("validação nas sementes 8001–8010; elegível se violação do SLA crítico ≤ cost_limit; "
-                 "maior recompensa entre os elegíveis; sem elegível, só H-RDL"),
+                 "maior recompensa entre os elegíveis; sem elegível, só RDL-N1"),
         "cost_limit": cost_limit, "validation_seeds": validation_seeds,
         "candidates": candidates,
         "selected": None if chosen is None else {"seed": chosen["seed"], "checkpoint": chosen["checkpoint"],

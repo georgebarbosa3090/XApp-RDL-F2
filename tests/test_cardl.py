@@ -1,4 +1,4 @@
-"""Testes da CA-RDL (Fase 2) sobre o núcleo da Fase 1."""
+"""Testes da RDL-N2 (Fase 2) sobre o núcleo da Fase 1."""
 import hashlib
 from pathlib import Path
 
@@ -58,7 +58,7 @@ def test_episode_and_baselines_run():
         assert steps == 8, name
 
 
-# --- motor CA-RDL --------------------------------------------------------------------
+# --- motor RDL-N2 --------------------------------------------------------------------
 
 def _conflict(values=((70, 90, "ranslicer"), (30, 65, "energysaver"))):
     actions = [XAppAction(xapp_id=x, node_id="gnb_0", parameter="PRB_QUOTA", value=float(v), priority=p)
@@ -153,7 +153,7 @@ def test_model_selection_rule_excludes_unsafe_seed():
     assert by_seed[103]["validation"]["critical_sla_violation_rate"] > result["cost_limit"]
     assert result["selected"]["seed"] == 101 and len(result["selected"]["sha256"]) == 64
     none = select(repo / "experiments" / "training", [103])
-    assert none["selected"] is None                                # sem elegível: só H-RDL
+    assert none["selected"] is None                                # sem elegível: só RDL-N1
 
 
 def test_engine_uses_selection_file(tmp_path, monkeypatch):
@@ -175,7 +175,7 @@ def test_engine_uses_selection_file(tmp_path, monkeypatch):
 
 
 def test_reserve_gate_latency_within_budget(checkpoint):
-    """Gate de reserva: com o orçamento padrão (20 ms), as decisões cabem nele ou recaem na H-RDL; nunca falta decisão."""
+    """Gate de reserva: com o orçamento padrão (20 ms), as decisões cabem nele ou recaem na RDL-N1; nunca falta decisão."""
     path, digest = checkpoint
     engine = CARDLReasoning(MemoryModule(), checkpoint_path=path, expected_sha256=digest, min_confidence=0.0)
     sources = []

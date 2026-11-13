@@ -1,4 +1,4 @@
-name: CI-Scientific-Readiness - CA-RDL F2
+name: CI-Scientific-Readiness - RDL-N2 F2
 
 # Gate de prontidão científica: só passa quando houver evidência elegível (validação com E2
 # real pré-registrada e afirmações verificadas). Falha de propósito até lá.

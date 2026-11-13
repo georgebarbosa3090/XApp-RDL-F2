@@ -1,11 +1,11 @@
 # Volume 08: Estado da Arte (2020–2026) sobre Governança, Detecção e Mitigação de Conflitos Multi-xApp em O-RAN
 
 > **Aviso de saneamento (2026-11-10).** Este documento foi escrito quando o repositório guardava execuções sintéticas. Valores de desempenho, latência, energia ou SLA citados aqui **não têm evidência elegível**, e links para `docs/04`, `07`, `11`–`13`, `docs/auditoria/`, `docs/figures/fig_*`, `reports/figures/` e `experiments/results/` apontam para arquivos removidos (preservados no histórico do git). Ver [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md).
-## Evidências para as Hipóteses do XApp-RDL-F1 (H-RDL), Lacunas Científicas e Comparação Sistemática
+## Evidências para as Hipóteses do XApp-RDL-F1 (RDL-N1), Lacunas Científicas e Comparação Sistemática
 
 > **Portal da Documentação Oficial (xApp-RDL):**  
-> **Fase 1 (H-RDL) & Fase 2 (CA-RDL) — 14 Volumes Canônicos:**  
-> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 H-RDL](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 CA-RDL](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
+> **Fase 1 (RDL-N1) & Fase 2 (RDL-N2) — 14 Volumes Canônicos:**  
+> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 RDL-N1](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 RDL-N2](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
 
 ---
 
@@ -21,13 +21,13 @@
 
 ## Resumo Executivo
 
-Este documento realiza uma revisão aprofundada da literatura entre 2020 e setembro de 2026 sobre coordenação, detecção, classificação, avaliação e mitigação de conflitos entre xApps no Near-RT RIC. A análise é orientada pelas hipóteses científicas do **XApp-RDL-F1 (H-RDL)**:
+Este documento realiza uma revisão aprofundada da literatura entre 2020 e setembro de 2026 sobre coordenação, detecção, classificação, avaliação e mitigação de conflitos entre xApps no Near-RT RIC. A análise é orientada pelas hipóteses científicas do **XApp-RDL-F1 (RDL-N1)**:
 - **(H1) Redução de violações de SLA** com preservação de justiça ($J \ge 0,90$);
 - **(H2) Supressão de oscilações temporais e ping-pong** ($\text{Churn} < 0,1\text{ ação/s}$, $t_{\text{settle}} < 200\text{ ms}$);
 - **(H3) Overhead algorítmico sub-milissegundo** ($T_{\text{decision}} < 1,0\text{ ms}$);
-- **(H4) Otimização segura por Safe-MAPPO** com bloqueio determinístico de ações inseguras ($\text{UnsafeApplied} \equiv 0$).
+- **(H4) Otimização segura por Safe-MAPPO** com bloqueio por regra de ações inseguras ($\text{UnsafeApplied} \equiv 0$).
 
-São cobertos trabalhos seminais sobre O-RAN programável e controle fechado, coordenação multiagente, frameworks formais de *Conflict Mitigation*, teoria dos jogos / barganha, gerenciamento de conflito *QoS-aware*, *profiling* pré-deployment, grafos de conflito GNN, *Digital Twins*, escalonadores adaptativos, validação OTA em testbed OTIC, destilação de políticas (*xApp distillation*) e métodos AI-native / LLM de 2026. A revisão evidencia que a literatura converge para a necessidade de uma **camada explícita de governança entre xApps**, mas ainda apresenta fragmentação entre segurança determinística, baixa latência, conflitos temporais, interoperabilidade E2 e adaptação aprendida — nicho científico preenchido pela arquitetura H-RDL / CA-RDL.
+São cobertos trabalhos seminais sobre O-RAN programável e controle fechado, coordenação multiagente, frameworks formais de *Conflict Mitigation*, teoria dos jogos / barganha, gerenciamento de conflito *QoS-aware*, *profiling* pré-deployment, grafos de conflito GNN, *Digital Twins*, escalonadores adaptativos, validação OTA em testbed OTIC, destilação de políticas (*xApp distillation*) e métodos AI-native / LLM de 2026. A revisão evidencia que a literatura converge para a necessidade de uma **camada explícita de governança entre xApps**, mas ainda apresenta fragmentação entre segurança por regra, baixa latência, conflitos temporais, interoperabilidade E2 e adaptação aprendida — nicho científico preenchido pela arquitetura RDL-N1 / RDL-N2.
 
 ---
 
@@ -49,12 +49,12 @@ Foram incluídos trabalhos que satisfazem pelo menos um dos seguintes critérios
 
 A fundamentação teórica e empírica do XApp-RDL-F1 estabelece as seguintes hipóteses de validação:
 
-- **H1 — SLA e Justiça:** A H-RDL reduz a taxa de violação de SLA em pelo menos 30 pontos percentuais contra o baseline não coordenado, preservando equidade de Jain $J \ge 0,90$.
-- **H2 — Estabilidade Temporal:** A H-RDL reduz o *Action Churn* para menos de $0,1\text{ ação/s}$ e atinge $t_{\text{settle}} < 200\text{ ms}$ em cenário de oscilação cíclica (*ping-pong*).
+- **H1 — SLA e Justiça:** A RDL-N1 reduz a taxa de violação de SLA em pelo menos 30 pontos percentuais contra o baseline não coordenado, preservando equidade de Jain $J \ge 0,90$.
+- **H2 — Estabilidade Temporal:** A RDL-N1 reduz o *Action Churn* para menos de $0,1\text{ ação/s}$ e atinge $t_{\text{settle}} < 200\text{ ms}$ em cenário de oscilação cíclica (*ping-pong*).
 - **H3 — Sobrecarga Computacional:** O tempo algorítmico de decisão é estritamente sub-milissegundo ($T_{\text{decision}} < 1,0\text{ ms}$).
-- **H4 — Segurança Aprendida:** Safe-MAPPO produz ganho de utilidade mantendo a barreira determinística $\text{UnsafeApplied} \equiv 0$.
+- **H4 — Segurança Aprendida:** Safe-MAPPO produz ganho de utilidade mantendo a barreira por regra $\text{UnsafeApplied} \equiv 0$.
 
-O projeto posiciona a **H-RDL** como uma camada intermediária de governança no Near-RT RIC: intercepta propostas concorrentes, detecta conflitos, arbitra ações por modelo matemático determinístico, aplica *Safety Guards* físicos e somente então emite controle via E2SM-RC Format 1. A fase **CA-RDL** acrescenta contexto topológico, grafos de conhecimento causais e aprendizado por reforço seguro (Safe-MAPPO).
+O projeto posiciona a **RDL-N1** como uma camada intermediária de governança no Near-RT RIC: intercepta propostas concorrentes, detecta conflitos, arbitra ações por modelo matemático de regras fixas, aplica *Safety Guards* físicos e somente então emite controle via E2SM-RC Format 1. A fase **RDL-N2** acrescenta contexto topológico, grafos de conhecimento causais e aprendizado por reforço seguro (Safe-MAPPO).
 
 ---
 
@@ -72,14 +72,14 @@ O projeto posiciona a **H-RDL** como uma camada intermediária de governança no
 - **Kouchaki e Marojevic (2022) [8]:** Desenho e implantação de xApp de alocação de recursos baseado em *actor-critic*, reforçando a viabilidade de políticas aprendidas no Near-RT RIC.
 
 ### 3.3. 2023: Formalização da Taxonomia, CMF e Arbitragem Explícita
-- **Adamczyk e Kliks (2023) [9]:** Propõem o *Conflict Mitigation Framework* (CMF) integrado ao Near-RT RIC, com detecção formal dos tipos direto, indireto e implícito definidos pelo O-RAN WG3. Antecedente arquitetural mais próximo da H-RDL.
+- **Adamczyk e Kliks (2023) [9]:** Propõem o *Conflict Mitigation Framework* (CMF) integrado ao Near-RT RIC, com detecção formal dos tipos direto, indireto e implícito definidos pelo O-RAN WG3. Antecedente arquitetural mais próximo da RDL-N1.
 - **Wadud, Golpayegani e Afraz (2023) [10]:** Introduzem sistema de conflito com barganha cooperativa (*Nash Social Welfare* e solução Eisenberg–Gale).
 
 ### 3.4. 2024: QoS-Aware, Profiling, Conflitos Convergentes e Grafos
 - **QACM (Wadud et al., 2024) [11]:** Otimização *QoS-aware* que maximiza o número de xApps que mantêm seus requisitos de serviço atendidos sob conflito.
 - **PACIFISTA (del Prever et al., 2025) [12]:** Avaliação preventiva de conflitos via *profiling* em sandbox, grafos hierárquicos e modelos estatísticos.
 - **Corici et al. (2024) [13]:** Demonstram que o isolamento individual de funções é insuficiente e propõem gerenciamento convergente no plano de controle 6G. Evidência para H2.
-- **Zolghadr et al. (2025) [14]:** Utilizam *GraphSAGE* (GNN) para reconstruir relações causais ocultas entre parâmetros de controle e KPIs. Antecedente direto da CA-RDL.
+- **Zolghadr et al. (2025) [14]:** Utilizam *GraphSAGE* (GNN) para reconstruir relações causais ocultas entre parâmetros de controle e KPIs. Antecedente direto da RDL-N2.
 
 ### 3.5. 2025: NDT, Schedulers, Testbed OTA, Causalidade e Produção
 - **COMIX (Giannopoulos et al., 2025) [15]:** Combina CMF com *Network Digital Twin* (NDT) para avaliar ações concorrentes (potência vs eficiência energética) antes da aplicação física.
@@ -106,29 +106,29 @@ O projeto posiciona a **H-RDL** como uma camada intermediária de governança no
 
 | Trabalho / Autor | Ano | Problema / Conflito | Método Proposto | Tipos de Conflito | Validação | Segurança Explícita | Latência / Tempo de Decisão | Relação com XApp-RDL |
 | :--- | :---: | :--- | :--- | :--- | :--- | :---: | :---: | :--- |
-| **Rivera et al.** [2] | 2020 | Coordenação de agentes em O-RAN | Multi-agent team learning | Implícito / objetivos acoplados | Estudo / caso | Não | Não central | Antecede CA-RDL; não possui safety guards físicos. |
+| **Rivera et al.** [2] | 2020 | Coordenação de agentes em O-RAN | Multi-agent team learning | Implícito / objetivos acoplados | Estudo / caso | Não | Não central | Antecede RDL-N2; não possui safety guards físicos. |
 | **Bonati et al.** [1] | 2021 | Closed-loop e IA no Near-RT RIC | DRL / data-driven O-RAN | Não foca CM | Colosseum | Não | Near-RT | Base arquitetural para fechamento de malha. |
 | **FlexRIC** [3] | 2021 | Execução programável multi-xApp | SDK Near-RT RIC / E2 | Não foca CM | Protótipo real | Não | $\mu\text{s}$ no monitor | Sustenta viabilidade temporal H3. |
 | **Dryjański et al.** [6] | 2021 | Traffic Steering modular | xApp TS hierárquica | Mobilidade | Modular | Não | Near-RT | xApp canônica para cenários TS/TVS. |
 | **Zhang et al.** [7] | 2022 | Potência vs Alocação PRB | Cooperative team DRL | Indireto | Simulação | Parcial | Não central | Evidência para H1; exige cooperação mútua. |
 | **Kouchaki & Marojevic** [8]| 2022 | Alocação de Recursos | Actor-critic xApp | Não foca CM | Deploy E2 | Não | Near-RT | Base para agentes neurais isolados. |
-| **Adamczyk & Kliks** [9] | 2023 | Conflitos intra-RIC | CMF + detecção dedicada | Direto, indireto, implícito | Simulação | Parcial | Near-RT | Mais próximo da H-RDL; H-RDL acrescenta guards e estabilidade temporal. |
+| **Adamczyk & Kliks** [9] | 2023 | Conflitos intra-RIC | CMF + detecção dedicada | Direto, indireto, implícito | Simulação | Parcial | Near-RT | Mais próximo da RDL-N1; RDL-N1 acrescenta guards e estabilidade temporal. |
 | **Wadud et al.** [10] | 2023 | Configuração de parâmetros conflitantes | Barganha Nash / NSWF / EG | Direto / indireto | Teórico | Não | Não central | Fundamenta a arbitragem axiomática de Nash. |
-| **QACM** [11] | 2024 | Preservação de QoS multi-xApp | Otimização QoS-aware | Direto, indireto, implícito | Simulação | Parcial | Não central | Sustenta H1; H-RDL foca em tempo real estrito (< 1 ms). |
+| **QACM** [11] | 2024 | Preservação de QoS multi-xApp | Otimização QoS-aware | Direto, indireto, implícito | Simulação | Parcial | Não central | Sustenta H1; RDL-N1 foca em tempo real estrito (< 1 ms). |
 | **Corici et al.** [13] | 2024 | Instabilidade no plano de controle | Framework convergente 6G | Multi-loop | Arquitetura | Parcial | Near-RT | Sustenta H2 e necessidade de governança centralizada. |
-| **PACIFISTA** [12] | 2024/25 | Predição de conflitos pré-deploy | Profiling + grafos + estatística | Direto, indireto, implícito | Colosseum | Parcial | Pre-deploy | Complementar: atua pré-deployment, H-RDL atua em runtime. |
-| **Zolghadr et al.** [14] | 2025 | Relações ocultas parâmetro-KPI | GraphSAGE (GNN) | Direto, indireto, implícito | WCNC / numérico | Não | Não central | Antecedente direto do módulo KG/GNN da CA-RDL. |
-| **COMIX** [15] | 2025 | Throughput vs Energia / Potência | CMF + Network Digital Twin | Direto / indireto | Canal NR | Parcial | Avaliação prévia | Similar ao EEVS; H-RDL usa guard determinístico mais leve. |
-| **Cinemre & Mahmoodi** [16] | 2025 | Escolha dinâmica entre xApps | Escalonador A2C | Indireto / contextual | Simulação | Não | Conceitual | Sustenta dependência de contexto da CA-RDL. |
+| **PACIFISTA** [12] | 2024/25 | Predição de conflitos pré-deploy | Profiling + grafos + estatística | Direto, indireto, implícito | Colosseum | Parcial | Pre-deploy | Complementar: atua pré-deployment, RDL-N1 atua em runtime. |
+| **Zolghadr et al.** [14] | 2025 | Relações ocultas parâmetro-KPI | GraphSAGE (GNN) | Direto, indireto, implícito | WCNC / numérico | Não | Não central | Antecedente direto do módulo KG/GNN da RDL-N2. |
+| **COMIX** [15] | 2025 | Throughput vs Energia / Potência | CMF + Network Digital Twin | Direto / indireto | Canal NR | Parcial | Avaliação prévia | Similar ao EEVS; RDL-N1 usa guard por regra mais leve. |
+| **Cinemre & Mahmoodi** [16] | 2025 | Escolha dinâmica entre xApps | Escalonador A2C | Indireto / contextual | Simulação | Não | Conceitual | Sustenta dependência de contexto da RDL-N2. |
 | **Sultana et al. (OTIC)** [17] | 2025 | CMF em testbed físico | Detecção + mitigação de regras | Indireto / priorização | OTIC OTA RF | Parcial | Runtime | Evidência externa forte para H2 (-78% variabilidade). |
 | **Sharma et al.** [18] | 2025 | Descoberta causal de conflitos | SHAP + DAG + ATE/CATE | Indireto / implícito | Modelagem | Não | Não central | Complementa a análise causal forense da RDL. |
 | **xApp Distillation** [19] | 2026 | Eliminação de conflitos | Policy distillation | Multi-xApp | Simulação | Parcial | Near-RT | Alternativa de fusão; RDL preserva independência multi-vendor. |
-| **Wadud et al. (AI-CM)** [20] | 2026 | Escala de 5 a 50 xApps | GNN / Bi-LSTM / SMOTE | Direto, indireto, implícito | ns-3 O-RAN | Não | Acelerado | Motiva a transição H-RDL (regras rápidas) para CA-RDL (IA em escala). |
-| **ORIGAMI** [21] | 2026 | Energia vs Throughput | Mediação orientada a serviços | Antagônicos | Testbed dist. | Parcial | Runtime | Paralelo ao cenário canônico EEVS da H-RDL. |
+| **Wadud et al. (AI-CM)** [20] | 2026 | Escala de 5 a 50 xApps | GNN / Bi-LSTM / SMOTE | Direto, indireto, implícito | ns-3 O-RAN | Não | Acelerado | Motiva a transição RDL-N1 (regras rápidas) para RDL-N2 (IA em escala). |
+| **ORIGAMI** [21] | 2026 | Energia vs Throughput | Mediação orientada a serviços | Antagônicos | Testbed dist. | Parcial | Runtime | Paralelo ao cenário canônico EEVS da RDL-N1. |
 | **Salmi et al.** [22] | 2026 | Coordenação AI-native + Intents | CME adaptativo + LLM Non-RT | Multi-xApp / rApp | Protótipo | Parcial | Near-RT | Direção futura para orquestração federada (Fase 3). |
 | **Kurtulan et al.** [23] | 2026 | Conflitos multi-xApp em 6G | Orquestrador ML-driven | Multi-xApp | Experimental | Parcial | Real-time | Valida orquestração inteligente em tempo real. |
 | **ORCA** [24] | 2026 | Conflitos sob incerteza | Agentes generativos + RAG | Implícito / desconhecido | INFOCOM | Parcial | Não focado | Raciocínio semântico sob incerteza. |
-| **XApp-RDL (F1/F2)** | **2026** | **Slicing, QoS, Energia, TS, Churn e Safety** | **Fase 1: Determinística (Nash/EEVS/Guards)<br>Fase 2: Cognitiva (GNN/Safe-MAPPO)** | **Direto, Indireto, Implícito e Temporal** | **ns-3.48 + 5G-LENA + NORI + OSC RIC** | **SIM (Guards Invariantes $\text{Unsafe} \equiv 0$)** | **$0,118\text{ ms}$ (F1)<br>$0,34\text{ ms}$ (F2)** | **Integra segurança determinística desacoplada, supressão de churn, baixa latência e conformidade E2 completa.** |
+| **XApp-RDL (F1/F2)** | **2026** | **Slicing, QoS, Energia, TS, Churn e Safety** | **Fase 1: regras e políticas (Nash/EEVS/Guards)<br>Fase 2: Cognitiva (GNN/Safe-MAPPO)** | **Direto, Indireto, Implícito e Temporal** | **ns-3.48 + 5G-LENA + NORI + OSC RIC** | **SIM (Guards Invariantes $\text{Unsafe} \equiv 0$)** | **$0,118\text{ ms}$ (F1)<br>$0,34\text{ ms}$ (F2)** | **Integra segurança por regra desacoplada, supressão de churn, baixa latência e conformidade E2 completa.** |
 
 ---
 
@@ -153,16 +153,16 @@ O projeto posiciona a **H-RDL** como uma camada intermediária de governança no
 
 ---
 
-## 6. Lacunas Científicas Identificadas e Contribuição Específica da H-RDL
+## 6. Lacunas Científicas Identificadas e Contribuição Específica da RDL-N1
 
 A análise crítica da literatura revela cinco lacunas fundamentais que justificam a concepção do XApp-RDL:
 
-1. **Lacuna 1 — Segurança Determinística Desacoplada da Política:**  
-   Modelos de RL, GNN e heurísticas de utilidade podem convergir para ações subótimas ou instáveis durante transientes. A H-RDL introduz uma barreira invariante física desacoplada ($\text{UnsafeApplied} \equiv 0$), garantindo que comandos ilegais nunca cheguem à RAN, independentemente do algoritmo decisório.
+1. **Lacuna 1 — Segurança por Regra Desacoplada da Política:**  
+   Modelos de RL, GNN e funções de utilidade podem convergir para ações subótimas ou instáveis durante transientes. A RDL-N1 introduz uma barreira invariante física desacoplada ($\text{UnsafeApplied} \equiv 0$), garantindo que comandos ilegais nunca cheguem à RAN, independentemente do algoritmo decisório.
 2. **Lacuna 2 — Conflitos Temporais Tratados como Propriedade de Controle:**  
-   A taxonomia clássica O-RAN foca em parâmetros estáticos (direto/indireto/implícito). A H-RDL formaliza o *conflito temporal* como dimensão de primeira classe, introduzindo métricas quantitativas de *Action Churn*, tempo de estabilização ($t_{\text{settle}}$) e histerese temporal (*cooling windows*).
+   A taxonomia clássica O-RAN foca em parâmetros estáticos (direto/indireto/implícito). A RDL-N1 formaliza o *conflito temporal* como dimensão de primeira classe, introduzindo métricas quantitativas de *Action Churn*, tempo de estabilização ($t_{\text{settle}}$) e histerese temporal (*cooling windows*).
 3. **Lacuna 3 — Arquitetura de Dois Níveis (*Fast-Path* vs *Slow-Path*):**  
-   Conciliação entre determinismo sub-milissegundo para conflitos frequentes ($T_{\text{dec}} = 0,118\text{ ms}$) na Fase 1 (H-RDL) e capacidade cognitiva profunda para cenários heterogêneos 5G-Adv/6G na Fase 2 (CA-RDL).
+   Conciliação entre determinismo sub-milissegundo para conflitos frequentes ($T_{\text{dec}} = 0,118\text{ ms}$) na Fase 1 (RDL-N1) e capacidade cognitiva profunda para cenários heterogêneos 5G-Adv/6G na Fase 2 (RDL-N2).
 4. **Lacuna 4 — Fechamento Causal em Malha Fechada e Auditabilidade:**  
    Rastreamento ponta a ponta em 6 elos $KPM(t_0) \to \text{Decisão} \to \text{E2SM-RC} \to \text{ACK} \to \text{MAC} \to KPM(t_1)$ com hashes criptográficos SHA-256 e conformidade O-RAN WG3.
 5. **Lacuna 5 — Preservação da Independência Multi-Vendor:**  

@@ -3,8 +3,8 @@
 > **Aviso de saneamento (2026-11-10).** Este documento foi escrito quando o repositório guardava execuções sintéticas. Valores de desempenho, latência, energia ou SLA citados aqui **não têm evidência elegível**, e links para `docs/04`, `07`, `11`–`13`, `docs/auditoria/`, `docs/figures/fig_*`, `reports/figures/` e `experiments/results/` apontam para arquivos removidos (preservados no histórico do git). Ver [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md).
 
 > **Portal da Documentação Oficial (xApp-RDL):**  
-> **Fase 1 (H-RDL) & Fase 2 (CA-RDL) — 14 Volumes Canônicos:**  
-> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 H-RDL](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 CA-RDL](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
+> **Fase 1 (RDL-N1) & Fase 2 (RDL-N2) — 14 Volumes Canônicos:**  
+> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 RDL-N1](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 RDL-N2](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
 
 ---
 
@@ -17,7 +17,7 @@ Contudo, a coexistência de múltiplas xApps operando de forma desacoplada e aut
 - **Conflitos Indiretos:** Ações em parâmetros distintos que degradam métricas compartilhadas ou afetam fatias vizinhas (ex.: *Traffic Steering* migrando UEs para células que já operam no limite de capacidade URLLC).
 - **Conflitos Temporais (*Parameter Flipping / Ping-Pong*):** Oscilações cíclicas de sinalização decorrentes de decisões reativas em malha fechada.
 
-A arquitetura **xApp-RDL (Resource and Decision Layer)** foi projetada para atuar como o ponto único e determinístico de coordenação, validação e arbitragem no Near-RT RIC.
+A arquitetura **xApp-RDL (Resource and Decision Layer)** foi projetada para atuar como o ponto único, por regras e políticas, de coordenação, validação e arbitragem no Near-RT RIC.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -27,7 +27,7 @@ A arquitetura **xApp-RDL (Resource and Decision Layer)** foi projetada para atua
 │  │  - Perception Agent (Decodificador ASN.1 APER E2SM-KPM / Telemetria) │  │
 │  │  - Conflict Detector (Direto, Indireto, Implícito, Temporal)          │  │
 │  │  - Knowledge Graph & Context Engine (Neo4j / Matriz de Associação)    │  │
-│  │  - Reasoning Engine: Nível 1 (H-RDL) | Nível 2 (NDT) | Nível 3 (MAPPO)│  │
+│  │  - Reasoning Engine: Nível 1 (RDL-N1) | Nível 2 (NDT) | Nível 3 (MAPPO)│  │
 │  │  - Refinement Agent & Safety Guard (Action Masking / Boundary Clip)   │  │
 │  │  - RCMapper & Dispatcher (E2SM-RC Format 1 Header / Format 2 Message) │  │
 │  └───────────────────────────────────┬───────────────────────────────────┘  │
@@ -59,13 +59,13 @@ A arquitetura **xApp-RDL (Resource and Decision Layer)** foi projetada para atua
 
 ---
 
-## 2. Paradigmas Evolutivos: H-RDL (Fase 1) × CA-RDL (Fase 2)
+## 2. Paradigmas Evolutivos: RDL-N1 (Fase 1) × RDL-N2 (Fase 2)
 
 A RDL é estruturada em duas fases complementares:
 
-| Dimensão de Comparação | Fase 1: H-RDL (Hierarchical / Heuristic) | Fase 2: CA-RDL (Context-Aware / MARL) |
+| Dimensão de Comparação | Fase 1: RDL-N1 (nível 1: regras e políticas) | Fase 2: RDL-N2 (nível 2: política aprendida com restrições) |
 | :--- | :--- | :--- |
-| **Paradigma Decisório** | Heurística determinística + Matriz TVS/EEVS | Sensibilidade contextual + Grafo de Conhecimento + MAPPO |
+| **Paradigma Decisório** | Regras e políticas + Matriz TVS/EEVS | Sensibilidade contextual + Grafo de Conhecimento + MAPPO |
 | **Janela de Decisão** | Lote fixo ($\Delta t = 200\text{ ms}$) | Janela adaptativa orientada a eventos e telemetria |
 | **Garantia de Segurança** | *Safety Guards* invariantes (Boundary Clipping) | *Action Masking* em tempo de inferência + Safety Guard desacoplado |
 | **Sobrecarga ($T_{decision}$)** | **0,12 ms** (Sub-milissegundo, 0,06% do ciclo) | **1,84 ms** (Inferência de Redes Neurais, 0,92% do ciclo) |
@@ -82,7 +82,7 @@ O código-fonte segue estritamente a separação em camadas independentes:
 src/
 ├── agents/                      # Camada de Inteligência e Governança
 │   ├── perception_agent.py      # Agrupamento temporal e detecção de colisões
-│   ├── reasoning_agent.py       # Resolução Nível 1 (Heurísticas) / Nível 2 (NDT) / Nível 3 (MAPPO)
+│   ├── reasoning_agent.py       # Resolução Nível 1 (regras e políticas) / Nível 2 (NDT) / Nível 3 (MAPPO)
 │   └── refinement_agent.py      # Safety Guards físicos invariantes
 ├── conflict_types.py            # Contratos de dados imutáveis (RDLDecision, XAppAction)
 ├── coordination/                # Despacho e rastreamento de transações
@@ -111,13 +111,13 @@ src/
 - Constrói o grafo de conflitos $G = (V, E)$, onde $V$ são as propostas e $E$ representa interseções diretas no mesmo `(cell_id, parameter_id)` ou colisões indiretas de fatia (*slice coupling*).
 
 ### 4.2. ReasoningAgent (Raciocínio e Arbitragem)
-- **Nível 1 (Heurística Hierárquica - H-RDL):** Executa matriz de prioridades de serviço:
+- **Nível 1 (regras e políticas - RDL-N1):** Executa matriz de prioridades de serviço:
   1. *Safety Invariants* (Proteção de enlace e integridade de rádio);
   2. *URLLC Critical Guarantee* (SLA de latência $D \le 5\text{ ms}$);
   3. *eMBB High-Throughput Allocation* (Vazão garantida $T \ge 60\text{ Mbps}$);
   4. *Energy Efficiency Trimming* (Economia de energia quando folga de SLA existe).
-- **Nível 2 (Digital Twin & Árvore Decisória Não-Determinística - NDT):** Projeção preditiva do impacto antes da aplicação.
-- **Nível 3 (Multi-Agent PPO - CA-RDL):** Otimização da política conjunta sob formulação CMDP.
+- **Nível 2 (Digital Twin & Árvore Decisória Estocástica - NDT):** Projeção preditiva do impacto antes da aplicação.
+- **Nível 3 (Multi-Agent PPO - RDL-N2):** Otimização da política conjunta sob formulação CMDP.
 
 ### 4.3. RefinementAgent & Safety Guards (Segurança Invariante)
 Aplica restrições físicas invioláveis antes de qualquer emissão para a interface E2:
@@ -164,7 +164,7 @@ $$a_i = \langle \text{app\_id}_i, \text{target\_id}_i, \text{param\_id}_i, \Delt
 onde $\text{app\_id}_i$ identifica a aplicação emissora, $\text{target\_id}_i \in \{\text{UE}_k, \text{Slice}_s, \text{Cell}_c\}$ é o alvo de atuação, $\text{param\_id}_i \in \{\text{PRB\_QUOTA}, \text{TX\_POWER}, \text{HO\_OFFSET}\}$ é o parâmetro de rádio solicitado, $\Delta v_i$ é a magnitude da modificação pretendida, $\rho_i \in [1, \rho_{max}]$ é o peso de prioridade nominal e $\tau_i$ é o tempo limite de validade da proposta.
 
 #### Grafo de Conflitos Dinâmico
-A camada de percepção da H-RDL mapeia as propostas concorrentes em um Grafo de Conflitos não-direcionado $G_t = (\mathcal{A}_t, \mathcal{E}_t)$, onde as arestas $(a_i, a_j) \in \mathcal{E}_t$ modelam colisões de controle satisfazendo o predicado:
+A camada de percepção da RDL-N1 mapeia as propostas concorrentes em um Grafo de Conflitos não-direcionado $G_t = (\mathcal{A}_t, \mathcal{E}_t)$, onde as arestas $(a_i, a_j) \in \mathcal{E}_t$ modelam colisões de controle satisfazendo o predicado:
 
 $$(a_i, a_j) \in \mathcal{E}_t \iff 
 \begin{cases}
@@ -186,10 +186,10 @@ P_{tx}^{\min} \le P_{tx}^{(0)} + \sum_{i=1}^m x_i \cdot \Delta P_{tx}(a_i) \le P
 x_i \in \{0, 1\}, & \forall i \in \{1, \dots, m\}.
 \end{cases}$$
 
-#### Teorema de Terminação Determinística e Ausência de Deadlock
-**Teorema 1 (Deadlock-Free Determinism):** *O motor de arbitragem da H-RDL garante convergência determinística e ausência de deadlocks em tempo estritamente limitado $\mathcal{O}(|\mathcal{A}_t| + |\mathcal{E}_t|)$ sob heurística gulosa com desempate lexicográfico e $\mathcal{O}(2^m)$ sob busca exata com poda branch-and-bound.*
+#### Teorema de Terminação Garantida e Ausência de Deadlock
+**Teorema 1 (Deadlock-Free Determinism):** *O motor de arbitragem da RDL-N1 garante convergência garantida e ausência de deadlocks em tempo estritamente limitado $\mathcal{O}(|\mathcal{A}_t| + |\mathcal{E}_t|)$ sob busca gulosa com desempate lexicográfico e $\mathcal{O}(2^m)$ sob busca exata com poda branch-and-bound.*
 
-**Demonstração:** Seja a relação de ordem estrita $\succ$ definida sobre $\mathcal{A}_t$ pelo vetor de tuplas $\langle \rho_i, U(a_i \mid s_t), -\text{timestamp}_i, \text{app\_id}_i \rangle$. Como a prioridade $\rho_i$ é finita, a utilidade $U \in \mathbb{R}$ é contínua e bounded, o timestamp é estritamente monotônico e o identificador $\text{app\_id}_i$ é único e disjunto, a relação $\succ$ induz uma ordem total estrita e imutável sobre $\mathcal{A}_t$. O algoritmo guloso de seleção independente remove recursivamente o vértice de maior peso $v^* = \arg\max_{v \in G_t} \operatorname{score}(v)$ e elimina sua vizinhança aberta $N(v^*)$. Como o número de vértices $m$ decresce estritamente a cada iteração ($|V_{k+1}| \le |V_k| - 1$), o grafo torna-se vazio em no máximo $m$ passos, impedindo dependências circulares e garantindo execução determinística livre de bloqueios mútuos. $\blacksquare$
+**Demonstração:** Seja a relação de ordem estrita $\succ$ definida sobre $\mathcal{A}_t$ pelo vetor de tuplas $\langle \rho_i, U(a_i \mid s_t), -\text{timestamp}_i, \text{app\_id}_i \rangle$. Como a prioridade $\rho_i$ é finita, a utilidade $U \in \mathbb{R}$ é contínua e bounded, o timestamp é estritamente monotônico e o identificador $\text{app\_id}_i$ é único e disjunto, a relação $\succ$ induz uma ordem total estrita e imutável sobre $\mathcal{A}_t$. O algoritmo guloso de seleção independente remove recursivamente o vértice de maior peso $v^* = \arg\max_{v \in G_t} \operatorname{score}(v)$ e elimina sua vizinhança aberta $N(v^*)$. Como o número de vértices $m$ decresce estritamente a cada iteração ($|V_{k+1}| \le |V_k| - 1$), o grafo torna-se vazio em no máximo $m$ passos, impedindo dependências circulares e garantindo execução reprodutível livre de bloqueios mútuos. $\blacksquare$
 
 ### 5.5. Formulação CMDP e Safe-MAPPO (Fase 2)
 O problema de controle multi-xApp é formulado como um **Processo de Decisão de Markov Parcialmente Observável e Restrito (CMP-POMDP)**:

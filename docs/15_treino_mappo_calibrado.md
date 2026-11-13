@@ -20,21 +20,21 @@
 | Política | Recompensa por episódio | Violação do SLA crítico | PRBs ativos | Satisfação crítica | Satisfação eMBB |
 | :-- | :-: | :-: | :-: | :-: | :-: |
 | B0 (última proposta) | 48,90 ± 0,44 | 0,949 | 10,0 % | 0,39 | 0,42 |
-| B1 = B2 = B3 (H-RDL) | 67,05 ± 0,21 | 0,000 | 38,6 % | 1,00 | 1,00 |
-| CA-RDL semente 101 | **68,19 ± 1,18** | 0,010 | 34,3 % | 1,00 | 0,80 |
-| CA-RDL semente 102 | 66,17 ± 1,31 | 0,015 | 30,8 % | 1,00 | 0,68 |
-| CA-RDL semente 103 | 62,72 ± 0,87 | **0,339** | 65,8 % | 0,92 | 1,00 |
+| B1 = B2 = B3 (RDL-N1) | 67,05 ± 0,21 | 0,000 | 38,6 % | 1,00 | 1,00 |
+| RDL-N2 semente 101 | **68,19 ± 1,18** | 0,010 | 34,3 % | 1,00 | 0,80 |
+| RDL-N2 semente 102 | 66,17 ± 1,31 | 0,015 | 30,8 % | 1,00 | 0,68 |
+| RDL-N2 semente 103 | 62,72 ± 0,87 | **0,339** | 65,8 % | 0,92 | 1,00 |
 
 Arquivos: `experiments/training/mappo_seed{101,102,103}/` (`evaluation.json`, `convergence.csv`, `training_manifest.json`, `actor_critic.pt`).
 
 ## 3. Leitura
 
-1. **A H-RDL é quase ótima neste ambiente.** A proposta do RANSlicer já atende a demanda com margem pequena, e o TVS a escolhe sempre: nenhuma violação, mas também nenhuma economia.
-2. **Duas de três sementes aprendem a trocar SLA por energia dentro do limite do CMDP.** Elas usam 11–20 % menos PRBs ativos e violam o SLA crítico em 1–1,5 % das janelas (limite: 5 %), à custa da fatia eMBB. A semente 101 supera a H-RDL na recompensa (68,19 contra 67,05).
-3. **A terceira semente não converge** para uma política segura: 34 % de violações. Sem um critério de seleção de modelo, o MAPPO não é utilizável como está; a reserva para a H-RDL e a política A1 20002 são o que evita o risco.
-4. **O treino não é determinístico na CPU.** A mesma semente produziu números diferentes numa rodada anterior, com o mesmo código e a árvore suja; essa rodada foi descartada. Para relato, fixar threads e algoritmos determinísticos do PyTorch.
+1. **A RDL-N1 é quase ótima neste ambiente.** A proposta do RANSlicer já atende a demanda com margem pequena, e o TVS a escolhe sempre: nenhuma violação, mas também nenhuma economia.
+2. **Duas de três sementes aprendem a trocar SLA por energia dentro do limite do CMDP.** Elas usam 11–20 % menos PRBs ativos e violam o SLA crítico em 1–1,5 % das janelas (limite: 5 %), à custa da fatia eMBB. A semente 101 supera a RDL-N1 na recompensa (68,19 contra 67,05).
+3. **A terceira semente não converge** para uma política segura: 34 % de violações. Sem um critério de seleção de modelo, o MAPPO não é utilizável como está; a reserva para a RDL-N1 e a política A1 20002 são o que evita o risco.
+4. **O treino não é reprodutível na CPU.** A mesma semente produziu números diferentes numa rodada anterior, com o mesmo código e a árvore suja; essa rodada foi descartada. Para relato, fixar threads e algoritmos reprodutíveis do PyTorch.
 
-**Estas medidas não são evidência de RAN** (`publication_eligible: false`): o ambiente é um substituto calibrado. A próxima etapa é uma validação pré-registrada na bancada NORI, com E2 real, comparando H-RDL e CA-RDL (semente selecionada por critério fixado antes) no S8.
+**Estas medidas não são evidência de RAN** (`publication_eligible: false`): o ambiente é um substituto calibrado. A próxima etapa é uma validação pré-registrada na bancada NORI, com E2 real, comparando RDL-N1 e RDL-N2 (semente selecionada por critério fixado antes) no S8.
 
 ## 4. Seleção do modelo, determinismo e reserva (2026-11-11)
 
@@ -44,7 +44,7 @@ Resposta aos itens 3 e 4 da seção 3 e ao gate de reserva do relatório de adeq
 
 1. Validação nas sementes 8001–8010, disjuntas das de treino e das de avaliação final (9001–9020).
 2. É elegível o checkpoint com violação do SLA crítico até o `cost_limit` do CMDP (5 %).
-3. Entre os elegíveis, vence a maior recompensa; sem elegível, a CA-RDL opera só com a H-RDL.
+3. Entre os elegíveis, vence a maior recompensa; sem elegível, a RDL-N2 opera só com a RDL-N1.
 
 **Resultado** (`experiments/training/selection.json`):
 
@@ -56,8 +56,8 @@ Resposta aos itens 3 e 4 da seção 3 e ao gate de reserva do relatório de adeq
 
 O motor carrega o checkpoint escolhido, com o sha256 conferido, por `CARDL_SELECTION=experiments/training/selection.json`.
 
-**Determinismo:** `train_seed` fixa as sementes de `random`, NumPy e PyTorch, um thread e algoritmos determinísticos (`set_determinism`). Os checkpoints atuais são de antes dessa mudança; um novo treino é necessário para conferir a reprodução bit a bit.
+**Determinismo:** `train_seed` fixa as sementes de `random`, NumPy e PyTorch, um thread e algoritmos reprodutíveis (`set_determinism`). Os checkpoints atuais são de antes dessa mudança; um novo treino é necessário para conferir a reprodução bit a bit.
 
-**Gate de reserva:** `tests/test_cardl.py::test_reserve_gate_latency_within_budget` exige decisão em toda chamada. A decisão do MAPPO só vale dentro do orçamento (`CARDL_TIME_BUDGET_MS`, 20 ms); fora dele, ou sem checkpoint, sha256 divergente, baixa confiança ou conflito fora do escopo, vale a H-RDL.
+**Gate de reserva:** `tests/test_cardl.py::test_reserve_gate_latency_within_budget` exige decisão em toda chamada. A decisão do MAPPO só vale dentro do orçamento (`CARDL_TIME_BUDGET_MS`, 20 ms); fora dele, ou sem checkpoint, sha256 divergente, baixa confiança ou conflito fora do escopo, vale a RDL-N1.
 
-**Continua pendente:** a validação pré-registrada CA-RDL × H-RDL na bancada NORI com E2 real, com a semente escolhida por este critério.
+**Continua pendente:** a validação pré-registrada RDL-N2 × RDL-N1 na bancada NORI com E2 real, com a semente escolhida por este critério.

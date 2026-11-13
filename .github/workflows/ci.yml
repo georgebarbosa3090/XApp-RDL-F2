@@ -1,4 +1,4 @@
-name: CI - CA-RDL (Fase 2)
+name: CI - RDL-N2 (Fase 2)
 
 on:
   push:

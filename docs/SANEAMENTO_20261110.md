@@ -62,7 +62,7 @@ Tudo o que foi removido continua no histórico do git (commit anterior: `95a1382
 
 1. **Rebasear a Fase 2 sobre a Fase 1.** O código da xApp aqui é anterior às 51 correções da Fase 1 (ex.: `control_dispatcher.py` ainda passa o nó como `retries` em `rmr_send`, achado 1; cota de PRB mapeada em E2SM-RC Style 1 / Action 1 em vez de Style 2 / Action 6). A Fase 2 deve importar o núcleo da Fase 1 e manter só o motor de contexto/MARL.
 2. **MAPPO real**: ambiente que converse com o NORI pela xApp da Fase 1, treino com proveniência, carga do checkpoint na inferência e remoção do piso artificial de confiança.
-3. **Reserva determinística** (H-RDL em ≤ 200 ms) como gate medido.
+3. **Reserva por regras** (RDL-N1 em ≤ 200 ms) como gate medido.
 4. **GNN / grafo de conhecimento**: implementar só se houver hipótese que precise deles (ex.: conflitos entre células); senão, retirar das alegações nos documentos que restaram.
 5. **Cenários**: os `.cc` daqui são anteriores às correções da Fase 1; S9–S15 nunca rodaram.
 6. **Documentos que restaram**: ainda contêm números sem evidência (só sinalizados pelo aviso). Reescrevê-los conforme a evidência nova surgir.

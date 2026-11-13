@@ -1,5 +1,5 @@
 """
-Ambiente de treino da CA-RDL calibrado com medições da Fase 1 (CMDP multiagente).
+Ambiente de treino da RDL-N2 calibrado com medições da Fase 1 (CMDP multiagente).
 
 Um passo é uma janela de decisão. Há dois alvos (agentes), o teto de PRB de cada fatia:
 

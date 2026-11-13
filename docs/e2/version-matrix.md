@@ -1,6 +1,6 @@
 # Matriz de Versionamento e Perfil de Interoperabilidade E2 — XApp-RDL-F1
 
-**Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (H-RDL Determinística)  
+**Projeto:** xApp RDL (Resource and Decision Layer) — Fase 1 (RDL-N1, regras e políticas)  
 **Target Interoperability Profile:** O-RAN SC Release I/J + NORI E2SIM (E2AP v02.03, E2SM-KPM v03.00, E2SM-RC v01.03)  
 **Ambiente de Referência:** O-RAN Software Community (Release J Dawn/Cherry), 5G-LENA v5.1 / ns-3.48 e OpenRAN@Brasil Blueprint v3  
 **Data de Atualização:** 10 de Setembro de 2026  

@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xapp-rdl-f2"
 version = "2.1.0"
-description = "CA-RDL (Fase 2): arbitragem aprendida (MAPPO com restrição) sobre o núcleo H-RDL da Fase 1"
+description = "RDL-N2 (Fase 2): arbitragem aprendida (MAPPO com restrição) sobre o núcleo RDL-N1 da Fase 1"
 authors = [{ name = "George Barbosa" }]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    # Núcleo H-RDL (percepção, TVS/EEVS, Safety Guard, grafo de conhecimento, A1, E2):
+    # Núcleo RDL-N1 (percepção, TVS/EEVS, Safety Guard, grafo de conhecimento, A1, E2):
     # fonte única na Fase 1, fixada por commit. Para desenvolvimento local:
     #   uv pip install -e ../XApp-RDL-F1
     "xapp-rdl-f1 @ git+https://github.com/georgebarbosa3090/XApp-RDL-F1@9fefbff6",

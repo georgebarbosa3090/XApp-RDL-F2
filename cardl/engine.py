@@ -1,13 +1,13 @@
 """
-Motor de decisão da CA-RDL: MAPPO sobre o núcleo H-RDL da Fase 1.
+Motor de decisão da RDL-N2: MAPPO sobre o núcleo RDL-N1 da Fase 1.
 
 ``CARDLReasoning`` estende ``src.core.reasoning.Reasoning`` (Fase 1). Para conflitos diretos de
 ``PRB_QUOTA`` com uma política carregada, consulta o MAPPO; nos demais casos, e sempre que o
 MAPPO não decidir dentro do orçamento, usa a arbitragem TVS/EEVS da Fase 1 (reserva
-determinística do contrato F1↔F2). O Refinement da Fase 1 continua validando a ação escolhida
+reprodutível do contrato F1↔F2). O Refinement da Fase 1 continua validando a ação escolhida
 no pipeline da ``RDLxApp``, qualquer que seja a origem.
 
-Reserva para a H-RDL quando:
+Reserva para a RDL-N1 quando:
 - não há checkpoint, ou o sha256 dele difere do esperado;
 - o conflito não é de ``PRB_QUOTA`` (o MAPPO foi treinado só para tetos de PRB por fatia);
 - a probabilidade da ação escolhida fica abaixo de ``min_confidence``;
@@ -179,7 +179,7 @@ class CARDLReasoning(Reasoning):
 
 def selected_checkpoint():
     """Checkpoint e sha256: de ``CARDL_SELECTION`` (seleção por critério, cardl/marl/select.py) ou de
-    ``CARDL_CHECKPOINT``. Seleção sem modelo elegível: nenhum checkpoint (só H-RDL)."""
+    ``CARDL_CHECKPOINT``. Seleção sem modelo elegível: nenhum checkpoint (só RDL-N1)."""
     selection = os.getenv("CARDL_SELECTION")
     if selection:
         import json
@@ -196,7 +196,7 @@ def selected_checkpoint():
 
 
 def build_cardl_xapp():
-    """RDLxApp da Fase 1 com o raciocínio CA-RDL e a política A1 20002."""
+    """RDLxApp da Fase 1 com o raciocínio RDL-N2 e a política A1 20002."""
     from src.rdl_xapp import RDLxApp
 
     app = RDLxApp()

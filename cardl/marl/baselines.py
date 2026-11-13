@@ -1,4 +1,4 @@
-"""Políticas de referência no ambiente calibrado: B0–B2 e a H-RDL da Fase 1 (B3)."""
+"""Políticas de referência no ambiente calibrado: B0–B2 e a RDL-N1 da Fase 1 (B3)."""
 
 from typing import Callable, List
 
@@ -38,7 +38,7 @@ def b2_priority(env: CalibratedSliceEnv) -> List[int]:
 
 
 def b3_hrdl(env: CalibratedSliceEnv) -> List[int]:
-    """H-RDL: TVS da Fase 1 (``Reasoning.resolve``) sobre o conflito direto de cada alvo."""
+    """RDL-N1: TVS da Fase 1 (``Reasoning.resolve``) sobre o conflito direto de cada alvo."""
     from src.conflict_types import ConflictEvent, ConflictSeverity, ConflictType, XAppAction
     from src.core.reasoning import Reasoning
     from src.infrastructure.memory_module import MemoryModule

@@ -1,13 +1,13 @@
 """
-Treino do MAPPO da CA-RDL no ambiente calibrado, com proveniência.
+Treino do MAPPO da RDL-N2 no ambiente calibrado, com proveniência.
 
 Uso:
     python -m cardl.marl.train --seeds 101 102 103 --episodes 400 --out experiments/training
 
 Para cada semente grava em ``<out>/mappo_seed<semente>/``:
-- ``actor_critic.pt``: checkpoint (carregado pelo motor CA-RDL na inferência);
+- ``actor_critic.pt``: checkpoint (carregado pelo motor RDL-N2 na inferência);
 - ``convergence.csv``: recompensa, custo e λ por episódio;
-- ``evaluation.json``: CA-RDL contra B0–B3 em sementes de avaliação separadas;
+- ``evaluation.json``: RDL-N2 contra B0–B3 em sementes de avaliação separadas;
 - ``training_manifest.json``: commit, versão da Fase 1, sha256 da curva de calibração e do
   checkpoint, hiperparâmetros. ``publication_eligible`` é sempre ``false``: o ambiente é um
   substituto calibrado; a evidência vem da validação pré-registrada com E2 real no NORI.
@@ -117,7 +117,7 @@ def mappo_policy(agent: MAPPO) -> Callable[[CalibratedSliceEnv], List[int]]:
 
 
 def set_determinism(seed: int) -> None:
-    """Treino reprodutível na CPU (docs/15 §3, item 4): sementes, um thread e algoritmos determinísticos."""
+    """Treino reprodutível na CPU (docs/15 §3, item 4): sementes, um thread e algoritmos reprodutíveis."""
     import random
     import torch
     random.seed(seed)
@@ -156,7 +156,7 @@ def train_seed(seed: int, episodes: int, out: Path, env_cfg: EnvConfig, cfg: Map
     agent.save(str(ckpt), {"calibration_sha256": curve.sha256, "seed": seed})
     ckpt_sha = hashlib.sha256(ckpt.read_bytes()).hexdigest()
 
-    evaluation = {"eval_seeds": EVAL_SEEDS, "CA-RDL": evaluate(mappo_policy(agent), EVAL_SEEDS, env_cfg)}
+    evaluation = {"eval_seeds": EVAL_SEEDS, "RDL-N2": evaluate(mappo_policy(agent), EVAL_SEEDS, env_cfg)}
     for name, policy in BASELINES.items():
         evaluation[name] = evaluate(policy, EVAL_SEEDS, env_cfg)
     (run_dir / "evaluation.json").write_text(json.dumps(evaluation, indent=2), encoding="utf-8")

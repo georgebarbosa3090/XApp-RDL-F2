@@ -1,23 +1,23 @@
-# Contrato de Sincronização entre Fase 1 (H-RDL) e Fase 2 (CA-RDL)
+# Contrato de Sincronização entre Fase 1 (RDL-N1) e Fase 2 (RDL-N2)
 
 **Projeto:** xApp RDL (Resource and Decision Layer)  
 **Documento:** `PHASE1_PHASE2_SYNC_CONTRACT.md`  
-**Status:** **ESPECIFICADO.** A reserva determinística (fallback para a H-RDL em ≤ 200 ms) não foi verificada, e o CI deste repositório falhava até 2026-11-10. Versão de referência do contrato: `XApp-RDL-F1/docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md`.  
+**Status:** **ESPECIFICADO.** A reserva por regras (fallback para a RDL-N1 em ≤ 200 ms) não foi verificada, e o CI deste repositório falhava até 2026-11-10. Versão de referência do contrato: `XApp-RDL-F1/docs/compliance/PHASE1_PHASE2_SYNC_CONTRACT.md`.  
 
-**Escopo:** Definição formal do contrato de sincronização de dados, modelos de objetos, abstrações de código e regras de repositório entre H-RDL (Fase 1) e CA-RDL (Fase 2).
+**Escopo:** Definição formal do contrato de sincronização de dados, modelos de objetos, abstrações de código e regras de repositório entre RDL-N1 (Fase 1) e RDL-N2 (Fase 2).
 
 ---
 
 ## 1. Princípios Arquiteturais da Sincronização
 
-A sincronização entre o H-RDL (**Fase 1: Heuristic Resource and Decision Layer — Heurística baseada em Modelo Matemático Determinístico**) e o CA-RDL (**Fase 2: Context-Aware Resource and Decision Layer**) segue três princípios fundamentais:
+A sincronização entre o RDL-N1 (**Fase 1: nível 1 da RDL hierárquica multinível, baseado em regras e políticas**) e o RDL-N2 (**Fase 2: nível 2, política aprendida com restrições**) segue três princípios fundamentais:
 
 1. **Determinismo em Primeira Linha (Safety-First):**
-   A Fase 1 estabelece as regras determinísticas invioláveis (*Safety Guards*). A Fase 2 opera sobre o subespaço de ações aprovadas pela Fase 1.
+   A Fase 1 estabelece as regras invioláveis (*Safety Guards*). A Fase 2 opera sobre o subespaço de ações aprovadas pela Fase 1.
 2. **Invariância do Esquema de Dados Core:**
    Estruturas fundamentais como `RDLDecision`, `XAppAction`, `ConflictSet` e `PERCEPTION_WINDOW` possuem garantia de compatibilidade estável entre as duas fases.
 3. **Mecanismo de Fallback Automático:**
-   Caso o motor contextual/MARL da Fase 2 sofra estresse temporal ou degradação ($\Delta t > 200\text{ ms}$ ou falha no modelo de IA), o sistema reverte instantânea e autonomamente para a arbitragem determinística TVS/EEVS do H-RDL Fase 1.
+   Caso o motor contextual/MARL da Fase 2 sofra estresse temporal ou degradação ($\Delta t > 200\text{ ms}$ ou falha no modelo de IA), o sistema reverte instantânea e autonomamente para a arbitragem por regras TVS/EEVS do RDL-N1 Fase 1.
 
 ---
 
@@ -37,7 +37,7 @@ A sincronização entre o H-RDL (**Fase 1: Heuristic Resource and Decision Layer
             ▼                                 ▼
 ┌───────────────────────┐         ┌───────────────────────┐
 │ ReasoningAgent (F1)   │         │ ContextEngine (F2)    │
-│ TVS/EEVS Determinístico│         │ MAPPO / GNN Context   │
+│ TVS/EEVS por regras│         │ MAPPO / GNN Context   │
 └───────────┬───────────┘         └───────────┬───────────┘
             │                                 │
             └────────────────┬────────────────┘
@@ -58,7 +58,7 @@ A sincronização entre o H-RDL (**Fase 1: Heuristic Resource and Decision Layer
 
 ### Contrato de Dados Python (`src/conflict_types.py`)
 
-| Campo / Tipo | Fase 1 (H-RDL) | Fase 2 (CA-RDL Extension) | Garantia de Sincronização |
+| Campo / Tipo | Fase 1 (RDL-N1) | Fase 2 (RDL-N2 Extension) | Garantia de Sincronização |
 | :--- | :--- | :--- | :--- |
 | `XAppAction` | `xapp_id`, `action_type`, `params`, `priority` | + `context_features`, `confidence_score` | Retrocompatível via argumentos opcionais com valor padrão (`None`). |
 | `RDLDecision` | `decision_id`, `selected_action`, `safety_applied` | + `marl_agent_id`, `reward_estimate` | Os novos campos possuem defaults nulos mantendo parsing idêntico. |
@@ -70,14 +70,14 @@ A sincronização entre o H-RDL (**Fase 1: Heuristic Resource and Decision Layer
 
 | Repositório Git | Nome Oficial | Papel na Arquitetura | Branch de Integração |
 | :--- | :--- | :--- | :--- |
-| `georgebarbosa3090/XApp-RDL-F1` | **XApp-RDL-F1 (H-RDL)** | Fase 1 congelada, testes de interoperabilidade, benchmarks $S_0\text{--}S_8$, Safety Guards determinísticos. | `main` |
-| `georgebarbosa3090/XApp-RDL-F2` | **XApp-RDL-F2 (CA-RDL)** | Fase 2 em evolução, treinamento MAPPO, GNN Context Engine, cenários $S_9\text{--}S_{15}$. | `main` / `feature/marl-context` |
+| `georgebarbosa3090/XApp-RDL-F1` | **XApp-RDL-F1 (RDL-N1)** | Fase 1 congelada, testes de interoperabilidade, benchmarks $S_0\text{--}S_8$, Safety Guards por regra. | `main` |
+| `georgebarbosa3090/XApp-RDL-F2` | **XApp-RDL-F2 (RDL-N2)** | Fase 2 em evolução, treinamento MAPPO, GNN Context Engine, cenários $S_9\text{--}S_{15}$. | `main` / `feature/marl-context` |
 
 ---
 
 ## 4. Checklist de Verificação de Sincronização F1 $\leftrightarrow$ F2
 
 1. [x] **Importação limpa:** `conflict_types.py` importa sem erros em ambos os ambientes.
-2. [x] **Safety Fallback:** Em caso de time-out do agente MARL da Fase 2, o H-RDL responde em $\le 200\text{ ms}$.
+2. [x] **Safety Fallback:** Em caso de time-out do agente MARL da Fase 2, o RDL-N1 responde em $\le 200\text{ ms}$.
 3. [x] **Zero Synthetic Evidence:** Ambas as fases aderem estritamente à `provenance_policy.yaml`.
 4. [x] **Normative Profile:** A Fase 1 permanece em `E2AP v02.03` / `KPM v03.00` / `RC v01.03` enquanto a Fase 2 habilita opcionalmente conectores para `Release 5`.

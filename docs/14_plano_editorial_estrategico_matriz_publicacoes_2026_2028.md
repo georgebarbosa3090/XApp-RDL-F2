@@ -1,11 +1,11 @@
 # Volume 14: Plano Editorial Estratégico & Matriz Exaustiva de Publicações (2026–2028)
 
 > **Aviso de saneamento (2026-11-10).** Este documento foi escrito quando o repositório guardava execuções sintéticas. Valores de desempenho, latência, energia ou SLA citados aqui **não têm evidência elegível**, e links para `docs/04`, `07`, `11`–`13`, `docs/auditoria/`, `docs/figures/fig_*`, `reports/figures/` e `experiments/results/` apontam para arquivos removidos (preservados no histórico do git). Ver [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md).
-## Roteiro de Submissões: H-RDL (Fase 1) $\to$ CA-RDL (Fase 2) $\to$ Multi-Tier Governance (Fase 3)
+## Roteiro de Submissões: RDL-N1 (Fase 1) $\to$ RDL-N2 (Fase 2) $\to$ Multi-Tier Governance (Fase 3)
 
 > **Portal da Documentação Oficial (xApp-RDL):**  
-> **Fase 1 (H-RDL) & Fase 2 (CA-RDL) — 14 Volumes Canônicos:**  
-> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 H-RDL](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 CA-RDL](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
+> **Fase 1 (RDL-N1) & Fase 2 (RDL-N2) — 14 Volumes Canônicos:**  
+> **[01. Arquitetura](01_arquitetura_e_modelagem.md)** | **[02. Deploy & Simulação](02_guia_operacional_deploy_e_simulacao.md)** | **[03. Taxonomia & Cenários](03_taxonomia_de_conflitos_e_cenarios.md)** | **[04. Relatório Científico Mestre](04_relatorio_cientifico_mestre_rdl.md)** | **[05. Auditoria & Conformidade](05_auditoria_e_conformidade_oran.md)** | **[06. Roadmap 6G](06_roadmap_e_pesquisa_futura_6g.md)** | **[07. Resultados S0–S15](07_relatorio_resultados_simulacao_baselines_hrdl_cardl.md)** | **[08. Estado da Arte](08_estado_da_arte_governanca_conflitos_xapp_rdl_2020_2026.md)** | **[09. Protocolo Periódico](09_protocolo_execucao_simulacoes_validacao_periodico.md)** | **[10. Plano Melhorias](10_analise_profunda_e_plano_de_melhorias_estrategicas.md)** | **[11. FlowMonitor S0–S15](11_relatorio_experimental_ns3_flowmonitor_s0_s15.md)** | **[12. Demo F1 RDL-N1](12_relatorio_demonstracao_rica_closed_loop_fase1_hrdl.md)** | **[13. Demo F2 RDL-N2](13_relatorio_demonstracao_rica_closed_loop_fase2_cardl.md)** | **[14. Matriz Publicações](14_plano_editorial_estrategico_matriz_publicacoes_2026_2028.md)**
 
 ---
 
@@ -27,8 +27,8 @@ Este documento estabelece o **Plano Editorial Estratégico Oficial** do ecossist
 ┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                 CRONOGRAMA GERAL DE SUBMISSÕES (2026–2028)                             │
 ├────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│  [PAPER 1: Q4/2026] ──► IEEE TNSM (H-RDL Flagship: Gestão de Conflito, Safety Guard & Loop E2)         │
-│  [PAPER 2: Q1/2027] ──► IEEE TCCN (CA-RDL Cognitive: Knowledge Graph, Safe-MAPPO & Two-Tier dApp)      │
+│  [PAPER 1: Q4/2026] ──► IEEE TNSM (RDL-N1 Flagship: Gestão de Conflito, Safety Guard & Loop E2)         │
+│  [PAPER 2: Q1/2027] ──► IEEE TCCN (RDL-N2, nível 2 aprendido: Knowledge Graph, Safe-MAPPO & Two-Tier dApp)      │
 │  [PAPER 3: Q2/2027] ──► IEEE Network / CommMag (Visão Arquitetural: Governança Multi-Tier r/x/dApp)    │
 │  [PAPER 4: Q3/2027] ──► Elsevier Computer Networks (Reprodutibilidade Experimental ns-3/5G-LENA/NORI) │
 │  [PAPER 5: 2027]    ──► IEEE WCL / OJ-COMS (Letter: Formulação Matemática de Bounding Box Sub-1ms)    │
@@ -42,15 +42,15 @@ Este documento estabelece o **Plano Editorial Estratégico Oficial** do ecossist
 
 ### Tabela 1: Matriz Estratégica Completa dos 6 Manuscritos
 
-| Dimensão Editorial | Paper 1 (H-RDL Flagship) | Paper 2 (CA-RDL Cognitive) | Paper 3 (Multi-Tier Governance) | Paper 4 (Reproducible Framework) | Paper 5 (Mathematical Letter) | Paper 6 (Comprehensive Survey) |
+| Dimensão Editorial | Paper 1 (RDL-N1 Flagship) | Paper 2 (RDL-N2, nível 2) | Paper 3 (Multi-Tier Governance) | Paper 4 (Reproducible Framework) | Paper 5 (Mathematical Letter) | Paper 6 (Comprehensive Survey) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Periódico Alvo** | **IEEE TNSM** (Q1, IF ~5.3) | **IEEE TCCN** (Q1, IF ~5.0) | **IEEE Network** (Q1, IF ~8.9) | **Elsevier COMNET** (Q1, IF ~4.4) | **IEEE WCL / OJ-COMS** (Q2/Q1) | **IEEE COMST** (Q1, IF ~35.6) |
 | **Prazo de Submissão** | **Outubro–Novembro / 2026** | **Dezembro/2026 – Fevereiro/2027** | **Maio–Julho / 2027** | **Agosto–Outubro / 2027** | **Fluxo Contínuo 2027** | **2027–2028** |
-| **Título Definitivo** | *Safe Closed-Loop Multi-xApp Conflict Mitigation in Open RAN through Hierarchical Arbitration and Deterministic Safety Guards* | *Context-Aware Multi-xApp Coordination in Open RAN through Knowledge Graphs and Constrained Multi-Agent Reinforcement Learning* | *Hierarchical Multi-Timescale Conflict Governance for Open RAN: From Non-RT Policies to Real-Time Distributed Units* | *A Fully Reproducible Co-Simulation Framework for Safe Multi-xApp Conflict Arbitration in Open RAN* | *Sub-Millisecond Bounding-Box Envelopes for Safe Real-Time Distributed App Preemption in Open RAN* | *A Survey and Taxonomy on Conflict Management, Dynamic Arbitration, and Safe Coordination in Open RAN* |
-| **Contribuição Inédita Central** | Arquitetura Near-RT determinística que detecta colisões multi-xApp, arbitra via matriz multiobjetivo (TVS/EEVS) e garante $\text{Unsafe} \equiv 0$ com latência sub-milissegundo ($T_{\text{dec}} \ll T_{\text{NearRT}}$). | Coordenação contextual via Grafo de Conhecimento heterogêneo ($\kappa$) e Safe-MAPPO (CMDP com multiplicadores Lagrangianos) sob ambientes estocásticos densos e multi-fatia. | Modelo unificado de governança em 3 escalas temporais ($r\text{App} > 1\text{s} \leftrightarrow x\text{App} \approx 10\text{-}100\text{ms} \leftrightarrow d\text{App} < 1\text{ms}$ TTI) com barramento A1-P/E2. | Pipeline de co-simulação aberto (ns-3.48 + 5G-LENA + NORI + OSC Near-RT RIC) com decodificação ASN.1 APER estrita e datasets brutos para reprodutibilidade. | Formulação matemática da projeção do envelope de segurança $\Omega_{\text{dApp}}$ garantindo limites de PRB/potência no TTI sem violar a estabilidade macro do RIC. | Revisão sistemática da literatura (SLR PRISMA) classificando taxonomias de conflitos (C1–C5), mecanismos de mediação e lacunas normativas O-RAN WG3/WG2. |
-| **Cenários Experimentais Suportados** | **B0 vs H-RDL, S1 (PRB Collision), S2 (Energy vs QoS), S3 (TVS Coupling), S8 (Validação Principal de Circuito Fechado E2AP/E2SM-KPM/RC)** + **Suite de Ablação A0–A5** + **Micro-benchmark de Escalabilidade Algorítmica de Decisão (2 a 100 propostas concorrentes)** [Simulação física ns-3 com até 6 xApps ativas de referência]. | **S6 (Conflict Storm), S9 (NTN LEO), S10 (UAV Swarm), S11 (V2X), S12 (TSN), S14 (ISAC)** + Curvas de Treinamento MAPPO. | **Cenário B (Two-Tier dApp) + Injeção de Políticas A1-P sintéticas** + Validação de Hierarquia de Controle rApp/xApp/dApp. | **Suite Completa S0–S15 + 30 Sementes Físicas** + Scripts de Automação de Testbed e Benchmarks de CPU/Memória. | **Micro-benchmarks de TTI (0.25ms / 0.5ms)** sob rajadas de preempção URLLC sobre eMBB com Bounding Box. | Não aplicável (SLR + Análise Bibliométrica + Mapeamento de Testbeds Globais). |
+| **Título Definitivo** | *Safe Closed-Loop Multi-xApp Conflict Mitigation in Open RAN through Multi-Level Rule- and Policy-Based Arbitration and Per-Proposal Safety Guards* | *Learned Multi-xApp Coordination in Open RAN through Knowledge Graphs and Constrained Multi-Agent Reinforcement Learning* | *Hierarchical Multi-Timescale Conflict Governance for Open RAN: From Non-RT Policies to Real-Time Distributed Units* | *A Fully Reproducible Co-Simulation Framework for Safe Multi-xApp Conflict Arbitration in Open RAN* | *Sub-Millisecond Bounding-Box Envelopes for Safe Real-Time Distributed App Preemption in Open RAN* | *A Survey and Taxonomy on Conflict Management, Dynamic Arbitration, and Safe Coordination in Open RAN* |
+| **Contribuição Inédita Central** | Arquitetura Near-RT por regras e políticas que detecta colisões multi-xApp, arbitra via matriz multiobjetivo (TVS/EEVS) e garante $\text{Unsafe} \equiv 0$ com latência sub-milissegundo ($T_{\text{dec}} \ll T_{\text{NearRT}}$). | Coordenação contextual via Grafo de Conhecimento heterogêneo ($\kappa$) e Safe-MAPPO (CMDP com multiplicadores Lagrangianos) sob ambientes estocásticos densos e multi-fatia. | Modelo unificado de governança em 3 escalas temporais ($r\text{App} > 1\text{s} \leftrightarrow x\text{App} \approx 10\text{-}100\text{ms} \leftrightarrow d\text{App} < 1\text{ms}$ TTI) com barramento A1-P/E2. | Pipeline de co-simulação aberto (ns-3.48 + 5G-LENA + NORI + OSC Near-RT RIC) com decodificação ASN.1 APER estrita e datasets brutos para reprodutibilidade. | Formulação matemática da projeção do envelope de segurança $\Omega_{\text{dApp}}$ garantindo limites de PRB/potência no TTI sem violar a estabilidade macro do RIC. | Revisão sistemática da literatura (SLR PRISMA) classificando taxonomias de conflitos (C1–C5), mecanismos de mediação e lacunas normativas O-RAN WG3/WG2. |
+| **Cenários Experimentais Suportados** | **B0 vs RDL-N1, S1 (PRB Collision), S2 (Energy vs QoS), S3 (TVS Coupling), S8 (Validação Principal de Circuito Fechado E2AP/E2SM-KPM/RC)** + **Suite de Ablação A0–A5** + **Micro-benchmark de Escalabilidade Algorítmica de Decisão (2 a 100 propostas concorrentes)** [Simulação física ns-3 com até 6 xApps ativas de referência]. | **S6 (Conflict Storm), S9 (NTN LEO), S10 (UAV Swarm), S11 (V2X), S12 (TSN), S14 (ISAC)** + Curvas de Treinamento MAPPO. | **Cenário B (Two-Tier dApp) + Injeção de Políticas A1-P sintéticas** + Validação de Hierarquia de Controle rApp/xApp/dApp. | **Suite Completa S0–S15 + 30 Sementes Físicas** + Scripts de Automação de Testbed e Benchmarks de CPU/Memória. | **Micro-benchmarks de TTI (0.25ms / 0.5ms)** sob rajadas de preempção URLLC sobre eMBB com Bounding Box. | Não aplicável (SLR + Análise Bibliométrica + Mapeamento de Testbeds Globais). |
 | **Formato & Limite de Páginas** | Máx. 10 páginas (IEEE Double Column, sem excess page fees). | Máx. 13 páginas (regular submission, IEEE Double Column). | 6–8 páginas (estilo Magazine, linguagem acessível, figuras conceituais de alto impacto). | 15–22 páginas (formato Elsevier Single/Double Column). | 4–5 páginas (IEEE Transactions Letter / OJ-COMS Track). | 25–35 páginas (IEEE COMST), análise exaustiva e taxonomia formal. |
-| **Fronteira de Isolamento (Zero Overlap)** | Foco estrito em **governança determinística, heurísticas de prioridade e safety guards fixos**. Sem menção a MAPPO ou Grafos Cais. | Foco estrito em **aprendizado por reforço multiagente restrito (Safe-RL), representação em grafos e envelopes dinâmicos**. | Foco em **padronização O-RAN, políticas de longo prazo e decomposição de timescales**. | Foco em **engenharia de software de rede, codecs ASN.1, harness de testes e reprodutibilidade aberta**. | Foco em **prova analítica e tempo real estrito (< 1ms)** na O-DU, isolado da pilha do Near-RT RIC. | Foco em **síntese do estado da arte global e categorização metodológica**, sem resultados experimentais primários. |
+| **Fronteira de Isolamento (Zero Overlap)** | Foco estrito em **governança por regras, regras de prioridade e safety guards fixos**. Sem menção a MAPPO ou Grafos Cais. | Foco estrito em **aprendizado por reforço multiagente restrito (Safe-RL), representação em grafos e envelopes dinâmicos**. | Foco em **padronização O-RAN, políticas de longo prazo e decomposição de timescales**. | Foco em **engenharia de software de rede, codecs ASN.1, harness de testes e reprodutibilidade aberta**. | Foco em **prova analítica e tempo real estrito (< 1ms)** na O-DU, isolado da pilha do Near-RT RIC. | Foco em **síntese do estado da arte global e categorização metodológica**, sem resultados experimentais primários. |
 
 ---
 
@@ -67,7 +67,7 @@ $$\boxed{T_{\text{inference}} \ll T_{\text{arbitration}} < T_{\text{pipeline}} \
 │                                DECOMPOSIÇÃO TEMPORAL DE CIRCUITO FECHADO                          │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ 1. T_inference = 0.0523 ms (52.3 µs)                                                             │
-│    Tempo puro de execução da matriz de prioridades determinística TVS/EEVS no H-RDL.             │
+│    Tempo puro de execução da matriz de prioridades por regras TVS/EEVS no RDL-N1.             │
 │                                                                                                  │
 │ 2. T_arbitration = 0.103 ms a 0.262 ms (103 µs - 262 µs)                                         │
 │    Ciclo completo: Detecção formal C1-C5 + Resolução de Conflito + Validação de Safety Guard.    │
@@ -80,7 +80,7 @@ $$\boxed{T_{\text{inference}} \ll T_{\text{arbitration}} < T_{\text{pipeline}} \
 └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-> **Aviso de Isolamento:** O valor de **$14{,}39\text{ ms}$** refere-se exclusivamente à inferência da rede neural Safe-MAPPO do CA-RDL (Fase 2) e **não deve constar no Paper 1**, garantindo que o H-RDL seja avaliado como solução determinística de latência sub-milissegundo ($T_{\text{arbitration}} \le 0{,}262\text{ ms}$).
+> **Aviso de Isolamento:** O valor de **$14{,}39\text{ ms}$** refere-se exclusivamente à inferência da rede neural Safe-MAPPO do RDL-N2 (Fase 2) e **não deve constar no Paper 1**, garantindo que o RDL-N1 seja avaliado como solução por regras de latência sub-milissegundo ($T_{\text{arbitration}} \le 0{,}262\text{ ms}$).
 
 ---
 
@@ -90,12 +90,12 @@ $$\boxed{T_{\text{inference}} \ll T_{\text{arbitration}} < T_{\text{pipeline}} \
 | :--- | :--- | :--- |
 | *"Homologado pelo O-RAN WG2 / WG3"* | **"Implemented in strict compliance with O-RAN WG3 E2SM-RC v01.03 and E2SM-KPM v02.03 specifications"** | Evita a alegação de certificação institucional formal pela O-RAN Alliance. |
 | *"100% Validado / 100% Operacional"* | **"Demonstrating 0.0% residual conflict rate and 100% safety bound satisfaction across all evaluated N=30 physical seeds"** | Converte hipérboles em evidências estatísticas objetivas e delimitadas. |
-| *"Provably Safe Conflict Mitigation"* | **"Safe Closed-Loop Multi-xApp Conflict Mitigation through Deterministic Safety Guards"** | Elimina a exigência de provas formais de estabilidade analítica de Lyapunov. |
+| *"Provably Safe Conflict Mitigation"* | **"Safe Closed-Loop Multi-xApp Conflict Mitigation through Per-Proposal Safety Guards"** | Elimina a exigência de provas formais de estabilidade analítica de Lyapunov. |
 | *"Zero Dados Sintéticos"* | **"Empirically derived from 3GPP TR 38.901 physical-layer simulations in ns-3/5G-LENA and real ASN.1 APER traces"** | Linguagem padrão e rigorosa em publicações IEEE Transactions. |
 
 ---
 
-### 3.3. Formalização Matemática do Deterministic Safety Guard
+### 3.3. Formalização Matemática do Safety Guard por proposta
 
 No Paper 1, a garantia de segurança física é formalizada através do operador de projeção convexa $G: \mathcal{A} \to \Omega_{\text{safe}}$:
 
@@ -105,7 +105,7 @@ onde o conjunto admissível seguro $\Omega_{\text{safe}}$ é delimitado pelas re
 
 $$\Omega_{\text{safe}} = \left\{ \mathbf{a} = (\mathbf{r}_{\text{PRB}}, P_{\text{tx}}) \mid \sum_{s \in \mathcal{S}} r_{\text{PRB}}^{(s)} \le 1.0, \; r_{\text{PRB}}^{(\text{URLLC})} \ge r_{\min}, \; P_{\min} \le P_{\text{tx}} \le P_{\max} \right\}$$
 
-Essa formalização assegura que **toda ação despachada via E2SM-RC pertence obrigatoriamente a $\Omega_{\text{safe}}$**, provendo segurança determinística por construção (*Safety-by-Design*).
+Essa formalização assegura que **toda ação despachada via E2SM-RC pertence obrigatoriamente a $\Omega_{\text{safe}}$**, provendo segurança por construção (*Safety-by-Design*).
 
 ---
 
@@ -114,7 +114,7 @@ Essa formalização assegura que **toda ação despachada via E2SM-RC pertence o
 O **Cenário S8 (Real NORI Closed Loop E2AP/E2SM)** constitui a evidência empírica principal de fechamento causal do Paper 1:
 
 1. **Topologia de Malha Fechada Completa:**
-   $$\text{ns-3/5G-LENA (O-DU/O-CU)} \xrightarrow[\text{E2SM-KPM v3.0}]{\text{SCTP:36422}} \text{Near-RT RIC} \xrightarrow{\text{H-RDL Arbitrage}} \text{Safety Guard} \xrightarrow[\text{E2SM-RC Format 1}]{\text{RIC\_CONTROL}} \text{E2 Agent} \xrightarrow{\text{RIC\_CONTROL\_ACK}} \text{MAC Scheduler}$$
+   $$\text{ns-3/5G-LENA (O-DU/O-CU)} \xrightarrow[\text{E2SM-KPM v3.0}]{\text{SCTP:36422}} \text{Near-RT RIC} \xrightarrow{\text{RDL-N1 Arbitrage}} \text{Safety Guard} \xrightarrow[\text{E2SM-RC Format 1}]{\text{RIC\_CONTROL}} \text{E2 Agent} \xrightarrow{\text{RIC\_CONTROL\_ACK}} \text{MAC Scheduler}$$
 2. **Fechamento Causal Comprovado:**
    - Taxa de Efeito Causal Confiável: $\text{CRE} = 100{,}0\%$.
    - Confirmação não-repudiável via captura de socket real (`experiments/results/traces/live_e2_loopback_capture.pcap`).
@@ -134,7 +134,7 @@ Para prevenir qualquer ambiguidade durante a revisão por pares na IEEE TNSM, o 
 
 ## 4. Tabela Sistemática de Comparação com o Estado da Arte (SOTA)
 
-### Tabela 2: Comparativo Sistemático entre o H-RDL e o Estado da Arte em Coordenação Open RAN
+### Tabela 2: Comparativo Sistemático entre o RDL-N1 e o Estado da Arte em Coordenação Open RAN
 
 | Abordagem / Framework | Paradigma de Controle | Suporte a Conflitos Concorrentes | Latência de Arbitragem ($T_{\text{dec}}$) | Garantia de Safety Guard ($\text{Unsafe} \equiv 0$) | Codec ASN.1 APER Real | Mecanismo de Rollback / Timeout E2 | Validação com Fatias Heterogêneas (URLLC/eMBB) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -143,7 +143,7 @@ Para prevenir qualquer ambiguidade durante a revisão por pares na IEEE TNSM, o 
 | **O-RAN WG3 Non-RT Broker** | Mediação Reativa Non-RT | ⚠️ Apenas Longo Prazo | $> 1000\text{ ms}$ | ⚠️ Parcial (A1 Policies) | ⚠️ JSON/REST | ❌ Sem Rollback | ⚠️ Limitado a cotas macro |
 | **ColO-RAN (Bonati et al., 2021)** | Emulação de Testbed DRL | ⚠️ Conflitos Binários | $10\text{--}50\text{ ms}$ | ❌ Probabilístico (Soft penalty) | ⚠️ Customizado | ❌ Ausente | ⚠️ eMBB predominante |
 | **Sl-ORAN (D'Oro et al., 2022)** | Dynamic Slicing Controller | ⚠️ Limitado a PRB Slicing | $5\text{--}15\text{ ms}$ | ⚠️ Sem Hard Boundary | ⚠️ Protobuf | ❌ Ausente | ⚠️ Apenas Slicing |
-| **Proposta H-RDL (Fase 1)** | **Hierárquico Determinístico** | **✅ Multi-xApp (C1 a C5)** | **$0{,}052\text{--}0{,}262\text{ ms}$** | **✅ Determinístico ($\text{Unsafe} \equiv 0$)** | **✅ E2SM-RC Format 1 (19 B)** | **✅ ACK Tracker + Rollback** | **✅ URLLC + eMBB + mMTC** |
+| **Proposta RDL-N1 (Fase 1)** | **Hierárquico por Regras e Políticas** | **✅ Multi-xApp (C1 a C5)** | **$0{,}052\text{--}0{,}262\text{ ms}$** | **✅ Por regra ($\text{Unsafe} \equiv 0$)** | **✅ E2SM-RC Format 1 (19 B)** | **✅ ACK Tracker + Rollback** | **✅ URLLC + eMBB + mMTC** |
 
 ---
 
