@@ -33,9 +33,10 @@ flowchart LR
 | `cardl/marl/baselines.py` | B0–B2 e B3 (o `Reasoning` real da F1) no mesmo ambiente |
 | `cardl/marl/train.py` | treino com proveniência (commit, versão da F1, sha256 da curva e do checkpoint) e avaliação contra B0–B3 |
 
-## Estado (2026-11-10)
+## Estado (2026-11-13)
 
-- **Treino:** `experiments/training/mappo_seed{101,102,103}`, 2000 episódios cada, no ambiente calibrado (`publication_eligible: false`). Na avaliação em 20 sementes separadas, a RDL-N1 (B3) atende o SLA crítico em todas as janelas. O MAPPO economiza PRBs ativos em uma semente, sacrificando a fatia eMBB, e é instável em outra; **não supera a RDL-N1** neste ambiente. Detalhes em [`docs/15_treino_mappo_calibrado.md`](docs/15_treino_mappo_calibrado.md).
+- **Treino:** `experiments/training/mappo_seed{101,102,103}`, 2000 episódios cada, no ambiente calibrado (`publication_eligible: false`). A seleção por critério fixado (validação nas sementes 8001–8010) escolheu a semente 101 e excluiu a 103 (violação do SLA crítico acima do limite do CMDP). Nas 20 sementes de avaliação, a 101 supera a RDL-N1 (B3) na recompensa, com menos PRBs ativos e menos mudanças de teto, à custa da fatia eMBB. Nesse ambiente, B1, B2 e B3 coincidem, então o ganho sobre a RDL-N1 também é sobre FIFO e prioridade estática. Números e decomposição em [`docs/15_treino_mappo_calibrado.md`](docs/15_treino_mappo_calibrado.md).
+- **Proveniência do treino:** os checkpoints foram treinados com o núcleo da Fase 1 em `a0cb21eb` (manifesto de cada semente, campo `phase1`), antes do treino reprodutível (`set_determinism`, `6c72ac3`). O pin atual da Fase 1 (`pyproject.toml`) é posterior. O B3 do ambiente usa só o TVS do conflito direto, que não mudou entre os dois commits; um novo treino no pin atual confirmaria a reprodução bit a bit.
 - **Validação com E2 real (NORI):** a pré-registrar; nenhuma execução ainda.
 - **Afirmações C1–C6:** `NOT_VERIFIED` ([`specs/claims.yaml`](specs/claims.yaml)).
 - **Histórico:** em 2026-11-10 saíram deste repositório os dados sintéticos ([`docs/SANEAMENTO_20261110.md`](docs/SANEAMENTO_20261110.md)) e a cópia antiga do núcleo, substituída pela dependência da Fase 1.
