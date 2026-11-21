@@ -208,6 +208,12 @@ def build_cardl_xapp():
         min_confidence=float(os.getenv("CARDL_MIN_CONFIDENCE", "0.5")),
         time_budget_ms=float(os.getenv("CARDL_TIME_BUDGET_MS", "20")),
     )
+    install_reasoning(app, reasoning)
+    return app
+
+
+def install_reasoning(app: Any, reasoning: CARDLReasoning) -> None:
+    """Põe o raciocínio na xApp: grafo de conhecimento, pesos da A1 20001 e liga/desliga da A1 20002."""
     reasoning.knowledge_graph = app.knowledge_graph
     app.reasoning = reasoning
     # O tipo A1 20002 (CARDL_Model_Policy) é definido na Fase 1, fonte única dos esquemas
@@ -219,4 +225,3 @@ def build_cardl_xapp():
 
     app.a1_policies._listeners = [apply if cb == previous else cb for cb in app.a1_policies._listeners]
     apply(app.a1_policies.effective_policy())
-    return app
