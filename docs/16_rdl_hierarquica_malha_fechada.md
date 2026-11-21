@@ -1,6 +1,8 @@
 # 16 — RDL hierárquica (N1 + N2) na malha fechada da Fase 1 (2026-11-20)
 
-Decisão do autor (2026-11-20): a partir daqui, os dois níveis rodam juntos nos cenários S0–S8. A RDL-N1 (regras: TVS, EEVS, Safety Guard, grafo de conhecimento) resolve os conflitos de baixa complexidade, e a RDL-N2 (MAPPO com restrição, docs/15) os de alta. Tudo o que a Fase 1 tem no laço continua igual: xApps originais, cadeia E2, Safety Guard, rApp GreenRAN e, agora também, o rApp de governança no Non-RT RIC simulado.
+Decisão do autor (2026-11-20): a partir daqui, os dois níveis rodam juntos nos cenários S0–S8. A RDL-N1 (regras: TVS, EEVS, Safety Guard, grafo de conhecimento) resolve os conflitos de baixa complexidade, e a RDL-N2 (MAPPO com restrição, docs/15) os de alta. Tudo o que a Fase 1 tem no laço continua igual: as xApps da malha fechada, cadeia E2, Safety Guard, rApp GreenRAN e, agora também, o rApp de governança no Non-RT RIC simulado.
+
+**Correção (2026-11-21, depois do "Comparativo xApps originais e próprias"):** onde este documento fala em "xApps originais", leia no singular. Na malha fechada roda uma única xApp original de terceiros, o Traffic Steering do O-RAN SC (`ric-app-ts`, commit `beb44e0`), com a lógica de decisão sem alteração, adaptador E2 e AD e QP emulados. As demais são próprias (EnergySaver-GreenRAN, Load Balancer, ISAC Radar, Beamformer, URLLC Slice Guard no papel do xSlice) ou derivadas. As rodadas citadas aqui (`cl_s0s7`, `cl_s1245`, `cl_n12`) usam as xApps de antes das correções de 2026-11-21 (docs/16 da Fase 1, §10.16) e serão substituídas pelas campanhas novas.
 
 ## 1. Critério de roteamento
 
@@ -40,7 +42,7 @@ Nesta Fase 2: `tests/test_hierarchy.py` (8 testes, 2 deles com PyTorch e um chec
 
 ## 3. Escopo do MAPPO nos cenários da Fase 1 (antes de rodar)
 
-`escopo_mappo.py` sobre as rodadas B3 da Fase 1 com xApps originais (`cl_s0s7`, `cl_s1245`): só o S6 teve conflitos que o MAPPO aceitaria (3 disputas diretas de teto de PRB). Os demais conflitos arbitrados foram indiretos ou entre células (handover, potência, estado de célula), fora do que o modelo conhece, e iriam à reserva. No S5, as resoluções eram recusas da proteção do ping-pong (`PINGPONG_GUARD`), que a `RDLxApp` decide antes da arbitragem e que não chegam ao raciocínio.
+`escopo_mappo.py` sobre as rodadas B3 da Fase 1 com as xApps da malha fechada (`cl_s0s7`, `cl_s1245`; uma original, o TS, e as demais próprias ou derivadas): só o S6 teve conflitos que o MAPPO aceitaria (3 disputas diretas de teto de PRB). Os demais conflitos arbitrados foram indiretos ou entre células (handover, potência, estado de célula), fora do que o modelo conhece, e iriam à reserva. No S5, as resoluções eram recusas da proteção do ping-pong (`PINGPONG_GUARD`), que a `RDLxApp` decide antes da arbitragem e que não chegam ao raciocínio.
 
 Consequência esperada para a campanha: a RDL-N2 recebe os conflitos de alta complexidade, mas na maioria deles devolve à RDL-N1 com motivo registrado. O N12 deve ficar próximo do B3 até que exista um ambiente de treino mais amplo (handover, potência, estado de célula, conflitos indiretos), calibrado com os registros de S0–S7, e um novo treino. Essa é a etapa seguinte, decidida pelo autor ("integrar já, retreinar depois").
 
