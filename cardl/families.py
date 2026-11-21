@@ -9,6 +9,10 @@ Cada conflito é classificado pelo tipo (Fase 1: DIRECT, INDIRECT, INTER_CELL) e
 - ``D``: indireto ou entre células, estado de célula ou potência × handover, ou estado de célula × potência;
 - ``P``: entre células, só handovers (ping-pong; decidido pela proteção da Fase 1 antes do raciocínio).
 
+Conflitos com uma xApp de teste de segurança (Rogue) ou com um evento agendado do cenário (``fault_injector``)
+não pertencem a nenhuma família (comparativo das xApps originais e próprias, seção 4.7; docs/17 §1): ficam com a
+RDL-N1 e fora das contagens e do dataset das famílias.
+
 Nas famílias B, C e D a política escolhe que ações manter (``HOLD_ACTIONS``): manter todas, segurar uma ou
 segurar todas. A RDL-N2 só decide uma família se houver política registrada para ela; sem política, o conflito
 volta à RDL-N1 com o mesmo motivo de antes (o comportamento atual não muda).
@@ -33,9 +37,24 @@ HOLD_ACTIONS = {KEEP_BOTH: (0, 1), HOLD_FIRST: (1,), HOLD_SECOND: (0,), HOLD_BOT
 
 _ENERGY_MOBILITY = {"CELL_STATE", "TX_POWER", "HANDOVER"}
 
+# xApp de teste de segurança e evento agendado do cenário: não são xApps legítimas em conflito
+TEST_XAPPS = frozenset({"rogue_xapp", "fault_injector"})
 
-def classify_params(conflict_type: str, parameters: Iterable[str]) -> Optional[str]:
-    """Família de um conflito pelo tipo (nome do ``ConflictType``) e pelos parâmetros das ações."""
+
+def xapp_of_action_id(action_id: str) -> str:
+    """``xapp_id`` de um id de proposta da malha fechada (``<xapp_id>-g<gnb>-<parâmetro>-<t>[-<seq>]``)."""
+    return str(action_id or "").split("-", 1)[0]
+
+
+def involves_test_xapp(xapp_ids: Iterable[str]) -> bool:
+    return any(str(x) in TEST_XAPPS for x in xapp_ids)
+
+
+def classify_params(conflict_type: str, parameters: Iterable[str], xapp_ids: Iterable[str] = ()) -> Optional[str]:
+    """Família de um conflito pelo tipo (nome do ``ConflictType``) e pelos parâmetros das ações. Com uma xApp de
+    teste ou evento entre as envolvidas (``xapp_ids``), nenhuma família."""
+    if involves_test_xapp(xapp_ids):
+        return None
     params = {str(p) for p in parameters if p}
     kind = str(conflict_type).upper()
     if not params:
@@ -57,7 +76,8 @@ def classify_params(conflict_type: str, parameters: Iterable[str]) -> Optional[s
 def classify(conflict: Any) -> Optional[str]:
     """Família de um ``ConflictEvent`` da Fase 1."""
     kind = getattr(getattr(conflict, "conflict_type", None), "name", "")
-    return classify_params(kind, (a.parameter for a in getattr(conflict, "involved_xapps", []) or []))
+    actions = list(getattr(conflict, "involved_xapps", []) or [])
+    return classify_params(kind, (a.parameter for a in actions), (getattr(a, "xapp_id", "") for a in actions))
 
 
 @dataclass

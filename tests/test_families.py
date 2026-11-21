@@ -140,6 +140,22 @@ def test_classify_conflict_event():
     assert classify(conflict) == C
 
 
+def test_test_xapps_belong_to_no_family_and_stay_with_n1():
+    """Comparativo das xApps, seção 4.7: conflitos com a Rogue (teste de segurança) ou com o fault_injector (evento
+    do cenário) não são conflitos entre xApps legítimas; ficam fora das famílias e com a RDL-N1."""
+    assert classify_params("INDIRECT", ["CELL_STATE", "HANDOVER"], ["fault_injector", "traffic_steering"]) is None
+    assert classify_params("INDIRECT", ["TX_POWER", "HANDOVER"], ["rogue_xapp", "traffic_steering"]) is None
+    assert classify_params("INDIRECT", ["TX_POWER", "HANDOVER"], ["energysaver_greenran", "traffic_steering"]) == D
+    rogue = XAppAction(xapp_id="rogue_xapp", node_id="gnb_0", parameter="PRB_QUOTA", value=90.0, priority=95)
+    ho = XAppAction(xapp_id="traffic_steering", node_id="gnb_0", parameter="HANDOVER", value=1.0, priority=80)
+    conflict = ConflictEvent(ConflictType.INDIRECT, ConflictSeverity.MEDIUM, [rogue, ho])
+    assert classify(conflict) is None
+    engine = _engine(policy=_family_c(StubModel(HOLD_FIRST)))
+    engine.resolve(conflict)
+    trace = engine.trace_last()
+    assert trace["source"] == "H_RDL" and "xApp de teste" in trace["fallback_reason"]
+
+
 # ---------------------------------------------------------------- ambiente da família C
 def _episode(env, action, seed):
     env.reset(seed=seed)

@@ -34,7 +34,7 @@ import numpy as np
 from src.conflict_types import ConflictEvent, ResolutionAction, ResolutionStrategy, XAppAction
 from src.core.reasoning import Reasoning
 
-from cardl.families import A, HOLD_ACTIONS, FamilyRegistry, classify
+from cardl.families import A, HOLD_ACTIONS, FamilyRegistry, classify, involves_test_xapp
 from cardl.marl.env import ACTION_DIM, OBS_DIM, SLOT_FEATURES, SLOTS
 
 
@@ -124,6 +124,8 @@ class CARDLReasoning(Reasoning):
         return super().resolve(conflict)
 
     def _marl_ineligible(self, conflict: ConflictEvent) -> Optional[str]:
+        if involves_test_xapp(a.xapp_id for a in conflict.involved_xapps):
+            return "conflito com xApp de teste ou evento do cenário (Rogue, fault_injector): decide a RDL-N1"
         family_policy = self.families.get(self._family)
         if family_policy is not None and self.marl_enabled:
             if len(conflict.involved_xapps) > family_policy.max_candidates:

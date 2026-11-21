@@ -4,17 +4,27 @@ Situação: proposta com a base implementada (§7: registro de famílias, ambien
 
 ## 1. O que aparece de fato nos cenários da Fase 1
 
-Contagem das resoluções registradas em `raw/closed_loop_log.jsonl` das execuções em malha fechada com xApps originais e B3 (RDL-N1). S0–S7: rodadas `cl_s0s7` (semente 16905), `cl_s1245` (16907), `cl_p1x85`, `cl_p1uex85` e `cl_p3v5` (S5, 16907) e a parte já concluída da `cl_n12` (S0–S3, 16908). S9–S15 e G1–G2: piloto `cl_piloto` (16901).
+**Correção (2026-11-21, depois do "Comparativo xApps originais e próprias"):**
+- **Uma só xApp original.** Onde este documento fala em "xApps originais", leia no singular. Na malha fechada roda uma única xApp original de terceiros, o Traffic Steering do O-RAN SC (`ric-app-ts`, commit `beb44e0`), com a lógica de decisão sem alteração, adaptador E2 e AD e QP emulados. As demais são próprias ou derivadas.
+- **Famílias sem a original.** As famílias com participação da original são as que têm handover (C, D e P). As famílias A e B só têm xApps próprias, e o texto dos artigos precisa dizer isso.
+- **Dados antigos.** As rodadas contadas abaixo usam as xApps de antes das correções da Fase 1 (docs/16 da Fase 1, §10.16):
+  - o xSlice derivado oscilava e parava de propor depois de uma recusa (hoje é a URLLC Slice Guard);
+  - a EnergySaver subia a potência de 4 para 30 dBm ao "reduzir";
+  - o Beamformer era inerte.
+  
+  A calibração do ambiente (§5) e as contagens serão refeitas com as campanhas novas.
+
+Contagem das resoluções registradas em `raw/closed_loop_log.jsonl` das execuções em malha fechada com as xApps da malha fechada e B3 (RDL-N1). S0–S7: rodadas `cl_s0s7` (semente 16905), `cl_s1245` (16907), `cl_p1x85`, `cl_p1uex85` e `cl_p3v5` (S5, 16907) e a parte já concluída da `cl_n12` (S0–S3, 16908). S9–S15 e G1–G2: piloto `cl_piloto` (16901).
 
 | Família | Tipo | Parâmetros | Cenários | Resoluções | Decisão da RDL-N1 |
 | :-- | :-- | :-- | :-- | :-: | :-- |
 | A | direto, mesmo gNB | teto de PRB × teto de PRB | S6 | 3 | TVS escolhe uma |
 | B | indireto, mesmo gNB | teto de PRB × potência | S1, S3, S6, S12 | 22 | EEVS mantém as duas |
 | C | indireto, mesmo gNB | handover × teto de PRB | S2, S5, S11, G1 | 23 | EEVS mantém as duas |
-| D | indireto ou entre células | estado de célula ou potência × handover; estado de célula × potência | S13, S15 | 16 | EEVS mantém todas em 12; descarta uma em 4 (3 entre células) |
+| D | indireto ou entre células | estado de célula ou potência × handover; estado de célula × potência | S13, S15 | 16, dos quais 11 com a Rogue ou o `fault_injector`; 5 entre xApps legítimas | EEVS mantém todas em 12; descarta uma em 4 (3 entre células) |
 | P | entre células | handover × handover em sentidos opostos (ping-pong) | S5 | 67 | proteção da ação recente (`PINGPONG_GUARD`) |
 
-Descrição: cada linha agrupa as resoluções pelo tipo de conflito e pelos parâmetros das ações envolvidas. Em S0, S4 e S7 nenhuma resolução foi registrada. A família P é decidida pela `RDLxApp` antes do raciocínio e não passa pela RDL-N2. As contagens serão refeitas com a campanha `cl_n12` completa (S0–S7, B3 e N12).
+Descrição: cada linha agrupa as resoluções pelo tipo de conflito e pelos parâmetros das ações envolvidas. Em S0, S4 e S7 nenhuma resolução foi registrada. A família P é decidida pela `RDLxApp` antes do raciocínio e não passa pela RDL-N2. Desde 2026-11-21, conflitos com a Rogue (teste de segurança) ou com o `fault_injector` (evento agendado do cenário) não pertencem a nenhuma família: `cardl/families.py` os deixa fora (`TEST_XAPPS`), a RDL-N2 os devolve à RDL-N1 com o motivo registrado, e o extrator marca essas resoluções (`test_xapp`). Na família D do piloto 16901, 11 das 16 resoluções eram desse tipo (contagem por script com `classify_params` sobre as 9 execuções B3 do piloto). A `cl_n12` foi abortada em 2026-11-21. As contagens serão refeitas com as campanhas novas, de 5 sementes, só no modo multinível.
 
 **Consequência para o desenho.** Nas famílias B, C e D, o EEVS manteve as duas ações em 57 de 58 conflitos indiretos. Copiar a RDL-N1 não acrescenta nada; a decisão que uma política aprendida pode melhorar é outra: **segurar uma das ações** (ou as duas) quando a combinação piora a rede, por exemplo baixar a potência no mesmo momento em que um handover traz UEs para a célula. A família A é a única em que a escolha é "qual vence".
 

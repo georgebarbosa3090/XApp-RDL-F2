@@ -30,7 +30,7 @@ from typing import Any, Dict, Iterable, List, Optional
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-from cardl.families import classify_params  # noqa: E402
+from cardl.families import classify_params, involves_test_xapp, xapp_of_action_id  # noqa: E402
 
 PARAM_RE = re.compile(r"-g\d+-([A-Z_]+)-\d")
 UE_KEYS = ("ue", "cell_id", "connected", "thp_mbps", "delay_ms", "sinr_db", "rsrp_dbm")
@@ -57,7 +57,10 @@ def _resolutions(window: Dict[str, Any]) -> List[Dict[str, Any]]:
     out = []
     for r in (window.get("decision") or {}).get("resolutions") or []:
         params = [param_of(i) for i in r.get("involved") or []]
-        out.append({"conflict_type": r.get("conflict_type"), "family": classify_params(r.get("conflict_type", ""), params),
+        xapps = [xapp_of_action_id(i) for i in r.get("involved") or []]
+        out.append({"conflict_type": r.get("conflict_type"),
+                    "family": classify_params(r.get("conflict_type", ""), params, xapps),
+                    "test_xapp": involves_test_xapp(xapps),
                     "strategy": r.get("strategy"), "involved": r.get("involved"), "winners": r.get("winners"),
                     **{k: r.get(k) for k in ("level", "complexity", "route_reason", "source", "fallback_reason")
                        if k in r}})
