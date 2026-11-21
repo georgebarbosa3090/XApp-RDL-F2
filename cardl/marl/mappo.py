@@ -6,16 +6,34 @@ MAPPO com restrição (CMDP, multiplicador de Lagrange) e mascaramento de açõe
 - Custo do CMDP: violação do SLA da fatia crítica; o multiplicador λ sobe enquanto o custo
   médio do episódio passa do limite e desce quando fica abaixo (ascensão dual projetada).
 - Ações mascaradas (rejeitadas pelo Safety Guard da Fase 1) recebem logit −1e9.
+- Dimensões (observação, estado global, ações, agentes) por ambiente (``Dims``); o padrão é o do ambiente
+  calibrado de teto de PRB (família A, ``cardl/marl/env.py``), e o checkpoint grava as dimensões com que
+  foi treinado.
 """
 
 from dataclasses import asdict, dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 
 from cardl.marl.env import ACTION_DIM, GLOBAL_DIM, N_AGENTS, OBS_DIM
+
+
+@dataclass(frozen=True)
+class Dims:
+    obs: int = OBS_DIM
+    global_: int = GLOBAL_DIM
+    actions: int = ACTION_DIM
+    agents: int = N_AGENTS
+
+    def as_dict(self) -> Dict[str, int]:
+        return {"obs": self.obs, "global": self.global_, "actions": self.actions, "agents": self.agents}
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, int]) -> "Dims":
+        return cls(obs=int(d["obs"]), global_=int(d["global"]), actions=int(d["actions"]), agents=int(d["agents"]))
 
 
 @dataclass
@@ -35,10 +53,10 @@ class MappoConfig:
 
 
 class Actor(nn.Module):
-    def __init__(self, hidden: int):
+    def __init__(self, hidden: int, dims: Dims = Dims()):
         super().__init__()
-        self.net = nn.Sequential(nn.Linear(OBS_DIM, hidden), nn.Tanh(), nn.Linear(hidden, hidden), nn.Tanh(),
-                                 nn.Linear(hidden, ACTION_DIM))
+        self.net = nn.Sequential(nn.Linear(dims.obs, hidden), nn.Tanh(), nn.Linear(hidden, hidden), nn.Tanh(),
+                                 nn.Linear(hidden, dims.actions))
 
     def dist(self, obs: torch.Tensor, mask: torch.Tensor) -> torch.distributions.Categorical:
         logits = self.net(obs)
@@ -47,9 +65,9 @@ class Actor(nn.Module):
 
 
 class Critic(nn.Module):
-    def __init__(self, hidden: int, outputs: int = 2):  # valor da recompensa e do custo
+    def __init__(self, hidden: int, outputs: int = 2, dims: Dims = Dims()):  # valor da recompensa e do custo
         super().__init__()
-        self.net = nn.Sequential(nn.Linear(GLOBAL_DIM, hidden), nn.Tanh(), nn.Linear(hidden, hidden), nn.Tanh(),
+        self.net = nn.Sequential(nn.Linear(dims.global_, hidden), nn.Tanh(), nn.Linear(hidden, hidden), nn.Tanh(),
                                  nn.Linear(hidden, outputs))
 
     def forward(self, state: torch.Tensor) -> torch.Tensor:
@@ -57,11 +75,12 @@ class Critic(nn.Module):
 
 
 class MAPPO:
-    def __init__(self, config: MappoConfig, seed: int = 0):
+    def __init__(self, config: MappoConfig, seed: int = 0, dims: Optional[Dims] = None):
         torch.manual_seed(seed)
         self.cfg = config
-        self.actor = Actor(config.hidden)
-        self.critic = Critic(config.hidden)
+        self.dims = dims or Dims()
+        self.actor = Actor(config.hidden, self.dims)
+        self.critic = Critic(config.hidden, dims=self.dims)
         self.opt_actor = torch.optim.Adam(self.actor.parameters(), lr=config.lr_actor)
         self.opt_critic = torch.optim.Adam(self.critic.parameters(), lr=config.lr_critic)
         self.lagrange = float(config.lagrange_init)
@@ -114,8 +133,8 @@ class MAPPO:
             np.random.shuffle(idx)
             for start in range(0, T, cfg.minibatch):
                 mb = torch.as_tensor(idx[start:start + cfg.minibatch])
-                d = self.actor.dist(obs[mb].reshape(-1, OBS_DIM), masks[mb].reshape(-1, masks.shape[-1]))
-                logp = d.log_prob(actions[mb].reshape(-1)).reshape(-1, N_AGENTS)
+                d = self.actor.dist(obs[mb].reshape(-1, self.dims.obs), masks[mb].reshape(-1, masks.shape[-1]))
+                logp = d.log_prob(actions[mb].reshape(-1)).reshape(-1, self.dims.agents)
                 ratio = torch.exp(logp - old_logp[mb])
                 a = adv_t[mb].unsqueeze(1)
                 loss_actor = -torch.min(ratio * a, torch.clamp(ratio, 1 - cfg.clip, 1 + cfg.clip) * a).mean()
@@ -145,16 +164,18 @@ class MAPPO:
     def save(self, path: str, extra: Dict) -> None:
         torch.save({"actor": self.actor.state_dict(), "critic": self.critic.state_dict(),
                     "lagrange": self.lagrange, "config": asdict(self.cfg),
-                    "dims": {"obs": OBS_DIM, "global": GLOBAL_DIM, "actions": ACTION_DIM, "agents": N_AGENTS},
+                    "dims": self.dims.as_dict(),
                     **extra}, path)
 
     @classmethod
-    def load(cls, path: str) -> "MAPPO":
+    def load(cls, path: str, expected: Optional[Dims] = Dims()) -> "MAPPO":
+        """Carrega o checkpoint com as dimensões gravadas nele. ``expected`` (padrão: família A) recusa um
+        checkpoint de outro ambiente; ``None`` aceita qualquer dimensão."""
         ckpt = torch.load(path, map_location="cpu", weights_only=False)
-        dims = ckpt["dims"]
-        if (dims["obs"], dims["global"], dims["actions"], dims["agents"]) != (OBS_DIM, GLOBAL_DIM, ACTION_DIM, N_AGENTS):
-            raise ValueError(f"checkpoint incompatível com o ambiente atual: {dims}")
-        agent = cls(MappoConfig(**ckpt["config"]))
+        dims = Dims.from_dict(ckpt["dims"])
+        if expected is not None and dims != expected:
+            raise ValueError(f"checkpoint incompatível com o ambiente esperado: {ckpt['dims']}")
+        agent = cls(MappoConfig(**ckpt["config"]), dims=dims)
         agent.actor.load_state_dict(ckpt["actor"])
         agent.critic.load_state_dict(ckpt["critic"])
         agent.lagrange = float(ckpt["lagrange"])

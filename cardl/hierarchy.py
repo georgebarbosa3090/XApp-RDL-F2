@@ -19,7 +19,8 @@ O roteador grava esse instante no nó do conflito (atributo ``t_route``) e só c
 por ele, porque o ``detected_at`` da Fase 1 é tempo de parede.
 
 Cada decisão deixa um traço (``trace_last()``): nível, C(c, s), conflitos recentes no grafo, motivo do
-roteamento, origem da decisão (MAPPO ou RDL-N1) e, na reserva, o motivo.
+roteamento, família do conflito (``cardl/families.py``), origem da decisão (MAPPO ou RDL-N1) e, na reserva,
+o motivo.
 """
 
 import os
@@ -30,6 +31,7 @@ from src.conflict_types import ConflictEvent, ResolutionAction
 from src.core.reasoning import Reasoning
 
 from cardl.engine import CARDLReasoning, DecisionRecord, install_reasoning, selected_checkpoint
+from cardl.families import classify
 
 LOW, HIGH = "N1", "N2"
 
@@ -82,7 +84,8 @@ class HierarchicalReasoning(CARDLReasoning):
                                               t_route=now, level=level, complexity=complexity)
             except Exception:
                 pass
-        return level, {"level": level, "complexity": complexity, "kg_recent_conflicts": recent,
+        return level, {"level": level, "family": classify(conflict), "complexity": complexity,
+                       "kg_recent_conflicts": recent,
                        "route_reason": "; ".join(reasons) or "baixa complexidade", "t_route": now}
 
     # ---------------------------------------------------------------- decisão

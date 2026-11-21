@@ -15,7 +15,12 @@ Reserva para a RDL-N1 quando:
 - o MAPPO escolhe uma proposta que não está entre as candidatas, ou o no-op;
 - a política A1 20002 desliga o MARL.
 
-Cada decisão registra a origem e, na reserva, o motivo (``last_decision``).
+Famílias de conflito (docs/17, ``cardl/families.py``): além do checkpoint da família A (teto de PRB direto),
+outras famílias podem ter política registrada em ``self.families`` (``FamilyRegistry``). Nelas a política decide
+que ações manter. Sem política registrada para a família do conflito, a reserva e o motivo são os de antes.
+Segurar todas as ações volta à RDL-N1, porque a Fase 1 trata uma resolução vazia como rejeição do Safety Guard.
+
+Cada decisão registra a origem, a família e, na reserva, o motivo (``last_decision``).
 """
 
 import hashlib
@@ -29,6 +34,7 @@ import numpy as np
 from src.conflict_types import ConflictEvent, ResolutionAction, ResolutionStrategy, XAppAction
 from src.core.reasoning import Reasoning
 
+from cardl.families import A, HOLD_ACTIONS, FamilyRegistry, classify
 from cardl.marl.env import ACTION_DIM, OBS_DIM, SLOT_FEATURES, SLOTS
 
 
@@ -40,6 +46,7 @@ class DecisionRecord:
     latency_ms: Optional[float] = None
     probabilities: List[float] = field(default_factory=list)
     context: Dict[str, float] = field(default_factory=dict)   # grafo de conhecimento da Fase 1
+    family: Optional[str] = None     # família do conflito (cardl/families.py)
 
 
 class CARDLReasoning(Reasoning):
@@ -57,6 +64,8 @@ class CARDLReasoning(Reasoning):
         self.last_decision: Optional[DecisionRecord] = None
         # Grafo de conhecimento da Fase 1 (o mesmo da RDLxApp); fornece o contexto de cada decisão
         self.knowledge_graph = None
+        self.families = FamilyRegistry()
+        self._family: Optional[str] = None
         if checkpoint_path:
             self.load_policy(checkpoint_path, expected_sha256)
 
@@ -77,6 +86,7 @@ class CARDLReasoning(Reasoning):
         self.marl_enabled = bool(policy.get("marl_enabled", True))
         if "min_confidence" in policy:
             self.min_confidence = float(policy["min_confidence"])
+        self.families.apply_model_policy(policy)
 
     # ---------------------------------------------------------------- decisão
     def _context(self, conflict: ConflictEvent) -> Dict[str, float]:
@@ -89,9 +99,11 @@ class CARDLReasoning(Reasoning):
             return {}
 
     def resolve(self, conflict: ConflictEvent) -> ResolutionAction:
+        self._family = classify(conflict)
         resolution = self._resolve(conflict)
         if self.last_decision is not None:
             self.last_decision.context = self._context(conflict)
+            self.last_decision.family = self._family
         return resolution
 
     def _resolve(self, conflict: ConflictEvent) -> ResolutionAction:
@@ -112,6 +124,11 @@ class CARDLReasoning(Reasoning):
         return super().resolve(conflict)
 
     def _marl_ineligible(self, conflict: ConflictEvent) -> Optional[str]:
+        family_policy = self.families.get(self._family)
+        if family_policy is not None and self.marl_enabled:
+            if len(conflict.involved_xapps) > family_policy.max_candidates:
+                return f"mais de {family_policy.max_candidates} candidatas na família {self._family}"
+            return None
         if self.policy is None:
             return "sem checkpoint"
         if not self.marl_enabled:
@@ -151,7 +168,39 @@ class CARDLReasoning(Reasoning):
                                         float(c.xapp_id.casefold().startswith("energy")))
         return obs
 
+    def _resolve_by_family(self, conflict: ConflictEvent):
+        """Família com política registrada: a política escolhe que candidatas manter (``HOLD_ACTIONS``)."""
+        fp = self.families.get(self._family)
+        candidates = fp.ordered(list(conflict.involved_xapps))
+        obs = fp.observe(self, candidates)
+        mask = np.zeros(fp.model.dims.actions, dtype=np.float32)
+        mask[:len(HOLD_ACTIONS)] = 1.0
+        if fp.mask is not None:
+            mask = mask * fp.mask(self, candidates)
+        probs = fp.model.probabilities(obs, mask)
+        choice = int(np.argmax(probs))
+        confidence = float(probs[choice])
+        record = DecisionRecord("MAPPO", confidence=confidence, probabilities=[float(p) for p in probs],
+                                family=self._family)
+        kept = [candidates[i] for i in HOLD_ACTIONS.get(choice, ()) if i < len(candidates)]
+        if not kept:
+            record.source, record.reason = "H_RDL", f"família {self._family}: política segurou todas as ações"
+            return None, record
+        if confidence < self.min_confidence:
+            record.source, record.reason = "H_RDL", f"confiança {confidence:.2f} < {self.min_confidence:.2f}"
+            return None, record
+        return ResolutionAction(
+            conflict_id=conflict.conflict_id,
+            strategy_used=ResolutionStrategy.MARL_AGENT,
+            winning_actions=kept,
+            modified_value=kept[0].value if len(kept) == 1 else None,
+            confidence=confidence,
+            validation_level=0,
+        ), record
+
     def _resolve_by_mappo(self, conflict: ConflictEvent):
+        if self._family != A and self.families.get(self._family) is not None:
+            return self._resolve_by_family(conflict)
         candidates = list(conflict.involved_xapps)
         obs = self._observation(candidates)
         mask = np.zeros(ACTION_DIM, dtype=np.float32)

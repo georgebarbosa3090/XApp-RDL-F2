@@ -6,6 +6,7 @@ A documentação do núcleo (percepção, TVS/EEVS, Safety Guard, grafo de conhe
 | :-- | :-- | :-- |
 | [15_treino_mappo_calibrado.md](15_treino_mappo_calibrado.md) | ambiente calibrado, MAPPO com restrição, resultados contra B0–B3 | atual |
 | [16_rdl_hierarquica_malha_fechada.md](16_rdl_hierarquica_malha_fechada.md) | RDL-N1 e RDL-N2 juntas na malha fechada da Fase 1: critério de roteamento, integração, escopo do MAPPO, primeira rodada (S5 com UEs em movimento) | atual |
+| [17_ambiente_ampliado_rdl_n2.md](17_ambiente_ampliado_rdl_n2.md) | proposta: ambiente de treino e políticas da RDL-N2 para outras famílias de conflito (PRB × potência, handover × PRB, energia × mobilidade), calibração, seleção e decisões pendentes | proposta |
 | [SANEAMENTO_20261110.md](SANEAMENTO_20261110.md) | remoção dos dados sintéticos e da cópia antiga do núcleo | atual |
 | [compliance/CARDL_F2_COMPATIBILITY_PROFILE.md](compliance/CARDL_F2_COMPATIBILITY_PROFILE.md) | portões F2-G0 a F2-G12 | atual |
 | [compliance/PHASE1_PHASE2_SYNC_CONTRACT.md](compliance/PHASE1_PHASE2_SYNC_CONTRACT.md) | contrato F1↔F2 | atual |
